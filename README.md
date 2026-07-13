@@ -4,8 +4,8 @@ sidebar_position: 1
 
 # Wallboard Application Boilerplate
 
-This guide shows you how to install and start WB Application Boilerplate.  
-You can download the **Boilerplate** for *Applications* from *Administrator* > *System Settings* (**2.1 UI!**) on your server.
+This guide shows you how to install and start WB Application Boilerplate.
+Clone the public repository from [WallboardPlatform/custom-app-boilerplate](https://github.com/WallboardPlatform/custom-app-boilerplate).
 
 ### Node.js Version: `24.9.0`
 
@@ -16,17 +16,25 @@ The required NodeJS version is `24.9.0` which can be downloaded from [**here**](
 
 ## Installation
 
-1. Extract [**wb-apps-boilerplate.rar**](https://apps.wallboard.info/app-boilerplate/wb-apps-boilerplate.rar)
-2. **Request `.npmrc` file:**  
-   To request a `.npmrc` file, contact **support@wallboard.info**. This file is needed to get access to the `wallboard-app-sdk`, which is required to start your app in our editor/displayer and to communicate with our system.
-3. Paste your `.npmrc` file next to the **package.json** file.
-4. Install the necessary dependencies:
+1. Clone the boilerplate:
 ```bash
-    npm install
+    git clone https://github.com/WallboardPlatform/custom-app-boilerplate.git
+    cd custom-app-boilerplate
 ```
-5. Copy the sample config file:
+2. Configure the public Wallboard SDK package and install dependencies:
+```bash
+    npm run setup
+```
+   The setup script uses public npm for normal packages and the anonymous Wallboard Nexus tarball for `wallboard-app-sdk`.
+3. Copy the sample config file:
 ```bash
     cp config.json.sample config.json
+```
+
+To pin a specific SDK version instead of the latest available one:
+```bash
+    npm run setup:sdk -- --version 2.0.85
+    npm install --registry=https://registry.npmjs.org/
 ```
 
 ---

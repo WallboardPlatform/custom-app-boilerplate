@@ -4,6 +4,8 @@
 	"description": "Wallboard Application Boilerplate",
 	"author": "Kukk Péter & Dimitrov Bernát & Kukk Zoltán",
 	"scripts": {
+		"setup": "npm run setup:sdk && npm install --registry=https://registry.npmjs.org/",
+		"setup:sdk": "node scripts/setup-sdk.mjs",
 		"build": "cross-env SIMPLE_OUTPUT=true DISABLE_MINIO_UPLOAD=true npm run build:production",
 		"build:vite:development": "vite build --config ./vite.config.mts --mode development",
 		"build:vite:production": "vite build --config ./vite.config.mts --mode production",
@@ -63,7 +65,7 @@
 		"vite-plugin-solid": "^2.11.8",
 		"vite-plugin-solid-svg": "^0.8.1",
 		"vite-plugin-stylelint": "^6.0.2",
-		"wallboard-app-sdk": "^2.0.73",
+		"wallboard-app-sdk": "https://nexus.wallboard.info/nexus/repository/npm-wallboard/wallboard-app-sdk/-/wallboard-app-sdk-2.0.85.tgz",
 		"webpack": "^5.99.8",
 		"webpack-cli": "^6.0.1"
 	},
