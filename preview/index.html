@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Wallboard Custom App Preview</title>
+	</head>
+	<body>
+		<div class="preview-shell">
+			<header class="preview-toolbar">
+				<div class="preview-title">
+					<strong>Wallboard Preview</strong>
+					<span id="viewport-label">App default</span>
+				</div>
+				<div class="preview-controls">
+					<label>
+						<span>Viewport</span>
+						<select id="viewport-preset">
+							<option value="app-default" selected>App default</option>
+							<option value="full-hd">Full HD 1920 x 1080</option>
+							<option value="wide-low">Wide split 1536 x 432</option>
+							<option value="landscape">Landscape 960 x 540</option>
+							<option value="portrait">Portrait 1080 x 1920</option>
+							<option value="square">Square 600 x 600</option>
+							<option value="custom">Custom</option>
+						</select>
+					</label>
+					<label class="preview-dimension">
+						<span>Width</span>
+						<input id="viewport-width" type="number" min="1" max="7680" step="1" value="512" />
+					</label>
+					<label class="preview-dimension">
+						<span>Height</span>
+						<input id="viewport-height" type="number" min="1" max="4320" step="1" value="512" />
+					</label>
+					<button id="apply-size" type="button">Apply</button>
+					<label>
+						<span>Backdrop</span>
+						<select id="preview-background">
+							<option value="checker" selected>Transparency</option>
+							<option value="light">Light</option>
+							<option value="dark">Dark</option>
+						</select>
+					</label>
+				</div>
+			</header>
+			<main id="preview-stage" class="preview-stage">
+				<div id="viewport-frame" class="viewport-frame">
+					<iframe id="widget-frame" title="Custom app preview" src="/preview/widget.html?background=checker"></iframe>
+				</div>
+			</main>
+		</div>
+		<script type="module" src="/preview/shell.ts"></script>
+	</body>
+</html>

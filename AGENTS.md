@@ -16,7 +16,12 @@ Core rules:
 - Keep the root widget responsive, isolated, and transparent by default.
 - Keep CSS compatible with the legacy Chromium target described by the boilerplate docs.
 - Map every editor property through `src/settings.ts` and `src/interfaces/application.interface.ts`.
+- Keep `preview/fixture.ts` representative of the app's settings and datasource shape.
+- Add named preview scenarios for empty, maximum-content, odd-count, last-page, and long-label states that materially change layout.
+- Import packaged media statically (for example `import mark from './mark.png'`); never use `new URL(..., import.meta.url)` for runtime images.
+- Preserve `properties.json.version` when rebuilding or fixing an existing app. A deliberate incompatible version is a separate app upload and must be called out to the user.
 - Run `npm run setup` before installing dependencies in a fresh clone.
-- Validate with `npm run lint` and `DISABLE_MINIO_UPLOAD=true SIMPLE_OUTPUT=true npm run build:production:zip`.
+- Validate with `npm run lint`, `npm run validate:visual`, and `npm run validate:package`.
+- Inspect every image in `preview/output/`; passing overflow checks does not prove that the composition is visually good.
 
 The final deliverable for a user is the generated zip path, not source files.

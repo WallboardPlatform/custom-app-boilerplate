@@ -33,6 +33,10 @@
 #### Quality Check Checklist
 - [ ] TypeScript compiles without errors
 - [ ] No ESLint warnings
+- [ ] `preview/fixture.ts` contains representative settings and datasource data
+- [ ] Named preview scenarios cover materially different dynamic and boundary states
+- [ ] `npm run validate:visual` passes
+- [ ] Every image in `preview/output/` was inspected at the generated signage dimensions
 
 ### 5. Build Phase
 **Decide how to Build the project**:
@@ -44,8 +48,7 @@ then build the project with the `build:development` tool
 #### Why the use of zip build
 The Wallboard ecosystem reads the `properties.json` as the basis, on what the custom app looks like,
 what it does, which the base build doesn't include in the output.
-The zip build contains the newest version of the JSON, so it's important on every change to it, 
-to build a zip of the custom app.
+The zip build contains the newest configuration, so build a zip after every configuration change. Preserve the existing app version for fixes and replacement uploads. A deliberate incompatible version must be uploaded as a separate app.
 
 #### What happens after build
-The provided build tools handle every deployment specific problems, so there is no need to think of this step.
+Run `npm run validate:package` before delivery. It builds the zip and validates required files, cache-listed runtime assets, and packaged media URL usage.

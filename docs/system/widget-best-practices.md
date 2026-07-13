@@ -11,6 +11,7 @@ Use this before designing or editing a Wallboard custom app. These rules are abo
 | No fixed canvas assumptions | Do not design only for `1920x1080`, `16:9`, or the default size in `properties.json`. Widgets can be tiny, wide, tall, square, or fullscreen. |
 | Stable layout | Hover states, changing text, loading states, and empty states must not resize the root layout unexpectedly. |
 | Contained overflow | Text, images, lists, and tables must wrap, truncate, scroll, paginate, or scale intentionally. Never let content spill outside the widget. |
+| One clipping surface | When the app has a panel, put its background, `border-radius`, and `overflow: hidden` on the same full-size element. Nested rounded backgrounds can expose square corners through sub-pixel differences. |
 
 Root style baseline:
 
@@ -37,6 +38,20 @@ Root style baseline:
 | Text-heavy content | Use explicit line limits, wrapping, truncation, or paging. |
 
 Avoid viewport-based sizing for widget internals. Size relative to the widget container, not the browser window.
+
+### Data tables and reader boards
+
+| Risk | Required practice |
+|------|-------------------|
+| Few rows in a tall zone | Use a column layout with a fixed header and `flex: 1 1 auto` body. Let visible rows share available height or paginate; do not leave the table compressed at the top. |
+| Wide/low zone | Keep the visual surface full-size, but center a bounded content region when spreading columns across the full width would weaken grouping. Reduce secondary metadata before reducing primary values. |
+| Clipped final column | Give every flex child `min-width: 0`. Add edge padding and use intentional column bases; truncate secondary text with ellipsis. |
+| Header metadata collision | Make title and metadata independently shrinkable with `min-width: 0`; truncate the secondary item first. |
+| Fixed small typography | Use measured container size tiers or a bounded root scale exposed through CSS variables. Do not use browser viewport units as a proxy for widget size. |
+
+For equal-height table rows, use a flex column body and `flex: 1 1 0` on each visible row. Bound the content region using a readable measure or a user-facing scale setting, not a hard-coded canvas width. When the whole composition must scale together, derive one bounded ratio from the observed root and a reference design size; do not calculate unrelated font sizes per element.
+
+The SDK includes a `ResizeObserver` compatibility layer. When flexbox and fixed breakpoints are insufficient, observe the root element, assign a small/wide/tall size class, and drive a limited set of CSS variables from that class. Keep the layout deterministic and avoid continuous resize-driven DOM rebuilding.
 
 ## Legacy CSS Safety
 
@@ -97,6 +112,8 @@ Every property in `src/editor-assets/properties.json` must be mapped in `src/set
 
 Do not let a missing datasource produce a blank widget unless blank is the explicit user requirement.
 
+Normalize variable datasource wrappers once at the application boundary, then render a single typed row shape. Accept documented array or serialized forms defensively, but do not spread ad hoc shape checks through visual components.
+
 ## Multi-Instance Safety
 
 Multiple instances of the same custom app can run on one page.
@@ -142,17 +159,42 @@ Avoid:
 - Large base64 assets inside source files.
 - Console debug logs in production output.
 
+## Packaged Assets
+
+| Rule | Practice |
+|------|----------|
+| Resolve from the app bundle | Use static imports for local images and media. Do not use `new URL(..., import.meta.url)` inside components. |
+| Cache every emitted asset | Add every file under `dist/assets/` to `properties.json.resourceList`. |
+| Validate the package | Run `npm run validate:package`; a successful Vite build alone does not prove that media loads in the displayer. |
+
+`resourceList` and URL resolution solve different problems. Cache-listing an image does not repair a bundle that requests `/displayer/index.png`.
+
+## Visual Validation
+
+1. Put representative settings and datasource values in `preview/fixture.ts`.
+2. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
+3. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
+4. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
+5. Inspect every image in `preview/output/`. Automated checks catch runtime and boundary failures, not weak hierarchy or excessive empty space.
+6. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
+
+Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
+
+Treat clipping as an application layout defect first: inspect flex bases, `min-width`, padding, and content width before blaming the editor viewport. Mark a deliberately off-canvas element with `data-preview-allow-overflow` only when overflow is part of the intended interaction; never use it to suppress clipped visible content.
+
 ## Build Checklist
 
 Before returning a zip:
 
-- `src/editor-assets/properties.json` has unique `name` and correct `version`.
+- `src/editor-assets/properties.json` has a unique `name`. Existing-app fixes preserve `version`; incompatible variants use a new version and a separate upload.
 - `src/editor-assets/icon.png` and `placeholder.png` are app-specific.
+- Unused sample wizard and layout-editor configuration and assets are removed from `properties.json` and `src/editor-assets/`.
 - Root background is transparent unless intentionally configured otherwise.
 - Layout behaves at small, wide, tall, and default sizes.
 - Empty, loading, and invalid-data states render cleanly.
+- `npm run validate:visual` passes and every generated screenshot has been inspected.
 - All settings are typed and mapped.
 - No unscoped global DOM selectors or shared mutable state.
 - `npm run lint` passes.
-- `DISABLE_MINIO_UPLOAD=true SIMPLE_OUTPUT=true npm run build:production:zip` passes.
+- `npm run validate:package` passes.
 - Zip contains `assets/app.js`, `assets/app-chrome-49.js`, and `editor-assets/config.json`.

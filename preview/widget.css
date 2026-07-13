@@ -1,0 +1,55 @@
+html,
+body,
+#wallboard-preview-root,
+#wallboard-preview-root > .wallboard-application {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+html,
+body {
+	margin: 0;
+	overflow: hidden;
+}
+
+body[data-preview-background='checker'] {
+	background-color: #f7f7f5;
+	background-image:
+		linear-gradient(45deg, #deded9 25%, transparent 25%), linear-gradient(-45deg, #deded9 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #deded9 75%), linear-gradient(-45deg, transparent 75%, #deded9 75%);
+	background-position:
+		0 0,
+		0 12px,
+		12px -12px,
+		-12px 0;
+	background-size: 24px 24px;
+}
+
+body[data-preview-background='light'] {
+	background: #f4f5f7;
+}
+
+body[data-preview-background='dark'] {
+	background: #17191c;
+}
+
+#wallboard-preview-root {
+	position: relative;
+	overflow: hidden;
+}
+
+.preview-error {
+	width: 100%;
+	height: 100%;
+	padding: 24px;
+	margin: 0;
+	overflow: auto;
+	background: #fff1f0;
+	color: #9f1d20;
+	font:
+		16px/1.5 Consolas,
+		monospace;
+	white-space: pre-wrap;
+}

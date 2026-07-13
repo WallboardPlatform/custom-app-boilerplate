@@ -1,0 +1,84 @@
+{
+	"version": "1",
+	"name": "KPI Operations",
+	"interactive": false,
+	"size": {
+		"width": "1280px",
+		"height": "720px"
+	},
+	"properties": [
+		{
+			"label": "Operations data",
+			"type": "dataPicker",
+			"property": "operationsData",
+			"tooltip": "Select a datasource containing metrics, history, and optional updatedAt fields."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Title",
+					"type": "text",
+					"property": "titleText",
+					"default": "Operations pulse"
+				},
+				{
+					"label": "Subtitle",
+					"type": "text",
+					"property": "subtitleText",
+					"default": "Live fulfillment performance"
+				},
+				{
+					"label": "Empty state",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No operational data is available."
+				},
+				{
+					"label": "Target label",
+					"type": "text",
+					"property": "targetLabel",
+					"default": "Daily target"
+				},
+				{
+					"label": "Target value",
+					"type": "number",
+					"property": "targetValue",
+					"default": 2400,
+					"min": 1,
+					"max": 1000000
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Font family",
+					"type": "select",
+					"property": "fontFamily",
+					"default": "'Segoe UI', Arial, sans-serif",
+					"options": [
+						{ "label": "Segoe UI", "value": "'Segoe UI', Arial, sans-serif" },
+						{ "label": "Arial", "value": "Arial, sans-serif" },
+						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#101416" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1b2226" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f4f1e8" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aab5ba" },
+				{ "label": "Chart accent", "type": "color", "property": "accentColor", "default": "#63d7ff" },
+				{ "label": "Positive", "type": "color", "property": "positiveColor", "default": "#63e6bd" },
+				{ "label": "Warning", "type": "color", "property": "warningColor", "default": "#ffbf69" }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

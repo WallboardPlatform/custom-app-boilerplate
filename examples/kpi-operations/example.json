@@ -1,0 +1,11 @@
+{
+	"title": "KPI Operations",
+	"description": "Responsive operations dashboard with KPI cards and a tree-shaken Chart.js trend.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	]
+}
