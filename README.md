@@ -42,6 +42,10 @@ To pin a specific SDK version instead of the latest available one:
 
 ## Important Steps Before Running
 
+### Production widget guidance
+
+Before building an app, read [`docs/system/widget-best-practices.md`](docs/system/widget-best-practices.md). It covers transparent backgrounds, responsive behavior, legacy CSS constraints, settings design, empty states, multi-instance safety, and production validation.
+
 ### Configuration (config.json)
 
 `config.json` is optional for local zip builds. Create it only when you need these properties:

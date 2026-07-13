@@ -5,6 +5,7 @@
 Before starting any task, read and follow the rules in these files:
 - `workflow.md`
 - `architecture.md`
+- `widget-best-practices.md`
 - ALL FILES IN docs/system
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -195,3 +196,4 @@ npm run prettify
 - `solidjs-patterns.md` - SolidJS patterns and best practices
 - `stores.md` - SolidJS stores usage
 - `styling.md` - SCSS styling guidelines
+- `widget-best-practices.md` - Production widget behavior, responsiveness, transparency, empty states, and performance
