@@ -56,6 +56,18 @@ be considered.
 
 ## Key Commands
 
+### Initial setup
+```bash
+npm run setup
+```
+Runs SDK setup, then installs dependencies from public npm and anonymous Wallboard Nexus.
+
+### SDK setup only
+```bash
+npm run setup:sdk
+```
+Updates `wallboard-app-sdk` to an anonymous Nexus tarball URL. Run this before `npm install` if dependencies are not installed yet.
+
 ### Builds
 
 #### Development build
