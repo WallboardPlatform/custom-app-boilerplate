@@ -25,7 +25,7 @@ The required NodeJS version is `24.9.0` which can be downloaded from [**here**](
 ```bash
     npm run setup
 ```
-   The setup script uses public npm for normal packages and the anonymous Wallboard Nexus tarball for `wallboard-app-sdk`.
+   The setup script uses public npm for normal packages. For `wallboard-app-sdk`, it prefers the anonymous Wallboard Nexus tarball and automatically falls back to a GitHub Release asset when Nexus is not reachable from the current environment.
 3. Optional: copy the sample config file if you need a fixed zip output directory or MinIO upload:
 ```bash
     cp config.json.sample config.json
@@ -37,6 +37,22 @@ To pin a specific SDK version instead of the latest available one:
     npm run setup:sdk -- --version 2.0.85
     npm install --registry=https://registry.npmjs.org/
 ```
+
+The default GitHub fallback asset is published at:
+
+```text
+https://github.com/WallboardPlatform/custom-app-boilerplate/releases/download/wallboard-app-sdk-2.0.85/wallboard-app-sdk-2.0.85.tgz
+```
+
+Optional setup overrides:
+
+| Variable | Purpose |
+|----------|---------|
+| `WALLBOARD_SDK_REGISTRY` | Override the preferred SDK npm registry. |
+| `WALLBOARD_APP_SDK_VERSION` | Pin the SDK version without passing `--version`. |
+| `WALLBOARD_APP_SDK_FALLBACK_VERSION` | Override the GitHub fallback version used when requested version is `latest`. |
+| `WALLBOARD_APP_SDK_FALLBACK_URL` | Override the GitHub fallback tarball URL. |
+| `WALLBOARD_APP_SDK_FALLBACK_SHA256` | Override the fallback checksum verification value. |
 
 ---
 
