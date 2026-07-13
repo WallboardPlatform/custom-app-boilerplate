@@ -15,6 +15,12 @@
 		"build:production:zip": "cross-env DO_APPLICATION_ZIP=true npm run build:production",
 		"build:chrome-49:development": "webpack --config package-tools/chrome-49-webpack.config.cjs --mode=development",
 		"build:chrome-49:production": "webpack --config package-tools/chrome-49-webpack.config.cjs --mode=production",
+		"dev:preview": "vite --config ./preview/vite.config.mts --host 127.0.0.1 --port 5173",
+		"typecheck:preview": "tsc --noEmit --project ./preview/tsconfig.json",
+		"validate:visual": "npm run typecheck:preview && playwright test --config ./preview/playwright.config.ts",
+		"validate:package-assets": "node scripts/validate-package-assets.mjs",
+		"validate:package": "cross-env DISABLE_MINIO_UPLOAD=true SIMPLE_OUTPUT=true npm run build:production:zip && npm run validate:package-assets",
+		"example:materialize": "node scripts/materialize-example.mjs",
 		"lint": "eslint --config ./eslint.config.mjs src",
 		"lint:fix": "eslint --config ./eslint.config.mjs src --fix",
 		"prettify": "prettier --write \"src/**/*.{ts,tsx}\" --config ./.prettierrc"
@@ -28,6 +34,7 @@
 		"@babel/plugin-transform-spread": "^7.27.1",
 		"@babel/preset-env": "~7.27.2",
 		"@babel/runtime-corejs3": "~7.27.1",
+		"@playwright/test": "^1.61.1",
 		"@stylistic/eslint-plugin": "^5.5.0",
 		"@types/archiver": "^6.0.3",
 		"@types/minio": "^7.1.0",
@@ -72,6 +79,7 @@
 	"dependencies": {
 		"@eslint/js": "^9.26.0",
 		"archiver": "^7.0.1",
+		"chart.js": "^4.5.1",
 		"dompurify": "^3.2.4",
 		"rxjs": "^7.8.2",
 		"solid-js": "^1.9.9",

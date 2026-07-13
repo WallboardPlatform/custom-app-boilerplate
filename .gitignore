@@ -77,6 +77,8 @@ coverage/
 jest-cache/
 jest-output/
 reports/
+preview/output/
+preview/.playwright/
 
 # ==============================
 # Temporary / Cache Files

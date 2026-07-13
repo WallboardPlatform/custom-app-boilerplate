@@ -15,7 +15,7 @@ The `properties.json` file contains these root-level properties:
 | `interactive`      | `boolean` | Whether the app supports user interaction in the displayer                |
 | `size`             | `object`  | Default dimensions of the widget                                          |
 | `properties`       | `array`   | Array of settings definitions (see App Settings section)                  |
-| `resourceList`     | `array`   | List of resource files to include in the build                            |
+| `resourceList`     | `array`   | Runtime files the editor/displayer must cache                             |
 | `externalCommands` | `array`   | Commands that can be triggered externally (see External Commands section) |
 
 ### Size Configuration
@@ -53,6 +53,15 @@ Specifies additional files to include in the build output:
   ]
 }
 ```
+
+Every file emitted under `dist/assets/` must be listed. Static media needs both parts:
+
+1. Import it statically, for example `import mark from './mark.png'`, so Vite anchors the URL to the loaded app script.
+2. Add the emitted path, for example `assets/index.png`, to `resourceList` so the displayer caches it.
+
+Do not use `new URL('./mark.png', import.meta.url)` for packaged runtime media. Custom apps execute inside `/displayer`, where a deferred URL evaluation can incorrectly request `/displayer/mark.png`.
+
+Run `npm run validate:package` after every production build.
 
 ## App Settings
 

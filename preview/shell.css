@@ -1,0 +1,149 @@
+:root {
+	font-family: Inter, 'Segoe UI', Arial, sans-serif;
+	color: #1d232a;
+	background: #e9ebed;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+.preview-shell {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+}
+
+.preview-shell {
+	display: flex;
+	flex-direction: column;
+}
+
+.preview-toolbar {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	min-height: 78px;
+	padding: 12px 18px;
+	border-bottom: 1px solid #c8ccd0;
+	background: #ffffff;
+}
+
+.preview-title {
+	display: flex;
+	flex-direction: column;
+	min-width: 180px;
+}
+
+.preview-title strong {
+	font-size: 16px;
+	line-height: 22px;
+}
+
+.preview-title span {
+	color: #69717a;
+	font-size: 12px;
+	line-height: 18px;
+}
+
+.preview-controls {
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	margin-left: 24px;
+}
+
+.preview-controls label {
+	display: flex;
+	flex-direction: column;
+	margin-left: 10px;
+}
+
+.preview-controls label > span {
+	margin-bottom: 4px;
+	color: #69717a;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.preview-controls select,
+.preview-controls input,
+.preview-controls button {
+	height: 34px;
+	border: 1px solid #b9bec4;
+	border-radius: 4px;
+	background: #ffffff;
+	color: #1d232a;
+	font: inherit;
+	font-size: 13px;
+}
+
+.preview-controls select {
+	min-width: 170px;
+	padding: 0 30px 0 9px;
+}
+
+.preview-controls input {
+	width: 88px;
+	padding: 0 8px;
+}
+
+.preview-controls button {
+	padding: 0 14px;
+	margin-left: 8px;
+	background: #b4232c;
+	border-color: #b4232c;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.preview-controls button:hover {
+	background: #941d25;
+}
+
+.preview-stage {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background: #e9ebed;
+}
+
+.viewport-frame {
+	position: relative;
+	flex: 0 0 auto;
+	border: 1px solid #9ba1a7;
+	background: #ffffff;
+	box-shadow: 0 10px 28px rgba(33, 37, 41, 0.18);
+}
+
+#widget-frame {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	border: 0;
+	transform-origin: top left;
+}
+
+@media (max-width: 900px) {
+	.preview-toolbar {
+		align-items: flex-start;
+		min-height: 126px;
+	}
+
+	.preview-title {
+		min-width: 120px;
+	}
+
+	.preview-controls {
+		margin-left: 12px;
+	}
+}

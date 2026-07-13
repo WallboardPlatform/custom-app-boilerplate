@@ -51,6 +51,7 @@ be considered.
 - **RxJS 7.8** - Reactive programming library for handling async data streams
 - **TSyringe 4.10** - Lightweight dependency injection container for TypeScript
 - **Wallboard App SDK 2.0.x** - SDK for building custom Wallboard widgets
+- **Chart.js 4.5** - Default charting library for common KPI, line, bar, doughnut, and gauge-like visuals
 - **ESLint 9.26** - Linting tool for code quality and consistency
 - **Prettier 3.5** - Code formatter for consistent code style
 - **Webpack 5.99** - Module bundler for legacy Chrome builds
@@ -91,6 +92,13 @@ npm run build:production
 npm run build:production:zip
 ```
 
+#### Validated production package
+```bash
+npm run validate:package
+```
+
+Builds the zip and fails when a runtime asset is missing from `resourceList`, a cache-listed file is absent, or local media uses an unsafe runtime-relative URL.
+
 ### Linting
 
 #### Lint check for problems
@@ -107,6 +115,14 @@ npm run lint:fix
 ```bash
 npm run prettify
 ```
+
+### Local visual preview
+```bash
+npm run dev:preview
+npm run validate:visual
+```
+
+The interactive preview is available at `http://127.0.0.1:5173/preview/`. Keep `preview/fixture.ts` aligned with the app's settings and datasource values. Add named `previewScenarios` for materially different states; use `advanceTimeMs` to validate rotating or paginated end states.
 
 ## Architecture Overview
 

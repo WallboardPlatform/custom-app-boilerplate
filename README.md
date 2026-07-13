@@ -94,6 +94,10 @@ Before building an app, read [`docs/system/widget-best-practices.md`](docs/syste
 ### Update app name  
   Ensure that the app name in `src/editor-assets/properties.json` is unique compared to other applications in your Wallboard system.
 
+### Preserve app version
+
+`name` plus `version` identifies the custom app runtime. When fixing or rebuilding an app that will replace an existing upload, keep `properties.json.version` unchanged. Change it only for a deliberately incompatible major variant, and upload that variant as a separate app so existing content keeps resolving its original runtime.
+
 ### Environment Variables
 
 The build process supports the following environment variables:
@@ -107,6 +111,35 @@ You don't need to configure these environment variables if you are using one of 
 ---
 
 ## How to Run
+
+### Local visual preview
+
+Edit `preview/fixture.ts` with representative settings and datasource values, then start the preview:
+
+```bash
+npm run dev:preview
+```
+
+Open `http://127.0.0.1:5173/preview/`. The preview runs the real application entry point inside an isolated Wallboard-like surface. Use the presets or enter the exact target zone dimensions; the iframe keeps the native widget size and is only visually scaled to fit the browser.
+
+Run the automated viewport pass before packaging:
+
+```bash
+npx playwright install chromium
+npm run validate:visual
+```
+
+This captures full HD, wide/low, landscape, portrait, and square screenshots in `preview/output/`. It fails on runtime errors, horizontal or vertical overflow, or visible elements outside the assigned zone. Define `previewScenarios` in `preview/fixture.ts` for empty, long-label, odd-count, last-page, and other materially different states. Inspect every screenshot because automated checks cannot judge hierarchy, density, typography, or unused space.
+
+### Examples and charts
+
+Materialize a thin example overlay into an isolated directory:
+
+```bash
+npm run example:materialize -- kpi-operations ../kpi-operations
+```
+
+See [`examples/README.md`](examples/README.md) for the overlay contract and [`docs/system/charting.md`](docs/system/charting.md) for Chart.js and optional ECharts guidance.
 
 ### Development Builds
 
@@ -136,6 +169,11 @@ Production builds are optimized for performance with minimal logging:
 - **Production Build with Zip**:
 ```bash
     npm run build:production:zip
+```
+
+- **Production Build with Package Validation**:
+```bash
+    npm run validate:package
 ```
 
 ---
