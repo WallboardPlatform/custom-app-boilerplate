@@ -15,21 +15,19 @@
   flex-direction: column;
 
   font-family: 'Open Sans', serif;
+}
 
-  &:global {
-    > * {
-      @include box-sizing();
+:global(.wb-app) > * {
+  @include box-sizing();
+}
 
-      * {
-        @include box-sizing();
-      }
-    }
+:global(.wb-app) > * * {
+  @include box-sizing();
+}
 
-    > h1 {
-      color: black;
-      text-align: center;
-    }
-  }
+:global(.wb-app) > h1 {
+  color: black;
+  text-align: center;
 }
 
 /* </editor-fold desc="App"> ---------------------------------------- */

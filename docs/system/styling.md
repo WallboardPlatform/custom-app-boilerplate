@@ -79,36 +79,34 @@ Every `.module.scss` file must follow this structure:
 
 /* <editor-fold desc="Component Name"> ------------------------------ */
 
-  .wb-component-name {
-    @include reset-styles();  // ALWAYS FIRST LINE - resets inherited styles
-    width: 100%;
-    height: 100%;
-    display: block;
+.wb-component-name {
+  @include reset-styles();  // ALWAYS FIRST LINE - resets inherited styles
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
-    &:global {
-      > * {
-        @include box-sizing();
+:global(.wb-component-name) > * {
+  @include box-sizing();
+}
 
-        * {
-          @include box-sizing();
-        }
-      }
+:global(.wb-component-name) > * * {
+  @include box-sizing();
+}
 
-      // Child components targeted by their plain class name
-      > .wb-child-component {
-        // styles for child
-      }
+// Child components targeted by their plain class name
+:global(.wb-component-name) > .wb-child-component {
+  // styles for child
+}
 
-      // State classes
-      &.is-active {
-        // active state styles
-      }
+// State classes
+:global(.wb-component-name.is-active) {
+  // active state styles
+}
 
-      &.is-loading {
-        // loading state styles
-      }
-    }
-  }
+:global(.wb-component-name.is-loading) {
+  // loading state styles
+}
 
 /* </editor-fold desc="Component Name"> ----------------------------- */
 ```
@@ -117,7 +115,7 @@ Every `.module.scss` file must follow this structure:
 
 1. **`@include reset-styles()`** - Always first line inside the component class. Resets all inherited styles using `all: initial` and applies `box-sizing: border-box`.
 
-2. **`&:global { }`** - Required wrapper for targeting child elements and state classes. Without this, CSS Modules would hash these selectors.
+2. **`:global(.plain-class)`** - Use explicit global selectors for child elements and state classes. Without this, CSS Modules would hash plain class selectors.
 
 3. **`@include box-sizing()`** - Apply to all children to ensure consistent box model.
 
@@ -134,26 +132,24 @@ Use `:global` to target child components by their plain class name:
 ```scss
 .wb-parent {
   @include reset-styles();
+}
 
-  &:global {
-    > .wb-child {
-      // Direct child with plain class
-      width: 50%;
-    }
+:global(.wb-parent) > .wb-child {
+  // Direct child with plain class
+  width: 50%;
+}
 
-    .wb-nested-child {
-      // Any descendant with plain class
-      color: red;
-    }
+:global(.wb-parent) .wb-nested-child {
+  // Any descendant with plain class
+  color: red;
+}
 
-    > .wb-content-renderer {
-      order: 1;
-    }
+:global(.wb-parent) > .wb-content-renderer {
+  order: 1;
+}
 
-    > .wb-image-renderer {
-      order: 2;
-    }
-  }
+:global(.wb-parent) > .wb-image-renderer {
+  order: 2;
 }
 ```
 
@@ -178,30 +174,28 @@ Use SolidJS `classList` for conditional state classes:
 ```scss
 .wb-component {
   @include reset-styles();
+}
 
-  &:global {
-    &.is-active {
-      border: 2px solid green;
-    }
+:global(.wb-component.is-active) {
+  border: 2px solid green;
+}
 
-    &.is-loading {
-      opacity: 0.5;
-    }
+:global(.wb-component.is-loading) {
+  opacity: 0.5;
+}
 
-    &.image-below {
-      flex-direction: column;
+:global(.wb-component.image-below) {
+  flex-direction: column;
 
-      > .wb-content { order: 1; }
-      > .wb-image { order: 2; }
-    }
+  > .wb-content { order: 1; }
+  > .wb-image { order: 2; }
+}
 
-    &.image-above {
-      flex-direction: column;
+:global(.wb-component.image-above) {
+  flex-direction: column;
 
-      > .wb-content { order: 2; }
-      > .wb-image { order: 1; }
-    }
-  }
+  > .wb-content { order: 2; }
+  > .wb-image { order: 1; }
 }
 ```
 
@@ -242,16 +236,16 @@ Use CSS custom properties for values that come from settings or reactive state.
 ```scss
 .wb-layout {
   @include reset-styles();
+}
 
-  &:global {
-    > .cell {
-      width: var(--ca-dir-cell-width);
-      height: var(--ca-dir-cell-height);
-      border-color: var(--ca-dir-border-color);
-    }
+:global(.wb-layout) {
+  gap: var(--ca-dir-gap-vertical) var(--ca-dir-gap-horizontal);
+}
 
-    gap: var(--ca-dir-gap-vertical) var(--ca-dir-gap-horizontal);
-  }
+:global(.wb-layout) > .cell {
+  width: var(--ca-dir-cell-width);
+  height: var(--ca-dir-cell-height);
+  border-color: var(--ca-dir-border-color);
 }
 ```
 
@@ -306,16 +300,14 @@ Reference animations by name in your `.module.scss`:
 ```scss
 .wb-component {
   @include reset-styles();
+}
 
-  &:global {
-    &.entering {
-      animation: wb-mr-fade-in 0.3s ease-out forwards;
-    }
+:global(.wb-component.entering) {
+  animation: wb-mr-fade-in 0.3s ease-out forwards;
+}
 
-    &.exiting {
-      animation: wb-mr-fade-out 0.3s ease-in forwards;
-    }
-  }
+:global(.wb-component.exiting) {
+  animation: wb-mr-fade-out 0.3s ease-in forwards;
 }
 ```
 
@@ -418,17 +410,18 @@ Use inline styles ONLY for:
        @include reset-styles();
        width: 100%;
        height: 100%;
+     }
 
-       &:global {
-         > * {
-           @include box-sizing();
-           * {
-             @include box-sizing();
-           }
-         }
+     :global(.wb-new-component) > * {
+       @include box-sizing();
+     }
 
-         // Your styles here
-       }
+     :global(.wb-new-component) > * * {
+       @include box-sizing();
+     }
+
+     :global(.wb-new-component) > .wb-child {
+       // styles here
      }
 
    /* </editor-fold desc="New Component"> ---------------------------- */
