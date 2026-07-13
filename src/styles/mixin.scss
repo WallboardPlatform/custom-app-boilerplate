@@ -1,0 +1,51 @@
+/** utf-8:  ő */
+
+/* <editor-fold desc="Box Sizing"> ---------------------------------- */
+
+@mixin box-sizing() {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* </editor-fold desc="Box Sizing"> --------------------------------- */
+
+/* <editor-fold desc="Reset Styles"> -------------------------------- */
+
+@mixin reset-styles() {
+  all: initial;
+  @include box-sizing;
+}
+
+/* </editor-fold desc="Reset Styles"> ------------------------------- */
+
+/* <editor-fold desc="Form"> ---------------------------------------- */
+
+@mixin placeholder {
+  &::-webkit-input-placeholder {
+    @content
+  }
+  &:-moz-placeholder {
+    @content
+  }
+  &::-moz-placeholder {
+    @content
+  }
+  &:-ms-input-placeholder {
+    @content
+  }
+}
+
+/* </editor-fold desc="Form"> --------------------------------------- */
+
+/* <editor-fold desc="User select"> --------------------------------- */
+
+@mixin user-select($userSelect) {
+  -webkit-touch-callout: $userSelect;
+  -webkit-user-select: $userSelect;
+  -moz-user-select: $userSelect;
+  -ms-user-select: $userSelect;
+  user-select: $userSelect;
+}
+
+/* </editor-fold desc="User Select"> --------------------------------- */

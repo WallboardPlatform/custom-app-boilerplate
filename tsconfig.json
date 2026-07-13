@@ -1,0 +1,81 @@
+{
+  "compilerOptions": {
+    /* For JSX */
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "noEmit": true,
+
+    /* Basic Options */
+    "target": "ES6",
+    "module": "ESNext",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES6",
+      "ESNext"
+    ],
+    "outDir": "./dist",
+    "rootDir": "./",
+
+    /* Strict Type-Checking Options */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "isolatedModules": false,
+
+    /* Additional Checks */
+    "noImplicitReturns": true,
+
+    /* Module Resolution Options */
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@contexts/*": ["src/contexts/*"],
+      "@services/*": ["src/services/*"],
+      "@components/*": ["src/components/*"],
+      "@interfaces/*": ["src/interfaces/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@utils/*": ["src/utils/*"],
+    },
+    "types": [
+      "vite-plugin-solid-svg/types-component-solid",
+      "vite/client",
+      "reflect-metadata"
+    ],
+    "typeRoots": [
+      "node_modules/@types",
+      "vite-plugin-solid-svg/types-component-solid",
+      "types"
+    ],
+
+    /* Other Options */
+    "forceConsistentCasingInFileNames": true,
+    "preserveConstEnums": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "noImplicitOverride": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "test",
+    "eslint.config.mjs",
+    "vite.config.mts",
+    "env.d.ts"
+  ],
+  "exclude": [
+    "web-workers",
+    "node_modules",
+    "types",
+    "package-tools",
+    "project-builder-utilities"
+  ]
+}

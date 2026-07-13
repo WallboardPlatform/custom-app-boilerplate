@@ -1,0 +1,140 @@
+{
+    "General": {
+        "preventOverlap": true,
+        "enableContextMenu": true,
+        "size": "1:1",
+        "settings": {
+            "enabled": true,
+            "fields": {
+                "size": true,
+                "overlap": true,
+                "contextMenu": true,
+                "grid": true
+            }
+        }
+    },
+    "Palette":  [
+        {
+            "id": "#1",
+            "accentColor": "#d1202c",
+            "label": "Wallboard Display",
+            "size": {
+                "width": 20,
+                "height": 10
+            },
+            "resizeType": "all",
+            "properties": [
+                {
+                    "label": "Select test",
+                    "type": "select",
+                    "property": "test1",
+                    "tooltip": "Test for select dropdown",
+                    "default": "option-1",
+                    "options": [
+                        {
+                            "label": "Option 1",
+                            "value": "option-1"
+                        },
+                        {
+                            "label": "Option 2",
+                            "value": "option-2"
+                        },
+                        {
+                            "label": "Option 3",
+                            "value": "option-3"
+                        }
+                    ]
+                },
+                {
+                    "label": "String test",
+                    "type": "text",
+                    "property": "test2",
+                    "tooltip": "Test for text input",
+                    "default": "Layout Editor"
+                },
+                {
+                    "label": "Number test",
+                    "type": "number",
+                    "property": "test3",
+                    "tooltip": "Test for number input",
+                    "default": 0,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                },
+                {
+                    "label": "Checkbox test",
+                    "type": "checkbox",
+                    "property": "test4",
+                    "tooltip": "Test for checkbox input",
+                    "default": true
+                },
+                {
+                    "label": "Color picker",
+                    "type": "color",
+                    "property": "test5",
+                    "tooltip": "Test for color input",
+                    "default": "#ffaa55"
+                },
+                {
+                    "label": "Slider test",
+                    "type": "slider",
+                    "property": "test6",
+                    "tooltip": "Sample slider tooltip",
+                    "default": 20,
+                    "max": 100,
+                    "min": 1,
+                    "step": 1
+                },
+                {
+                    "label": "Sample Group",
+                    "type": "group",
+                    "tooltip": "Sample Group Tooltip",
+                    "properties": [
+                        {
+                            "label": "Font Styles",
+                            "type": "fontStyle",
+                            "property": "test7",
+                            "tooltip": "Sample Font Styles tooltip"
+                        },
+                        {
+                            "label": "Alignment",
+                            "type": "alignment",
+                            "property": "test8",
+                            "tooltip": "Sample Position tooltip",
+                            "vertical": true,
+                            "horizontal": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "#2",
+            "accentColor": "#ff9800",
+            "label": "Boilerplate",
+            "size": {
+                "width": 20,
+                "height": 10
+            },
+            "resizeType": "all"
+        },
+        {
+            "id": "#3",
+            "accentColor": "#00e8d5",
+            "label": "With Layout Editor!",
+            "size": {
+                "width": 20,
+                "height": 10
+            },
+            "resizeType": "all"
+        }
+    ],
+    "Layout": [
+        { "id": "#1", "size": { "width": 33.3, "height": 33.3 }, "position": { "x": 0, "y": 0 } },
+        { "id": "#1", "size": { "width": 33.3, "height": 33.3 }, "position": { "x": 66.6, "y": 0 } },
+        { "id": "#2", "size": { "width": 33.3, "height": 33.3 }, "position": { "x": 33.3, "y": 33.3 } },
+        { "id": "#3", "size": { "width": 33.3, "height": 33.3 }, "position": { "x": 66.6, "y": 66.6 } },
+        { "id": "#3", "size": { "width": 33.3, "height": 33.3 }, "position": { "x": 0, "y": 66.6 } }
+    ]
+}

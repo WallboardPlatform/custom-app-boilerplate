@@ -1,0 +1,421 @@
+{
+	"version": "1",
+	"name": "Boilerplate",
+	"interactive": true,
+	"size": {
+		"width": "512px",
+		"height": "512px"
+	},
+	"initWizard": {
+		"url": "/editor-assets/popup-wizard/index.html",
+		"knowledgeBaseURL": "https://docs.wallboard.info/",
+		"config": {
+			"pages": [
+				{
+					"id": "main",
+					"label": "Welcome to the Initialization Wizard!",
+					"settings": {
+						"layout": [
+							{
+								"id": "template",
+								"type": "multi",
+								"config": [
+									{
+										"label": "Ready to Use",
+										"values": {},
+										"image": "./images/boilerplate.png"
+									}
+								]
+							}
+						],
+						"required": ["template"]
+					},
+					"isLast": true
+				}
+			]
+		}
+	},
+	"dblClickWizard": {
+		"url": "/editor-assets/dblClickWizard/index.html",
+		"knowledgeBaseURL": "https://docs.wallboard.info/",
+		"config": {
+			"pages": [
+				{
+					"id": "main",
+					"label": "Welcome to the Double Click Wizard!",
+					"isLast": true,
+					"settings": {
+						"layout": [
+							{
+								"id": "template",
+								"type": "multi",
+								"config": [
+									{
+										"label": "Ready to Use",
+										"values": {},
+										"image": "./images/boilerplate.png"
+									}
+								]
+							}
+						],
+						"required": ["template"]
+					}
+				}
+			]
+		}
+	},
+	"properties": [
+		{
+			"label": "Layout Editor In Popup",
+			"type": "dividerLineWithText"
+		},
+		{
+			"label": "Layout Editor",
+			"property": "layoutEditor",
+			"type": "button",
+			"customSettingsUrl": "/editor-assets/layout-editor/index.html"
+		},
+		{
+			"label": "Select a file",
+			"type": "file",
+			"property": "filePicker",
+			"tooltip": "Tooltip for file"
+		},
+		{
+			"label": "Select a folder",
+			"type": "folder",
+			"fileType": "image_folder",
+			"property": "folderPicker",
+			"tooltip": "Tooltip for folder"
+		},
+		{
+			"label": "Set data source",
+			"type": "dataPicker",
+			"property": "myDataset",
+			"tooltip": "Tooltip for data source"
+		},
+		{
+			"label": "SVG Sanitization Example",
+			"type": "dividerLineWithText"
+		},
+		{
+			"label": "Select SVG file",
+			"type": "file",
+			"property": "svgFile",
+			"tooltip": "Select an SVG file to render with sanitization"
+		},
+		{
+			"label": "Sample checkbox",
+			"type": "checkbox",
+			"property": "btnSample",
+			"tooltip": "Tooltip for checkbox",
+			"default": false
+		},
+		{
+			"label": "Sample select",
+			"type": "select",
+			"property": "sampleType",
+			"tooltip": "Tooltip for select",
+			"default": "none",
+			"options": [
+				{
+					"label": "None",
+					"value": "none"
+				},
+				{
+					"label": "Some value",
+					"value": "valOne"
+				},
+				{
+					"label": "Some other value",
+					"value": "valTwo"
+				}
+			]
+		},
+		{
+			"label": "Color picker",
+			"type": "color",
+			"property": "colorPicker",
+			"tooltip": "Tooltip for color picker",
+			"default": "#ff0000"
+		},
+		{
+			"label": "Sample number input",
+			"type": "number",
+			"property": "sampleNumberInput",
+			"tooltip": "Tooltip for number input",
+			"default": 220,
+			"min": 1,
+			"max": 500
+		},
+		{
+			"label": "Sample text area",
+			"type": "textArea",
+			"property": "sampleTextAreaInput",
+			"tooltip": "Tooltip for text area"
+		},
+		{
+			"label": "Allow own keyboard",
+			"type": "checkbox",
+			"property": "wbKeyboardEnabled",
+			"tooltip": "Allow own keyboard",
+			"default": false
+		},
+		{
+			"label": "Group for virtual keyboard settings",
+			"type": "group",
+			"tooltip": "Group for virtual keyboard settings",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "wbKeyboardTheme",
+					"tooltip": "Theme of the keyboard.",
+					"default": "light",
+					"options": [
+						{
+							"label": "Light",
+							"value": "light"
+						},
+						{
+							"label": "Dark",
+							"value": "dark"
+						},
+						{
+							"label": "Flat",
+							"value": "flat"
+						},
+						{
+							"label": "Material",
+							"value": "material"
+						},
+						{
+							"label": "Old School",
+							"value": "oldschool"
+						}
+					]
+				},
+				{
+					"label": "Language",
+					"type": "select",
+					"property": "wbKeyboardLanguage",
+					"tooltip": "Language of the keyboard.",
+					"default": "en",
+					"options": [
+						{
+							"label": "English",
+							"value": "en"
+						},
+						{
+							"label": "Magyar",
+							"value": "hu"
+						},
+						{
+							"label": "Deutsch",
+							"value": "de"
+						},
+						{
+							"label": "Español",
+							"value": "es"
+						},
+						{
+							"label": "Français",
+							"value": "fr"
+						},
+						{
+							"label": "Русский",
+							"value": "ru"
+						},
+						{
+							"label": "Svenska",
+							"value": "sv"
+						}
+					]
+				},
+				{
+					"label": "Auto-Scroll",
+					"type": "checkbox",
+					"property": "wbKeyboardAutoScroll",
+					"tooltip": "",
+					"default": true
+				},
+				{
+					"label": "Caps Lock",
+					"type": "checkbox",
+					"property": "wbKeyboardCapsLockActive",
+					"tooltip": "Indicates if Caps Lock is active by default.",
+					"default": false
+				},
+				{
+					"label": "Allow default keyboard",
+					"type": "checkbox",
+					"property": "wbKeyboardAllowDefaultKeyboard",
+					"tooltip": "Whether to allow the default physical and virtual keyboard.",
+					"default": false
+				},
+				{
+					"label": "Animation",
+					"type": "checkbox",
+					"property": "wbKeyboardAnimation",
+					"tooltip": "Whether keyboard animation is enabled.",
+					"default": true
+				},
+				{
+					"label": "Animation Duration",
+					"type": "number",
+					"property": "wbKeyboardAnimationDuration",
+					"tooltip": "Duration of keyboard animation in milliseconds.",
+					"default": 360,
+					"min": 1,
+					"max": 5000,
+					"step": 1
+				},
+				{
+					"label": "Animation Style",
+					"type": "select",
+					"property": "wbKeyboardAnimationStyle",
+					"tooltip": "Style of the keyboard animation.",
+					"default": "slide",
+					"options": [
+						{
+							"label": "Slide",
+							"value": "slide"
+						},
+						{
+							"label": "Fade",
+							"value": "fade"
+						}
+					]
+				}
+			],
+			"visibilityConditions": {
+				"conditions": [
+					{
+						"id": "#1",
+						"type": "EQUALS",
+						"value": true,
+						"dependsOn": "wbKeyboardEnabled"
+					}
+				],
+				"rule": "#1"
+			}
+		},
+		{
+			"label": "Sample group with settings",
+			"type": "group",
+			"tooltip": "Something...",
+			"properties": [
+				{
+					"type": "text",
+					"label": "Text field",
+					"property": "txtField",
+					"tooltip": "Text field tooltip",
+					"default": null
+				},
+				{
+					"type": "slider",
+					"label": "Sample slider",
+					"property": "sampleSlider",
+					"tooltip": "Sample slider tooltip",
+					"default": 20,
+					"max": 100,
+					"min": 1,
+					"step": 1
+				},
+				{
+					"type": "dividerLine"
+				},
+				{
+					"type": "fontFamily",
+					"propertyContainer": "sampleFont"
+				},
+				{
+					"type": "fontSize",
+					"propertyContainer": "sampleFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "sampleFont"
+				},
+				{
+					"type": "fontColor",
+					"propertyContainer": "sampleFont"
+				}
+			]
+		},
+		{
+			"label": "Conditionally hidden group",
+			"type": "group",
+			"tooltip": "Set Sample checkbox to false or Sample select other than none to hide this group",
+			"properties": [
+				{
+					"type": "color",
+					"label": "Color picker",
+					"property": "colorPicker2",
+					"tooltip": "Set Sample checkbox to false or Sample select other than none to hide this group",
+					"default": "#ff00ff"
+				}
+			],
+			"visibilityConditions": {
+				"conditions": [
+					{
+						"id": "#1",
+						"type": "EQUALS",
+						"value": false,
+						"dependsOn": "btnSample"
+					},
+					{
+						"id": "#2",
+						"type": "EQUALS",
+						"value": "none",
+						"dependsOn": "sampleType"
+					}
+				],
+				"rule": "#1&&#2"
+			}
+        }
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": [
+		{
+			"command": "first_test_command",
+			"label": "Test Command #1"
+		},
+		{
+			"command": "second_test_command",
+			"label": "Test Command #2",
+			"parameters": [
+				{
+					"parameter": "test_parameter",
+					"label": "Test Parameter Boolean",
+					"type": "boolean"
+				}
+			]
+		},
+		{
+			"command": "third_test_command",
+			"label": "Test Command #3",
+			"parameters": [
+				{
+					"parameter": "test_parameter",
+					"label": "Test Parameter Text",
+					"type": "text"
+				}
+			]
+		},
+		{
+			"command": "fourth_test_command",
+			"label": "Test Command #4",
+			"parameters": [
+				{
+					"parameter": "test_parameter",
+					"label": "Test Parameter Number",
+					"type": "number"
+				}
+			]
+		}
+	]
+}

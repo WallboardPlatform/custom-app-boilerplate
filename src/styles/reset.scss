@@ -1,0 +1,670 @@
+/** utf-8:  ő */
+
+html.ca {
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  /* <editor-fold desc="Basic"> ---------------------------------------- */
+
+  body, div, span, applet, object, iframe,
+  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+  a, abbr, acronym, address, big, cite, code,
+  del, dfn, em, img, ins, kbd, q, s, samp,
+  small, strike, strong, sub, sup, tt, var,
+  b, u, i, center,
+  dl, dt, dd, ol, ul, li,
+  fieldset, form, label, legend,
+  table, caption, tbody, tfoot, thead, tr, th, td,
+  article, aside, canvas, details, embed,
+  figure, figcaption, footer, header, hgroup,
+  main, nav, output, ruby, section, summary,
+  time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  article, aside, details, figcaption, figure,
+  footer, header, hgroup, nav, section, main {
+    display: block;
+  }
+
+  *, *::before, *::after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+
+  /* </editor-fold desc="Basic"> -------------------------------------- */
+
+  /* <editor-fold desc="Grouping Content"> ---------------------------- */
+
+  /**
+  * 1. Add the correct box sizing in Firefox.
+  * 2. Show the overflow in Edge and IE.
+  */
+
+  hr {
+    box-sizing: content-box !important; /* 1 */
+    height: 0; /* 1 */
+    margin: 1.5rem;
+    border: none;
+    border-top: 1px solid #000;
+    overflow: visible; /* 2 */
+  }
+
+  /**
+   * 1. Use the default monospace user interface font
+   *    in all browsers (opinionated).
+   * 2. Correct the odd `em` font sizing in all browsers. (Nice rule)
+   */
+
+  pre {
+    // Remove browser default top margin
+    margin-top: 0;
+    // Reset browser default of `1em` to use `rem`s
+    margin-bottom: 1rem;
+    // Don't allow content to break outside
+    -moz-tab-size: 3;
+    tab-size: 3;
+    overflow: auto;
+    font-size: 14px; /* 2 */
+    font-family: Menlo,
+      /* Windows 6+ */
+    Consolas,
+      /* Android 4+ */
+    Roboto Mono,
+      /* Ubuntu 10.10+ */
+    Ubuntu Monospace,
+      /* KDE Plasma 5+ */
+    Noto Mono,
+      /* KDE Plasma 4+ */
+    Oxygen Mono,
+      /* Linux/OpenOffice fallback */
+    Liberation Mono,
+      /* fallback */
+    monospace;
+  }
+
+  /* </editor-fold desc="Grouping Content"> --------------------------- */
+
+
+  /* <editor-fold desc="Table"> --------------------------------------- */
+
+  table {
+    display: table;
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+  }
+
+  /* </editor-fold desc="Table"> -------------------------------------- */
+
+  /* <editor-fold desc="List"> ---------------------------------------- */
+
+  ul, ol, dl {
+    margin: 0;
+    padding-left: 2em;
+    display: block;
+
+    > ul, > ol {
+      margin-bottom: 0;
+    }
+  }
+
+  li, dt, dd {
+    display: list-item;
+    font-weight: normal;
+  }
+
+  li {
+    list-style: disc;
+  }
+
+  dd {
+    margin-bottom: 0.5em;
+    margin-left: 0; // Undo browser default
+  }
+
+  nav {
+    ul, ol {
+      list-style: none;
+    }
+  }
+
+  /* </editor-fold desc="List"> --------------------------------------- */
+
+
+  /* <editor-fold desc="Embedded content"> ---------------------------- */
+
+  /**
+   * Inherit styling in all browsers (opinionated).
+   */
+
+  audio,
+  canvas,
+  iframe,
+  img,
+  svg,
+  video {
+    vertical-align: middle;
+  }
+
+  /**
+   * Add the correct display in IE 9-.
+   */
+
+  audio,
+  video {
+    display: inline-block;
+  }
+
+  /**
+   * Add the correct display in iOS 4-7.
+   */
+
+  audio:not([controls]) {
+    display: none;
+    height: 0;
+  }
+
+  figure {
+    // Apply a consistent margin strategy (matches our type styles).
+    margin: 0 0 1rem;
+  }
+
+  /**
+   * Remove the border on images inside links in IE 10-.
+   */
+
+  img {
+    border-style: none;
+    max-width: 100%;
+    max-height: 100%;
+    display: inline-block;
+  }
+
+  svg {
+    // Workaround for the SVG overflow bug in IE10/11 is still required.
+    overflow: hidden;
+    vertical-align: middle;
+  }
+
+  /**
+   * Change the fill color to match the text color in all browsers (opinionated).
+   */
+
+  svg:not([fill]) {
+    fill: currentColor;
+  }
+
+  /**
+   * Hide the overflow in IE.
+   */
+
+  svg:not(:root) {
+    overflow: hidden;
+  }
+
+  blockquote, q {
+    quotes: none;
+    margin: 0 0 1rem;
+
+    &:after, &:before {
+      content: "";
+      content: none;
+    }
+  }
+
+  /* </editor-fold desc="Embedded content"> --------------------------- */
+
+  /* <editor-fold desc="Interactive"> --------------------------------- */
+
+  /*
+   * Add the correct styles in Edge, IE, and Safari.
+   */
+
+  dialog {
+    width: -moz-fit-content;
+    width: -webkit-fit-content;
+    width: fit-content;
+    height: -moz-fit-content;
+    height: -webkit-fit-content;
+    height: fit-content;
+    padding: 1em;
+    margin: auto;
+    left: 0;
+    right: 0;
+    position: absolute;
+    display: block;
+    border: solid;
+    color: black;
+    background-color: white;
+  }
+
+  dialog:not([open]) {
+    display: none;
+  }
+
+  /*
+   * Add the correct display in all browsers.
+   */
+
+  summary {
+    display: list-item;
+  }
+
+  /* </editor-fold desc="Interactive"> -------------------------------- */
+
+  /* <editor-fold desc="Forms"> --------------------------------------- */
+
+  label {
+    // Allow labels to use `margin` for spacing.
+    display: inline-block;
+    margin-bottom: 0.25em;
+  }
+
+  /**
+   * 1. Remove the margin in Firefox and Safari.
+   * 2. Change the font styles in all browsers.
+   * 3. Remove ugly outline from all browsers. (optional)
+   */
+
+  button, input, optgroup, select, textarea {
+    margin: 0; /* 1 */
+    font-family: inherit; /* 2 */
+    font-size: inherit; /* 2 */
+    line-height: inherit; /* 2 */
+    outline: none; /* 3 */
+  }
+
+  /**
+   * Show the overflow in IE.
+   * 1. Show the overflow in Edge.
+   */
+
+  button,
+  input { /* 1 */
+    overflow: visible;
+  }
+
+  /**
+   * Remove the inheritance of text transform in Edge, Firefox, and IE.
+   * 1. Remove the inheritance of text transform in Firefox.
+   */
+
+  button,
+  select { /* 1 */
+    text-transform: none;
+  }
+
+  /**
+   *  Remove the default `border-radius` that macOS Chrome adds.
+   *  Correct the inability to style clickable types in iOS and Safari.
+   */
+
+  button {
+    border-radius: 0;
+
+    &[type="button"],
+    &[type="reset"],
+    &[type="submit"] {
+      -webkit-appearance: button;
+    }
+
+    &:not(:disabled) {
+      cursor: pointer;
+    }
+  }
+
+  /**
+   * Remove the inner border and padding in Firefox.
+   */
+
+  button::-moz-focus-inner,
+  [type="button"]::-moz-focus-inner,
+  [type="reset"]::-moz-focus-inner,
+  [type="submit"]::-moz-focus-inner {
+    border-style: none;
+    padding: 0;
+  }
+
+  /**
+   * Restore the focus styles unset by the previous rule.
+   */
+
+  button:-moz-focusring,
+  [type="button"]:-moz-focusring,
+  [type="reset"]:-moz-focusring,
+  [type="submit"]:-moz-focusring {
+    outline: 1px dotted ButtonText;
+  }
+
+  /**
+   * Correct the padding in Firefox.
+   */
+
+  fieldset {
+    // Browsers set a default `min-width: min-content;` on fieldsets,
+    // unlike e.g. `<div>`s, which have `min-width: 0;` by default.
+    // So we reset that to ensure fieldsets behave more like a standard block element.
+    min-width: 0;
+    // Reset the default outline behavior of fieldsets so they don't affect page layout.
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
+  /**
+   * 1. Correct the text wrapping in Edge and IE.
+   * 2. Correct the color inheritance from `fieldset` elements in IE.
+   */
+
+  legend {
+    display: block;
+    width: 100%;
+    max-width: 100%; // 1
+    padding: 0;
+    margin-bottom: .5rem;
+    font-size: 1.5rem;
+    line-height: inherit;
+    color: inherit; // 2
+    white-space: normal; // 1
+  }
+
+  /**
+  * 1. Add the correct display in Edge and IE.
+  * 2. Add the correct vertical alignment in Chrome, Firefox, and Opera.
+  */
+
+  progress {
+    display: inline-block; /* 1 */
+    vertical-align: baseline; /* 2 */
+  }
+
+  /**
+   * Remove the default vertical scrollbar in IE 10+.
+   */
+
+  textarea {
+    overflow: auto;
+    resize: vertical; // Textareas should really only resize vertically so they don't break their (horizontal) containers.
+  }
+
+  // Remove the inheritance of word-wrap in Safari.
+
+  select {
+    word-wrap: normal;
+  }
+
+  input {
+    &[type="date"],
+    &[type="time"],
+    &[type="datetime-local"],
+    &[type="month"] {
+      // Remove the default appearance of temporal inputs to avoid a Mobile Safari
+      // bug where setting a custom line-height prevents text from being vertically
+      // centered within the input.
+      -webkit-appearance: listbox;
+    }
+  }
+
+  /**
+   *  Remove the padding in IE 10.
+   */
+
+  [type="checkbox"],
+  [type="radio"] {
+    padding: 0; /* 2 */
+  }
+
+  /**
+   * Correct the cursor style of increment and decrement buttons in Chrome.
+   */
+
+  [type="number"]::-webkit-inner-spin-button,
+  [type="number"]::-webkit-outer-spin-button {
+    height: auto;
+  }
+
+  /**
+   * 1. Correct the odd appearance in Chrome and Safari.
+   * 2. Correct the outline style in Safari.
+   */
+
+  [type="search"] {
+    -webkit-appearance: textfield; /* 1 */
+    outline-offset: -2px; /* 2 */
+  }
+
+  /**
+  * Correct the text style of placeholders in Chrome, Edge, and Safari.
+  */
+
+  ::-webkit-input-placeholder {
+    color: inherit;
+    opacity: 0.54;
+  }
+
+  /**
+   * Remove the inner padding in Chrome and Safari on macOS.
+   */
+
+  [type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+
+  /**
+   * 1. Correct the inability to style clickable types in iOS and Safari.
+   * 2. Change font properties to `inherit` in Safari.
+   */
+
+  ::-webkit-file-upload-button {
+    -webkit-appearance: button; /* 1 */
+    font: inherit; /* 2 */
+  }
+
+  //
+  // Correct element displays
+  //
+
+  output {
+    display: inline-block;
+  }
+
+  /* </editor-fold desc="Forms"> -------------------------------------- */
+
+  /* <editor-fold desc="Attributes, misc"> ---------------------------- */
+
+  /**
+     * Add the correct display in IE 10-.
+     */
+
+  [hidden] {
+    display: none !important;
+  }
+
+  [disabled] {
+    cursor: not-allowed !important;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /**
+   * Add the correct display in IE 10+.
+   */
+
+  template {
+    display: none;
+  }
+
+  /* </editor-fold desc="Attributes, misc"> --------------------------- */
+
+  /* <editor-fold desc="User interaction"> ---------------------------- */
+
+  /*
+   * 1. Remove the tapping delay in IE 10.
+   * 2. Remove the tapping delay on clickable elements
+      in all browsers (opinionated).
+   */
+
+  a,
+  area,
+  button,
+  input,
+  label,
+  select,
+  summary,
+  textarea,
+  [tabindex] {
+    -ms-touch-action: manipulation; /* 1 */
+    touch-action: manipulation; /* 2 */
+  }
+
+  /* </editor-fold desc="User interaction"> --------------------------- */
+
+  /* <editor-fold desc="Text-level semantics"> ------------------------ */
+
+  // Abbreviations
+  //
+  // 1. Duplicate behavior to the data-* attribute for our tooltip plugin
+  // 2. Add the correct text decoration in Chrome, Edge, IE, Opera, and Safari.
+  // 3. Add explicit cursor to indicate changed behavior.
+  // 4. Remove the bottom border in Firefox 39-.
+  // 5. Prevent the text-decoration to be skipped.
+
+  abbr[title],
+  abbr[data-original-title] { // 1
+    text-decoration: underline; // 2
+    text-decoration: underline dotted; // 2
+    cursor: help; // 3
+    border-bottom: 0; // 4
+    text-decoration-skip-ink: none; // 5
+  }
+
+  // Reset margins on paragraphs
+  //
+  // Similarly, the top margin on `<p>`s get reset. However, we also reset the
+  // bottom margin to use `rem` units instead of `em`.
+  p {
+    margin-top: 0;
+    margin-bottom: 1em;
+  }
+
+  address {
+    margin-bottom: 1em;
+    font-style: normal;
+    line-height: 1.15em;
+  }
+
+  /**
+   * Add the correct font weight in Chrome, Edge, and Safari.
+   */
+
+  b, strong {
+    font-weight: bold !important;
+  }
+
+  /**
+   * Add the correct font style in all browsers.
+   */
+  em, i {
+    font-style: italic;
+  }
+
+  /**
+  * 1. Use the default monospace user interface font
+  *    in all browsers (opinionated).
+  * 2. Correct the odd `em` font sizing in all browsers.
+  */
+
+  code,
+  kbd,
+  samp {
+    font-family: Menlo,
+      /* Windows 6+ */
+    Consolas,
+      /* Android 4+ */
+    Roboto Mono,
+      /* Ubuntu 10.10+ */
+    Ubuntu Monospace,
+      /* KDE Plasma 5+ */
+    Noto Mono,
+      /* KDE Plasma 4+ */
+    Oxygen Mono,
+      /* Linux/OpenOffice fallback */
+    Liberation Mono,
+      /* fallback */
+    monospace; /* 1 */
+
+    font-size: 14px; /* 2 */
+  }
+
+  /**
+   * Add the correct font size in all browsers.
+   */
+
+  small {
+    font-size: 0.8rem;
+  }
+
+  /**
+   * Prevent `sub` and `sup` elements from affecting the line height in
+   * all browsers.
+   */
+
+  sub,
+  sup {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+
+  sub {
+    bottom: -0.25em;
+  }
+
+  sup {
+    top: -0.5em;
+  }
+
+  a {
+    color: blue;
+    text-decoration: none;
+    background-color: transparent; // Remove the gray background on active links in IE 10.
+    cursor: pointer;
+    transition: color 0.2s linear 0s, text-decoration 0.2s linear 0s;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: inherit;
+    }
+  }
+
+  /*
+   * Remove the text shadow on text selections in Firefox 61- (opinionated).
+   * 1. Restore the coloring undone by defining the text shadow
+   *    in all browsers (opinionated).
+   */
+
+  ::-moz-selection {
+    background-color: blue; /* 1 */
+    color: #fff; /* 1 */
+    text-shadow: none;
+  }
+
+  ::selection {
+    background-color: blue; /* 1 */
+    color: #fff; /* 1 */
+    text-shadow: none;
+  }
+
+  /* </editor-fold desc="Text-level semantics"> ----------------------- */
+}

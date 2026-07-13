@@ -1,0 +1,35 @@
+/** utf-8:  ő */
+
+/* <editor-fold desc="App"> ----------------------------------------- */
+
+.wb-app {
+  @include reset-styles();
+
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  flex-direction: column;
+
+  font-family: 'Open Sans', serif;
+
+  &:global {
+    > * {
+      @include box-sizing();
+
+      * {
+        @include box-sizing();
+      }
+    }
+
+    > h1 {
+      color: black;
+      text-align: center;
+    }
+  }
+}
+
+/* </editor-fold desc="App"> ---------------------------------------- */
