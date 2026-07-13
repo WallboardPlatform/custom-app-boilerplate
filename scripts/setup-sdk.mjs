@@ -1,11 +1,17 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
 
 const SDK_PACKAGE = 'wallboard-app-sdk';
 const DEFAULT_REGISTRY = 'https://nexus.wallboard.info/nexus/repository/npm-wallboard/';
 const PUBLIC_NPM_REGISTRY = 'https://registry.npmjs.org/';
+const GITHUB_RELEASE_BASE_URL = 'https://github.com/WallboardPlatform/custom-app-boilerplate/releases/download/';
+const DEFAULT_FALLBACK_VERSION = '2.0.85';
+const FALLBACK_SHA256 = {
+	'2.0.85': '6d28540f1f889723f2519a38a2c059da48976cfaf9044b9d9c9077c67bd45e04',
+};
 
 function getArgValue(name) {
 	const index = process.argv.indexOf(name);
@@ -44,6 +50,37 @@ async function fetchJson(url) {
 	return response.json();
 }
 
+async function fetchTarball(url) {
+	const response = await fetch(url, {
+		headers: {
+			Accept: 'application/octet-stream, application/gzip, */*',
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`Failed to fetch ${url}: HTTP ${response.status} ${response.statusText}`);
+	}
+
+	return Buffer.from(await response.arrayBuffer());
+}
+
+function getSha256(buffer) {
+	return createHash('sha256').update(buffer).digest('hex');
+}
+
+async function verifyTarball(url, expectedSha256) {
+	const buffer = await fetchTarball(url);
+
+	if (expectedSha256) {
+		const actualSha256 = getSha256(buffer);
+		if (actualSha256 !== expectedSha256) {
+			throw new Error(`Checksum mismatch for ${url}. Expected ${expectedSha256}, got ${actualSha256}`);
+		}
+	}
+
+	return buffer.length;
+}
+
 function resolveVersion(metadata, requestedVersion) {
 	if (requestedVersion === 'latest') {
 		const latest = metadata['dist-tags']?.latest;
@@ -60,6 +97,25 @@ function resolveVersion(metadata, requestedVersion) {
 	}
 
 	return requestedVersion;
+}
+
+function getGitHubFallbackVersion(requestedVersion) {
+	if (requestedVersion === 'latest') {
+		return process.env.WALLBOARD_APP_SDK_FALLBACK_VERSION ?? DEFAULT_FALLBACK_VERSION;
+	}
+
+	return requestedVersion;
+}
+
+function getGitHubFallbackUrl(version) {
+	return (
+		process.env.WALLBOARD_APP_SDK_FALLBACK_URL ??
+		`${GITHUB_RELEASE_BASE_URL}wallboard-app-sdk-${version}/wallboard-app-sdk-${version}.tgz`
+	);
+}
+
+function getFallbackSha256(version) {
+	return process.env.WALLBOARD_APP_SDK_FALLBACK_SHA256 ?? FALLBACK_SHA256[version];
 }
 
 function setSdkDependency(packageJson, tarballUrl) {
@@ -102,10 +158,9 @@ async function removeStaleLockfile(tarballUrl) {
 	return true;
 }
 
-async function main() {
+async function resolveFromRegistry(requestedVersion) {
 	const registry = ensureTrailingSlash(process.env.WALLBOARD_SDK_REGISTRY ?? DEFAULT_REGISTRY);
 	const metadataUrl = new URL(SDK_PACKAGE, registry).toString();
-	const requestedVersion = getRequestedVersion();
 	const metadata = await fetchJson(metadataUrl);
 	const version = resolveVersion(metadata, requestedVersion);
 	const versionMetadata = metadata.versions[version];
@@ -115,11 +170,55 @@ async function main() {
 		throw new Error(`Registry metadata for ${SDK_PACKAGE}@${version} does not include dist.tarball`);
 	}
 
-	const section = await updatePackageJson(tarballUrl);
-	const removedLockfile = await removeStaleLockfile(tarballUrl);
+	const size = await verifyTarball(tarballUrl);
+	return {
+		version,
+		tarballUrl,
+		source: 'Wallboard Nexus',
+		size,
+	};
+}
 
-	console.log(`Configured ${SDK_PACKAGE}@${version} in ${section}.`);
-	console.log(`SDK tarball: ${tarballUrl}`);
+async function resolveFromGitHubFallback(requestedVersion, registryError) {
+	const version = getGitHubFallbackVersion(requestedVersion);
+	const tarballUrl = getGitHubFallbackUrl(version);
+	const expectedSha256 = getFallbackSha256(version);
+	const size = await verifyTarball(tarballUrl, expectedSha256);
+
+	return {
+		version,
+		tarballUrl,
+		source: 'GitHub Release fallback',
+		size,
+		expectedSha256,
+		registryError,
+	};
+}
+
+async function resolveSdkTarball(requestedVersion) {
+	try {
+		return await resolveFromRegistry(requestedVersion);
+	} catch (error) {
+		return resolveFromGitHubFallback(requestedVersion, error);
+	}
+}
+
+async function main() {
+	const requestedVersion = getRequestedVersion();
+	const resolved = await resolveSdkTarball(requestedVersion);
+	const section = await updatePackageJson(resolved.tarballUrl);
+	const removedLockfile = await removeStaleLockfile(resolved.tarballUrl);
+
+	console.log(`Configured ${SDK_PACKAGE}@${resolved.version} in ${section}.`);
+	console.log(`SDK source: ${resolved.source}.`);
+	console.log(`SDK tarball: ${resolved.tarballUrl}`);
+	console.log(`SDK tarball size: ${resolved.size} bytes.`);
+	if (resolved.expectedSha256) {
+		console.log(`SDK SHA-256 verified: ${resolved.expectedSha256}`);
+	}
+	if (resolved.registryError) {
+		console.log(`Registry unavailable, used fallback: ${resolved.registryError.message}`);
+	}
 	if (removedLockfile) {
 		console.log(`Removed stale package-lock.json. Run npm install --registry=${PUBLIC_NPM_REGISTRY} to regenerate it.`);
 	} else {
