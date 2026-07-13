@@ -26,10 +26,11 @@ The required NodeJS version is `24.9.0` which can be downloaded from [**here**](
     npm run setup
 ```
    The setup script uses public npm for normal packages and the anonymous Wallboard Nexus tarball for `wallboard-app-sdk`.
-3. Copy the sample config file:
+3. Optional: copy the sample config file if you need a fixed zip output directory or MinIO upload:
 ```bash
     cp config.json.sample config.json
 ```
+   For the normal local zip workflow, `config.json` is not required. The build reads app name and version from `src/editor-assets/properties.json` and writes the zip to Desktop when `zipOutput` is not configured.
 
 To pin a specific SDK version instead of the latest available one:
 ```bash
@@ -43,7 +44,7 @@ To pin a specific SDK version instead of the latest available one:
 
 ### Configuration (config.json)
 
-Before running the application, you need to configure the following properties in `config.json`:
+`config.json` is optional for local zip builds. Create it only when you need these properties:
 
 - **`id` property:**  
   Set your unique widget/application ID. This is used for MinIO uploads and identification.
