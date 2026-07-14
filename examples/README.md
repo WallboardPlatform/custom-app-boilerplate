@@ -16,6 +16,7 @@ examples/<id>/
 |---------|------------|-----------------|
 | `airport-departures` | Editable `TABLE` flight board, adaptive pagination, status hierarchy | Default, wide/low, portrait, square, empty, invalid rows, long labels, odd/maximum counts, row array, last page, live update |
 | `kpi-operations` | Hierarchical `CUSTOM` contract, KPI cards, responsive Chart.js trend, target progress | Default, wide/low, portrait, square, empty, long labels, live update |
+| `market-rotation-ticker` | Five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, standard layouts, empty, invalid prices, missing icons, short data, rotation completion, moving title |
 | `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page |
 
 Reference screenshots live beside each example under `screenshots/`.
@@ -34,3 +35,5 @@ npm run validate:package
 The explicit target must be new or empty. Run `npm run validate:examples` in the boilerplate before materialization and again in the materialized project after changing its contract or sample data. Files listed in `example.json.artifacts` are copied to the materialized project root but are not bundled into the app zip.
 
 Run `npm run example:accept -- <id>` for the clean materialization, complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, every screenshot is inspected, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
+
+An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.

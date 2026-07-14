@@ -1,0 +1,41 @@
+{
+	"contractVersion": 1,
+	"bindings": [
+		{
+			"property": "nasdaqData",
+			"dataPickerType": "any",
+			"source": { "contract": "EXISTING", "sampleData": "sample-datasource.json", "samplePath": "nasdaq100" },
+			"delivery": { "suggestedDatasourceName": "NASDAQ100", "quickEditEligible": false }
+		},
+		{
+			"property": "tsxData",
+			"dataPickerType": "any",
+			"source": { "contract": "EXISTING", "sampleData": "sample-datasource.json", "samplePath": "tsx60" },
+			"delivery": { "suggestedDatasourceName": "TSX60", "quickEditEligible": false }
+		},
+		{
+			"property": "dowData",
+			"dataPickerType": "any",
+			"source": { "contract": "EXISTING", "sampleData": "sample-datasource.json", "samplePath": "dj30" },
+			"delivery": { "suggestedDatasourceName": "DJ30", "quickEditEligible": false }
+		},
+		{
+			"property": "fxData",
+			"dataPickerType": "any",
+			"source": { "contract": "EXISTING", "sampleData": "sample-datasource.json", "samplePath": "fx" },
+			"delivery": { "suggestedDatasourceName": "CAD and USD FX", "quickEditEligible": false }
+		},
+		{
+			"property": "stockIcons",
+			"dataPickerType": "any",
+			"source": { "contract": "EXISTING", "sampleData": "sample-datasource.json", "samplePath": "stockIcons" },
+			"delivery": { "suggestedDatasourceName": "Stock Icons", "quickEditEligible": false }
+		}
+	],
+	"rationale": "The widget combines four independently refreshed market feeds and one File System icon index. Keeping them separate preserves their existing Wallboard bindings and refresh lifecycles.",
+	"behavior": {
+		"boundEmpty": "skip an empty market and continue with the remaining configured markets",
+		"invalidRows": "discard rows without a symbol, live price, or numeric change",
+		"assetFallback": "render a ticker-symbol tile when no matching icon exists"
+	}
+}

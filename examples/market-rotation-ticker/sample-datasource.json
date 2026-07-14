@@ -1,0 +1,69 @@
+{
+	"nasdaq100": {
+		"status": true,
+		"code": 200,
+		"response": [
+			{ "id": "n1", "s": "AAPL", "c": "231.42", "ch": "+2.16" },
+			{ "id": "n2", "s": "MSFT", "c": "508.11", "ch": "-1.73" },
+			{ "id": "n3", "s": "NVDA", "c": "172.88", "ch": "+4.02" },
+			{ "id": "n4", "s": "AMZN", "c": "225.29", "ch": "+0.91" },
+			{ "id": "n5", "s": "META", "c": "718.36", "ch": "-3.44" },
+			{ "id": "n6", "s": "COST", "c": "983.05", "ch": "+5.22" },
+			{ "id": "n7", "s": "INVALID", "c": "#N/A", "ch": "+1.00" }
+		]
+	},
+	"tsx60": {
+		"feed": {
+			"entry": [
+				{ "gsx:ID": "t1", "gsx:Ticker": "SHOP", "gsx:Live Price": "161.28", "gsx:Today's Change ($)": "+1.82", "gsx:ChangeIcon": "up" },
+				{ "gsx:ID": "t2", "gsx:Ticker": "RY", "gsx:Live Price": "202.19", "gsx:Today's Change ($)": "-0.74", "gsx:ChangeIcon": "down" },
+				{ "gsx:ID": "t3", "gsx:Ticker": "TD", "gsx:Live Price": "109.86", "gsx:Today's Change ($)": "+0.38", "gsx:ChangeIcon": "up" },
+				{ "gsx:ID": "t4", "gsx:Ticker": "CNQ", "gsx:Live Price": "48.77", "gsx:Today's Change ($)": "-0.26", "gsx:ChangeIcon": "down" },
+				{ "gsx:ID": "t5", "gsx:Ticker": "BMO", "gsx:Live Price": "177.43", "gsx:Today's Change ($)": "+1.14", "gsx:ChangeIcon": "up" },
+				{ "gsx:ID": "t6", "gsx:Ticker": "CP", "gsx:Live Price": "112.03", "gsx:Today's Change ($)": "+0.09", "gsx:ChangeIcon": "up" }
+			]
+		}
+	},
+	"dj30": {
+		"status": true,
+		"code": 200,
+		"response": [
+			{ "id": "d1", "s": "BA", "c": "229.63", "ch": "-2.41" },
+			{ "id": "d2", "s": "JPM", "c": "289.18", "ch": "+3.08" },
+			{ "id": "d3", "s": "V", "c": "354.26", "ch": "+0.66" },
+			{ "id": "d4", "s": "HD", "c": "386.71", "ch": "-1.27" },
+			{ "id": "d5", "s": "KO", "c": "70.44", "ch": "+0.14" },
+			{ "id": "d6", "s": "DIS", "c": "121.08", "ch": "-0.89" }
+		]
+	},
+	"fx": {
+		"status": true,
+		"code": 200,
+		"response": [
+			{ "id": "f1", "s": "USD/CAD", "c": "1.3728", "ch": "-0.0042" },
+			{ "id": "f2", "s": "CAD/USD", "c": "0.7284", "ch": "+0.0021" }
+		]
+	},
+	"stockIcons": {
+		"totalSize": 4,
+		"size": 4,
+		"content": [
+			{
+				"name": "AAPL.png",
+				"url": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='14' fill='%2321272f'/%3E%3Ctext x='36' y='43' text-anchor='middle' font-family='Arial' font-size='16' font-weight='700' fill='%23ffffff'%3EAAPL%3C/text%3E%3C/svg%3E"
+			},
+			{
+				"name": "MSFT.png",
+				"url": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='14' fill='%2321272f'/%3E%3Ctext x='36' y='43' text-anchor='middle' font-family='Arial' font-size='15' font-weight='700' fill='%23ffffff'%3EMSFT%3C/text%3E%3C/svg%3E"
+			},
+			{
+				"name": "SHOP.png",
+				"url": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='14' fill='%2321272f'/%3E%3Ctext x='36' y='43' text-anchor='middle' font-family='Arial' font-size='15' font-weight='700' fill='%23ffffff'%3ESHOP%3C/text%3E%3C/svg%3E"
+			},
+			{
+				"name": "BA.png",
+				"url": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='14' fill='%2321272f'/%3E%3Ctext x='36' y='43' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23ffffff'%3EBA%3C/text%3E%3C/svg%3E"
+			}
+		]
+	}
+}

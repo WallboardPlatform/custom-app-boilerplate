@@ -131,6 +131,8 @@ npm run validate:examples
 
 Before implementing a data-bound app, follow `docs/system/datasource-contracts.md`. Prefer an explicit user schema or a verified built-in Wallboard contract; otherwise generate a `TABLE` contract and its editable sample data.
 
+Apps that intentionally consume multiple existing sources declare every picker in `datasource-contract.json.bindings`. Use one sanitized sample bundle and select each fixture with `source.samplePath`; do not combine independent live sources solely to fit a single-binding contract.
+
 ### Validated delivery
 ```bash
 npm run deliver -- <output-directory>

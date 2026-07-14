@@ -1,0 +1,98 @@
+{
+	"version": "1",
+	"name": "Market Rotation Ticker",
+	"interactive": false,
+	"size": {
+		"width": "6000px",
+		"height": "136px"
+	},
+	"properties": [
+		{
+			"label": "Market datasources",
+			"type": "group",
+			"properties": [
+				{ "label": "NASDAQ100 datasource", "type": "dataPicker", "property": "nasdaqData", "dataPickerType": "any", "tooltip": "Select the NASDAQ100 stock datasource." },
+				{ "label": "TSX60 datasource", "type": "dataPicker", "property": "tsxData", "dataPickerType": "any", "tooltip": "Select the TSX60 stock datasource." },
+				{ "label": "DJ30 datasource", "type": "dataPicker", "property": "dowData", "dataPickerType": "any", "tooltip": "Select the DJ30 stock datasource." },
+				{ "label": "CAD/USD datasource", "type": "dataPicker", "property": "fxData", "dataPickerType": "any", "tooltip": "Select the CAD and USD FX datasource." },
+				{ "label": "Stock icon datasource", "type": "dataPicker", "property": "stockIcons", "dataPickerType": "any", "tooltip": "Select the File System datasource containing ticker-named PNG files." }
+			]
+		},
+		{
+			"label": "Market labels",
+			"type": "group",
+			"properties": [
+				{ "label": "NASDAQ label", "type": "text", "property": "nasdaqLabel", "default": "NASDAQ 100" },
+				{ "label": "TSX label", "type": "text", "property": "tsxLabel", "default": "TSX60: TORONTO STOCK EXCHANGE" },
+				{ "label": "Dow label", "type": "text", "property": "dowLabel", "default": "DJ30: DOW JONES" },
+				{ "label": "FX label", "type": "text", "property": "fxLabel", "default": "CAD AND USD FX" }
+			]
+		},
+		{
+			"label": "Motion and spacing",
+			"type": "group",
+			"properties": [
+				{ "label": "Exchange title duration", "type": "number", "property": "exchangeTitleSeconds", "default": 8, "min": 1, "max": 60, "step": 1, "tooltip": "Seconds to show the repeated exchange name before its stocks." },
+				{ "label": "Ticker speed", "type": "number", "property": "speedPixelsPerSecond", "default": 140, "min": 10, "max": 4000, "step": 10, "tooltip": "Reference pixels per second at the default 136 pixel height." },
+				{ "label": "Top and bottom margin", "type": "slider", "property": "verticalMargin", "default": 4, "min": 0, "max": 40, "step": 1 },
+				{ "label": "Stock spacing", "type": "slider", "property": "itemMargin", "default": 22, "min": 0, "max": 100, "step": 1 },
+				{ "label": "Logo size", "type": "slider", "property": "logoScale", "default": 72, "min": 20, "max": 100, "step": 1, "tooltip": "Logo height as a percentage of the available ticker height." }
+			]
+		},
+		{
+			"label": "Ticker name font",
+			"type": "group",
+			"properties": [
+				{ "type": "fontFamily", "propertyContainer": "tickerFont" },
+				{ "type": "fontSize", "propertyContainer": "tickerFont" },
+				{ "type": "fontStyle", "propertyContainer": "tickerFont" },
+				{ "type": "fontColor", "propertyContainer": "tickerFont" }
+			]
+		},
+		{
+			"label": "Live price font",
+			"type": "group",
+			"properties": [
+				{ "type": "fontFamily", "propertyContainer": "priceFont" },
+				{ "type": "fontSize", "propertyContainer": "priceFont" },
+				{ "type": "fontStyle", "propertyContainer": "priceFont" },
+				{ "type": "fontColor", "propertyContainer": "priceFont" }
+			]
+		},
+		{
+			"label": "Price change font",
+			"type": "group",
+			"properties": [
+				{ "type": "fontFamily", "propertyContainer": "changeFont" },
+				{ "type": "fontSize", "propertyContainer": "changeFont" },
+				{ "type": "fontStyle", "propertyContainer": "changeFont" },
+				{ "type": "fontColor", "propertyContainer": "changeFont" }
+			]
+		},
+		{
+			"label": "Icons and colors",
+			"type": "group",
+			"properties": [
+				{ "label": "Up arrow image", "type": "file", "property": "upIconFile", "tooltip": "Optional replacement for the built-in up triangle." },
+				{ "label": "Down arrow image", "type": "file", "property": "downIconFile", "tooltip": "Optional replacement for the built-in down triangle." },
+				{ "label": "Up color", "type": "color", "property": "upColor", "default": "#4fe34f" },
+				{ "label": "Down color", "type": "color", "property": "downColor", "default": "#ff2435" },
+				{ "label": "Fallback logo background", "type": "color", "property": "fallbackIconBackground", "default": "#20252b" }
+			]
+		},
+		{
+			"label": "Surface",
+			"type": "group",
+			"properties": [
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000" },
+				{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No valid market data is available." }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}
