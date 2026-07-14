@@ -56,6 +56,66 @@ test('metric cards stay balanced and the throughput chart paints data', async ({
 	expect(metrics.paintedPixels).toBeGreaterThan(100);
 });
 
+test('preview teardown removes the Chart.js instance', async ({ page }): Promise<void> => {
+	const response = await page.goto('/preview/widget.html?background=dark');
+
+	expect(response?.ok()).toBe(true);
+	await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true');
+	await page.waitForSelector('.wb-app__chart canvas');
+
+	const lifecycle = await page.evaluate(async () => {
+		interface ChartInstance {
+			id: string;
+		}
+		interface ChartModule {
+			Chart: {
+				getChart: (canvas: HTMLCanvasElement) => ChartInstance | undefined;
+				instances: Record<string, ChartInstance>;
+			};
+		}
+		interface PreviewWindow extends Window {
+			__wallboardPreview?: { destroy: () => Promise<void> };
+		}
+
+		const canvas: HTMLCanvasElement | null = document.querySelector<HTMLCanvasElement>('.wb-app__chart canvas');
+
+		if (!canvas) {
+			throw new Error('Throughput chart canvas was not found.');
+		}
+
+		const chartModuleUrl: string | undefined = performance
+			.getEntriesByType('resource')
+			.map((entry: PerformanceEntry): string => entry.name)
+			.find((url: string): boolean => /\/node_modules\/\.vite\/deps\/chart.*js/i.test(url));
+
+		if (!chartModuleUrl) {
+			throw new Error('The loaded Chart.js module URL was not found.');
+		}
+
+		const chartModule = (await import(chartModuleUrl)) as ChartModule;
+		const previewWindow = window as PreviewWindow;
+		const initialInstance: ChartInstance | undefined = chartModule.Chart.getChart(canvas);
+
+		if (!initialInstance || !previewWindow.__wallboardPreview) {
+			throw new Error('Chart instance or preview lifecycle bridge was unavailable.');
+		}
+
+		const initialCount: number = Object.keys(chartModule.Chart.instances).length;
+
+		await previewWindow.__wallboardPreview.destroy();
+
+		return {
+			initialCount,
+			remainingCount: Object.keys(chartModule.Chart.instances).length,
+			chartRemoved: chartModule.Chart.getChart(canvas) === undefined
+		};
+	});
+
+	expect(lifecycle.initialCount).toBe(1);
+	expect(lifecycle.chartRemoved).toBe(true);
+	expect(lifecycle.remainingCount).toBe(0);
+});
+
 test('empty datasource state replaces the chart and remains centered', async ({ page }): Promise<void> => {
 	const response = await page.goto('/preview/widget.html?background=light&scenario=empty');
 
