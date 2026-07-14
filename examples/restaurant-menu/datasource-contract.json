@@ -1,0 +1,38 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "menuData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "MenuItems",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Cordo Menu Items",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "section", "type": "string", "required": true },
+		{ "name": "sectionOrder", "type": "number", "required": true },
+		{ "name": "itemOrder", "type": "number", "required": true },
+		{ "name": "name", "type": "string", "required": true },
+		{ "name": "description", "type": "text", "required": false },
+		{ "name": "price", "type": "string", "required": true },
+		{ "name": "badge", "type": "string", "required": false },
+		{ "name": "available", "type": "boolean", "required": true },
+		{ "name": "featured", "type": "boolean", "required": true }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing MenuItems",
+		"selected MenuItems table object",
+		"processed MenuItems row array"
+	],
+	"behavior": {
+		"unbound": "render bundled sample rows",
+		"boundEmpty": "render configured empty state",
+		"invalidRows": "skip rows missing section or name",
+		"pagination": "three items per section block and four blocks per page"
+	}
+}

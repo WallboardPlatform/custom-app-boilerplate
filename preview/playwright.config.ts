@@ -1,5 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
+const previewPort: number = Number.parseInt(process.env.WALLBOARD_PREVIEW_TEST_PORT ?? '4173', 10);
+
+if (!Number.isInteger(previewPort) || previewPort < 1 || previewPort > 65535) {
+	throw new Error('WALLBOARD_PREVIEW_TEST_PORT must be a valid TCP port.');
+}
+
+const previewBaseUrl: string = `http://127.0.0.1:${previewPort}`;
+
 export default defineConfig({
 	testDir: '.',
 	testMatch: 'visual.spec.ts',
@@ -9,13 +17,13 @@ export default defineConfig({
 	reporter: 'line',
 	outputDir: './.playwright',
 	use: {
-		baseURL: 'http://127.0.0.1:4173',
+		baseURL: previewBaseUrl,
 		headless: true
 	},
 	webServer: {
-		command: 'npm run dev:preview -- --port 4173',
-		url: 'http://127.0.0.1:4173/preview/widget.html',
-		reuseExistingServer: !process.env.CI,
+		command: `npm run dev:preview -- --port ${previewPort}`,
+		url: `${previewBaseUrl}/preview/widget.html`,
+		reuseExistingServer: false,
 		timeout: 120000
 	}
 });

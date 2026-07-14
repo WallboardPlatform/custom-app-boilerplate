@@ -1,5 +1,8 @@
+import operationsData from '../sample-datasource.json';
+
 export interface PreviewFixture {
 	id: string;
+	readySelector?: string;
 	configValues: Record<string, unknown>;
 	dataPickerValues: Record<string, unknown>;
 	datasourceIds: Record<string, string | number | undefined>;
@@ -15,6 +18,15 @@ export interface PreviewScenario {
 		background?: 'checker' | 'light' | 'dark';
 	};
 	advanceTimeMs?: number;
+	minimumContentCoverage?: {
+		width: number;
+		height: number;
+	};
+	liveDatasourceUpdate?: {
+		property: string;
+		value: unknown;
+		expectedText: string;
+	};
 }
 
 const baseConfig: Record<string, unknown> = {
@@ -33,30 +45,13 @@ const baseConfig: Record<string, unknown> = {
 	warningColor: '#ffbf69'
 };
 
-const operationsData = {
-	metrics: [
-		{ label: 'Orders completed', value: 1842, unit: 'orders', delta: '+8.4% vs yesterday', tone: 'positive' },
-		{ label: 'On-time dispatch', value: 96.8, unit: '%', delta: '1.2 pts above target', tone: 'positive' },
-		{ label: 'Open exceptions', value: 17, unit: 'cases', delta: '5 need attention', tone: 'warning' }
-	],
-	history: [
-		{ label: '06:00', value: 120 },
-		{ label: '08:00', value: 310 },
-		{ label: '10:00', value: 570 },
-		{ label: '12:00', value: 910 },
-		{ label: '14:00', value: 1280 },
-		{ label: '16:00', value: 1575 },
-		{ label: '18:00', value: 1842 }
-	],
-	updatedAt: 'Updated 18:05'
-};
-
 const createFixture = (
 	id: string,
 	data: unknown,
 	configValues: Record<string, unknown> = baseConfig
 ): PreviewFixture => ({
 	id,
+	readySelector: '.wb-app__header h1',
 	configValues,
 	dataPickerValues: { operationsData: data },
 	datasourceIds: { operationsData: 'preview-operations-data' },
@@ -69,7 +64,8 @@ export const previewScenarios: PreviewScenario[] = [
 	{
 		id: 'empty',
 		fixture: createFixture('kpi-operations-empty', null),
-		viewport: { width: 960, height: 540, background: 'light' }
+		viewport: { width: 960, height: 540, background: 'light' },
+		minimumContentCoverage: { width: 75, height: 55 }
 	},
 	{
 		id: 'long-labels',
@@ -85,7 +81,25 @@ export const previewScenarios: PreviewScenario[] = [
 			},
 			{ ...baseConfig, titleText: 'European distribution operations performance' }
 		),
-		viewport: { width: 1536, height: 432, background: 'dark' }
+		viewport: { width: 1536, height: 432, background: 'dark' },
+		minimumContentCoverage: { width: 80, height: 75 }
+	},
+	{
+		id: 'live-update',
+		fixture: createFixture('kpi-operations-live-update', operationsData),
+		viewport: { width: 1280, height: 720, background: 'dark' },
+		minimumContentCoverage: { width: 80, height: 75 },
+		liveDatasourceUpdate: {
+			property: 'operationsData',
+			value: {
+				...operationsData,
+				metrics: [
+					{ ...operationsData.metrics[0], label: 'Orders updated from the live datasource' },
+					...operationsData.metrics.slice(1)
+				]
+			},
+			expectedText: 'Orders updated from the live datasource'
+		}
 	}
 ];
 

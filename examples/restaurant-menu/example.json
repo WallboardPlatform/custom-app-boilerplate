@@ -1,6 +1,6 @@
 {
-	"title": "KPI Operations",
-	"description": "Responsive operations dashboard with KPI cards and a tree-shaken Chart.js trend.",
+	"title": "Restaurant Menu",
+	"description": "Photo-to-menu pattern with an editable TABLE contract, bounded normalization, grouping, and pagination.",
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",

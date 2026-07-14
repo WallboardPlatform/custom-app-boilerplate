@@ -15,6 +15,9 @@ interface WidgetRegistration {
 
 interface PreviewWindow extends Window {
 	CustomWidget?: Record<string, WidgetRegistration>;
+	__wallboardPreview?: {
+		pushDatasource: (property: string, value: unknown) => void;
+	};
 }
 
 const applyBackground = (): void => {
@@ -68,6 +71,15 @@ const mountWidget = async (): Promise<void> => {
 	}
 
 	const eventSubject: Subject<unknown> = new Subject<unknown>();
+	previewWindow.__wallboardPreview = {
+		pushDatasource: (property: string, value: unknown): void => {
+			eventSubject.next({
+				messageType: 'boundDataChanged',
+				changedProperty: property,
+				newValue: value
+			});
+		}
+	};
 	const config: Record<string, unknown> = {
 		...fixture.additionalConfig,
 		id: fixture.id,

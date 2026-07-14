@@ -172,9 +172,10 @@ Avoid:
 ## Visual Validation
 
 1. Put representative settings and datasource values in `preview/fixture.ts`.
-2. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
-3. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
-4. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
+2. Set fixture `readySelector` to a config-driven text element when SDK configuration settles after the preview root mounts. Do not add app-specific readiness logic to `visual.spec.ts`.
+3. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
+4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
+5. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
 5. Inspect every image in `preview/output/`. Automated checks catch runtime and boundary failures, not weak hierarchy or excessive empty space.
 6. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
@@ -198,3 +199,16 @@ Before returning a zip:
 - `npm run lint` passes.
 - `npm run validate:package` passes.
 - Zip contains `assets/app.js`, `assets/app-chrome-49.js`, and `editor-assets/config.json`.
+
+## Installation Handoff
+
+First apply the identity rules in `app-identity-and-delivery.md`. Creating a duplicate record with the same internal app name and version causes editor registration and public resource-resolution collisions.
+
+Creating an app record and uploading its zip are not enough to expose it in the content editor. New custom app records are disabled by default.
+
+1. Upload the zip to the intended custom app record.
+2. Enable the app after the upload succeeds.
+3. Assign the editor's current customer, or keep the customer assignment list empty to make the app available to all customers.
+4. Reopen or reload the content editor so it downloads the updated custom app list.
+
+If content already contains the app while it is disabled or unavailable to the selected customer, the editor cannot resolve its `customApp_*` widget service and may fail while requesting its editor template or context-menu inputs.

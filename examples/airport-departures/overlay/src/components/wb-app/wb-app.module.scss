@@ -1,0 +1,747 @@
+.wb-app {
+  @include reset-styles();
+
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
+  color: var(--board-text, #f5f6f3);
+  background: var(--board-background, #111315);
+  font-family: 'Arial Narrow', 'Segoe UI', Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+:global(.wb-app) > *,
+:global(.wb-app) > * * {
+  @include box-sizing();
+}
+
+:global(.departures-header) {
+  display: flex;
+  height: 150px;
+  min-height: 0;
+  padding: 24px 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  border-bottom: 1px solid #3d4144;
+  background: #1a1d20;
+}
+
+:global(.departures-brand) {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+}
+
+:global(.departures-brand) > strong {
+  display: flex;
+  width: 90px;
+  height: 90px;
+  margin-right: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: #17191b;
+  background: var(--board-accent, #f4c542);
+  font-size: 31px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+:global(.departures-brand) > div {
+  min-width: 0;
+}
+
+:global(.departures-brand) span {
+  display: block;
+  margin-bottom: 4px;
+  overflow: hidden;
+  color: #b8bec2;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:global(.departures-brand) h1 {
+  margin: 0;
+  color: var(--board-text, #f5f6f3);
+  font-size: 55px;
+  font-weight: 700;
+  line-height: 1;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+}
+
+:global(.departures-terminal) {
+  display: flex;
+  min-width: 0;
+  margin: 0 48px;
+  flex: 0 1 260px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+:global(.departures-terminal) span,
+:global(.departures-header) time span,
+:global(.departures-header) time small {
+  color: #92999e;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+:global(.departures-terminal) strong {
+  display: block;
+  max-width: 100%;
+  margin-top: 8px;
+  overflow: hidden;
+  color: var(--board-accent, #f4c542);
+  font-size: 31px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:global(.departures-header) time {
+  display: flex;
+  min-width: 140px;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+:global(.departures-header) time strong {
+  margin: 2px 0;
+  color: var(--board-text, #f5f6f3);
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+:global(.departures-ribbon) {
+  display: flex;
+  height: 48px;
+  min-height: 0;
+  padding: 0 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  color: #151719;
+  background: var(--board-accent, #f4c542);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+:global(.departures-ribbon) > strong {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+:global(.departures-ribbon) > div {
+  display: flex;
+  margin-left: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+:global(.departures-ribbon) b {
+  margin-left: 22px;
+  padding-left: 22px;
+  border-left: 1px solid #7f6a1f;
+}
+
+:global(.departures-columns) {
+  display: flex;
+  height: 52px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  color: #8f969a;
+  border-bottom: 1px solid #4a4e51;
+  background: #202326;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:global(.departure-time),
+:global(.departure-destination),
+:global(.departure-flight),
+:global(.departure-terminal),
+:global(.departure-gate),
+:global(.departure-status) {
+  min-width: 0;
+}
+
+:global(.departure-time) {
+  width: 11%;
+  flex: 0 0 auto;
+}
+
+:global(.departure-destination) {
+  width: 31%;
+  flex: 0 0 auto;
+}
+
+:global(.departure-flight) {
+  width: 16%;
+  flex: 0 0 auto;
+}
+
+:global(.departure-terminal) {
+  width: 10%;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+:global(.departure-gate) {
+  width: 10%;
+  flex: 0 0 auto;
+}
+
+:global(.departure-status) {
+  width: 22%;
+  flex: 0 0 auto;
+}
+
+:global(.departures-list) {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+:global(.departure-row) {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 40px;
+  flex: 1 1 0;
+  align-items: center;
+  color: var(--board-text, #f5f6f3);
+  border-bottom: 1px solid #34383b;
+  background: var(--board-background, #111315);
+}
+
+:global(.departure-row:nth-child(even)) {
+  background: #171a1c;
+}
+
+:global(.departure-row) > div {
+  display: flex;
+  min-height: 0;
+  padding-right: 20px;
+  align-items: center;
+}
+
+:global(.departure-row) > div:last-child {
+  padding-right: 0;
+}
+
+:global(.departure-row) :global(.departure-time) strong {
+  color: var(--board-accent, #f4c542);
+  font-size: 31px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:global(.departure-row) :global(.departure-destination) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+:global(.departure-row) :global(.departure-destination) strong {
+  max-width: 100%;
+  color: var(--board-text, #f5f6f3);
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.08;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+}
+
+:global(.departure-row) :global(.departure-destination) span {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #9ca3a7;
+  font-size: 12px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global(.departure-row) :global(.departure-flight) strong,
+:global(.departure-row) :global(.departure-terminal) strong,
+:global(.departure-row) :global(.departure-gate) strong {
+  font-size: 23px;
+  font-weight: 650;
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+
+:global(.departure-row) :global(.departure-gate) strong {
+  display: flex;
+  width: 50px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  color: #151719;
+  background: #e4e7e5;
+  border-radius: 2px;
+}
+
+:global(.departure-row) :global(.departure-status) span {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  padding: 7px 10px;
+  align-items: center;
+  justify-content: center;
+  color: #f7f8f6;
+  background: #3e4448;
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+:global(.departure-row) :global(.departure-status) :global(.departure-status--boarding) {
+  color: #17191b;
+  background: var(--board-accent, #f4c542);
+}
+
+:global(.departure-row) :global(.departure-status) :global(.departure-status--gate) {
+  background: #137f82;
+}
+
+:global(.departure-row) :global(.departure-status) :global(.departure-status--delayed) {
+  background: #b55a26;
+}
+
+:global(.departure-row) :global(.departure-status) :global(.departure-status--cancelled) {
+  background: #a6373f;
+}
+
+:global(.departure-row) :global(.departure-status) :global(.departure-status--departed) {
+  color: #d2d6d4;
+  background: #394146;
+}
+
+:global(.departures-empty) {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #a8afb3;
+  text-align: center;
+}
+
+:global(.departures-empty) strong {
+  margin-bottom: 12px;
+  color: var(--board-accent, #f4c542);
+  font-size: 66px;
+  font-weight: 400;
+  line-height: 0.7;
+}
+
+:global(.departures-empty) span {
+  max-width: 75%;
+  font-size: 25px;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+:global(.departures-footer) {
+  display: flex;
+  height: 40px;
+  min-height: 0;
+  padding: 0 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  color: #949b9f;
+  background: #202326;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+:global(.departures-footer) span {
+  display: flex;
+  margin-right: 24px;
+  align-items: center;
+}
+
+:global(.departures-footer) strong {
+  margin-left: auto;
+  color: #b4b9bc;
+  text-align: right;
+}
+
+:global(.legend-dot) {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #687075;
+}
+
+:global(.legend-dot--boarding) {
+  background: var(--board-accent, #f4c542);
+}
+
+:global(.legend-dot--gate) {
+  background: #178f92;
+}
+
+:global(.legend-dot--delayed) {
+  background: #c4652e;
+}
+
+@media (max-height: 620px) {
+  :global(.departures-header) {
+    height: 92px;
+    padding: 12px 28px;
+  }
+
+  :global(.departures-brand) > strong {
+    width: 62px;
+    height: 62px;
+    margin-right: 16px;
+    font-size: 23px;
+  }
+
+  :global(.departures-brand) span {
+    margin-bottom: 2px;
+    font-size: 10px;
+  }
+
+  :global(.departures-brand) h1 {
+    font-size: 34px;
+  }
+
+  :global(.departures-terminal) {
+    margin: 0 30px;
+  }
+
+  :global(.departures-terminal) strong {
+    margin-top: 4px;
+    font-size: 22px;
+  }
+
+  :global(.departures-header) time strong {
+    font-size: 29px;
+  }
+
+  :global(.departures-ribbon) {
+    height: 34px;
+    padding: 0 28px;
+    font-size: 10px;
+  }
+
+  :global(.departures-columns) {
+    height: 34px;
+    padding: 0 28px;
+    font-size: 10px;
+  }
+
+  :global(.departure-row) {
+    padding: 4px 28px;
+  }
+
+  :global(.departure-row) > div {
+    padding-right: 13px;
+  }
+
+  :global(.departure-row) :global(.departure-time) strong {
+    font-size: 21px;
+  }
+
+  :global(.departure-row) :global(.departure-destination) strong {
+    font-size: 18px;
+  }
+
+  :global(.departure-row) :global(.departure-destination) span {
+    margin-top: 2px;
+    font-size: 9px;
+  }
+
+  :global(.departure-row) :global(.departure-flight) strong,
+  :global(.departure-row) :global(.departure-terminal) strong,
+  :global(.departure-row) :global(.departure-gate) strong {
+    font-size: 16px;
+  }
+
+  :global(.departure-row) :global(.departure-gate) strong {
+    width: 40px;
+    height: 30px;
+  }
+
+  :global(.departure-row) :global(.departure-status) span {
+    min-height: 30px;
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+
+  :global(.departures-footer) {
+    height: 30px;
+    padding: 0 28px;
+    font-size: 8px;
+  }
+}
+
+@media (max-height: 480px) {
+  :global(.departures-header) {
+    height: 72px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  :global(.departures-brand) > strong {
+    width: 52px;
+    height: 52px;
+    font-size: 19px;
+  }
+
+  :global(.departures-brand) h1 {
+    font-size: 29px;
+  }
+
+  :global(.departures-header) time span,
+  :global(.departures-header) time small {
+    display: none;
+  }
+
+  :global(.departures-ribbon) {
+    height: 30px;
+  }
+
+  :global(.departures-columns) {
+    height: 28px;
+  }
+
+  :global(.departures-footer) {
+    height: 26px;
+  }
+}
+
+@media (max-width: 900px) {
+  :global(.departures-header) {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  :global(.departures-terminal) {
+    display: none;
+  }
+
+  :global(.departures-ribbon),
+  :global(.departures-columns),
+  :global(.departure-row),
+  :global(.departures-footer) {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  :global(.departure-time) {
+    width: 13%;
+  }
+
+  :global(.departure-destination) {
+    width: 34%;
+  }
+
+  :global(.departure-flight) {
+    width: 18%;
+  }
+
+  :global(.departure-terminal) {
+    width: 0;
+  }
+
+  :global(.departure-row) :global(.departure-terminal),
+  :global(.departures-columns) :global(.departure-terminal) {
+    display: none;
+  }
+
+  :global(.departure-gate) {
+    width: 12%;
+  }
+
+  :global(.departure-status) {
+    width: 23%;
+  }
+}
+
+@media (max-width: 700px) {
+  :global(.departures-header) {
+    height: 94px;
+    padding: 13px 18px;
+  }
+
+  :global(.departures-brand) > strong {
+    width: 64px;
+    height: 64px;
+    margin-right: 14px;
+    font-size: 22px;
+  }
+
+  :global(.departures-brand) span {
+    display: none;
+  }
+
+  :global(.departures-brand) h1 {
+    font-size: 30px;
+  }
+
+  :global(.departures-header) time {
+    min-width: 78px;
+  }
+
+  :global(.departures-header) time span,
+  :global(.departures-header) time small {
+    font-size: 8px;
+  }
+
+  :global(.departures-header) time strong {
+    font-size: 27px;
+  }
+
+  :global(.departures-ribbon) {
+    height: 36px;
+    padding: 0 18px;
+    font-size: 9px;
+  }
+
+  :global(.departures-ribbon) > div span {
+    display: none;
+  }
+
+  :global(.departures-ribbon) b {
+    margin-left: 12px;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  :global(.departures-columns) {
+    display: none;
+  }
+
+  :global(.departure-row) {
+    padding: 7px 18px;
+    flex-wrap: wrap;
+    align-content: center;
+  }
+
+  :global(.departure-row) > div {
+    height: 48%;
+    padding-right: 10px;
+  }
+
+  :global(.departure-row) :global(.departure-time) {
+    width: 24%;
+  }
+
+  :global(.departure-row) :global(.departure-destination) {
+    width: 76%;
+    padding-right: 0;
+  }
+
+  :global(.departure-row) :global(.departure-flight) {
+    width: 34%;
+  }
+
+  :global(.departure-row) :global(.departure-terminal) {
+    display: flex;
+    width: 18%;
+  }
+
+  :global(.departure-row) :global(.departure-terminal) strong::before {
+    color: #8f969a;
+    content: 'T ';
+    font-size: 9px;
+  }
+
+  :global(.departure-row) :global(.departure-gate) {
+    width: 18%;
+  }
+
+  :global(.departure-row) :global(.departure-gate) strong {
+    width: 44px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  :global(.departure-row) :global(.departure-status) {
+    width: 30%;
+  }
+
+  :global(.departure-row) :global(.departure-time) strong {
+    font-size: 21px;
+  }
+
+  :global(.departure-row) :global(.departure-destination) strong {
+    font-size: 17px;
+  }
+
+  :global(.departure-row) :global(.departure-flight) strong,
+  :global(.departure-row) :global(.departure-terminal) strong {
+    font-size: 14px;
+  }
+
+  :global(.departure-row) :global(.departure-status) span {
+    min-height: 30px;
+    font-size: 9px;
+  }
+
+  :global(.departures-footer) {
+    height: 32px;
+    padding: 0 18px;
+    justify-content: center;
+  }
+
+  :global(.departures-footer) span {
+    display: none;
+  }
+
+  :global(.departures-footer) strong {
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
+@media (min-height: 1200px) and (max-width: 1200px) {
+  :global(.departures-header) {
+    height: 170px;
+  }
+
+  :global(.departures-ribbon) {
+    height: 52px;
+  }
+
+  :global(.departures-columns) {
+    height: 54px;
+  }
+
+  :global(.departures-footer) {
+    height: 50px;
+  }
+}

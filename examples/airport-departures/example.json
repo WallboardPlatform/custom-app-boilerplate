@@ -1,6 +1,6 @@
 {
-	"title": "KPI Operations",
-	"description": "Responsive operations dashboard with KPI cards and a tree-shaken Chart.js trend.",
+	"title": "Airport Departures",
+	"description": "Editable TABLE flight board with adaptive pagination, status hierarchy, long-label handling, and live datasource updates.",
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",

@@ -33,6 +33,9 @@
 #### Quality Check Checklist
 - [ ] TypeScript compiles without errors
 - [ ] No ESLint warnings
+- [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
+- [ ] Generated datasource contract and sample data pass `npm run validate:examples`
+- [ ] Internal app name and version identify one Wallboard app record; compatible rebuilds preserve both
 - [ ] `preview/fixture.ts` contains representative settings and datasource data
 - [ ] Named preview scenarios cover materially different dynamic and boundary states
 - [ ] `npm run validate:visual` passes
@@ -51,4 +54,4 @@ what it does, which the base build doesn't include in the output.
 The zip build contains the newest configuration, so build a zip after every configuration change. Preserve the existing app version for fixes and replacement uploads. A deliberate incompatible version must be uploaded as a separate app.
 
 #### What happens after build
-Run `npm run validate:package` before delivery. It builds the zip and validates required files, cache-listed runtime assets, and packaged media URL usage.
+Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the zip, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.

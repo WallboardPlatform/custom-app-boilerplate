@@ -1,0 +1,45 @@
+{
+	"version": "1",
+	"name": "Airport Departures Board",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Departures datasource",
+			"type": "dataPicker",
+			"property": "departuresData",
+			"dataPickerType": "any",
+			"tooltip": "Select the Departures table datasource. Leave unbound to show representative sample flights."
+		},
+		{
+			"label": "Board content",
+			"type": "group",
+			"properties": [
+				{ "label": "Airport code", "type": "text", "property": "airportCode", "default": "BUD" },
+				{ "label": "Airport name", "type": "text", "property": "airportName", "default": "Budapest Airport" },
+				{ "label": "Board title", "type": "text", "property": "boardTitle", "default": "Departures" },
+				{ "label": "Terminal label", "type": "text", "property": "terminalLabel", "default": "Terminal 2" },
+				{ "label": "Information label", "type": "text", "property": "informationLabel", "default": "Live flight information" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No departures are currently listed." },
+				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 10, "min": 3, "max": 120, "step": 1 }
+			]
+		},
+		{
+			"label": "Board theme",
+			"type": "group",
+			"properties": [
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#111315" },
+				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f5f6f3" },
+				{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#f4c542" }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

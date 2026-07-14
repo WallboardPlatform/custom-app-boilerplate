@@ -1,0 +1,49 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "operationsData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "CUSTOM",
+		"root": "Operations",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Operations KPI Data",
+		"quickEditEligible": false
+	},
+	"rationale": "Metrics and trend history are separate collections with different row shapes; flattening them into one table would discard their relationship.",
+	"schema": {
+		"metrics": {
+			"type": "array",
+			"maxItems": 3,
+			"items": {
+				"label": "string",
+				"value": "string|number",
+				"unit": "string?",
+				"delta": "string?",
+				"tone": "positive|warning|neutral?"
+			}
+		},
+		"history": {
+			"type": "array",
+			"maxItems": 24,
+			"items": {
+				"label": "string",
+				"value": "number"
+			}
+		},
+		"updatedAt": "string?"
+	},
+	"acceptedValueShapes": [
+		"direct operations payload",
+		"object containing the payload under Operations",
+		"JSON string of either documented shape"
+	],
+	"behavior": {
+		"boundEmpty": "render configured empty state",
+		"invalidRows": "skip malformed metrics and history points",
+		"limits": "render at most three metrics and the latest twenty-four history points"
+	}
+}

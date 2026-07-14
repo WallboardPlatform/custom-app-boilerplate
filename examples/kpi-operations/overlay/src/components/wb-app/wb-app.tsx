@@ -49,44 +49,36 @@ const parseJson = (value: unknown): unknown => {
 	}
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+};
+
 const toFiniteNumber = (value: unknown): number | undefined => {
 	const parsed: number = typeof value === 'number' ? value : Number(value);
 
 	return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const findPayload = (value: unknown, depth: number = 0): Record<string, unknown> | undefined => {
+const isOperationsPayload = (value: Record<string, unknown>): boolean => {
+	return Array.isArray(parseJson(value.metrics)) || Array.isArray(parseJson(value.history));
+};
+
+const extractPayload = (value: unknown): Record<string, unknown> | undefined => {
 	const candidate: unknown = parseJson(value);
 
-	if (depth > 5 || !candidate || typeof candidate !== 'object') return undefined;
+	if (!isRecord(candidate)) return undefined;
 
-	if (Array.isArray(candidate)) {
-		for (const item of candidate) {
-			const result: Record<string, unknown> | undefined = findPayload(item, depth + 1);
-
-			if (result) return result;
-		}
-
-		return undefined;
+	if (isOperationsPayload(candidate)) {
+		return candidate;
 	}
 
-	const record: Record<string, unknown> = candidate as Record<string, unknown>;
+	const wrapped: unknown = parseJson(candidate.Operations);
 
-	if (Array.isArray(parseJson(record.metrics)) || Array.isArray(parseJson(record.history))) {
-		return record;
-	}
-
-	for (const nestedValue of Object.values(record)) {
-		const result: Record<string, unknown> | undefined = findPayload(nestedValue, depth + 1);
-
-		if (result) return result;
-	}
-
-	return undefined;
+	return isRecord(wrapped) && isOperationsPayload(wrapped) ? wrapped : undefined;
 };
 
 const normalizePayload = (value: unknown): OperationsPayload | undefined => {
-	const source: Record<string, unknown> | undefined = findPayload(value);
+	const source: Record<string, unknown> | undefined = extractPayload(value);
 
 	if (!source) return undefined;
 

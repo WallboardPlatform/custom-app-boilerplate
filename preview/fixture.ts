@@ -1,5 +1,6 @@
 export interface PreviewFixture {
 	id: string;
+	readySelector?: string;
 	configValues: Record<string, unknown>;
 	dataPickerValues: Record<string, unknown>;
 	datasourceIds: Record<string, string | number | undefined>;
@@ -15,10 +16,20 @@ export interface PreviewScenario {
 		background?: 'checker' | 'light' | 'dark';
 	};
 	advanceTimeMs?: number;
+	minimumContentCoverage?: {
+		width: number;
+		height: number;
+	};
+	liveDatasourceUpdate?: {
+		property: string;
+		value: unknown;
+		expectedText: string;
+	};
 }
 
 const previewFixture: PreviewFixture = {
 	id: 'wallboard-local-preview',
+	readySelector: '.wb-app',
 	configValues: {
 		layoutEditor: {
 			items: []
