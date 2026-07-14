@@ -26,7 +26,7 @@ Run:
 npm run deliver -- <output-directory>
 ```
 
-The command runs identity, generation-brief, datasource, lint, visual, legacy bundle, and package-asset validation. It creates:
+The command runs identity, generation-brief project synchronization, datasource, script typecheck, lint, visual, legacy bundle, and package-asset validation. It creates:
 
 ```text
 <output-directory>/

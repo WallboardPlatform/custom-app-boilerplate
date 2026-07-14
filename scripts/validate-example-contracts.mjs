@@ -2,7 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getDatasourceProvisioning } from './datasource-provisioning.mjs';
+import {
+	getDatasourceDefinition,
+	normalizeDatasourceBindings
+} from './datasource-provisioning.mjs';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const examplesDirectory = path.join(rootDirectory, 'examples');
@@ -163,24 +166,6 @@ const validateTableContract = (exampleId, exampleDirectory, binding) => {
 
 let validatedBindings = 0;
 
-const normalizeBindings = (exampleId, contract) => {
-	if (Array.isArray(contract.bindings)) {
-		if (contract.bindings.length === 0) {
-			fail(exampleId, 'bindings must contain at least one datasource binding.');
-		}
-
-		return contract.bindings;
-	}
-
-	return [{
-		property: contract.binding?.property,
-		dataPickerType: contract.binding?.dataPickerType,
-		source: contract.source,
-		delivery: contract.delivery,
-		columns: contract.columns
-	}];
-};
-
 const collectDataPickers = (properties, output = []) => {
 	for (const property of properties ?? []) {
 		if (property?.type === 'dataPicker' && typeof property.property === 'string') {
@@ -205,7 +190,12 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 	}
 
 	const properties = JSON.parse(fs.readFileSync(propertiesPath, 'utf8'));
-	const bindings = normalizeBindings(exampleId, contract);
+	const bindings = normalizeDatasourceBindings(contract);
+
+	if (bindings.length === 0) {
+		fail(exampleId, 'bindings must contain at least one datasource binding.');
+	}
+
 	const declaredProperties = new Set();
 	const sampleDataPaths = new Set(bindings.map((binding) => {
 		return requireString(exampleId, binding.source?.sampleData, `${binding.property ?? 'binding'}.source.sampleData`);
@@ -230,17 +220,17 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 		}
 
 		declaredProperties.add(bindingProperty);
-		getDatasourceProvisioning(sourceContract);
+		const datasourceDefinition = getDatasourceDefinition(sourceContract);
 
 		if (typeof binding.delivery?.quickEditEligible !== 'boolean') {
 			fail(exampleId, `${bindingProperty}.delivery.quickEditEligible must be boolean.`);
 		}
 
-		if (sourceContract === 'TABLE' && binding.delivery.quickEditEligible !== true) {
+		if (datasourceDefinition.quickEdit === 'required' && binding.delivery.quickEditEligible !== true) {
 			fail(exampleId, `TABLE datasource '${suggestedDatasourceName}' must be quick-edit eligible.`);
 		}
 
-		if (['EXISTING', 'FEED', 'CALENDAR'].includes(sourceContract) && binding.delivery.quickEditEligible !== false) {
+		if (datasourceDefinition.quickEdit === 'forbidden' && binding.delivery.quickEditEligible !== false) {
 			fail(exampleId, `${sourceContract} datasource '${suggestedDatasourceName}' must not claim generated-table quick edit.`);
 		}
 
@@ -256,7 +246,7 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 
 		if (sourceContract === 'TABLE') {
 			validateTableContract(exampleId, exampleDirectory, binding);
-		} else if (['CUSTOM', 'EXISTING', 'FEED', 'CALENDAR'].includes(sourceContract)) {
+		} else {
 			readSample(exampleId, exampleDirectory, binding.source);
 		}
 

@@ -10,7 +10,7 @@
 
 ### 2. Thinking Phase
 **After reading all the relevant files**:
-- Translate the accepted request into `generation-brief.json` and run `npm run validate:brief`
+- Translate the accepted request into `generation-brief.json` and run `npm run validate:brief` before editing project artifacts
 - Think of a way to retain the existing patterns
 - Retain the gained knowledge of the project
 - Think of the easiest and most efficient way to implement the request
@@ -30,6 +30,7 @@
 - Implement proper error handling and logging
 - Ensure responsive design works across devices and on legacy chrome versions
 - Follow existing naming conventions and file organization
+- Run `npm run validate:project` to prove the implementation matches the accepted generation brief
 
 #### Quality Check Checklist
 - [ ] TypeScript compiles without errors

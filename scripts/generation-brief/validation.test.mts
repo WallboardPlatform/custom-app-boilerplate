@@ -1,0 +1,159 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { describe, it } from 'node:test';
+
+import {
+	type ProjectValidationContext,
+	validateBriefAgainstProject
+} from './project-validation.mts';
+import {
+	type GenerationBrief,
+	validateStandaloneBrief
+} from './validation.mts';
+
+const createValidBrief = (): GenerationBrief => ({
+	briefVersion: 1,
+	request: {
+		summary: 'Create an operational signage widget.',
+		audience: 'Visitors reading a shared display.',
+		primaryGoal: 'Present current information clearly.'
+	},
+	assumptions: [],
+	app: { mode: 'new', name: 'Validation Test', version: '1' },
+	surfaces: [
+		{ id: 'app-default', width: 1920, height: 1080, role: 'primary', purpose: 'Primary display.' },
+		{ id: 'wide-low', width: 1536, height: 432, role: 'required', purpose: 'Wide display zone.' },
+		{ id: 'portrait', width: 1080, height: 1920, role: 'fallback', purpose: 'Portrait fallback.' },
+		{ id: 'square', width: 600, height: 600, role: 'fallback', purpose: 'Square fallback.' }
+	],
+	data: { mode: 'static', bindings: [] },
+	settings: [],
+	states: [],
+	behaviors: [],
+	assets: [
+		{
+			id: 'app-icon',
+			source: 'packaged',
+			path: 'src/editor-assets/icon.png',
+			required: true
+		},
+		{
+			id: 'app-placeholder',
+			source: 'packaged',
+			path: 'src/editor-assets/placeholder.png',
+			required: true
+		}
+	],
+	visualReview: {
+		intent: 'A readable production signage composition.',
+		focus: ['Check containment.', 'Check hierarchy.']
+	}
+});
+
+const cloneBrief = (brief: GenerationBrief): GenerationBrief => {
+	return JSON.parse(JSON.stringify(brief)) as GenerationBrief;
+};
+
+const createProject = (brief: GenerationBrief): ProjectValidationContext => {
+	const applicationDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'wallboard-brief-'));
+	const editorAssetsDirectory = path.join(applicationDirectory, 'src', 'editor-assets');
+	const previewDirectory = path.join(applicationDirectory, 'preview');
+
+	fs.mkdirSync(editorAssetsDirectory, { recursive: true });
+	fs.mkdirSync(previewDirectory, { recursive: true });
+	fs.writeFileSync(path.join(editorAssetsDirectory, 'icon.png'), 'icon');
+	fs.writeFileSync(path.join(editorAssetsDirectory, 'placeholder.png'), 'placeholder');
+	fs.writeFileSync(
+		path.join(editorAssetsDirectory, 'properties.json'),
+		JSON.stringify({
+			name: brief.app.name,
+			version: brief.app.version,
+			size: { width: '1920px', height: '1080px' },
+			properties: []
+		})
+	);
+	fs.writeFileSync(path.join(previewDirectory, 'fixture.ts'), 'export const previewScenarios = [];\n');
+
+	return {
+		id: 'test-project',
+		applicationDirectory,
+		briefPath: path.join(applicationDirectory, 'generation-brief.json'),
+		contractPath: path.join(applicationDirectory, 'datasource-contract.json'),
+		fixturePath: path.join(previewDirectory, 'fixture.ts'),
+		propertiesPath: path.join(editorAssetsDirectory, 'properties.json')
+	};
+};
+
+void describe('standalone generation brief validation', () => {
+	void it('accepts a complete plan without project artifacts', () => {
+		assert.deepEqual(validateStandaloneBrief(createValidBrief()), createValidBrief());
+	});
+
+	void it('rejects unknown fields through the JSON schema', () => {
+		const brief = createValidBrief() as GenerationBrief & { unexpected?: boolean };
+		brief.unexpected = true;
+
+		assert.throws(() => validateStandaloneBrief(brief), /additional properties/);
+	});
+
+	void it('rejects incompatible datasource source and contract pairs', () => {
+		const brief = createValidBrief();
+		brief.data = {
+			mode: 'bound',
+			bindings: [{ property: 'items', source: 'existing', contract: 'TABLE' }]
+		};
+
+		assert.throws(() => validateStandaloneBrief(brief), /source and contract are inconsistent/);
+	});
+
+	void it('requires the canonical editor icon and placeholder assets', () => {
+		const brief = createValidBrief();
+		brief.assets[0] = {
+			id: 'brand-mark',
+			source: 'packaged',
+			path: 'src/editor-assets/icon.png',
+			required: true
+		};
+
+		assert.throws(() => validateStandaloneBrief(brief), /app-icon/);
+	});
+});
+
+void describe('generation brief project synchronization', () => {
+	void it('accepts a synchronized project', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('rejects editor settings that are not implemented', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'title', purpose: 'Visible heading.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /settings must exactly match/);
+	});
+
+	void it('rejects a missing packaged asset', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.rmSync(path.join(context.applicationDirectory, 'src', 'editor-assets', 'icon.png'));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /packaged asset/);
+	});
+
+	void it('rejects preview states that are not implemented', async (testContext) => {
+		const brief = cloneBrief(createValidBrief());
+		brief.states.push({ scenario: 'empty', expectation: 'Show a clear empty state.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /states must document every named preview scenario/);
+	});
+});

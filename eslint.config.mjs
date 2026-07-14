@@ -17,12 +17,12 @@ export default tseslint.config(
 
 	// ✅ Typed TypeScript files (with full type information)
 	{
-		files: ['**/src/**/*.{ts,tsx}'],
+		files: ['**/src/**/*.{ts,tsx}', 'scripts/**/*.mts'],
 
 		languageOptions: {
 			parserOptions: {
 				parser: '@typescript-eslint/parser',
-				project: './tsconfig.json',
+				project: ['./tsconfig.json', './tsconfig.scripts.json'],
 				tsconfigRootDir: process.cwd(),
 				ecmaVersion: 2020,
 				sourceType: 'module',
@@ -94,9 +94,10 @@ export default tseslint.config(
 				{
 					before: false,
 					after: true,
-					overrides: { arrow: { before: true, after: true } }
+					overrides: { arrow: 'ignore' }
 				}
 			],
+			'@stylistic/arrow-spacing': ['warn', { before: true, after: true }],
 			'@stylistic/member-delimiter-style': [
 				'warn',
 				{

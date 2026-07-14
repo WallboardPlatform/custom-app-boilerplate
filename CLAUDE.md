@@ -134,7 +134,7 @@ Before implementing a data-bound app, follow `docs/system/datasource-contracts.m
 Apps that intentionally consume multiple existing sources declare every picker in `datasource-contract.json.bindings`. Use one sanitized sample bundle and select each fixture with `source.samplePath`; do not combine independent live sources solely to fit a single-binding contract.
 
 ### Validated delivery
-Before implementation, create `generation-brief.json` from the request and run `npm run validate:brief`. See `docs/system/generation-brief.md`. The brief must match app identity, datasource bindings, editor settings, preview states, behavior evidence, and assets.
+Before implementation, create `generation-brief.json` from the request and run `npm run validate:brief`. This validates the plan without requiring implementation artifacts. After implementation, run `npm run validate:project` to cross-check identity, datasource bindings, editor settings, preview states, behavior evidence, and assets. See `docs/system/generation-brief.md`.
 
 ```bash
 npm run deliver -- <output-directory>
