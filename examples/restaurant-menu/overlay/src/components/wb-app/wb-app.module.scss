@@ -90,11 +90,20 @@
   text-align: center;
 }
 
+:global(.menu-edition) > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 :global(.menu-edition) strong {
   margin-bottom: 5px;
+  overflow: hidden;
   font-family: Georgia, serif;
   font-size: 24px;
   font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :global(.menu-edition) span {
