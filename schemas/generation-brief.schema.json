@@ -1,0 +1,213 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://wallboard.info/schemas/generation-brief.schema.json",
+	"title": "Wallboard Custom App Generation Brief",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"briefVersion",
+		"request",
+		"assumptions",
+		"app",
+		"surfaces",
+		"data",
+		"settings",
+		"states",
+		"behaviors",
+		"assets",
+		"visualReview"
+	],
+	"properties": {
+		"briefVersion": { "const": 1 },
+		"request": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["summary", "audience", "primaryGoal"],
+			"properties": {
+				"summary": { "$ref": "#/$defs/nonEmptyString" },
+				"audience": { "$ref": "#/$defs/nonEmptyString" },
+				"primaryGoal": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"assumptions": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/nonEmptyString" }
+		},
+		"app": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode", "name", "version"],
+			"properties": {
+				"mode": { "enum": ["new", "replacement"] },
+				"name": { "$ref": "#/$defs/nonEmptyString" },
+				"version": {
+					"anyOf": [
+						{ "$ref": "#/$defs/nonEmptyString" },
+						{ "type": "number" }
+					]
+				}
+			}
+		},
+		"surfaces": {
+			"type": "array",
+			"minItems": 4,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "width", "height", "role", "purpose"],
+				"properties": {
+					"id": { "$ref": "#/$defs/nonEmptyString" },
+					"width": { "type": "integer", "minimum": 1 },
+					"height": { "type": "integer", "minimum": 1 },
+					"role": { "enum": ["primary", "required", "fallback"] },
+					"purpose": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"data": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode", "bindings"],
+			"properties": {
+				"mode": { "enum": ["static", "bound"] },
+				"bindings": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["property", "source", "contract"],
+						"properties": {
+							"property": { "$ref": "#/$defs/nonEmptyString" },
+							"source": { "enum": ["generated", "existing", "built-in"] },
+							"contract": { "enum": ["TABLE", "CUSTOM", "EXISTING", "FEED", "CALENDAR"] }
+						}
+					}
+				}
+			}
+		},
+		"settings": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["property", "purpose"],
+				"properties": {
+					"property": { "$ref": "#/$defs/nonEmptyString" },
+					"purpose": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"states": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["scenario", "expectation"],
+				"properties": {
+					"scenario": { "$ref": "#/$defs/nonEmptyString" },
+					"expectation": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"behaviors": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "expectation", "evidence"],
+				"properties": {
+					"id": { "$ref": "#/$defs/nonEmptyString" },
+					"expectation": { "$ref": "#/$defs/nonEmptyString" },
+					"evidence": {
+						"oneOf": [
+							{
+								"type": "object",
+								"additionalProperties": false,
+								"required": ["scenario"],
+								"properties": {
+									"scenario": { "$ref": "#/$defs/nonEmptyString" }
+								}
+							},
+							{
+								"type": "object",
+								"additionalProperties": false,
+								"required": ["testFile"],
+								"properties": {
+									"testFile": { "type": "string", "pattern": "\\.spec\\.ts$" }
+								}
+							}
+						]
+					}
+				}
+			}
+		},
+		"assets": {
+			"type": "array",
+			"minItems": 2,
+			"items": {
+				"oneOf": [
+					{ "$ref": "#/$defs/packagedAsset" },
+					{ "$ref": "#/$defs/datasourceAsset" },
+					{ "$ref": "#/$defs/settingAsset" }
+				]
+			}
+		},
+		"visualReview": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["intent", "focus"],
+			"properties": {
+				"intent": { "$ref": "#/$defs/nonEmptyString" },
+				"focus": {
+					"type": "array",
+					"minItems": 2,
+					"items": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		}
+	},
+	"$defs": {
+		"nonEmptyString": {
+			"type": "string",
+			"minLength": 1,
+			"pattern": "\\S"
+		},
+		"packagedAsset": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "source", "path", "required"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"source": { "const": "packaged" },
+				"path": { "$ref": "#/$defs/nonEmptyString" },
+				"required": { "type": "boolean" }
+			}
+		},
+		"datasourceAsset": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "source", "binding", "required"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"source": { "const": "datasource" },
+				"binding": { "$ref": "#/$defs/nonEmptyString" },
+				"required": { "type": "boolean" }
+			}
+		},
+		"settingAsset": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "source", "properties", "required"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"source": { "const": "setting" },
+				"properties": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "$ref": "#/$defs/nonEmptyString" }
+				},
+				"required": { "type": "boolean" }
+			}
+		}
+	}
+}

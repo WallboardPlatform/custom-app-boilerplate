@@ -2,7 +2,7 @@
 
 Create `generation-brief.json` before implementing a custom app. It is the machine-readable agreement between the user's request and the generated project. It records decisions; it does not prescribe visual implementation.
 
-`npm run validate:brief` checks the brief against the app identity, editor properties, datasource contract, preview scenarios, behavior tests, and assets. `npm run deliver -- <output-directory>` requires a valid brief and preserves it as a delivery sidecar.
+`npm run validate:brief` checks the standalone plan against [`schemas/generation-brief.schema.json`](../../schemas/generation-brief.schema.json) and its policy rules before implementation. `npm run validate:project` then checks the accepted brief against app identity, editor properties, datasource contracts, preview scenarios, behavior tests, and packaged assets. `npm run deliver -- <output-directory>` requires both phases to pass and preserves the brief as a delivery sidecar.
 
 ## Required Shape
 
@@ -45,8 +45,9 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 2. Resolve blocking ambiguity before implementation. Record non-blocking assumptions.
 3. Choose datasource contracts and editor settings.
 4. Define realistic surfaces, edge states, and observable behavior evidence.
-5. Run `npm run validate:brief`; then implement until the project satisfies the agreed contract.
-6. Inspect screenshots using `visualReview.intent` and `visualReview.focus`, not only mechanical pass/fail results.
-7. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
+5. Run `npm run validate:brief`, then implement the accepted plan.
+6. Run `npm run validate:project` and resolve every project synchronization failure.
+7. Inspect screenshots using `visualReview.intent` and `visualReview.focus`, not only mechanical pass/fail results.
+8. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
 
 Gold-standard briefs live in `examples/*/generation-brief.json`.

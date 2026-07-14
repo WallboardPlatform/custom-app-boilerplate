@@ -6,7 +6,10 @@ import { fileURLToPath } from 'node:url';
 import archiver from 'archiver';
 
 import { readAppMetadata, readJson } from './app-metadata.mjs';
-import { getDatasourceProvisioning } from './datasource-provisioning.mjs';
+import {
+	getDatasourceProvisioning,
+	normalizeDatasourceBindings
+} from './datasource-provisioning.mjs';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const metadata = readAppMetadata(projectDirectory);
@@ -110,8 +113,9 @@ const prepareOutputDirectory = () => {
 };
 
 runNpmScript('validate:identity');
-runNpmScript('validate:brief');
+runNpmScript('validate:project');
 runNpmScript('validate:examples');
+runNpmScript('typecheck:scripts');
 runNpmScript('lint');
 runNpmScript('validate:visual');
 runNpmScript('prepare:datasource-package');
@@ -137,20 +141,14 @@ await createZip(distDirectory, zipPath);
 
 const contractPath = path.join(projectDirectory, 'datasource-contract.json');
 const briefPath = path.join(projectDirectory, 'generation-brief.json');
+const brief = readJson(briefPath);
 let datasource = null;
 
 fs.copyFileSync(briefPath, path.join(outputDirectory, 'generation-brief.json'));
 
 if (fs.existsSync(contractPath)) {
 	const contract = readJson(contractPath);
-	const bindings = Array.isArray(contract.bindings)
-		? contract.bindings
-		: [{
-			property: contract.binding.property,
-			dataPickerType: contract.binding.dataPickerType,
-			source: contract.source,
-			delivery: contract.delivery
-		}];
+	const bindings = normalizeDatasourceBindings(contract);
 	const sampleDataPaths = new Set(bindings.map((binding) => binding.source.sampleData));
 
 	if (sampleDataPaths.size !== 1) {
@@ -207,7 +205,7 @@ const manifest = {
 		uploadRule: 'Create this identity once; replacement builds must be uploaded to the same Wallboard app record.'
 	},
 	generationBrief: {
-		briefVersion: 1,
+		briefVersion: brief.briefVersion,
 		file: 'generation-brief.json'
 	},
 	datasource,

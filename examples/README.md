@@ -37,4 +37,4 @@ The explicit target must be new or empty. Run `npm run validate:examples` in the
 
 Run `npm run example:accept -- <id>` for the clean materialization, complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, every screenshot is inspected, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
 
-Every example includes a generation brief whose settings and evidence match the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.
+Every example includes a standalone-valid generation brief whose settings and evidence also pass project synchronization against the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.

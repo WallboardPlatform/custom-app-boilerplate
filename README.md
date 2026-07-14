@@ -60,7 +60,7 @@ Optional setup overrides:
 
 ### Production widget guidance
 
-Before building an app, create the prompt-to-project contract described in [`docs/system/generation-brief.md`](docs/system/generation-brief.md), then read [`docs/system/widget-best-practices.md`](docs/system/widget-best-practices.md) and [`docs/system/app-identity-and-delivery.md`](docs/system/app-identity-and-delivery.md). For data-bound apps, also read [`docs/system/datasource-contracts.md`](docs/system/datasource-contracts.md) before choosing or generating a datasource structure.
+Before building an app, create the prompt-to-project contract described in [`docs/system/generation-brief.md`](docs/system/generation-brief.md) and run `npm run validate:brief`. After implementation, `npm run validate:project` proves that the project matches the accepted contract. Then follow [`docs/system/widget-best-practices.md`](docs/system/widget-best-practices.md) and [`docs/system/app-identity-and-delivery.md`](docs/system/app-identity-and-delivery.md). For data-bound apps, also read [`docs/system/datasource-contracts.md`](docs/system/datasource-contracts.md) before choosing or generating a datasource structure.
 
 ### Configuration (config.json)
 

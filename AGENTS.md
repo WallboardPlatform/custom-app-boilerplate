@@ -8,7 +8,7 @@ Before implementing a custom app:
 2. Read `CLAUDE.md`.
 3. Read `docs/claude/workflow.md`.
 4. Read all files in `docs/system/`, especially `docs/system/widget-best-practices.md`.
-5. Create `generation-brief.json` and run `npm run validate:brief` before implementation.
+5. Create `generation-brief.json` and run `npm run validate:brief` before implementation. Run `npm run validate:project` after implementation to prove that the project still matches the accepted brief.
 
 Core rules:
 
