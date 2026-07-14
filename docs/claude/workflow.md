@@ -10,6 +10,7 @@
 
 ### 2. Thinking Phase
 **After reading all the relevant files**:
+- Translate the accepted request into `generation-brief.json` and run `npm run validate:brief`
 - Think of a way to retain the existing patterns
 - Retain the gained knowledge of the project
 - Think of the easiest and most efficient way to implement the request
@@ -33,6 +34,7 @@
 #### Quality Check Checklist
 - [ ] TypeScript compiles without errors
 - [ ] No ESLint warnings
+- [ ] Generation brief matches identity, target surfaces, settings, data bindings, named states, and behavior evidence
 - [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
 - [ ] Generated datasource contract and sample data pass `npm run validate:examples`
 - [ ] Every datasource picker is declared; multi-source apps use `bindings[]` and sanitized `samplePath` fixtures
@@ -56,4 +58,4 @@ what it does, which the base build doesn't include in the output.
 The zip build contains the newest configuration, so build a zip after every configuration change. Preserve the existing app version for fixes and replacement uploads. A deliberate incompatible version must be uploaded as a separate app.
 
 #### What happens after build
-Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the zip, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.
+Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the zip, generation brief, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.

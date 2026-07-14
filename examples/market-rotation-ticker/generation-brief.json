@@ -1,0 +1,78 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a continuously filled rotating market ticker for a 6000 by 136 video-wall strip.",
+		"audience": "Financial-information viewers reading live market movement across an ultra-wide display.",
+		"primaryGoal": "Rotate four markets in order without an empty strip before, during, or after each transition."
+	},
+	"assumptions": [
+		"The five supplied datasources retain independent Wallboard bindings and refresh lifecycles.",
+		"Rows without a valid live price are excluded and missing stock logos use a ticker-symbol fallback.",
+		"Version 1 is preserved for replacement uploads to the existing app record."
+	],
+	"app": { "mode": "replacement", "name": "Market Rotation Ticker", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 6000, "height": 136, "role": "primary", "purpose": "Native ultra-wide video-wall ticker strip." },
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "fallback", "purpose": "Safe centered ticker fallback on a standard canvas." },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Safe portrait fallback without clipped content." },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Safe square fallback without invalid geometry." }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "nasdaqData", "source": "existing", "contract": "EXISTING" },
+			{ "property": "tsxData", "source": "existing", "contract": "EXISTING" },
+			{ "property": "dowData", "source": "existing", "contract": "EXISTING" },
+			{ "property": "fxData", "source": "existing", "contract": "EXISTING" },
+			{ "property": "stockIcons", "source": "existing", "contract": "EXISTING" }
+		]
+	},
+	"settings": [
+		{ "property": "nasdaqLabel", "purpose": "NASDAQ market title." },
+		{ "property": "tsxLabel", "purpose": "TSX market title." },
+		{ "property": "dowLabel", "purpose": "Dow Jones market title." },
+		{ "property": "fxLabel", "purpose": "Foreign-exchange market title." },
+		{ "property": "exchangeTitleSeconds", "purpose": "Duration of the moving exchange title phase." },
+		{ "property": "speedPixelsPerSecond", "purpose": "Ticker travel speed." },
+		{ "property": "verticalMargin", "purpose": "Vertical strip inset." },
+		{ "property": "itemMargin", "purpose": "Spacing between market entries." },
+		{ "property": "logoScale", "purpose": "Stock logo size." },
+		{ "property": "tickerFont", "purpose": "Ticker symbol typography." },
+		{ "property": "priceFont", "purpose": "Live price typography." },
+		{ "property": "changeFont", "purpose": "Price-change typography." },
+		{ "property": "upIconFile", "purpose": "Optional custom rising-value icon." },
+		{ "property": "downIconFile", "purpose": "Optional custom falling-value icon." },
+		{ "property": "upColor", "purpose": "Positive change color." },
+		{ "property": "downColor", "purpose": "Negative change color." },
+		{ "property": "fallbackIconBackground", "purpose": "Ticker-symbol fallback tile color." },
+		{ "property": "backgroundColor", "purpose": "Ticker strip background." },
+		{ "property": "exchangeTitleColor", "purpose": "Exchange title color." },
+		{ "property": "emptyStateText", "purpose": "Message when no market has valid rows." }
+	],
+	"states": [
+		{ "scenario": "scrolling-nasdaq", "expectation": "NASDAQ entries fill the complete 6000-pixel strip while moving." },
+		{ "scenario": "market-rotation", "expectation": "The next exchange title appears after the prior market exits." },
+		{ "scenario": "short-fx-dataset", "expectation": "A short FX dataset repeats safely without exposing an empty strip." },
+		{ "scenario": "missing-icons", "expectation": "Ticker-symbol tiles replace unavailable stock logos." },
+		{ "scenario": "invalid-prices", "expectation": "Rows with invalid prices are filtered and a quiet empty state remains." },
+		{ "scenario": "unbound", "expectation": "Missing datasource bindings render a stable configured empty state." }
+	],
+	"behaviors": [
+		{ "id": "moving-exchange-title", "expectation": "The red exchange title visibly travels right to left during its phase.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "continuous-final-exit", "expectation": "The final canonical stock exits fully while cloned content still covers the viewport.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "ordered-market-rotation", "expectation": "Markets transition in the configured canonical order.", "evidence": { "scenario": "market-rotation" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{ "id": "stock-logos", "source": "datasource", "binding": "stockIcons", "required": false },
+		{ "id": "trend-icons", "source": "setting", "properties": ["upIconFile", "downIconFile"], "required": false }
+	],
+	"visualReview": {
+		"intent": "A dense broadcast-style financial strip that remains continuously populated and readable at extreme width.",
+		"focus": [
+			"Inspect the full 6000 by 136 frame for empty gaps, partial vertical clipping, and uneven item cadence.",
+			"Verify standard fallback surfaces remain contained even though the primary composition is ultra-wide."
+		]
+	}
+}

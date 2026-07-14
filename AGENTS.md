@@ -8,10 +8,12 @@ Before implementing a custom app:
 2. Read `CLAUDE.md`.
 3. Read `docs/claude/workflow.md`.
 4. Read all files in `docs/system/`, especially `docs/system/widget-best-practices.md`.
+5. Create `generation-brief.json` and run `npm run validate:brief` before implementation.
 
 Core rules:
 
 - Do not edit `src/index.tsx`.
+- Treat `generation-brief.json` as the accepted request contract. Update it when the user changes identity, surfaces, data, settings, states, behavior, or assets.
 - Build the user-facing widget in `src/components/wb-app/`.
 - Keep the root widget responsive, isolated, and transparent by default.
 - Keep CSS compatible with the legacy Chromium target described by the boilerplate docs.

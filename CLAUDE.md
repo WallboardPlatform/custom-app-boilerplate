@@ -134,11 +134,13 @@ Before implementing a data-bound app, follow `docs/system/datasource-contracts.m
 Apps that intentionally consume multiple existing sources declare every picker in `datasource-contract.json.bindings`. Use one sanitized sample bundle and select each fixture with `source.samplePath`; do not combine independent live sources solely to fit a single-binding contract.
 
 ### Validated delivery
+Before implementation, create `generation-brief.json` from the request and run `npm run validate:brief`. See `docs/system/generation-brief.md`. The brief must match app identity, datasource bindings, editor settings, preview states, behavior evidence, and assets.
+
 ```bash
 npm run deliver -- <output-directory>
 ```
 
-This is the final handoff command. It validates the app, creates the uploadable zip, packages datasource templates when present, and writes a machine-readable delivery manifest. Follow `docs/system/app-identity-and-delivery.md`; internal app name plus version must be unique across Wallboard app records.
+This is the final handoff command. It validates the app, creates the uploadable zip, preserves the generation brief, packages datasource templates when present, and writes a machine-readable delivery manifest. Follow `docs/system/app-identity-and-delivery.md`; internal app name plus version must be unique across Wallboard app records.
 
 ## Architecture Overview
 
@@ -218,6 +220,7 @@ This is the final handoff command. It validates the app, creates the uploadable 
 ### System documentation (`docs/system/`)
 - `architecture.md` - Architecture concepts
 - `app-identity-and-delivery.md` - Runtime identity, replacement rules, validated delivery bundle, and datasource template packaging
+- `generation-brief.md` - Prompt-to-project contract, required evidence, and validation rules
 - `code-styling.md` - Code styling guidelines
 - `components.md` - Component creation and patterns
 - `configuration.md` - Configuration options

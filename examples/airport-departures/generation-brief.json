@@ -1,0 +1,64 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a production airport departure board backed by an editable internal table.",
+		"audience": "Airport passengers scanning flight status from a distance.",
+		"primaryGoal": "Keep departure time, destination, flight, gate, and status readable across signage layouts."
+	},
+	"assumptions": [
+		"The customer maintains departures as table rows and expects live edits without rebuilding the app.",
+		"Rows missing core flight identity fields should be ignored instead of breaking the board."
+	],
+	"app": { "mode": "new", "name": "Airport Departures Board", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen departure board." },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Split-screen reader-board zone." },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait information display." },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editor or playlist zone." }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "departuresData", "source": "generated", "contract": "TABLE" }
+		]
+	},
+	"settings": [
+		{ "property": "airportCode", "purpose": "Short airport identifier." },
+		{ "property": "airportName", "purpose": "Airport name in the board header." },
+		{ "property": "boardTitle", "purpose": "Primary board title." },
+		{ "property": "terminalLabel", "purpose": "Terminal context." },
+		{ "property": "informationLabel", "purpose": "Supporting live-information label." },
+		{ "property": "emptyStateText", "purpose": "Message shown when no valid departures exist." },
+		{ "property": "pageDurationSeconds", "purpose": "Rotation duration for paginated departures." },
+		{ "property": "backgroundColor", "purpose": "Board background color." },
+		{ "property": "textColor", "purpose": "Primary text color." },
+		{ "property": "accentColor", "purpose": "Status and hierarchy accent color." }
+	],
+	"states": [
+		{ "scenario": "static-unbound", "expectation": "Representative departures remain visible before a datasource is selected." },
+		{ "scenario": "empty", "expectation": "An explicit empty state replaces the table body." },
+		{ "scenario": "bound-null", "expectation": "A null bound value remains stable and communicates missing data." },
+		{ "scenario": "long-labels", "expectation": "Long destinations, airlines, and statuses remain contained in a wide-low zone." },
+		{ "scenario": "odd-count", "expectation": "A short odd row count fills the available body without top compression." },
+		{ "scenario": "invalid-rows", "expectation": "Malformed rows are skipped while valid departures still render." },
+		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same board model." },
+		{ "scenario": "maximum-content", "expectation": "A large source paginates without rendering an unbounded DOM." },
+		{ "scenario": "last-page", "expectation": "The final partial page remains balanced after rotation." },
+		{ "scenario": "live-datasource-update", "expectation": "A datasource edit updates the placed board without rebuilding." }
+	],
+	"behaviors": [
+		{ "id": "adaptive-pagination", "expectation": "Rows per page adapt to height and the last page remains readable.", "evidence": { "scenario": "last-page" } },
+		{ "id": "live-update", "expectation": "Datasource changes update visible flight status in place.", "evidence": { "scenario": "live-datasource-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A dense, high-contrast transport board optimized for fast scanning rather than decorative presentation.",
+		"focus": [
+			"Verify the final column and long statuses never clip at any edge.",
+			"Verify few rows and partial pages still use the assigned height intentionally."
+		]
+	}
+}
