@@ -124,6 +124,20 @@ npm run validate:visual
 
 The interactive preview is available at `http://127.0.0.1:5173/preview/`. Keep `preview/fixture.ts` aligned with the app's settings and datasource values. Add named `previewScenarios` for materially different states; use `advanceTimeMs` to validate rotating or paginated end states.
 
+### Datasource contract validation
+```bash
+npm run validate:examples
+```
+
+Before implementing a data-bound app, follow `docs/system/datasource-contracts.md`. Prefer an explicit user schema or a verified built-in Wallboard contract; otherwise generate a `TABLE` contract and its editable sample data.
+
+### Validated delivery
+```bash
+npm run deliver -- <output-directory>
+```
+
+This is the final handoff command. It validates the app, creates the uploadable zip, packages datasource templates when present, and writes a machine-readable delivery manifest. Follow `docs/system/app-identity-and-delivery.md`; internal app name plus version must be unique across Wallboard app records.
+
 ## Architecture Overview
 
 ### Directory Structure
@@ -201,9 +215,11 @@ The interactive preview is available at `http://127.0.0.1:5173/preview/`. Keep `
 
 ### System documentation (`docs/system/`)
 - `architecture.md` - Architecture concepts
+- `app-identity-and-delivery.md` - Runtime identity, replacement rules, validated delivery bundle, and datasource template packaging
 - `code-styling.md` - Code styling guidelines
 - `components.md` - Component creation and patterns
 - `configuration.md` - Configuration options
+- `datasource-contracts.md` - Data contract selection, table fallback, binding types, and generated datasource artifacts
 - `contexts.md` - SolidJS contexts usage
 - `hooks.md` - Custom hooks documentation
 - `interfaces.md` - TypeScript interfaces

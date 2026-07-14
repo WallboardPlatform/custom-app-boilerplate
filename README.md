@@ -60,7 +60,7 @@ Optional setup overrides:
 
 ### Production widget guidance
 
-Before building an app, read [`docs/system/widget-best-practices.md`](docs/system/widget-best-practices.md). It covers transparent backgrounds, responsive behavior, legacy CSS constraints, settings design, empty states, multi-instance safety, and production validation.
+Before building an app, read [`docs/system/widget-best-practices.md`](docs/system/widget-best-practices.md) and [`docs/system/app-identity-and-delivery.md`](docs/system/app-identity-and-delivery.md). For data-bound apps, also read [`docs/system/datasource-contracts.md`](docs/system/datasource-contracts.md) before choosing or generating a datasource structure.
 
 ### Configuration (config.json)
 
@@ -139,7 +139,17 @@ Materialize a thin example overlay into an isolated directory:
 npm run example:materialize -- kpi-operations ../kpi-operations
 ```
 
-See [`examples/README.md`](examples/README.md) for the overlay contract and [`docs/system/charting.md`](docs/system/charting.md) for Chart.js and optional ECharts guidance.
+An explicit target must be a new or empty directory. Omitting it uses the replaceable generated path under `.tmp/examples/`.
+
+See [`examples/README.md`](examples/README.md) for the overlay contract, [`docs/system/datasource-contracts.md`](docs/system/datasource-contracts.md) for data-bound widgets, and [`docs/system/charting.md`](docs/system/charting.md) for Chart.js and optional ECharts guidance.
+
+Run the complete acceptance and delivery workflow for an example with:
+
+```bash
+npm run example:accept -- restaurant-menu
+```
+
+For a finished materialized app, run `npm run deliver -- <output-directory>`.
 
 ### Development Builds
 

@@ -3,7 +3,7 @@ import path from 'path';
 import { expect, test } from '@playwright/test';
 
 import { appViewport } from './app-viewport';
-import { previewScenarios } from './fixture';
+import previewFixture, { previewScenarios } from './fixture';
 import type { PreviewScenario } from './fixture';
 
 interface VisualPreset {
@@ -12,7 +12,17 @@ interface VisualPreset {
 	height: number;
 	background: 'checker' | 'light' | 'dark';
 	scenario?: string;
+	readySelector?: string;
 	advanceTimeMs?: number;
+	minimumContentCoverage?: {
+		width: number;
+		height: number;
+	};
+	liveDatasourceUpdate?: {
+		property: string;
+		value: unknown;
+		expectedText: string;
+	};
 }
 
 interface VisualMetrics {
@@ -24,15 +34,16 @@ interface VisualMetrics {
 	horizontalOverflow: string[];
 	verticalOverflow: string[];
 	outsideRoot: string[];
+	brokenImages: string[];
 }
 
 const presets: VisualPreset[] = [
-	{ name: 'app-default', ...appViewport, background: 'checker' },
-	{ name: 'full-hd', width: 1920, height: 1080, background: 'checker' },
-	{ name: 'wide-low', width: 1536, height: 432, background: 'light' },
-	{ name: 'landscape', width: 960, height: 540, background: 'checker' },
-	{ name: 'portrait', width: 1080, height: 1920, background: 'dark' },
-	{ name: 'square', width: 600, height: 600, background: 'light' }
+	{ name: 'app-default', ...appViewport, background: 'checker', readySelector: previewFixture.readySelector },
+	{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
+	{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
+	{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector },
+	{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector },
+	{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector }
 ];
 
 const scenarioPresets: VisualPreset[] = previewScenarios.map(
@@ -42,15 +53,22 @@ const scenarioPresets: VisualPreset[] = previewScenarios.map(
 		height: scenario.viewport.height,
 		background: scenario.viewport.background ?? 'checker',
 		scenario: scenario.id,
-		advanceTimeMs: scenario.advanceTimeMs
+		readySelector: scenario.fixture.readySelector ?? previewFixture.readySelector,
+		advanceTimeMs: scenario.advanceTimeMs,
+		minimumContentCoverage: scenario.minimumContentCoverage,
+		liveDatasourceUpdate: scenario.liveDatasourceUpdate
 	})
 );
 
 const screenshotDirectory: string = path.resolve(process.cwd(), 'preview', 'output');
+const previewBaseUrl: string = process.env.WALLBOARD_PREVIEW_TEST_PORT
+	? `http://127.0.0.1:${process.env.WALLBOARD_PREVIEW_TEST_PORT}/`
+	: 'http://127.0.0.1:4173/';
 
 for (const preset of [...presets, ...scenarioPresets]) {
 	test(`${preset.name} ${preset.width}x${preset.height}`, async ({ page }): Promise<void> => {
 		const runtimeErrors: string[] = [];
+		const failedLocalRequests: string[] = [];
 
 		page.on('pageerror', (error: Error): void => {
 			runtimeErrors.push(error.message);
@@ -60,8 +78,19 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				runtimeErrors.push(message.text());
 			}
 		});
+		page.on('requestfailed', (request): void => {
+			if (request.url().startsWith(previewBaseUrl)) {
+				failedLocalRequests.push(`${request.method()} ${request.url()}`);
+			}
+		});
+		page.on('response', (response): void => {
+			if (response.url().startsWith(previewBaseUrl) && response.status() >= 400) {
+				failedLocalRequests.push(`${response.status()} ${response.url()}`);
+			}
+		});
 
 		await page.setViewportSize({ width: preset.width, height: preset.height });
+
 		const query: URLSearchParams = new URLSearchParams({ background: preset.background });
 
 		if (preset.scenario) {
@@ -79,7 +108,28 @@ for (const preset of [...presets, ...scenarioPresets]) {
 		});
 
 		if (preset.advanceTimeMs) {
-			await page.clock.runFor(preset.advanceTimeMs);
+			await page.waitForTimeout(preset.advanceTimeMs);
+		}
+
+		if (preset.liveDatasourceUpdate) {
+			await page.evaluate(
+				(update): void => {
+					const previewWindow = window as Window & {
+						__wallboardPreview?: {
+							pushDatasource: (property: string, value: unknown) => void;
+						};
+					};
+
+					if (!previewWindow.__wallboardPreview) {
+						throw new Error('Preview datasource update bridge is unavailable.');
+					}
+
+					previewWindow.__wallboardPreview.pushDatasource(update.property, update.value);
+				},
+				preset.liveDatasourceUpdate
+			);
+			await page.waitForTimeout(250);
+			await expect(page.getByText(preset.liveDatasourceUpdate.expectedText, { exact: true })).toBeVisible();
 		}
 
 		const previewError: string | undefined = await page.evaluate((): string | undefined => {
@@ -98,6 +148,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			const horizontalOverflow: string[] = [];
 			const verticalOverflow: string[] = [];
 			const outsideRoot: string[] = [];
+			const brokenImages: string[] = [];
 			const leafRects: DOMRect[] = [];
 
 			const describeElement = (element: HTMLElement): string => {
@@ -122,6 +173,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 				if (!isVisible || element.closest('[data-preview-allow-overflow]')) {
 					continue;
+				}
+
+				if (element instanceof HTMLImageElement && (!element.complete || element.naturalWidth === 0)) {
+					brokenImages.push(describeElement(element));
 				}
 
 				if (element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) {
@@ -186,9 +241,18 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				contentHeightCoverage: Math.round((contentHeight / rootRect.height) * 100),
 				horizontalOverflow: [...new Set(horizontalOverflow)],
 				verticalOverflow: [...new Set(verticalOverflow)],
-				outsideRoot: [...new Set(outsideRoot)]
+				outsideRoot: [...new Set(outsideRoot)],
+				brokenImages: [...new Set(brokenImages)]
 			};
 		});
+
+		if (preset.readySelector) {
+			await page.waitForFunction((selector: string): boolean => {
+				const element: HTMLElement | null = document.querySelector<HTMLElement>(selector);
+
+				return Boolean(element?.textContent?.trim());
+			}, preset.readySelector);
+		}
 
 		await page.screenshot({
 			path: path.join(screenshotDirectory, `${preset.name}-${preset.width}x${preset.height}.png`),
@@ -201,12 +265,19 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 		expect(previewError).toBeUndefined();
 		expect(runtimeErrors).toEqual([]);
+		expect(failedLocalRequests).toEqual([]);
 		expect(metrics.rootWidth).toBe(preset.width);
 		expect(metrics.rootHeight).toBe(preset.height);
 		expect(metrics.visibleLeafNodes).toBeGreaterThan(0);
 		expect(metrics.horizontalOverflow).toEqual([]);
 		expect(metrics.verticalOverflow).toEqual([]);
 		expect(metrics.outsideRoot).toEqual([]);
+		expect(metrics.brokenImages).toEqual([]);
+
+		if (preset.minimumContentCoverage) {
+			expect(metrics.contentWidthCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.width);
+			expect(metrics.contentHeightCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.height);
+		}
 	});
 }
 

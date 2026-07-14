@@ -1,0 +1,32 @@
+{
+	"Departures": {
+		"header": {
+			"sortOrder": "number",
+			"scheduledTime": "string",
+			"destination": "string",
+			"flight": "string",
+			"airline": "string",
+			"terminal": "string",
+			"gate": "string",
+			"status": "string",
+			"statusTone": "string",
+			"visible": "boolean"
+		},
+		"rows": [
+			{ "sortOrder": 1, "scheduledTime": "09:15", "destination": "Amsterdam", "flight": "KL 1362", "airline": "KLM", "terminal": "2A", "gate": "A12", "status": "BOARDING", "statusTone": "boarding", "visible": true },
+			{ "sortOrder": 2, "scheduledTime": "09:30", "destination": "London Heathrow", "flight": "BA 867", "airline": "British Airways", "terminal": "2B", "gate": "B7", "status": "GO TO GATE", "statusTone": "gate", "visible": true },
+			{ "sortOrder": 3, "scheduledTime": "09:40", "destination": "Frankfurt", "flight": "LH 1337", "airline": "Lufthansa", "terminal": "2A", "gate": "A8", "status": "FINAL CALL", "statusTone": "boarding", "visible": true },
+			{ "sortOrder": 4, "scheduledTime": "09:55", "destination": "Istanbul", "flight": "TK 1036", "airline": "Turkish Airlines", "terminal": "2B", "gate": "B14", "status": "DELAYED 10:25", "statusTone": "delayed", "visible": true },
+			{ "sortOrder": 5, "scheduledTime": "10:05", "destination": "Paris Charles de Gaulle", "flight": "AF 1295", "airline": "Air France", "terminal": "2A", "gate": "A4", "status": "ON TIME", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 6, "scheduledTime": "10:20", "destination": "Warsaw", "flight": "LO 536", "airline": "LOT Polish Airlines", "terminal": "2A", "gate": "A15", "status": "GATE OPENS 09:40", "statusTone": "gate", "visible": true },
+			{ "sortOrder": 7, "scheduledTime": "10:35", "destination": "Dubai", "flight": "EK 112", "airline": "Emirates", "terminal": "2B", "gate": "B3", "status": "CHECK-IN", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 8, "scheduledTime": "10:45", "destination": "Zurich", "flight": "LX 2251", "airline": "Swiss", "terminal": "2A", "gate": "A10", "status": "ON TIME", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 9, "scheduledTime": "11:00", "destination": "Copenhagen", "flight": "SK 2788", "airline": "SAS", "terminal": "2A", "gate": "A6", "status": "ON TIME", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 10, "scheduledTime": "11:15", "destination": "Tel Aviv", "flight": "LY 2366", "airline": "El Al", "terminal": "2B", "gate": "B10", "status": "CANCELLED", "statusTone": "cancelled", "visible": true },
+			{ "sortOrder": 11, "scheduledTime": "11:25", "destination": "Munich", "flight": "LH 1677", "airline": "Lufthansa", "terminal": "2A", "gate": "A9", "status": "ON TIME", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 12, "scheduledTime": "11:40", "destination": "Athens", "flight": "A3 879", "airline": "Aegean Airlines", "terminal": "2B", "gate": "B5", "status": "CHECK-IN", "statusTone": "scheduled", "visible": true },
+			{ "sortOrder": 13, "scheduledTime": "11:55", "destination": "Helsinki", "flight": "AY 1256", "airline": "Finnair", "terminal": "2A", "gate": "A11", "status": "ON TIME", "statusTone": "scheduled", "visible": true }
+		],
+		"connectors": {}
+	}
+}

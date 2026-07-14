@@ -1,0 +1,17 @@
+{
+	"metrics": [
+		{ "label": "Orders completed", "value": 1842, "unit": "orders", "delta": "+8.4% vs yesterday", "tone": "positive" },
+		{ "label": "On-time dispatch", "value": 96.8, "unit": "%", "delta": "1.2 pts above target", "tone": "positive" },
+		{ "label": "Open exceptions", "value": 17, "unit": "cases", "delta": "5 need attention", "tone": "warning" }
+	],
+	"history": [
+		{ "label": "06:00", "value": 120 },
+		{ "label": "08:00", "value": 310 },
+		{ "label": "10:00", "value": 570 },
+		{ "label": "12:00", "value": 910 },
+		{ "label": "14:00", "value": 1280 },
+		{ "label": "16:00", "value": 1575 },
+		{ "label": "18:00", "value": 1842 }
+	],
+	"updatedAt": "Updated 18:05"
+}

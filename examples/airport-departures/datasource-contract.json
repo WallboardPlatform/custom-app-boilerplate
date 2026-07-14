@@ -1,0 +1,40 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "departuresData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "Departures",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Airport Departures",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "sortOrder", "type": "number", "required": true },
+		{ "name": "scheduledTime", "type": "string", "required": true },
+		{ "name": "destination", "type": "string", "required": true },
+		{ "name": "flight", "type": "string", "required": true },
+		{ "name": "airline", "type": "string", "required": false },
+		{ "name": "terminal", "type": "string", "required": false },
+		{ "name": "gate", "type": "string", "required": false },
+		{ "name": "status", "type": "string", "required": true },
+		{ "name": "statusTone", "type": "string", "required": true },
+		{ "name": "visible", "type": "boolean", "required": true }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing Departures",
+		"selected Departures table object",
+		"processed Departures row array"
+	],
+	"behavior": {
+		"unbound": "render bundled sample rows",
+		"boundEmpty": "render configured empty state",
+		"invalidRows": "skip rows missing scheduledTime, destination, or flight",
+		"ordering": "sort ascending by sortOrder and preserve source order for ties",
+		"pagination": "derive rows per page from the assigned widget height and rotate pages"
+	}
+}

@@ -11,6 +11,7 @@
 			"label": "Operations data",
 			"type": "dataPicker",
 			"property": "operationsData",
+			"dataPickerType": "any",
 			"tooltip": "Select a datasource containing metrics, history, and optional updatedAt fields."
 		},
 		{

@@ -1,0 +1,30 @@
+{
+	"MenuItems": {
+		"header": {
+			"section": "string",
+			"sectionOrder": "number",
+			"itemOrder": "number",
+			"name": "string",
+			"description": "text",
+			"price": "string",
+			"badge": "string",
+			"available": "boolean",
+			"featured": "boolean"
+		},
+		"rows": [
+			{ "section": "Soups", "sectionOrder": 1, "itemOrder": 1, "name": "Roasted tomato", "description": "smoked cream, basil oil", "price": "$10", "badge": "", "available": true, "featured": false },
+			{ "section": "Soups", "sectionOrder": 1, "itemOrder": 2, "name": "Wild mushroom", "description": "thyme, brown butter", "price": "$12", "badge": "Chef's choice", "available": true, "featured": true },
+			{ "section": "Soups", "sectionOrder": 1, "itemOrder": 3, "name": "Seasonal broth", "description": "garden herbs, sourdough", "price": "$9", "badge": "", "available": true, "featured": false },
+			{ "section": "Mains", "sectionOrder": 2, "itemOrder": 1, "name": "Sea bass", "description": "fennel, lemon, young potato", "price": "$28", "badge": "", "available": true, "featured": false },
+			{ "section": "Mains", "sectionOrder": 2, "itemOrder": 2, "name": "Glazed pork", "description": "apple, mustard, charred cabbage", "price": "$25", "badge": "", "available": true, "featured": false },
+			{ "section": "Mains", "sectionOrder": 2, "itemOrder": 3, "name": "Garden risotto", "description": "peas, mint, aged cheese", "price": "$22", "badge": "Plant based", "available": true, "featured": false },
+			{ "section": "Drinks", "sectionOrder": 3, "itemOrder": 1, "name": "House cola", "description": "citrus, spice, soda", "price": "$6", "badge": "", "available": true, "featured": false },
+			{ "section": "Drinks", "sectionOrder": 3, "itemOrder": 2, "name": "Elderflower tonic", "description": "lime, rosemary", "price": "$6", "badge": "", "available": true, "featured": false },
+			{ "section": "Drinks", "sectionOrder": 3, "itemOrder": 3, "name": "Sparkling water", "description": "still also available", "price": "$5", "badge": "", "available": true, "featured": false },
+			{ "section": "Desserts", "sectionOrder": 4, "itemOrder": 1, "name": "Burnt honey cake", "description": "cream, walnut", "price": "$10", "badge": "", "available": true, "featured": false },
+			{ "section": "Desserts", "sectionOrder": 4, "itemOrder": 2, "name": "Apple strudel", "description": "vanilla, caramel", "price": "$12", "badge": "", "available": true, "featured": false },
+			{ "section": "Desserts", "sectionOrder": 4, "itemOrder": 3, "name": "Dark chocolate tart", "description": "sea salt, olive oil", "price": "$11", "badge": "", "available": true, "featured": false }
+		],
+		"connectors": {}
+	}
+}

@@ -1,0 +1,43 @@
+{
+	"version": "1",
+	"name": "Cordo Menu Board",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Menu datasource",
+			"type": "dataPicker",
+			"property": "menuData",
+			"dataPickerType": "any",
+			"tooltip": "Select the MenuItems table datasource. Leave unbound to show sample data."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Restaurant label", "type": "text", "property": "restaurantLabel", "default": "Restaurant" },
+				{ "label": "Restaurant name", "type": "text", "property": "restaurantName", "default": "Cordo" },
+				{ "label": "Menu title", "type": "text", "property": "editionTitle", "default": "Dinner menu" },
+				{ "label": "Menu subtitle", "type": "text", "property": "editionSubtitle", "default": "Seasonal kitchen - thoughtfully sourced" },
+				{ "label": "Story eyebrow", "type": "text", "property": "storyEyebrow", "default": "Chef's selection" },
+				{ "label": "Story title", "type": "textArea", "property": "storyTitle", "default": "Simple ingredients.\nConsidered plates." },
+				{ "label": "Story description", "type": "textArea", "property": "storyDescription", "default": "Our evening menu follows the market, the season, and the growers we trust." },
+				{ "label": "Course label", "type": "text", "property": "courseLabel", "default": "Tonight's table" },
+				{ "label": "Course name", "type": "text", "property": "courseName", "default": "Four courses" },
+				{ "label": "Course price", "type": "text", "property": "coursePrice", "default": "$68" },
+				{ "label": "Closing text", "type": "text", "property": "closingText", "default": "Kitchen closes 22:30" },
+				{ "label": "Allergen text", "type": "text", "property": "allergenText", "default": "Ask us about allergens" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No menu items are available." },
+				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 12, "min": 3, "max": 120, "step": 1 }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}
