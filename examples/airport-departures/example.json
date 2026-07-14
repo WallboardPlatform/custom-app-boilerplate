@@ -9,6 +9,7 @@
 		"src/editor-assets/popup-wizard"
 	],
 	"artifacts": [
+		"generation-brief.json",
 		"datasource-contract.json",
 		"sample-datasource.json"
 	]

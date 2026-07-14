@@ -96,6 +96,7 @@ A custom-schema example or deliverable includes:
 
 | File | Purpose |
 |------|---------|
+| `generation-brief.json` | Accepted request and evidence contract; its datasource bindings must match this contract and `properties.json`. |
 | `datasource-contract.json` | Generator metadata: one binding or `bindings[]`, source contracts, columns, accepted runtime shapes, and empty-state behavior. Not uploaded to Wallboard. |
 | `sample-datasource.json` | Importable native data for generated sources, or a sanitized representative bundle for existing bindings. |
 | `preview/fixture.ts` | Uses the same sample contract and adds boundary scenarios. |

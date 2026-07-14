@@ -26,17 +26,20 @@ Run:
 npm run deliver -- <output-directory>
 ```
 
-The command runs identity, datasource, lint, visual, legacy bundle, and package-asset validation. It creates:
+The command runs identity, generation-brief, datasource, lint, visual, legacy bundle, and package-asset validation. It creates:
 
 ```text
 <output-directory>/
 |- <App_Name>_<version>.zip
 |- delivery-manifest.json
+|- generation-brief.json
 |- datasource-contract.json   # data-bound apps only
 `- sample-datasource.json     # data-bound apps only
 ```
 
 Use a new directory or reuse the directory from the previous delivery of the same app. The command replaces known delivery files and fails rather than mixing a new manifest with unrelated or stale artifacts.
+
+`generation-brief.json` records the accepted identity, surfaces, data strategy, settings, states, behavior evidence, assets, and visual-review focus. Keep it with the delivery for traceability; it is not uploaded as part of the app ZIP.
 
 For data-bound apps, the ZIP also contains:
 

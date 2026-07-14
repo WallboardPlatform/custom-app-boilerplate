@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import archiver from 'archiver';
 
 import { readAppMetadata, readJson } from './app-metadata.mjs';
+import { getDatasourceProvisioning } from './datasource-provisioning.mjs';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const metadata = readAppMetadata(projectDirectory);
@@ -68,6 +69,7 @@ const prepareOutputDirectory = () => {
 	const allowedFiles = new Set([
 		metadata.zipFileName,
 		'delivery-manifest.json',
+		'generation-brief.json',
 		'datasource-contract.json',
 		'sample-datasource.json'
 	]);
@@ -108,6 +110,7 @@ const prepareOutputDirectory = () => {
 };
 
 runNpmScript('validate:identity');
+runNpmScript('validate:brief');
 runNpmScript('validate:examples');
 runNpmScript('lint');
 runNpmScript('validate:visual');
@@ -133,7 +136,10 @@ const zipPath = path.join(outputDirectory, metadata.zipFileName);
 await createZip(distDirectory, zipPath);
 
 const contractPath = path.join(projectDirectory, 'datasource-contract.json');
+const briefPath = path.join(projectDirectory, 'generation-brief.json');
 let datasource = null;
+
+fs.copyFileSync(briefPath, path.join(outputDirectory, 'generation-brief.json'));
 
 if (fs.existsSync(contractPath)) {
 	const contract = readJson(contractPath);
@@ -160,20 +166,20 @@ if (fs.existsSync(contractPath)) {
 	const samplePath = path.resolve(projectDirectory, sampleDataPath);
 	const contractOutputPath = path.join(outputDirectory, 'datasource-contract.json');
 	const sampleOutputPath = path.join(outputDirectory, 'sample-datasource.json');
-	const manifestBindings = bindings.map((binding) => ({
-		contract: binding.source.contract,
-		bindingProperty: binding.property,
-		dataPickerType: binding.dataPickerType,
-		suggestedName: binding.delivery.suggestedDatasourceName,
-		quickEditEligible: binding.delivery.quickEditEligible,
-		samplePath: binding.source.samplePath ?? null,
-		currentProvisioning: binding.source.contract === 'EXISTING'
-			? 'select-existing-then-bind'
-			: 'create-or-import-then-bind',
-		futureProvisioning: binding.source.contract === 'EXISTING'
-			? 'bind-existing-source'
-			: 'create-from-packaged-template'
-	}));
+	const manifestBindings = bindings.map((binding) => {
+		const provisioning = getDatasourceProvisioning(binding.source.contract);
+
+		return {
+			contract: binding.source.contract,
+			bindingProperty: binding.property,
+			dataPickerType: binding.dataPickerType,
+			suggestedName: binding.delivery.suggestedDatasourceName,
+			quickEditEligible: binding.delivery.quickEditEligible,
+			samplePath: binding.source.samplePath ?? null,
+			currentProvisioning: provisioning.current,
+			futureProvisioning: provisioning.future
+		};
+	});
 	const singleBinding = manifestBindings.length === 1 ? manifestBindings[0] : null;
 
 	fs.copyFileSync(contractPath, contractOutputPath);
@@ -200,9 +206,14 @@ const manifest = {
 		zipFile: metadata.zipFileName,
 		uploadRule: 'Create this identity once; replacement builds must be uploaded to the same Wallboard app record.'
 	},
+	generationBrief: {
+		briefVersion: 1,
+		file: 'generation-brief.json'
+	},
 	datasource,
 	validation: {
 		identity: true,
+		generationBrief: true,
 		contract: true,
 		lint: true,
 		visual: true,

@@ -1,0 +1,65 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Turn a photographed restaurant menu into a branded digital menu board with editable dishes and prices.",
+		"audience": "Restaurant guests reading a dinner menu from shared signage.",
+		"primaryGoal": "Preserve the restaurant's visual identity while keeping operational menu content editable as table rows."
+	},
+	"assumptions": [
+		"Menu sections contain different numbers of items and must paginate without leaving broken columns.",
+		"Temporarily unavailable dishes remain in the datasource and are hidden through an availability field."
+	],
+	"app": { "mode": "new", "name": "Cordo Menu Board", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen branded dinner menu." },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low menu zone with reduced secondary copy." },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait menu display." },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact menu composition." }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "menuData", "source": "generated", "contract": "TABLE" }
+		]
+	},
+	"settings": [
+		{ "property": "restaurantLabel", "purpose": "Small venue category label." },
+		{ "property": "restaurantName", "purpose": "Primary restaurant name." },
+		{ "property": "editionTitle", "purpose": "Menu edition title." },
+		{ "property": "editionSubtitle", "purpose": "Menu edition supporting line." },
+		{ "property": "storyEyebrow", "purpose": "Editorial story label." },
+		{ "property": "storyTitle", "purpose": "Editorial story headline." },
+		{ "property": "storyDescription", "purpose": "Editorial story description." },
+		{ "property": "courseLabel", "purpose": "Course offer label." },
+		{ "property": "courseName", "purpose": "Course offer name." },
+		{ "property": "coursePrice", "purpose": "Course offer price." },
+		{ "property": "closingText", "purpose": "Service-hours note." },
+		{ "property": "allergenText", "purpose": "Allergen notice." },
+		{ "property": "emptyStateText", "purpose": "Message when no menu rows are available." },
+		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." }
+	],
+	"states": [
+		{ "scenario": "static-unbound", "expectation": "Representative menu content remains visible before binding." },
+		{ "scenario": "empty", "expectation": "An explicit empty menu message replaces missing dishes." },
+		{ "scenario": "bound-null", "expectation": "A null bound datasource remains stable and does not substitute sample rows." },
+		{ "scenario": "long-labels", "expectation": "Long section, dish, description, and badge text remains contained." },
+		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same menu model." },
+		{ "scenario": "last-page", "expectation": "Uneven section counts and the final partial page remain balanced." },
+		{ "scenario": "quick-edit-update", "expectation": "Edited dish names and prices update without rebuilding the app." }
+	],
+	"behaviors": [
+		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section paginate into balanced menu pages.", "evidence": { "scenario": "last-page" } },
+		{ "id": "quick-edit-update", "expectation": "Datasource edits update placed menu content immediately.", "evidence": { "scenario": "quick-edit-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A polished editorial restaurant menu that feels branded, legible, and intentionally composed rather than template-like.",
+		"focus": [
+			"Verify unequal section lengths and final pages do not produce broken columns or excessive empty space.",
+			"Verify typography remains proportional and dish prices never collide with long names."
+		]
+	}
+}

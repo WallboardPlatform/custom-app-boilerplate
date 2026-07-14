@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { getDatasourceProvisioning } from './datasource-provisioning.mjs';
+
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const examplesDirectory = path.join(rootDirectory, 'examples');
 
@@ -228,6 +230,7 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 		}
 
 		declaredProperties.add(bindingProperty);
+		getDatasourceProvisioning(sourceContract);
 
 		if (typeof binding.delivery?.quickEditEligible !== 'boolean') {
 			fail(exampleId, `${bindingProperty}.delivery.quickEditEligible must be boolean.`);
@@ -235,6 +238,10 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 
 		if (sourceContract === 'TABLE' && binding.delivery.quickEditEligible !== true) {
 			fail(exampleId, `TABLE datasource '${suggestedDatasourceName}' must be quick-edit eligible.`);
+		}
+
+		if (['EXISTING', 'FEED', 'CALENDAR'].includes(sourceContract) && binding.delivery.quickEditEligible !== false) {
+			fail(exampleId, `${sourceContract} datasource '${suggestedDatasourceName}' must not claim generated-table quick edit.`);
 		}
 
 		const dataPicker = findDataPicker(properties.properties, bindingProperty);
@@ -249,10 +256,8 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 
 		if (sourceContract === 'TABLE') {
 			validateTableContract(exampleId, exampleDirectory, binding);
-		} else if (sourceContract === 'CUSTOM' || sourceContract === 'EXISTING') {
+		} else if (['CUSTOM', 'EXISTING', 'FEED', 'CALENDAR'].includes(sourceContract)) {
 			readSample(exampleId, exampleDirectory, binding.source);
-		} else {
-			fail(exampleId, `unsupported source contract '${sourceContract}'.`);
 		}
 
 		validatedBindings += 1;

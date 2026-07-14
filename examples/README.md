@@ -7,6 +7,7 @@ Each example contains:
 ```text
 examples/<id>/
 |- example.json      # description and base files to remove
+|- generation-brief.json  # validated request, design, data, and evidence contract
 |- datasource-contract.json  # optional generator metadata for data-bound examples
 |- sample-datasource.json     # optional native Wallboard datasource data
 `- overlay/          # files copied over a clean boilerplate materialization
@@ -36,4 +37,4 @@ The explicit target must be new or empty. Run `npm run validate:examples` in the
 
 Run `npm run example:accept -- <id>` for the clean materialization, complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, every screenshot is inspected, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
 
-An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.
+Every example includes a generation brief whose settings and evidence match the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.

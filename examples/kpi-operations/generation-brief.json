@@ -1,0 +1,60 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a responsive operations KPI board with summary metrics, target progress, and a trend chart.",
+		"audience": "Operations teams monitoring fulfillment performance on shared displays.",
+		"primaryGoal": "Make current performance and exceptions immediately legible while retaining recent trend context."
+	},
+	"assumptions": [
+		"Metrics and history remain separate collections because flattening them would lose their relationship.",
+		"The dashboard renders at most three primary metrics and twenty-four trend points."
+	],
+	"app": { "mode": "new", "name": "KPI Operations", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 1280, "height": 720, "role": "primary", "purpose": "Landscape operations dashboard." },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide dashboard band with compressed secondary detail." },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Stacked portrait KPI layout." },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact KPI tile composition." }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "operationsData", "source": "generated", "contract": "CUSTOM" }
+		]
+	},
+	"settings": [
+		{ "property": "titleText", "purpose": "Dashboard title." },
+		{ "property": "subtitleText", "purpose": "Dashboard context line." },
+		{ "property": "emptyStateText", "purpose": "Missing-data message." },
+		{ "property": "targetLabel", "purpose": "Target progress label." },
+		{ "property": "targetValue", "purpose": "Numeric target for progress calculation." },
+		{ "property": "fontFamily", "purpose": "Display typeface." },
+		{ "property": "backgroundColor", "purpose": "Root background color." },
+		{ "property": "surfaceColor", "purpose": "Metric surface color." },
+		{ "property": "primaryTextColor", "purpose": "Primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Supporting text color." },
+		{ "property": "accentColor", "purpose": "Chart and target accent." },
+		{ "property": "positiveColor", "purpose": "Positive performance color." },
+		{ "property": "warningColor", "purpose": "Warning and exception color." }
+	],
+	"states": [
+		{ "scenario": "empty", "expectation": "An explicit empty state occupies the dashboard without layout collapse." },
+		{ "scenario": "long-labels", "expectation": "Long metric labels and deltas remain readable in a wide-low surface." },
+		{ "scenario": "live-update", "expectation": "Updated metrics replace current values without rebuilding the app." }
+	],
+	"behaviors": [
+		{ "id": "responsive-chart", "expectation": "The trend remains bounded while the KPI hierarchy adapts around it.", "evidence": { "scenario": "long-labels" } },
+		{ "id": "live-update", "expectation": "Datasource updates propagate to metric labels and values.", "evidence": { "scenario": "live-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A quiet operational dashboard with one dominant metric story, restrained surfaces, and a readable trend.",
+		"focus": [
+			"Verify the chart never crowds or overlaps metric cards at narrow and tall sizes.",
+			"Verify numeric values remain dominant while long supporting text truncates or wraps intentionally."
+		]
+	}
+}
