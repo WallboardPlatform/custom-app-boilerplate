@@ -188,6 +188,8 @@ Production builds are optimized for performance with minimal logging:
 
 This validates the accepted generation brief, datasource contracts, visual surfaces, Chromium 56 CSS compatibility, cache-listed runtime assets, and editor image integrity before accepting the zip.
 
+Pull requests run the complete delivery workflow for every maintained example and retain screenshots plus delivery artifacts as CI evidence.
+
 ---
 
 ## Build Process Overview

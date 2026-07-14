@@ -47,7 +47,7 @@
 		{ "scenario": "live-datasource-update", "expectation": "A datasource edit updates the placed board without rebuilding." }
 	],
 	"behaviors": [
-		{ "id": "adaptive-pagination", "expectation": "Rows per page adapt to height and the last page remains readable.", "evidence": { "scenario": "last-page" } },
+		{ "id": "adaptive-pagination", "expectation": "Rows per page adapt to height, rotate on schedule, and fill the final page without overlap.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "live-update", "expectation": "Datasource changes update visible flight status in place.", "evidence": { "scenario": "live-datasource-update" } }
 	],
 	"assets": [
