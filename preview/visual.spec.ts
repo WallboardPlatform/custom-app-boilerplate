@@ -2,10 +2,16 @@ import fs from 'node:fs';
 import path from 'path';
 
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { appViewport } from './app-viewport';
-import previewFixture, { previewScenarios } from './fixture';
-import type { MinimumContentCoverage, PreviewScenario } from './fixture.types';
+import previewFixture, { previewScenarios, previewSettingEffects } from './fixture';
+import type {
+	MinimumContentCoverage,
+	PreviewScenario,
+	PreviewSettingEffect,
+	PreviewSettingEffectMeasurement
+} from './fixture.types';
 
 interface VisualPreset {
 	name: string;
@@ -100,6 +106,30 @@ const screenshotDirectory: string = path.resolve(process.cwd(), 'preview', 'outp
 const previewBaseUrl: string = process.env.WALLBOARD_PREVIEW_TEST_PORT
 	? `http://127.0.0.1:${process.env.WALLBOARD_PREVIEW_TEST_PORT}/`
 	: 'http://127.0.0.1:4173/';
+
+const readSettingEffectValue = async (
+	page: Page,
+	effect: PreviewSettingEffect
+): Promise<number | string | null> => {
+	return page.locator(effect.selector).first().evaluate(
+		(element: Element, measurement: PreviewSettingEffectMeasurement): number | string | null => {
+			if (measurement.type === 'bounding-box') {
+				return element.getBoundingClientRect()[measurement.dimension];
+			}
+
+			if (measurement.type === 'computed-style') {
+				return window.getComputedStyle(element).getPropertyValue(measurement.property).trim();
+			}
+
+			if (measurement.type === 'text-content') {
+				return element.textContent?.trim() ?? '';
+			}
+
+			return element.getAttribute(measurement.name);
+		},
+		effect.measurement
+	);
+};
 
 for (const preset of [...presets, ...scenarioPresets]) {
 	test(`${preset.name} ${preset.width}x${preset.height}`, async ({ page }): Promise<void> => {
@@ -326,6 +356,81 @@ for (const preset of [...presets, ...scenarioPresets]) {
 		if (preset.minimumContentCoverage) {
 			expect(metrics.contentWidthCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.width);
 			expect(metrics.contentHeightCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.height);
+		}
+	});
+}
+
+for (const effect of previewSettingEffects) {
+	test(`setting effect ${effect.id}`, async ({ page }): Promise<void> => {
+		const scenario: PreviewScenario | undefined = effect.scenario
+			? previewScenarios.find((candidate: PreviewScenario): boolean => candidate.id === effect.scenario)
+			: undefined;
+		const primarySurface: BriefSurface = generationBrief.surfaces.find(
+			(surface: BriefSurface): boolean => surface.role === 'primary'
+		) as BriefSurface;
+		const viewport = scenario?.viewport ?? {
+			width: primarySurface.width,
+			height: primarySurface.height,
+			background: 'checker' as const
+		};
+		const query: URLSearchParams = new URLSearchParams({ background: viewport.background ?? 'checker' });
+
+		if (effect.scenario) {
+			query.set('scenario', effect.scenario);
+		}
+
+		await page.setViewportSize({ width: viewport.width, height: viewport.height });
+		const response = await page.goto(`/preview/widget.html?${query.toString()}`);
+
+		expect(response?.ok()).toBe(true);
+		await page.waitForFunction((): boolean => {
+			return document.documentElement.dataset.previewReady === 'true';
+		});
+		await page.locator(effect.selector).first().waitFor({ state: 'visible' });
+		await page.locator(effect.selector).first().evaluate(async (element: Element): Promise<void> => {
+			if (element instanceof HTMLImageElement && !element.complete) {
+				await new Promise<void>((resolve): void => {
+					element.addEventListener('load', (): void => resolve(), { once: true });
+					element.addEventListener('error', (): void => resolve(), { once: true });
+				});
+			}
+		});
+
+		const baselineValue: number | string | null = await readSettingEffectValue(page, effect);
+
+		await page.evaluate(({ property, changedValue }): void => {
+			const previewWindow = window as Window & {
+				__wallboardPreview?: {
+					pushConfiguration: (configValues: Record<string, unknown>) => void;
+				};
+			};
+
+			if (!previewWindow.__wallboardPreview) {
+				throw new Error('Preview configuration update bridge is unavailable.');
+			}
+
+			previewWindow.__wallboardPreview.pushConfiguration({ [property]: changedValue });
+		}, effect);
+
+		if (effect.expectation.type === 'change') {
+			await expect.poll(async (): Promise<boolean> => {
+				return (await readSettingEffectValue(page, effect)) !== baselineValue;
+			}).toBe(true);
+		} else {
+			const baselineNumber: number = Number.parseFloat(String(baselineValue));
+			const minimumDelta: number = effect.expectation.minimumDelta ?? 1;
+
+			expect(Number.isFinite(baselineNumber)).toBe(true);
+
+			if (effect.expectation.type === 'increase') {
+				await expect.poll(async (): Promise<number> => {
+					return Number.parseFloat(String(await readSettingEffectValue(page, effect)));
+				}).toBeGreaterThanOrEqual(baselineNumber + minimumDelta);
+			} else {
+				await expect.poll(async (): Promise<number> => {
+					return Number.parseFloat(String(await readSettingEffectValue(page, effect)));
+				}).toBeLessThanOrEqual(baselineNumber - minimumDelta);
+			}
 		}
 	});
 }

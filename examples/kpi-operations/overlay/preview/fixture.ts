@@ -1,6 +1,6 @@
 import operationsData from '../sample-datasource.json';
 
-import type { PreviewFixture, PreviewScenario } from './fixture.types';
+import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fixture.types';
 
 
 const baseConfig: Record<string, unknown> = {
@@ -76,5 +76,7 @@ export const previewScenarios: PreviewScenario[] = [
 		}
 	}
 ];
+
+export const previewSettingEffects: PreviewSettingEffect[] = [];
 
 export default previewFixture;

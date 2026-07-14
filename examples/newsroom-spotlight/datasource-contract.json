@@ -1,0 +1,27 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "feedData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "FEED",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Newsroom Feed",
+		"quickEditEligible": false
+	},
+	"acceptedValueShapes": [
+		"Wallboard feed channel containing items with media or attachments",
+		"Legacy RSS parser output containing feed.entries with enclosure or media",
+		"RSS channel object containing channel.item",
+		"Processed feed item array"
+	],
+	"behavior": {
+		"unbound": "render the configured empty state",
+		"boundEmpty": "render the configured empty state",
+		"invalidRows": "skip entries without a title and ignore unsafe media URLs",
+		"ordering": "show newest dated entries first while preserving source order for undated entries"
+	}
+}

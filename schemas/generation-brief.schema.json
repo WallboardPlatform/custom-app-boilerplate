@@ -94,7 +94,8 @@
 				"required": ["property", "purpose"],
 				"properties": {
 					"property": { "$ref": "#/$defs/nonEmptyString" },
-					"purpose": { "$ref": "#/$defs/nonEmptyString" }
+					"purpose": { "$ref": "#/$defs/nonEmptyString" },
+					"effect": { "$ref": "#/$defs/safeId" }
 				}
 			}
 		},

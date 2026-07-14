@@ -38,6 +38,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 		verticalMargin: numberSetting(config.verticalMargin, 4, 0, 40),
 		itemMargin: numberSetting(config.itemMargin, 22, 0, 100),
 		logoScale: numberSetting(config.logoScale, 72, 20, 100),
+		marketLabelFont: fontSetting(config.marketLabelFont, 28, '#ff1f2d'),
 		tickerFont: fontSetting(config.tickerFont, 34, '#ffffff'),
 		priceFont: fontSetting(config.priceFont, 28, '#ffffff'),
 		changeFont: fontSetting(config.changeFont, 21, '#ffffff'),

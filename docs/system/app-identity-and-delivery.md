@@ -31,6 +31,7 @@ The command runs identity, generation-brief project synchronization, datasource,
 ```text
 <output-directory>/
 |- <App_Name>_<version>.zip
+|- <App_Name>_<version>_source.zip
 |- delivery-manifest.json
 |- generation-brief.json
 |- datasource-contract.json   # data-bound apps only
@@ -40,6 +41,10 @@ The command runs identity, generation-brief project synchronization, datasource,
 Use a new directory or reuse the directory from the previous delivery of the same app. The command replaces known delivery files and fails rather than mixing a new manifest with unrelated or stale artifacts.
 
 `generation-brief.json` records the accepted identity, surfaces, data strategy, settings, states, behavior evidence, assets, and visual-review focus. Keep it with the delivery for traceability; it is not uploaded as part of the app ZIP.
+
+The source ZIP is a separate agent/developer handoff and must never be uploaded as the Wallboard app package. It contains the buildable project while excluding `.npmrc`, environment files, `config.json`, private keys, archives, dependencies, generated output, caches, preview screenshots, and the delivery directory. The manifest records its SHA-256 hash, file count, Git commit when available, and whether the working tree was clean. A dirty source archive remains complete, but its commit alone does not reproduce the local changes.
+
+`deliver` always runs visual validation. Package-only diagnostics are not accepted delivery evidence; move the source ZIP to an environment with Playwright support and run `deliver` there instead of bypassing visual checks.
 
 For data-bound apps, the ZIP also contains:
 

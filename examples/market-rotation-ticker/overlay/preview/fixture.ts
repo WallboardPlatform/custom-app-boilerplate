@@ -1,6 +1,6 @@
 import sampleDatasourceJson from '../sample-datasource.json';
 
-import type { PreviewFixture, PreviewScenario } from './fixture.types';
+import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fixture.types';
 
 
 interface SampleDatasourceBundle extends Record<string, unknown> {
@@ -30,6 +30,7 @@ const baseConfig: Record<string, unknown> = {
 	verticalMargin: 4,
 	itemMargin: 22,
 	logoScale: 72,
+	marketLabelFont: defaultFont(28),
 	tickerFont: defaultFont(34),
 	priceFont: defaultFont(28),
 	changeFont: defaultFont(21),
@@ -181,6 +182,44 @@ export const previewScenarios: PreviewScenario[] = [
 		},
 		viewport: { width: 1280, height: 180, background: 'dark' },
 		minimumContentCoverage: { width: 90, height: 10 }
+	}
+];
+
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'vertical-margin',
+		property: 'verticalMargin',
+		changedValue: 24,
+		selector: '.ticker-viewport',
+		scenario: 'scrolling-nasdaq',
+		measurement: { type: 'computed-style', property: 'padding-top' },
+		expectation: { type: 'increase', minimumDelta: 15 }
+	},
+	{
+		id: 'item-margin',
+		property: 'itemMargin',
+		changedValue: 60,
+		selector: '.stock-item',
+		scenario: 'scrolling-nasdaq',
+		measurement: { type: 'bounding-box', dimension: 'width' },
+		expectation: { type: 'increase', minimumDelta: 50 }
+	},
+	{
+		id: 'logo-scale',
+		property: 'logoScale',
+		changedValue: 100,
+		selector: '.stock-logo-image',
+		scenario: 'scrolling-nasdaq',
+		measurement: { type: 'bounding-box', dimension: 'height' },
+		expectation: { type: 'increase', minimumDelta: 15 }
+	},
+	{
+		id: 'market-label-font',
+		property: 'marketLabelFont',
+		changedValue: defaultFont(52),
+		selector: '.exchange-title strong',
+		measurement: { type: 'computed-style', property: 'font-size' },
+		expectation: { type: 'increase', minimumDelta: 20 }
 	}
 ];
 

@@ -10,6 +10,7 @@ import {
 	getDatasourceProvisioning,
 	normalizeDatasourceBindings
 } from './datasource-provisioning.mjs';
+import { createSourceArchive, readGitProvenance } from './source-archive.mts';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const metadata = readAppMetadata(projectDirectory);
@@ -30,6 +31,7 @@ const commandEnvironment = {
 	WALLBOARD_PREVIEW_TEST_PORT: process.env.WALLBOARD_PREVIEW_TEST_PORT ?? String(40000 + (projectPathHash % 20000)),
 	SIMPLE_OUTPUT: 'true'
 };
+const sourceArchiveFileName = `${path.basename(metadata.zipFileName, '.zip')}_source.zip`;
 
 const runNpmScript = (script) => {
 	const result = spawnSync(npmCommand, ['run', script], {
@@ -71,6 +73,7 @@ const prepareOutputDirectory = () => {
 
 	const allowedFiles = new Set([
 		metadata.zipFileName,
+		sourceArchiveFileName,
 		'delivery-manifest.json',
 		'generation-brief.json',
 		'datasource-contract.json',
@@ -88,6 +91,7 @@ const prepareOutputDirectory = () => {
 		}
 
 		const previousZipFile = previousManifest?.app?.zipFile;
+		const previousSourceArchiveFile = previousManifest?.source?.archiveFile;
 
 		if (
 			typeof previousZipFile === 'string'
@@ -95,6 +99,14 @@ const prepareOutputDirectory = () => {
 			&& previousZipFile.toLowerCase().endsWith('.zip')
 		) {
 			allowedFiles.add(previousZipFile);
+		}
+
+		if (
+			typeof previousSourceArchiveFile === 'string'
+			&& path.basename(previousSourceArchiveFile) === previousSourceArchiveFile
+			&& previousSourceArchiveFile.toLowerCase().endsWith('.zip')
+		) {
+			allowedFiles.add(previousSourceArchiveFile);
 		}
 	}
 
@@ -139,6 +151,9 @@ for (const relativePath of requiredFiles) {
 prepareOutputDirectory();
 const zipPath = path.join(outputDirectory, metadata.zipFileName);
 await createZip(distDirectory, zipPath);
+const sourceArchivePath = path.join(outputDirectory, sourceArchiveFileName);
+const sourceArchive = await createSourceArchive(projectDirectory, sourceArchivePath, outputDirectory);
+const gitProvenance = readGitProvenance(projectDirectory);
 
 const contractPath = path.join(projectDirectory, 'datasource-contract.json');
 const briefPath = path.join(projectDirectory, 'generation-brief.json');
@@ -197,13 +212,19 @@ if (fs.existsSync(contractPath)) {
 }
 
 const manifest = {
-	deliveryVersion: 1,
+	deliveryVersion: 2,
 	app: {
 		name: metadata.name,
 		version: metadata.version,
 		identity: metadata.identity,
 		zipFile: metadata.zipFileName,
 		uploadRule: 'Create this identity once; replacement builds must be uploaded to the same Wallboard app record.'
+	},
+	source: {
+		archiveFile: sourceArchiveFileName,
+		fileCount: sourceArchive.fileCount,
+		sha256: sourceArchive.sha256,
+		git: gitProvenance
 	},
 	generationBrief: {
 		briefVersion: brief.briefVersion,
@@ -217,7 +238,8 @@ const manifest = {
 		lint: true,
 		visual: true,
 		legacyBundle: true,
-		packageAssets: true
+		packageAssets: true,
+		sourceArchive: true
 	}
 };
 
@@ -229,3 +251,4 @@ fs.writeFileSync(
 
 console.log(`Delivery created at ${outputDirectory}`);
 console.log(`Uploadable package: ${zipPath}`);
+console.log(`Agent-ready source: ${sourceArchivePath}`);

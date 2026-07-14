@@ -18,11 +18,22 @@ export interface ProjectValidationContext {
 interface PropertySummary {
 	dataPickers: Set<string>;
 	settings: Set<string>;
+	sliders: Set<string>;
 }
 
 interface PreviewScenarioValue {
 	id?: unknown;
 	minimumContentCoverage?: unknown;
+}
+
+interface PreviewSettingEffectValue {
+	changedValue?: unknown;
+	expectation?: unknown;
+	id?: unknown;
+	measurement?: unknown;
+	property?: unknown;
+	selector?: unknown;
+	scenario?: unknown;
 }
 
 type JsonObject = Record<string, unknown>;
@@ -51,6 +62,63 @@ const requireString = (context: ProjectValidationContext, value: unknown, field:
 	return fail(context, `${field} must be a non-empty string.`);
 };
 
+const requireSettingEffectMeasurement = (
+	context: ProjectValidationContext,
+	value: unknown,
+	field: string
+): void => {
+	const measurement = requireObject(context, value, field);
+	const type = requireString(context, measurement.type, `${field}.type`);
+
+	if (type === 'bounding-box') {
+		if (measurement.dimension !== 'width' && measurement.dimension !== 'height') {
+			fail(context, `${field}.dimension must be 'width' or 'height'.`);
+		}
+
+		return;
+	}
+
+	if (type === 'computed-style') {
+		requireString(context, measurement.property, `${field}.property`);
+
+		return;
+	}
+
+	if (type === 'attribute') {
+		requireString(context, measurement.name, `${field}.name`);
+
+		return;
+	}
+
+	if (type !== 'text-content') {
+		fail(context, `${field}.type must be 'bounding-box', 'computed-style', 'text-content', or 'attribute'.`);
+	}
+};
+
+const requireSettingEffectExpectation = (
+	context: ProjectValidationContext,
+	value: unknown,
+	field: string
+): void => {
+	const expectation = requireObject(context, value, field);
+	const type = requireString(context, expectation.type, `${field}.type`);
+
+	if (type !== 'change' && type !== 'increase' && type !== 'decrease') {
+		fail(context, `${field}.type must be 'change', 'increase', or 'decrease'.`);
+	}
+
+	if (expectation.minimumDelta !== undefined) {
+		if (
+			type === 'change'
+			|| typeof expectation.minimumDelta !== 'number'
+			|| !Number.isFinite(expectation.minimumDelta)
+			|| expectation.minimumDelta <= 0
+		) {
+			fail(context, `${field}.minimumDelta must be a positive number for increase or decrease expectations.`);
+		}
+	}
+};
+
 export const readJsonFile = (
 	context: ProjectValidationContext,
 	filePath: string,
@@ -74,7 +142,7 @@ export const readJsonFile = (
 const collectProperties = (
 	context: ProjectValidationContext,
 	properties: unknown,
-	output: PropertySummary = { dataPickers: new Set(), settings: new Set() }
+	output: PropertySummary = { dataPickers: new Set(), settings: new Set(), sliders: new Set() }
 ): PropertySummary => {
 	if (!Array.isArray(properties)) {
 		return fail(context, 'properties.json properties must be an array.');
@@ -105,6 +173,10 @@ const collectProperties = (
 		}
 
 		target.add(propertyName);
+
+		if (property.type === 'slider') {
+			output.sliders.add(propertyName);
+		}
 	}
 
 	return output;
@@ -232,7 +304,10 @@ export const validateBriefAgainstProject = async (
 	}
 
 	const fixtureUrl = `${pathToFileURL(context.fixturePath).href}?brief-validation=${Date.now()}-${Math.random()}`;
-	const fixtureModule = await import(fixtureUrl) as { previewScenarios?: PreviewScenarioValue[] };
+	const fixtureModule = await import(fixtureUrl) as {
+		previewScenarios?: PreviewScenarioValue[];
+		previewSettingEffects?: PreviewSettingEffectValue[];
+	};
 	const previewScenarioIds = new Set<string>();
 
 	for (const [index, scenario] of (fixtureModule.previewScenarios ?? []).entries()) {
@@ -259,6 +334,86 @@ export const validateBriefAgainstProject = async (
 
 	if (!setsMatch(stateScenarioIds, previewScenarioIds)) {
 		fail(context, `states must document every named preview scenario. Brief: ${formatSet(stateScenarioIds)}; fixture: ${formatSet(previewScenarioIds)}.`);
+	}
+
+	const effectIds = new Set<string>();
+	const effectProperties = new Map<string, string>();
+
+	for (const [index, effect] of (fixtureModule.previewSettingEffects ?? []).entries()) {
+		const effectId = requireString(context, effect.id, `previewSettingEffects[${index}].id`);
+		const property = requireString(context, effect.property, `previewSettingEffects[${index}].property`);
+
+		requireString(context, effect.selector, `previewSettingEffects[${index}].selector`);
+
+		if (!Object.prototype.hasOwnProperty.call(effect, 'changedValue') || effect.changedValue === undefined) {
+			fail(context, `previewSettingEffects[${index}].changedValue must be defined.`);
+		}
+
+		requireSettingEffectMeasurement(
+			context,
+			effect.measurement,
+			`previewSettingEffects[${index}].measurement`
+		);
+		requireSettingEffectExpectation(
+			context,
+			effect.expectation,
+			`previewSettingEffects[${index}].expectation`
+		);
+
+		if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(effectId)) {
+			fail(context, `previewSettingEffects[${index}].id must be a lowercase kebab-case identifier.`);
+		}
+
+		if (!propertySummary.settings.has(property)) {
+			fail(context, `setting effect '${effectId}' references unknown editor property '${property}'.`);
+		}
+
+		if (effectIds.has(effectId)) {
+			fail(context, `preview fixture contains duplicate setting effect '${effectId}'.`);
+		}
+
+		if (effect.scenario !== undefined) {
+			const scenario = requireString(context, effect.scenario, `previewSettingEffects[${index}].scenario`);
+
+			if (!previewScenarioIds.has(scenario)) {
+				fail(context, `setting effect '${effectId}' references unknown scenario '${scenario}'.`);
+			}
+		}
+
+		effectIds.add(effectId);
+		effectProperties.set(effectId, property);
+	}
+
+	const referencedEffectIds = new Set<string>();
+
+	for (const setting of brief.settings) {
+		if (!setting.effect) {
+			continue;
+		}
+
+		if (!effectIds.has(setting.effect)) {
+			fail(context, `setting '${setting.property}' references unknown effect '${setting.effect}'.`);
+		}
+
+		if (effectProperties.get(setting.effect) !== setting.property) {
+			fail(context, `setting effect '${setting.effect}' must verify property '${setting.property}'.`);
+		}
+
+		referencedEffectIds.add(setting.effect);
+	}
+
+	for (const effectId of effectIds) {
+		if (!referencedEffectIds.has(effectId)) {
+			fail(context, `setting effect '${effectId}' must be referenced by settings[].effect.`);
+		}
+	}
+
+	for (const slider of propertySummary.sliders) {
+		const plannedSetting = brief.settings.find((setting) => setting.property === slider);
+
+		if (!plannedSetting?.effect) {
+			fail(context, `slider setting '${slider}' must declare executable settings[].effect evidence.`);
+		}
 	}
 
 	const referencedTestFiles = new Set<string>();

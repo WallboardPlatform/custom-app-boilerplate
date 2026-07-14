@@ -1,0 +1,26 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "calendarData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "CALENDAR",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Live Agenda Calendar",
+		"quickEditEligible": false
+	},
+	"acceptedValueShapes": [
+		"Google or Microsoft calendar object containing events with nested start and end timeStamp values",
+		"iCalendar object containing events with startTimestamp, endTimestamp, and summary",
+		"iCalendar wrapper containing calendar.events"
+	],
+	"behavior": {
+		"unbound": "render the configured empty state",
+		"boundEmpty": "render the configured empty state",
+		"invalidRows": "skip cancelled events or rows without a title and valid start/end timestamps",
+		"ordering": "sort valid events chronologically and feature the active event or next upcoming event"
+	}
+}

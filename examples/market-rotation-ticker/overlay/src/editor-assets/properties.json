@@ -40,6 +40,15 @@
 			]
 		},
 		{
+			"label": "Market label font",
+			"type": "group",
+			"properties": [
+				{ "type": "fontFamily", "propertyContainer": "marketLabelFont" },
+				{ "type": "fontSize", "propertyContainer": "marketLabelFont" },
+				{ "type": "fontStyle", "propertyContainer": "marketLabelFont" }
+			]
+		},
+		{
 			"label": "Ticker name font",
 			"type": "group",
 			"properties": [

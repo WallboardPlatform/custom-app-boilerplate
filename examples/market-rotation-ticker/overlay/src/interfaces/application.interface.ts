@@ -40,6 +40,7 @@ export interface Settings extends Record<string, unknown> {
 	verticalMargin: number;
 	itemMargin: number;
 	logoScale: number;
+	marketLabelFont: FontSettings;
 	tickerFont: FontSettings;
 	priceFont: FontSettings;
 	changeFont: FontSettings;
@@ -72,6 +73,7 @@ export interface ConfigValues {
 	verticalMargin?: number;
 	itemMargin?: number;
 	logoScale?: number;
+	marketLabelFont?: RawFontSettings;
 	tickerFont?: RawFontSettings;
 	priceFont?: RawFontSettings;
 	changeFont?: RawFontSettings;

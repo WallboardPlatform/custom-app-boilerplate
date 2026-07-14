@@ -14,7 +14,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
 | `surfaces` | At least four realistic sizes; lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; include portrait and square fallbacks; set minimum width/height content coverage for every surface |
 | `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
-| `settings` | Exactly one purpose for every non-datasource editor property |
+| `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
 | `states` | Exactly one expectation for every named `previewScenario` |
 | `behaviors` | Observable timing, motion, pagination, live-update, or interaction rules with scenario or test-file evidence |
 | `assets` | Packaged, datasource-backed, or setting-provided assets; include icon and placeholder |
@@ -40,6 +40,7 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
   - `{"scenario":"last-page"}` for a state proven by the shared visual suite.
   - `{"testFile":"preview/behavior.spec.ts"}` for app-specific motion, timing, or interaction assertions.
 - Every app-specific `preview/*.spec.ts` file must be referenced by at least one behavior.
+- Every slider must have a `previewSettingEffects` entry referenced by its `settings[].effect`. Use the same mechanism for other controls whose visible effect is easy to regress, especially typography, media sizing, visibility, and color controls.
 - Asset paths must stay inside the project. Datasource assets must name a declared binding; setting assets must name real editor properties.
 
 ## Workflow

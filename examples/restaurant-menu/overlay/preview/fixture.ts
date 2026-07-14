@@ -1,6 +1,6 @@
 import sampleDatasourceJson from '../sample-datasource.json';
 
-import type { PreviewFixture, PreviewScenario } from './fixture.types';
+import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fixture.types';
 
 
 interface MenuRow extends Record<string, unknown> {
@@ -149,5 +149,7 @@ export const previewScenarios: PreviewScenario[] = [
 		}
 	}
 ];
+
+export const previewSettingEffects: PreviewSettingEffect[] = [];
 
 export default previewFixture;
