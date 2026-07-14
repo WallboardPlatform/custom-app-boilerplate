@@ -1,10 +1,11 @@
+import fs from 'node:fs';
 import path from 'path';
 
 import { expect, test } from '@playwright/test';
 
 import { appViewport } from './app-viewport';
 import previewFixture, { previewScenarios } from './fixture';
-import type { PreviewScenario } from './fixture';
+import type { MinimumContentCoverage, PreviewScenario } from './fixture.types';
 
 interface VisualPreset {
 	name: string;
@@ -14,10 +15,7 @@ interface VisualPreset {
 	scenario?: string;
 	readySelector?: string;
 	advanceTimeMs?: number;
-	minimumContentCoverage?: {
-		width: number;
-		height: number;
-	};
+	minimumContentCoverage?: MinimumContentCoverage;
 	liveDatasourceUpdate?: {
 		property: string;
 		value: unknown;
@@ -37,14 +35,50 @@ interface VisualMetrics {
 	brokenImages: string[];
 }
 
-const presets: VisualPreset[] = [
-	{ name: 'app-default', ...appViewport, background: 'checker', readySelector: previewFixture.readySelector },
+interface BriefSurface {
+	id: string;
+	width: number;
+	height: number;
+	role: 'primary' | 'required' | 'fallback';
+	minimumContentCoverage: MinimumContentCoverage;
+}
+
+interface GenerationBriefSummary {
+	surfaces: BriefSurface[];
+}
+
+const generationBriefPath: string = path.resolve(process.cwd(), 'generation-brief.json');
+const generationBrief: GenerationBriefSummary = JSON.parse(fs.readFileSync(generationBriefPath, 'utf8')) as GenerationBriefSummary;
+
+const backgroundForSurface = (surface: BriefSurface): VisualPreset['background'] => {
+	if (surface.role === 'primary') {
+		return 'checker';
+	}
+
+	return surface.height > surface.width ? 'dark' : 'light';
+};
+
+const plannedSurfacePresets: VisualPreset[] = generationBrief.surfaces.map((surface: BriefSurface): VisualPreset => ({
+	name: surface.id,
+	width: surface.width,
+	height: surface.height,
+	background: backgroundForSurface(surface),
+	readySelector: previewFixture.readySelector,
+	minimumContentCoverage: surface.minimumContentCoverage
+}));
+
+const standardPresets: VisualPreset[] = ([
 	{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
 	{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
 	{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector },
 	{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector },
 	{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector }
-];
+] as VisualPreset[]).filter((standard: VisualPreset): boolean => {
+	return !plannedSurfacePresets.some((planned: VisualPreset): boolean => {
+		return planned.width === standard.width && planned.height === standard.height;
+	});
+});
+const presets: VisualPreset[] = [...plannedSurfacePresets, ...standardPresets];
 
 const scenarioPresets: VisualPreset[] = previewScenarios.map(
 	(scenario: PreviewScenario): VisualPreset => ({
@@ -152,7 +186,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			}
 
 			const rootRect: DOMRect = root.getBoundingClientRect();
-			const elements: HTMLElement[] = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))];
+			const elements: HTMLElement[] = Array.from(root.querySelectorAll<HTMLElement>('*'));
 			const horizontalOverflow: string[] = [];
 			const verticalOverflow: string[] = [];
 			const outsideRoot: string[] = [];
@@ -183,18 +217,27 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					continue;
 				}
 
-				const allowsOverflow: boolean = Boolean(element.closest('[data-preview-allow-overflow]'));
+				const allowsOffCanvasContent: boolean = Boolean(element.closest('[data-preview-allow-overflow]'));
+				const clipsTextWithEllipsis: boolean =
+					element.childElementCount === 0
+					&& style.textOverflow === 'ellipsis'
+					&& ['clip', 'hidden'].includes(style.overflowX);
 
 				if (element instanceof HTMLImageElement && (!element.complete || element.naturalWidth === 0)) {
 					brokenImages.push(describeElement(element));
 				}
 
-				if (!allowsOverflow && element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) {
+				if (
+					!allowsOffCanvasContent
+					&& !clipsTextWithEllipsis
+					&& element.clientWidth > 0
+					&& element.scrollWidth > element.clientWidth + 1
+				) {
 					horizontalOverflow.push(describeElement(element));
 				}
 
 				if (
-					!allowsOverflow &&
+					!allowsOffCanvasContent &&
 					element.childElementCount > 0 &&
 					element.clientHeight > 0 &&
 					['auto', 'clip', 'hidden', 'scroll'].includes(style.overflowY) &&
@@ -204,7 +247,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				if (
-					!allowsOverflow &&
+					!allowsOffCanvasContent &&
 					element !== root &&
 					(
 						rect.left < rootRect.left - 1 ||
@@ -217,8 +260,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				const tagName: string = element.tagName.toLowerCase();
+				const hasPaintedText: boolean = element.childElementCount === 0 && Boolean(element.textContent?.trim());
+				const hasBackgroundImage: boolean = style.backgroundImage !== 'none';
 				const isVisualLeaf: boolean =
-					element.childElementCount === 0 || ['canvas', 'img', 'svg', 'video'].includes(tagName);
+					hasPaintedText || hasBackgroundImage || ['canvas', 'img', 'svg', 'video'].includes(tagName);
 
 				if (isVisualLeaf) {
 					leafRects.push(rect);
@@ -258,8 +303,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			};
 		});
 
+		const safePresetName: string = preset.name.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'surface';
+
 		await page.screenshot({
-			path: path.join(screenshotDirectory, `${preset.name}-${preset.width}x${preset.height}.png`),
+			path: path.join(screenshotDirectory, `${safePresetName}-${preset.width}x${preset.height}.png`),
 			fullPage: false
 		});
 

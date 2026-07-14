@@ -186,6 +186,8 @@ Production builds are optimized for performance with minimal logging:
     npm run validate:package
 ```
 
+This validates the accepted generation brief, datasource contracts, visual surfaces, Chromium 56 CSS compatibility, cache-listed runtime assets, and editor image integrity before accepting the zip.
+
 ---
 
 ## Build Process Overview

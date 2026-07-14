@@ -51,6 +51,10 @@ export interface GenerationBrief {
 		height: number;
 		role: 'primary' | 'required' | 'fallback';
 		purpose: string;
+		minimumContentCoverage: {
+			width: number;
+			height: number;
+		};
 	}>;
 	data: {
 		mode: 'static' | 'bound';

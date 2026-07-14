@@ -12,10 +12,10 @@
 	],
 	"app": { "mode": "replacement", "name": "Market Rotation Ticker", "version": "1" },
 	"surfaces": [
-		{ "id": "app-default", "width": 6000, "height": 136, "role": "primary", "purpose": "Native ultra-wide video-wall ticker strip." },
-		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "fallback", "purpose": "Safe centered ticker fallback on a standard canvas." },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Safe portrait fallback without clipped content." },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Safe square fallback without invalid geometry." }
+		{ "id": "app-default", "width": 6000, "height": 136, "role": "primary", "purpose": "Native ultra-wide video-wall ticker strip.", "minimumContentCoverage": { "width": 95, "height": 15 } },
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "fallback", "purpose": "Safe centered ticker fallback on a standard canvas.", "minimumContentCoverage": { "width": 95, "height": 4 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Safe portrait fallback without clipped content.", "minimumContentCoverage": { "width": 95, "height": 1 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Safe square fallback without invalid geometry.", "minimumContentCoverage": { "width": 95, "height": 2 } }
 	],
 	"data": {
 		"mode": "bound",

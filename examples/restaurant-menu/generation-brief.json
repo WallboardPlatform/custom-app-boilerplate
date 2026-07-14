@@ -11,10 +11,10 @@
 	],
 	"app": { "mode": "new", "name": "Cordo Menu Board", "version": "1" },
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen branded dinner menu." },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low menu zone with reduced secondary copy." },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait menu display." },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact menu composition." }
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen branded dinner menu.", "minimumContentCoverage": { "width": 85, "height": 85 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low menu zone with reduced secondary copy.", "minimumContentCoverage": { "width": 90, "height": 85 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait menu display.", "minimumContentCoverage": { "width": 85, "height": 85 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact menu composition.", "minimumContentCoverage": { "width": 85, "height": 85 } }
 	],
 	"data": {
 		"mode": "bound",

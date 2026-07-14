@@ -12,7 +12,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
-| `surfaces` | At least four realistic sizes; exactly one `primary` matching `properties.json`; include portrait and square fallbacks |
+| `surfaces` | At least four realistic sizes; lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; include portrait and square fallbacks; set minimum width/height content coverage for every surface |
 | `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
 | `settings` | Exactly one purpose for every non-datasource editor property |
 | `states` | Exactly one expectation for every named `previewScenario` |
@@ -33,6 +33,9 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 ## Evidence Rules
 
 - Every `states[].scenario` must exist in `preview/fixture.ts`, and every named scenario must be documented by the brief.
+- Surface and scenario IDs use lowercase kebab-case so URLs, test names, and screenshot paths remain portable.
+- Every planned surface and named scenario must define integer `minimumContentCoverage.width` and `.height` percentages from `1` to `100`. Use measured baseline values with regression margin; do not enter arbitrary low thresholds merely to pass validation.
+- The shared visual suite renders every planned surface at its declared dimensions, then adds standard fallback dimensions not already covered by the brief.
 - A behavior uses exactly one evidence source:
   - `{"scenario":"last-page"}` for a state proven by the shared visual suite.
   - `{"testFile":"preview/behavior.spec.ts"}` for app-specific motion, timing, or interaction assertions.

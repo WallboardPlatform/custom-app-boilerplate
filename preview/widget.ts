@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 
 import previewFixture, { previewScenarios } from './fixture';
-import type { PreviewFixture, PreviewScenario } from './fixture';
+import type { PreviewFixture, PreviewScenario } from './fixture.types';
 import { installPlatformMock } from './platform-mock';
 
 import configJson from '../src/editor-assets/properties.json';

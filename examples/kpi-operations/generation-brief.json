@@ -11,10 +11,10 @@
 	],
 	"app": { "mode": "new", "name": "KPI Operations", "version": "1" },
 	"surfaces": [
-		{ "id": "app-default", "width": 1280, "height": 720, "role": "primary", "purpose": "Landscape operations dashboard." },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide dashboard band with compressed secondary detail." },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Stacked portrait KPI layout." },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact KPI tile composition." }
+		{ "id": "app-default", "width": 1280, "height": 720, "role": "primary", "purpose": "Landscape operations dashboard.", "minimumContentCoverage": { "width": 85, "height": 75 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide dashboard band with compressed secondary detail.", "minimumContentCoverage": { "width": 90, "height": 75 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Stacked portrait KPI layout.", "minimumContentCoverage": { "width": 85, "height": 85 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact KPI tile composition.", "minimumContentCoverage": { "width": 85, "height": 80 } }
 	],
 	"data": {
 		"mode": "bound",

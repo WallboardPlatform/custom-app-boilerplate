@@ -11,10 +11,10 @@
 	],
 	"app": { "mode": "new", "name": "Airport Departures Board", "version": "1" },
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen departure board." },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Split-screen reader-board zone." },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait information display." },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editor or playlist zone." }
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen departure board.", "minimumContentCoverage": { "width": 90, "height": 90 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Split-screen reader-board zone.", "minimumContentCoverage": { "width": 90, "height": 90 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait information display.", "minimumContentCoverage": { "width": 85, "height": 90 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editor or playlist zone.", "minimumContentCoverage": { "width": 85, "height": 90 } }
 	],
 	"data": {
 		"mode": "bound",

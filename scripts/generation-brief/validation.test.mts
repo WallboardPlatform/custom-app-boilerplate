@@ -13,6 +13,11 @@ import {
 	validateStandaloneBrief
 } from './validation.mts';
 
+const VALID_PNG = Buffer.from(
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+	'base64'
+);
+
 const createValidBrief = (): GenerationBrief => ({
 	briefVersion: 1,
 	request: {
@@ -23,10 +28,10 @@ const createValidBrief = (): GenerationBrief => ({
 	assumptions: [],
 	app: { mode: 'new', name: 'Validation Test', version: '1' },
 	surfaces: [
-		{ id: 'app-default', width: 1920, height: 1080, role: 'primary', purpose: 'Primary display.' },
-		{ id: 'wide-low', width: 1536, height: 432, role: 'required', purpose: 'Wide display zone.' },
-		{ id: 'portrait', width: 1080, height: 1920, role: 'fallback', purpose: 'Portrait fallback.' },
-		{ id: 'square', width: 600, height: 600, role: 'fallback', purpose: 'Square fallback.' }
+		{ id: 'app-default', width: 1920, height: 1080, role: 'primary', purpose: 'Primary display.', minimumContentCoverage: { width: 80, height: 80 } },
+		{ id: 'wide-low', width: 1536, height: 432, role: 'required', purpose: 'Wide display zone.', minimumContentCoverage: { width: 80, height: 70 } },
+		{ id: 'portrait', width: 1080, height: 1920, role: 'fallback', purpose: 'Portrait fallback.', minimumContentCoverage: { width: 70, height: 80 } },
+		{ id: 'square', width: 600, height: 600, role: 'fallback', purpose: 'Square fallback.', minimumContentCoverage: { width: 70, height: 70 } }
 	],
 	data: { mode: 'static', bindings: [] },
 	settings: [],
@@ -63,8 +68,8 @@ const createProject = (brief: GenerationBrief): ProjectValidationContext => {
 
 	fs.mkdirSync(editorAssetsDirectory, { recursive: true });
 	fs.mkdirSync(previewDirectory, { recursive: true });
-	fs.writeFileSync(path.join(editorAssetsDirectory, 'icon.png'), 'icon');
-	fs.writeFileSync(path.join(editorAssetsDirectory, 'placeholder.png'), 'placeholder');
+	fs.writeFileSync(path.join(editorAssetsDirectory, 'icon.png'), VALID_PNG);
+	fs.writeFileSync(path.join(editorAssetsDirectory, 'placeholder.png'), VALID_PNG);
 	fs.writeFileSync(
 		path.join(editorAssetsDirectory, 'properties.json'),
 		JSON.stringify({
@@ -119,6 +124,20 @@ void describe('standalone generation brief validation', () => {
 
 		assert.throws(() => validateStandaloneBrief(brief), /app-icon/);
 	});
+
+	void it('requires measurable content coverage for every planned surface', () => {
+		const brief = createValidBrief() as unknown as { surfaces: Array<Record<string, unknown>> };
+		delete brief.surfaces[0].minimumContentCoverage;
+
+		assert.throws(() => validateStandaloneBrief(brief), /minimumContentCoverage/);
+	});
+
+	void it('requires filename-safe surface and scenario identifiers', () => {
+		const brief = createValidBrief();
+		brief.surfaces[0].id = 'primary/surface';
+
+		assert.throws(() => validateStandaloneBrief(brief), /pattern/);
+	});
 });
 
 void describe('generation brief project synchronization', () => {
@@ -148,6 +167,15 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /packaged asset/);
 	});
 
+	void it('rejects a corrupt editor image', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(path.join(context.applicationDirectory, 'src', 'editor-assets', 'icon.png'), 'not-an-image');
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /structurally valid PNG/);
+	});
+
 	void it('rejects preview states that are not implemented', async (testContext) => {
 		const brief = cloneBrief(createValidBrief());
 		brief.states.push({ scenario: 'empty', expectation: 'Show a clear empty state.' });
@@ -155,5 +183,31 @@ void describe('generation brief project synchronization', () => {
 		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
 
 		await assert.rejects(validateBriefAgainstProject(context, brief), /states must document every named preview scenario/);
+	});
+
+	void it('rejects named scenarios without measurable content coverage', async (testContext) => {
+		const brief = cloneBrief(createValidBrief());
+		brief.states.push({ scenario: 'empty', expectation: 'Show a clear empty state.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.fixturePath,
+			'export const previewScenarios = [{ id: \'empty\' }];\n'
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /minimumContentCoverage/);
+	});
+
+	void it('rejects preview scenario identifiers that are unsafe as filenames', async (testContext) => {
+		const brief = cloneBrief(createValidBrief());
+		brief.states.push({ scenario: 'unsafe-scenario', expectation: 'Show the requested state.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.fixturePath,
+			'export const previewScenarios = [{ id: \'unsafe/scenario\', minimumContentCoverage: { width: 80, height: 80 } }];\n'
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /lowercase kebab-case identifier/);
 	});
 });

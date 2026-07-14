@@ -55,7 +55,7 @@ The SDK includes a `ResizeObserver` compatibility layer. When flexbox and fixed 
 
 ## Legacy CSS Safety
 
-CSS is not transpiled. Keep styles compatible with the legacy Chromium target required by the boilerplate.
+The production build targets Chrome 56 CSS, but it cannot safely rewrite every modern layout feature. Keep source styles compatible with the legacy Chromium target required by the boilerplate.
 
 | Avoid | Prefer |
 |-------|--------|
@@ -69,6 +69,8 @@ CSS is not transpiled. Keep styles compatible with the legacy Chromium target re
 | Modern viewport units (`dvh`, `svh`, `lvh`) | `%`, `px`, or classic `vh` only when unavoidable |
 
 If unsure about CSS support, use the simpler option.
+
+Run `npm run validate:legacy` after changing app styles. The delivery workflow runs this automatically and rejects the unsupported features listed above before packaging.
 
 ## Visual Design
 
@@ -138,7 +140,7 @@ Avoid:
 | Editor | Helpful fallbacks are allowed. Show missing configuration clearly. Keep controls predictable. |
 | Displayer | Output should be stable, quiet, and production-looking. Avoid debug text and noisy errors. |
 
-Never rely on editor-only behavior for the displayer. Test the display output as a standalone widget surface through the build output or emulator only when debugging is necessary.
+Never rely on editor-only behavior for the displayer. Test the display output as a standalone widget surface through the local preview and validated build output.
 
 ## Performance
 
@@ -165,6 +167,7 @@ Avoid:
 |------|----------|
 | Resolve from the app bundle | Use static imports for local images and media. Do not use `new URL(..., import.meta.url)` inside components. |
 | Cache every emitted asset | Add every file under `dist/assets/` to `properties.json.resourceList`. |
+| Ship real editor images | `icon.png` and `placeholder.png` must be structurally valid PNG files with non-zero dimensions. |
 | Validate the package | Run `npm run validate:package`; a successful Vite build alone does not prove that media loads in the displayer. |
 
 `resourceList` and URL resolution solve different problems. Cache-listing an image does not repair a bundle that requests `/displayer/index.png`.
@@ -174,10 +177,11 @@ Avoid:
 1. Put representative settings and datasource values in `preview/fixture.ts`.
 2. Set fixture `readySelector` to a config-driven text element when SDK configuration settles after the preview root mounts. Do not add app-specific readiness logic to `visual.spec.ts`.
 3. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
-4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
-5. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
-5. Inspect every image in `preview/output/`. Automated checks catch runtime and boundary failures, not weak hierarchy or excessive empty space.
-6. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
+4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states. Every scenario requires measured `minimumContentCoverage` percentages.
+5. Put measured content-coverage thresholds on every planned generation-brief surface. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count. Keep enough margin for browser rounding while making a compressed or mostly empty composition fail.
+6. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
+7. Inspect every image in `preview/output/`. Content coverage is a bounding-box regression guard; sparse corner content can still satisfy it. Automated checks do not judge hierarchy, composition, or legibility.
+8. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
 Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
 
@@ -197,8 +201,9 @@ Before returning a zip:
 - All settings are typed and mapped.
 - No unscoped global DOM selectors or shared mutable state.
 - `npm run lint` passes.
+- `npm run validate:legacy` passes.
 - `npm run validate:package` passes.
-- Zip contains `assets/app.js`, `assets/app-chrome-49.js`, and `editor-assets/config.json`.
+- Zip contains `assets/app.js`, `assets/app-chrome-49.js`, `editor-assets/config.json`, `editor-assets/icon.png`, and `editor-assets/placeholder.png`.
 
 ## Installation Handoff
 

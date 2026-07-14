@@ -303,13 +303,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				<div class="departures-brand">
 					<strong>{settings().airportCode}</strong>
 					<div>
-						<span data-preview-allow-overflow>{settings().airportName}</span>
+						<span>{settings().airportName}</span>
 						<h1>{settings().boardTitle}</h1>
 					</div>
 				</div>
 				<div class="departures-terminal">
 					<span>DEPARTING FROM</span>
-					<strong data-preview-allow-overflow>{settings().terminalLabel}</strong>
+					<strong>{settings().terminalLabel}</strong>
 				</div>
 				<time>
 					<span>{clock().date}</span>
@@ -351,7 +351,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								<div class="departure-time"><strong>{row.scheduledTime}</strong></div>
 								<div class="departure-destination">
 									<strong>{row.destination}</strong>
-									<span data-preview-allow-overflow>{row.airline || 'Airline information pending'}</span>
+									<span>{row.airline || 'Airline information pending'}</span>
 								</div>
 								<div class="departure-flight"><strong>{row.flight}</strong></div>
 								<div class="departure-terminal"><strong>{row.terminal || '--'}</strong></div>
