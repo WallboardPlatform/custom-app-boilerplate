@@ -35,9 +35,11 @@
 - [ ] No ESLint warnings
 - [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
 - [ ] Generated datasource contract and sample data pass `npm run validate:examples`
+- [ ] Every datasource picker is declared; multi-source apps use `bindings[]` and sanitized `samplePath` fixtures
 - [ ] Internal app name and version identify one Wallboard app record; compatible rebuilds preserve both
 - [ ] `preview/fixture.ts` contains representative settings and datasource data
 - [ ] Named preview scenarios cover materially different dynamic and boundary states
+- [ ] Timing, motion, or interaction requirements have dedicated `preview/*.spec.ts` assertions
 - [ ] `npm run validate:visual` passes
 - [ ] Every image in `preview/output/` was inspected at the generated signage dimensions
 

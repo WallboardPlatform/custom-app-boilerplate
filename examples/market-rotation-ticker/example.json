@@ -1,0 +1,15 @@
+{
+	"title": "Market Rotation Ticker",
+	"description": "Continuous ultra-wide market ticker with rotating heterogeneous datasource bindings, asset lookup, and motion-specific acceptance tests.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"datasource-contract.json",
+		"sample-datasource.json"
+	]
+}

@@ -137,24 +137,57 @@ let datasource = null;
 
 if (fs.existsSync(contractPath)) {
 	const contract = readJson(contractPath);
-	const samplePath = path.resolve(projectDirectory, contract.source.sampleData);
+	const bindings = Array.isArray(contract.bindings)
+		? contract.bindings
+		: [{
+			property: contract.binding.property,
+			dataPickerType: contract.binding.dataPickerType,
+			source: contract.source,
+			delivery: contract.delivery
+		}];
+	const sampleDataPaths = new Set(bindings.map((binding) => binding.source.sampleData));
+
+	if (sampleDataPaths.size !== 1) {
+		throw new Error('All datasource bindings must use one shared sampleData bundle.');
+	}
+
+	const [sampleDataPath] = sampleDataPaths;
+
+	if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
+		throw new Error('datasource-contract.json source.sampleData must identify the shared template data file.');
+	}
+
+	const samplePath = path.resolve(projectDirectory, sampleDataPath);
 	const contractOutputPath = path.join(outputDirectory, 'datasource-contract.json');
 	const sampleOutputPath = path.join(outputDirectory, 'sample-datasource.json');
+	const manifestBindings = bindings.map((binding) => ({
+		contract: binding.source.contract,
+		bindingProperty: binding.property,
+		dataPickerType: binding.dataPickerType,
+		suggestedName: binding.delivery.suggestedDatasourceName,
+		quickEditEligible: binding.delivery.quickEditEligible,
+		samplePath: binding.source.samplePath ?? null,
+		currentProvisioning: binding.source.contract === 'EXISTING'
+			? 'select-existing-then-bind'
+			: 'create-or-import-then-bind',
+		futureProvisioning: binding.source.contract === 'EXISTING'
+			? 'bind-existing-source'
+			: 'create-from-packaged-template'
+	}));
+	const singleBinding = manifestBindings.length === 1 ? manifestBindings[0] : null;
 
 	fs.copyFileSync(contractPath, contractOutputPath);
 	fs.copyFileSync(samplePath, sampleOutputPath);
 	datasource = {
-		contract: contract.source.contract,
-		bindingProperty: contract.binding.property,
-		dataPickerType: contract.binding.dataPickerType,
-		suggestedName: contract.delivery.suggestedDatasourceName,
-		quickEditEligible: contract.delivery.quickEditEligible,
+		mode: singleBinding ? 'single' : 'multiple',
+		...(singleBinding ?? {}),
+		bindings: manifestBindings,
 		contractFile: 'datasource-contract.json',
 		sampleFile: 'sample-datasource.json',
 		packagedContractFile: 'editor-assets/datasource-contract.json',
 		packagedTemplateFile: 'editor-assets/datasource-template.json',
-		currentProvisioning: 'create-or-import-then-bind',
-		futureProvisioning: 'create-from-packaged-template'
+		currentProvisioning: singleBinding?.currentProvisioning ?? 'resolve-each-binding',
+		futureProvisioning: singleBinding?.futureProvisioning ?? 'resolve-each-binding'
 	};
 }
 

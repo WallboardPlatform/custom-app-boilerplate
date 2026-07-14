@@ -24,6 +24,39 @@ Do not choose `CUSTOM` because the input arrived as JSON. Menus, price lists, de
 
 Add other built-in contracts only after verifying their current platform payload. A domain label alone is not proof that a built-in contract exists.
 
+## Multiple Existing Bindings
+
+Use `bindings[]` when one app intentionally consumes independently configured sources. Do not create a synthetic aggregate merely to fit a single datasource picker.
+
+```json
+{
+  "contractVersion": 1,
+  "bindings": [
+    {
+      "property": "marketData",
+      "dataPickerType": "any",
+      "source": {
+        "contract": "EXISTING",
+        "sampleData": "sample-datasource.json",
+        "samplePath": "market"
+      },
+      "delivery": {
+        "suggestedDatasourceName": "Market Data",
+        "quickEditEligible": false
+      }
+    }
+  ]
+}
+```
+
+Rules:
+
+- Declare every `dataPicker` exactly once. A missing or duplicate binding fails validation.
+- Keep one shared, sanitized `sample-datasource.json`; `samplePath` selects each source's representative value.
+- Use `EXISTING` only for a supplied and inspected runtime shape. Normalize provider differences at one typed application boundary.
+- Preserve independent bindings when sources have different ownership, refresh cadence, credentials, or structure.
+- Never publish live datasource IDs, customer IDs, private payloads, or storage URLs in examples or delivery templates.
+
 ## Table Contract
 
 Generated table data uses Wallboard's native internal datasource shape:
@@ -63,8 +96,8 @@ A custom-schema example or deliverable includes:
 
 | File | Purpose |
 |------|---------|
-| `datasource-contract.json` | Generator metadata: binding property, source contract, columns, accepted runtime shapes, and empty-state behavior. Not uploaded to Wallboard. |
-| `sample-datasource.json` | Native datasource data that can be pasted, imported, or written through the API. |
+| `datasource-contract.json` | Generator metadata: one binding or `bindings[]`, source contracts, columns, accepted runtime shapes, and empty-state behavior. Not uploaded to Wallboard. |
+| `sample-datasource.json` | Importable native data for generated sources, or a sanitized representative bundle for existing bindings. |
 | `preview/fixture.ts` | Uses the same sample contract and adds boundary scenarios. |
 | App zip | Contains the contract and template under `editor-assets/`, but no datasource ID. |
 | `delivery-manifest.json` | Connects app identity, zip, binding property, sidecars, and quick-edit eligibility. |
@@ -77,7 +110,7 @@ Uploading the app zip does not yet create or select a datasource. A data-bound d
 
 1. App zip for a Wallboard super administrator to upload, enable, and assign as described in `widget-best-practices.md`.
 2. `sample-datasource.json` for creating or importing the internal datasource through the available Wallboard UI or API.
-3. The binding property name from `datasource-contract.json` so the installed app can be connected to the datasource.
+3. The binding property name or names from `datasource-contract.json` so the installed app can be connected to every datasource.
 4. A live-edit check: change one datasource row and confirm that the placed app updates without rebuilding or changing its app version.
 
 `npm run deliver -- <output-directory>` also embeds the contract and template in the zip for the planned customer-facing provisioning flow. Until that platform flow exists, datasource creation remains a separate operation and does not need to happen through MCP. For a verified built-in Feed or Calendar contract, bind the existing integrated datasource instead of creating the sample table.

@@ -39,15 +39,29 @@ const hasDataPicker = (properties) => {
 	});
 };
 
-const readSample = (exampleId, exampleDirectory, contract) => {
-	const samplePath = requireString(exampleId, contract.source?.sampleData, 'source.sampleData');
+const readSample = (exampleId, exampleDirectory, source) => {
+	const samplePath = requireString(exampleId, source?.sampleData, 'source.sampleData');
 	const absoluteSamplePath = path.resolve(exampleDirectory, samplePath);
 
 	if (!absoluteSamplePath.startsWith(`${exampleDirectory}${path.sep}`) || !fs.existsSync(absoluteSamplePath)) {
 		fail(exampleId, `sample datasource '${samplePath}' was not found inside the example.`);
 	}
 
-	return JSON.parse(fs.readFileSync(absoluteSamplePath, 'utf8'));
+	let sample = JSON.parse(fs.readFileSync(absoluteSamplePath, 'utf8'));
+
+	if (source?.samplePath !== undefined) {
+		const valuePath = requireString(exampleId, source.samplePath, 'source.samplePath').split('.');
+
+		for (const segment of valuePath) {
+			if (!sample || typeof sample !== 'object' || Array.isArray(sample) || !(segment in sample)) {
+				fail(exampleId, `sample datasource does not contain path '${source.samplePath}'.`);
+			}
+
+			sample = sample[segment];
+		}
+	}
+
+	return sample;
 };
 
 const matchesPrimitiveType = (value, type) => {
@@ -70,9 +84,9 @@ const matchesPrimitiveType = (value, type) => {
 	return true;
 };
 
-const validateTableContract = (exampleId, exampleDirectory, contract) => {
-	const tableName = requireString(exampleId, contract.source?.table, 'source.table');
-	const columns = contract.columns;
+const validateTableContract = (exampleId, exampleDirectory, binding) => {
+	const tableName = requireString(exampleId, binding.source?.table, 'source.table');
+	const columns = binding.columns;
 
 	if (!Array.isArray(columns) || columns.length === 0) {
 		fail(exampleId, 'columns must contain at least one column.');
@@ -91,7 +105,7 @@ const validateTableContract = (exampleId, exampleDirectory, contract) => {
 		columnTypes.set(name, { type, required: column.required === true });
 	}
 
-	const sample = readSample(exampleId, exampleDirectory, contract);
+	const sample = readSample(exampleId, exampleDirectory, binding.source);
 	const table = sample?.[tableName];
 
 	if (!table || typeof table !== 'object' || Array.isArray(table)) {
@@ -145,7 +159,37 @@ const validateTableContract = (exampleId, exampleDirectory, contract) => {
 	}
 };
 
-let validatedContracts = 0;
+let validatedBindings = 0;
+
+const normalizeBindings = (exampleId, contract) => {
+	if (Array.isArray(contract.bindings)) {
+		if (contract.bindings.length === 0) {
+			fail(exampleId, 'bindings must contain at least one datasource binding.');
+		}
+
+		return contract.bindings;
+	}
+
+	return [{
+		property: contract.binding?.property,
+		dataPickerType: contract.binding?.dataPickerType,
+		source: contract.source,
+		delivery: contract.delivery,
+		columns: contract.columns
+	}];
+};
+
+const collectDataPickers = (properties, output = []) => {
+	for (const property of properties ?? []) {
+		if (property?.type === 'dataPicker' && typeof property.property === 'string') {
+			output.push(property.property);
+		}
+
+		collectDataPickers(property?.properties, output);
+	}
+
+	return output;
+};
 
 const validateContract = (exampleId, exampleDirectory, contractPath, propertiesPath) => {
 	const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
@@ -154,45 +198,71 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 		fail(exampleId, 'contractVersion must be 1.');
 	}
 
-	const bindingProperty = requireString(exampleId, contract.binding?.property, 'binding.property');
-	const dataPickerType = requireString(exampleId, contract.binding?.dataPickerType, 'binding.dataPickerType');
-	const sourceContract = requireString(exampleId, contract.source?.contract, 'source.contract');
-	const suggestedDatasourceName = requireString(
-		exampleId,
-		contract.delivery?.suggestedDatasourceName,
-		'delivery.suggestedDatasourceName'
-	);
-
-	if (typeof contract.delivery?.quickEditEligible !== 'boolean') {
-		fail(exampleId, 'delivery.quickEditEligible must be boolean.');
-	}
-
-	if (sourceContract === 'TABLE' && contract.delivery.quickEditEligible !== true) {
-		fail(exampleId, `TABLE datasource '${suggestedDatasourceName}' must be quick-edit eligible.`);
-	}
-
 	if (!fs.existsSync(propertiesPath)) {
 		fail(exampleId, `properties file '${path.relative(exampleDirectory, propertiesPath)}' was not found.`);
 	}
 
 	const properties = JSON.parse(fs.readFileSync(propertiesPath, 'utf8'));
-	const dataPicker = findDataPicker(properties.properties, bindingProperty);
+	const bindings = normalizeBindings(exampleId, contract);
+	const declaredProperties = new Set();
+	const sampleDataPaths = new Set(bindings.map((binding) => {
+		return requireString(exampleId, binding.source?.sampleData, `${binding.property ?? 'binding'}.source.sampleData`);
+	}));
 
-	if (!dataPicker) {
-		fail(exampleId, `properties.json has no dataPicker for '${bindingProperty}'.`);
+	if (sampleDataPaths.size !== 1) {
+		fail(exampleId, 'all datasource bindings must use one shared sampleData bundle.');
 	}
 
-	if ((dataPicker.dataPickerType ?? 'any') !== dataPickerType) {
-		fail(exampleId, `dataPickerType for '${bindingProperty}' does not match the contract.`);
+	for (const binding of bindings) {
+		const bindingProperty = requireString(exampleId, binding.property, 'binding.property');
+		const dataPickerType = requireString(exampleId, binding.dataPickerType, `${bindingProperty}.dataPickerType`);
+		const sourceContract = requireString(exampleId, binding.source?.contract, `${bindingProperty}.source.contract`);
+		const suggestedDatasourceName = requireString(
+			exampleId,
+			binding.delivery?.suggestedDatasourceName,
+			`${bindingProperty}.delivery.suggestedDatasourceName`
+		);
+
+		if (declaredProperties.has(bindingProperty)) {
+			fail(exampleId, `duplicate datasource binding '${bindingProperty}'.`);
+		}
+
+		declaredProperties.add(bindingProperty);
+
+		if (typeof binding.delivery?.quickEditEligible !== 'boolean') {
+			fail(exampleId, `${bindingProperty}.delivery.quickEditEligible must be boolean.`);
+		}
+
+		if (sourceContract === 'TABLE' && binding.delivery.quickEditEligible !== true) {
+			fail(exampleId, `TABLE datasource '${suggestedDatasourceName}' must be quick-edit eligible.`);
+		}
+
+		const dataPicker = findDataPicker(properties.properties, bindingProperty);
+
+		if (!dataPicker) {
+			fail(exampleId, `properties.json has no dataPicker for '${bindingProperty}'.`);
+		}
+
+		if ((dataPicker.dataPickerType ?? 'any') !== dataPickerType) {
+			fail(exampleId, `dataPickerType for '${bindingProperty}' does not match the contract.`);
+		}
+
+		if (sourceContract === 'TABLE') {
+			validateTableContract(exampleId, exampleDirectory, binding);
+		} else if (sourceContract === 'CUSTOM' || sourceContract === 'EXISTING') {
+			readSample(exampleId, exampleDirectory, binding.source);
+		} else {
+			fail(exampleId, `unsupported source contract '${sourceContract}'.`);
+		}
+
+		validatedBindings += 1;
 	}
 
-	if (sourceContract === 'TABLE') {
-		validateTableContract(exampleId, exampleDirectory, contract);
-	} else if (sourceContract === 'CUSTOM') {
-		readSample(exampleId, exampleDirectory, contract);
+	for (const dataPickerProperty of collectDataPickers(properties.properties)) {
+		if (!declaredProperties.has(dataPickerProperty)) {
+			fail(exampleId, `dataPicker '${dataPickerProperty}' is missing from datasource-contract.json.`);
+		}
 	}
-
-	validatedContracts += 1;
 };
 
 const materializedContractPath = path.join(rootDirectory, 'datasource-contract.json');
@@ -238,4 +308,4 @@ if (fs.existsSync(examplesDirectory)) {
 	}
 }
 
-console.log(`Validated ${validatedContracts} datasource contract(s).`);
+console.log(`Validated ${validatedBindings} datasource binding(s).`);

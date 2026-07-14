@@ -17,10 +17,19 @@ if (!fs.existsSync(contractPath)) {
 }
 
 const contract = readJson(contractPath);
-const sampleDataPath = contract.source?.sampleData;
+const bindings = Array.isArray(contract.bindings)
+	? contract.bindings
+	: [{ source: contract.source }];
+const sampleDataPaths = new Set(bindings.map((binding) => binding.source?.sampleData));
+
+if (sampleDataPaths.size !== 1) {
+	throw new Error('All datasource bindings must use one shared sampleData bundle.');
+}
+
+const [sampleDataPath] = sampleDataPaths;
 
 if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
-	throw new Error('datasource-contract.json source.sampleData must identify the template data file.');
+	throw new Error('datasource-contract.json source.sampleData must identify the shared template data file.');
 }
 
 const absoluteSamplePath = path.resolve(projectDirectory, sampleDataPath);

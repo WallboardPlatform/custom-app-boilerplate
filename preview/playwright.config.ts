@@ -10,7 +10,7 @@ const previewBaseUrl: string = `http://127.0.0.1:${previewPort}`;
 
 export default defineConfig({
 	testDir: '.',
-	testMatch: 'visual.spec.ts',
+	testMatch: '*.spec.ts',
 	globalSetup: './global-setup.ts',
 	fullyParallel: false,
 	workers: 1,

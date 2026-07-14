@@ -132,6 +132,14 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			await expect(page.getByText(preset.liveDatasourceUpdate.expectedText, { exact: true })).toBeVisible();
 		}
 
+		if (preset.readySelector) {
+			await page.waitForFunction((selector: string): boolean => {
+				const element: HTMLElement | null = document.querySelector<HTMLElement>(selector);
+
+				return Boolean(element?.textContent?.trim() || element?.tagName.toLowerCase() === 'img');
+			}, preset.readySelector);
+		}
+
 		const previewError: string | undefined = await page.evaluate((): string | undefined => {
 			return document.documentElement.dataset.previewError;
 		});
@@ -171,19 +179,22 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					rect.width > 0 &&
 					rect.height > 0;
 
-				if (!isVisible || element.closest('[data-preview-allow-overflow]')) {
+				if (!isVisible) {
 					continue;
 				}
+
+				const allowsOverflow: boolean = Boolean(element.closest('[data-preview-allow-overflow]'));
 
 				if (element instanceof HTMLImageElement && (!element.complete || element.naturalWidth === 0)) {
 					brokenImages.push(describeElement(element));
 				}
 
-				if (element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) {
+				if (!allowsOverflow && element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) {
 					horizontalOverflow.push(describeElement(element));
 				}
 
 				if (
+					!allowsOverflow &&
 					element.childElementCount > 0 &&
 					element.clientHeight > 0 &&
 					['auto', 'clip', 'hidden', 'scroll'].includes(style.overflowY) &&
@@ -193,6 +204,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				if (
+					!allowsOverflow &&
 					element !== root &&
 					(
 						rect.left < rootRect.left - 1 ||
@@ -245,14 +257,6 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				brokenImages: [...new Set(brokenImages)]
 			};
 		});
-
-		if (preset.readySelector) {
-			await page.waitForFunction((selector: string): boolean => {
-				const element: HTMLElement | null = document.querySelector<HTMLElement>(selector);
-
-				return Boolean(element?.textContent?.trim());
-			}, preset.readySelector);
-		}
 
 		await page.screenshot({
 			path: path.join(screenshotDirectory, `${preset.name}-${preset.width}x${preset.height}.png`),

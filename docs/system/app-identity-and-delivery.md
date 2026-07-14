@@ -45,11 +45,11 @@ editor-assets/datasource-contract.json
 editor-assets/datasource-template.json
 ```
 
-Current Wallboard versions store these files but do not provision a datasource from them. The human or API creates/imports the datasource, then binds the property named by the contract. A future customer-facing installer can consume the same packaged template and manifest to create, bind, and expose quick editing without changing the app contract.
+Current Wallboard versions store these files but do not provision datasources from them. The human or API creates/imports generated sources or selects supplied existing sources, then binds every property named by the contract. A future customer-facing installer can consume the same packaged template and manifest to create generated datasources, bind existing ones, and expose eligible data through quick editing without changing the app contract.
 
 ## Installation Check
 
 1. Ensure no existing app record has the same internal identity unless this is a replacement upload.
 2. Upload to the existing record for replacements; otherwise create one record, upload, enable, and assign it.
-3. For data-bound apps, create/import the supplied datasource and bind the declared property.
+3. For data-bound apps, create/import or select the required datasources and bind every declared property.
 4. Edit one value and confirm the placed widget updates without rebuilding the ZIP or changing the app version.
