@@ -96,7 +96,10 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-labels',
-		fixture: createFixture('agent-status-long-labels', longLabelRows),
+		fixture: createFixture('agent-status-long-labels', longLabelRows, {
+			...baseConfig,
+			titleText: 'Regional agent availability and handling status'
+		}),
 		viewport: { width: 1536, height: 432, background: 'light' },
 		minimumContentCoverage: { width: 92, height: 84 }
 	},

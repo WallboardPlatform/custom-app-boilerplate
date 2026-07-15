@@ -109,8 +109,10 @@
 }
 
 :global(.unit-identity) h2 {
+	max-height: 2.46em;
 	margin: 10px 0 14px;
 	padding-bottom: 0.14em;
+	overflow: hidden;
 	font-size: 58px;
 	line-height: 1.16;
 	word-wrap: break-word;

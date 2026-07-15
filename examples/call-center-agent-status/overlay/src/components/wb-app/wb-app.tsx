@@ -281,10 +281,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<For each={currentAgents()}>
 						{(agent: AgentStatusRow): JSX.Element => (
 							<article class="agent-card" data-agent-tone={agent.tone} data-agent-name={agent.name}>
-								<div class="agent-card__top">
-									<div class="agent-avatar">{initials(agent.name)}</div>
-									<div class="agent-identity">
-										<strong>{agent.name}</strong>
+									<div class="agent-card__top">
+										<div class="agent-avatar">{initials(agent.name)}</div>
+										<div class="agent-identity">
+											<strong title={agent.name}>{agent.name}</strong>
 										<span>
 											<i />
 											<b>{agent.state}</b>

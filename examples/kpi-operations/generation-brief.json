@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a responsive operations KPI board with summary metrics, target progress, and a trend chart.",
 		"audience": "Operations teams monitoring fulfillment performance on shared displays.",
@@ -41,6 +41,28 @@
 		{ "property": "accentColor", "purpose": "Chart and target accent." },
 		{ "property": "positiveColor", "purpose": "Positive performance color." },
 		{ "property": "warningColor", "purpose": "Warning and exception color." }
+	],
+	"dynamicText": [
+		{
+			"id": "dashboard-title",
+			"source": { "type": "setting", "properties": ["titleText"] },
+			"selectors": [".wb-app__header h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable title is the board anchor and must fit before the timestamp and KPI field are compressed.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "metric-label",
+			"source": { "type": "datasource", "properties": ["operationsData"] },
+			"selectors": [".wb-app__metrics article > span"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two lines so the value and delta remain visible.",
+			"rationale": "Metric labels may need a second line, but numeric values and trend context retain priority.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves KPI hierarchy and semantic status contrast." },

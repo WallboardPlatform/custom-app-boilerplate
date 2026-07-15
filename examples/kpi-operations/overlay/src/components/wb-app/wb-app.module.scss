@@ -101,6 +101,14 @@
   margin-right: 0;
 }
 
+:global(.wb-app__metrics) article > span {
+  max-height: 2.4em;
+  line-height: 1.2;
+  text-overflow: clip;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
 :global(.wb-app__metrics) article > div {
   display: flex;
   min-width: 0;

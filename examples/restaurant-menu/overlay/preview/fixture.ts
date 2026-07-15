@@ -127,7 +127,10 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-labels',
-		fixture: createFixture('cordo-menu-long-labels', withRows(longLabelRows)),
+		fixture: createFixture('cordo-menu-long-labels', withRows(longLabelRows), {
+			...baseConfig,
+			restaurantName: 'Cordo Riverside Dining Room'
+		}),
 		viewport: { width: 1536, height: 432, background: 'dark' },
 		minimumContentCoverage: { width: 80, height: 75 }
 	},

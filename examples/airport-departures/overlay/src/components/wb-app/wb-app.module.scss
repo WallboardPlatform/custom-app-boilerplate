@@ -49,7 +49,7 @@
   background: var(--board-accent, #f4c542);
   font-size: 31px;
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.16;
 }
 
 :global(.departures-brand) > div {
@@ -71,12 +71,15 @@
 
 :global(.departures-brand) h1 {
   margin: 0;
+  padding-bottom: 0.1em;
+  overflow: hidden;
   color: var(--board-text, #f5f6f3);
   font-size: 55px;
   font-weight: 700;
   line-height: 1;
-  overflow-wrap: break-word;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 :global(.departures-terminal) {
@@ -123,7 +126,7 @@
   color: var(--board-text, #f5f6f3);
   font-size: 42px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.16;
 }
 
 :global(.departures-ribbon) {
@@ -263,13 +266,17 @@
 }
 
 :global(.departure-row) :global(.departure-destination) strong {
+  width: 100%;
   max-width: 100%;
+  display: block;
+  overflow: hidden;
   color: var(--board-text, #f5f6f3);
   font-size: 26px;
   font-weight: 650;
   line-height: 1.08;
-  overflow-wrap: break-word;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 :global(.departure-row) :global(.departure-destination) span {

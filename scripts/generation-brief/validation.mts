@@ -28,13 +28,30 @@ export interface GenerationBriefBehavior {
 	evidence: { scenario: string } | { testFile: string };
 }
 
+export interface GenerationBriefDynamicTextPolicy {
+	id: string;
+	source: {
+		type: 'setting' | 'datasource' | 'computed';
+		properties: string[];
+	};
+	selectors: string[];
+	strategy: 'auto-fit' | 'wrap' | 'ellipsis' | 'marquee';
+	limits: {
+		minimumFontSize?: number;
+		maximumLines?: number;
+	};
+	fallback: string;
+	rationale: string;
+	evidenceScenario: string;
+}
+
 export type GenerationBriefAsset =
 	| { id: string; source: 'packaged'; path: string; required: boolean }
 	| { id: string; source: 'datasource'; binding: string; required: boolean }
 	| { id: string; source: 'setting'; properties: string[]; required: boolean };
 
 export interface GenerationBrief {
-	briefVersion: 2;
+	briefVersion: 3;
 	request: {
 		summary: string;
 		audience: string;
@@ -66,6 +83,7 @@ export interface GenerationBrief {
 		bindings: GenerationBriefBinding[];
 	};
 	settings: GenerationBriefSetting[];
+	dynamicText: GenerationBriefDynamicTextPolicy[];
 	states: GenerationBriefState[];
 	behaviors: GenerationBriefBehavior[];
 	assets: GenerationBriefAsset[];
@@ -193,6 +211,24 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 	}
 
 	requireUnique(id, brief.settings.map((setting) => setting.property), 'settings[].property');
+	requireUnique(id, brief.dynamicText.map((policy) => policy.id), 'dynamicText[].id');
+
+	for (const policy of brief.dynamicText) {
+		requireUnique(id, policy.source.properties, `dynamicText '${policy.id}' source.properties`);
+		requireUnique(id, policy.selectors, `dynamicText '${policy.id}' selectors`);
+
+		if (policy.strategy === 'auto-fit' && policy.limits.minimumFontSize === undefined) {
+			fail(id, `dynamicText '${policy.id}' auto-fit strategy must declare limits.minimumFontSize.`);
+		}
+
+		if (
+			(policy.strategy === 'wrap' || policy.strategy === 'ellipsis')
+			&& policy.limits.maximumLines === undefined
+		) {
+			fail(id, `dynamicText '${policy.id}' ${policy.strategy} strategy must declare limits.maximumLines.`);
+		}
+	}
+
 	requireUnique(id, brief.states.map((state) => state.scenario), 'states[].scenario');
 	requireUnique(id, brief.behaviors.map((behavior) => behavior.id), 'behaviors[].id');
 	requireUnique(id, brief.assets.map((asset) => asset.id), 'assets[].id');

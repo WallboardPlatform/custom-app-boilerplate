@@ -172,7 +172,8 @@ export const previewScenarios: PreviewScenario[] = [
 		fixture: createFixture('live-agenda-long-labels', longLabelCalendar, {
 			...baseConfig,
 			venueName: 'International Centre for Shared Information and Public Experience',
-			boardTitle: 'Today across the public innovation and collaboration forum'
+			boardTitle: 'Today across the public innovation and collaboration forum',
+			upcomingTitle: 'Upcoming programme and scheduled sessions'
 		}),
 		viewport: { width: 1080, height: 1920, background: 'dark' },
 		minimumContentCoverage: { width: 85, height: 85 }

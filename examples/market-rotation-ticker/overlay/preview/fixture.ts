@@ -120,6 +120,15 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 92, height: 15 }
 	},
 	{
+		id: 'long-exchange-title',
+		fixture: createFixture('market-rotation-long-exchange-title', previewDatasourceValues, {
+			...baseConfig,
+			nasdaqLabel: 'NASDAQ 100 TECHNOLOGY AND GROWTH MARKET'
+		}),
+		viewport: { width: 6000, height: 136, background: 'dark' },
+		minimumContentCoverage: { width: 92, height: 15 }
+	},
+	{
 		id: 'scrolling-nasdaq',
 		fixture: {
 			...createFixture('market-rotation-ticker-scrolling', previewDatasourceValues),

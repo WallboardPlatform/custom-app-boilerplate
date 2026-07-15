@@ -285,7 +285,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<section class="unit-identity">
 							<div>
 								<span>BUSINESS UNIT</span>
-								<h2>{unit().name}</h2>
+								<h2 title={unit().name}>{unit().name}</h2>
 								<p>{unit().staffed} staffed agents across the current operation</p>
 							</div>
 							<div class="unit-page">

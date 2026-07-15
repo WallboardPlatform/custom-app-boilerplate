@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a continuously filled rotating market ticker for a 6000 by 136 video-wall strip.",
 		"audience": "Financial-information viewers reading live market movement across an ultra-wide display.",
@@ -52,8 +52,31 @@
 		{ "property": "exchangeTitleColor", "purpose": "Exchange title color." },
 		{ "property": "emptyStateText", "purpose": "Message when no market has valid rows." }
 	],
+	"dynamicText": [
+		{
+			"id": "exchange-title",
+			"source": { "type": "setting", "properties": ["nasdaqLabel", "tsxLabel", "dowLabel", "fxLabel"] },
+			"selectors": [".exchange-title strong"],
+			"strategy": "marquee",
+			"limits": { "minimumFontSize": 12, "maximumLines": 1 },
+			"fallback": "Extend the moving rail duration for long labels; never truncate the exchange identity.",
+			"rationale": "The title phase is explicitly motion-led on a fixed ultra-wide strip, so horizontal travel is the intended overflow behavior.",
+			"evidenceScenario": "long-exchange-title"
+		},
+		{
+			"id": "stock-symbol",
+			"source": { "type": "datasource", "properties": ["nasdaqData", "tsxData", "dowData", "fxData"] },
+			"selectors": [".stock-symbol"],
+			"strategy": "marquee",
+			"limits": { "minimumFontSize": 12, "maximumLines": 1 },
+			"fallback": "Keep every symbol on the measured repeating rail and expand the cycle rather than clipping entries.",
+			"rationale": "Stock symbols are canonical ticker content and the continuously filled marquee is the product behavior, not a truncation workaround.",
+			"evidenceScenario": "scrolling-nasdaq"
+		}
+	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps exchange, price, and movement indicators legible." },
+		{ "scenario": "long-exchange-title", "expectation": "A long exchange title remains complete while moving through its dedicated title phase." },
 		{ "scenario": "scrolling-nasdaq", "expectation": "NASDAQ entries fill the complete 6000-pixel strip while moving." },
 		{ "scenario": "market-rotation", "expectation": "The next exchange title appears after the prior market exits." },
 		{ "scenario": "short-fx-dataset", "expectation": "A short FX dataset repeats safely without exposing an empty strip." },
