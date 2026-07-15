@@ -22,6 +22,7 @@ Core rules:
 - Classify data-bound widgets using `docs/system/datasource-contracts.md`: explicit or built-in contract first, otherwise `TABLE`; use `CUSTOM` only when tabular data would lose required structure.
 - For multiple independent existing sources, declare every picker in `bindings[]`, keep one sanitized sample bundle with per-binding `samplePath` values, and preserve the sources' separate refresh lifecycles.
 - Add named preview scenarios for empty, maximum-content, odd-count, last-page, and long-label states that materially change layout.
+- Give every planned surface and named scenario measured minimum content-coverage thresholds that would fail a compressed or mostly empty layout.
 - Put app-specific timing, animation, or interaction assertions in an additional `preview/*.spec.ts` file; keep the shared visual suite generic.
 - Import packaged media statically (for example `import mark from './mark.png'`); never use `new URL(..., import.meta.url)` for runtime images.
 - Preserve `properties.json.version` when rebuilding or fixing an existing app. A deliberate incompatible version is a separate app upload and must be called out to the user.

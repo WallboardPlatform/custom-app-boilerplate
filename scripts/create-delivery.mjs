@@ -117,6 +117,7 @@ runNpmScript('validate:project');
 runNpmScript('validate:examples');
 runNpmScript('typecheck:scripts');
 runNpmScript('lint');
+runNpmScript('validate:legacy');
 runNpmScript('validate:visual');
 runNpmScript('prepare:datasource-package');
 runNpmScript('build:production');

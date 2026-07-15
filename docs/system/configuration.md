@@ -61,7 +61,7 @@ Every file emitted under `dist/assets/` must be listed. Static media needs both 
 
 Do not use `new URL('./mark.png', import.meta.url)` for packaged runtime media. Custom apps execute inside `/displayer`, where a deferred URL evaluation can incorrectly request `/displayer/mark.png`.
 
-Run `npm run validate:package` after every production build.
+Run `npm run validate:package` after every production build. It validates generation/project contracts, legacy CSS, emitted resources, cache-list entries, and editor PNG integrity before accepting the package.
 
 ## App Settings
 

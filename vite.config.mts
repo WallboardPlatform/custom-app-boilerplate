@@ -89,6 +89,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     build: {
       minify: 'terser',
+      cssTarget: 'chrome56',
       terserOptions: {
         mangle: {
           reserved: ['$']

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { normalizeDatasourceBindings } from '../datasource-provisioning.mjs';
+import { readPngDimensions } from '../png-validation.mjs';
 import type { GenerationBrief } from './validation.mts';
 
 export interface ProjectValidationContext {
@@ -17,6 +18,11 @@ export interface ProjectValidationContext {
 interface PropertySummary {
 	dataPickers: Set<string>;
 	settings: Set<string>;
+}
+
+interface PreviewScenarioValue {
+	id?: unknown;
+	minimumContentCoverage?: unknown;
 }
 
 type JsonObject = Record<string, unknown>;
@@ -121,6 +127,22 @@ const parsePixelSize = (context: ProjectValidationContext, value: unknown, field
 	return Number(match[1]);
 };
 
+const requireMinimumContentCoverage = (
+	context: ProjectValidationContext,
+	value: unknown,
+	field: string
+): void => {
+	const coverage = requireObject(context, value, field);
+
+	for (const dimension of ['width', 'height']) {
+		const percentage = coverage[dimension];
+
+		if (typeof percentage !== 'number' || !Number.isInteger(percentage) || percentage < 1 || percentage > 100) {
+			fail(context, `${field}.${dimension} must be an integer percentage from 1 to 100.`);
+		}
+	}
+};
+
 const resolveInsideApplication = (
 	context: ProjectValidationContext,
 	relativePath: string,
@@ -210,11 +232,21 @@ export const validateBriefAgainstProject = async (
 	}
 
 	const fixtureUrl = `${pathToFileURL(context.fixturePath).href}?brief-validation=${Date.now()}-${Math.random()}`;
-	const fixtureModule = await import(fixtureUrl) as { previewScenarios?: Array<{ id?: unknown }> };
+	const fixtureModule = await import(fixtureUrl) as { previewScenarios?: PreviewScenarioValue[] };
 	const previewScenarioIds = new Set<string>();
 
 	for (const [index, scenario] of (fixtureModule.previewScenarios ?? []).entries()) {
 		const scenarioId = requireString(context, scenario.id, `previewScenarios[${index}].id`);
+
+		if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(scenarioId)) {
+			fail(context, `previewScenarios[${index}].id must be a lowercase kebab-case identifier.`);
+		}
+
+		requireMinimumContentCoverage(
+			context,
+			scenario.minimumContentCoverage,
+			`previewScenarios[${index}].minimumContentCoverage`
+		);
 
 		if (previewScenarioIds.has(scenarioId)) {
 			fail(context, `preview fixture contains duplicate scenario '${scenarioId}'.`);
@@ -266,8 +298,18 @@ export const validateBriefAgainstProject = async (
 
 	for (const asset of brief.assets) {
 		if (asset.source === 'packaged') {
-			if (!fs.existsSync(resolveInsideApplication(context, asset.path, `asset '${asset.id}' path`))) {
+			const assetPath = resolveInsideApplication(context, asset.path, `asset '${asset.id}' path`);
+
+			if (!fs.existsSync(assetPath)) {
 				fail(context, `packaged asset '${asset.path}' was not found.`);
+			}
+
+			if (asset.id === 'app-icon' || asset.id === 'app-placeholder') {
+				try {
+					readPngDimensions(assetPath);
+				} catch (error) {
+					fail(context, `packaged asset '${asset.path}' is invalid: ${(error as Error).message}.`);
+				}
 			}
 		} else if (asset.source === 'datasource') {
 			if (!briefBindings.has(asset.binding)) {

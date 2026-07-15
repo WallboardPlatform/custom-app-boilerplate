@@ -1,33 +1,7 @@
 import sampleDatasourceJson from '../sample-datasource.json';
 
-export interface PreviewFixture {
-	id: string;
-	readySelector?: string;
-	configValues: Record<string, unknown>;
-	dataPickerValues: Record<string, unknown>;
-	datasourceIds: Record<string, string | number | undefined>;
-	additionalConfig?: Record<string, unknown>;
-}
+import type { PreviewFixture, PreviewScenario } from './fixture.types';
 
-export interface PreviewScenario {
-	id: string;
-	fixture: PreviewFixture;
-	viewport: {
-		width: number;
-		height: number;
-		background?: 'checker' | 'light' | 'dark';
-	};
-	advanceTimeMs?: number;
-	minimumContentCoverage?: {
-		width: number;
-		height: number;
-	};
-	liveDatasourceUpdate?: {
-		property: string;
-		value: unknown;
-		expectedText: string;
-	};
-}
 
 interface SampleDatasourceBundle extends Record<string, unknown> {
 	nasdaq100: Record<string, unknown>;

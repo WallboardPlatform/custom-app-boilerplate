@@ -98,6 +98,7 @@ npm run validate:package
 ```
 
 Builds the zip and fails when a runtime asset is missing from `resourceList`, a cache-listed file is absent, or local media uses an unsafe runtime-relative URL.
+It also rejects corrupt editor PNGs and CSS features outside the documented Chromium 56 compatibility contract.
 
 ### Linting
 

@@ -54,13 +54,14 @@
 			"items": {
 				"type": "object",
 				"additionalProperties": false,
-				"required": ["id", "width", "height", "role", "purpose"],
+				"required": ["id", "width", "height", "role", "purpose", "minimumContentCoverage"],
 				"properties": {
-					"id": { "$ref": "#/$defs/nonEmptyString" },
+					"id": { "$ref": "#/$defs/safeId" },
 					"width": { "type": "integer", "minimum": 1 },
 					"height": { "type": "integer", "minimum": 1 },
 					"role": { "enum": ["primary", "required", "fallback"] },
-					"purpose": { "$ref": "#/$defs/nonEmptyString" }
+					"purpose": { "$ref": "#/$defs/nonEmptyString" },
+					"minimumContentCoverage": { "$ref": "#/$defs/minimumContentCoverage" }
 				}
 			}
 		},
@@ -104,7 +105,7 @@
 				"additionalProperties": false,
 				"required": ["scenario", "expectation"],
 				"properties": {
-					"scenario": { "$ref": "#/$defs/nonEmptyString" },
+					"scenario": { "$ref": "#/$defs/safeId" },
 					"expectation": { "$ref": "#/$defs/nonEmptyString" }
 				}
 			}
@@ -125,7 +126,7 @@
 								"additionalProperties": false,
 								"required": ["scenario"],
 								"properties": {
-									"scenario": { "$ref": "#/$defs/nonEmptyString" }
+									"scenario": { "$ref": "#/$defs/safeId" }
 								}
 							},
 							{
@@ -171,6 +172,19 @@
 			"type": "string",
 			"minLength": 1,
 			"pattern": "\\S"
+		},
+		"safeId": {
+			"type": "string",
+			"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+		},
+		"minimumContentCoverage": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["width", "height"],
+			"properties": {
+				"width": { "type": "integer", "minimum": 1, "maximum": 100 },
+				"height": { "type": "integer", "minimum": 1, "maximum": 100 }
+			}
 		},
 		"packagedAsset": {
 			"type": "object",
