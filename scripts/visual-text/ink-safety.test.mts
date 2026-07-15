@@ -59,4 +59,16 @@ void describe('text ink safety', () => {
 
 		assert.deepEqual(risks, []);
 	});
+
+	void it('rejects text clipped by an ancestor even when its own box is tall enough', () => {
+		const risks = findTextInkRisks([clippedHeading({
+			lineHeight: 44,
+			boxHeight: 50,
+			visibleHeight: 39,
+			actualAscent: 30,
+			actualDescent: 8
+		})]);
+
+		assert.equal(risks.length, 1);
+	});
 });

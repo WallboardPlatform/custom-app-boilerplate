@@ -25,6 +25,7 @@ interface MenuDatasource {
 
 const sampleDatasource: MenuDatasource = sampleDatasourceJson as MenuDatasource;
 const baseConfig: Record<string, unknown> = {
+	themePreset: 'dark',
 	restaurantLabel: 'Restaurant',
 	restaurantName: 'Cordo',
 	editionTitle: 'Dinner menu',
@@ -95,6 +96,12 @@ const quickEditRows: MenuRow[] = sampleDatasource.MenuItems.rows.map(
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'light-theme',
+		fixture: createFixture('cordo-menu-light-theme', sampleDatasource, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		minimumContentCoverage: { width: 85, height: 85 }
+	},
+	{
 		id: 'static-unbound',
 		fixture: {
 			id: 'cordo-menu-static',
@@ -150,6 +157,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;

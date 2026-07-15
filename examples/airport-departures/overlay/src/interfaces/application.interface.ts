@@ -31,6 +31,7 @@ export interface Settings extends Record<string, unknown> {
 }
 
 export interface ConfigValues {
+	themePreset?: string;
 	airportCode?: string;
 	airportName?: string;
 	boardTitle?: string;

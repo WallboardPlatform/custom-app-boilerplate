@@ -39,6 +39,7 @@ export interface ConfigValues extends Record<string, unknown> {
 	subtitleText?: string;
 	emptyStateText?: string;
 	pageDurationSeconds?: number;
+	themePreset?: string;
 	fontFamily?: string;
 	backgroundColor?: string;
 	surfaceColor?: string;

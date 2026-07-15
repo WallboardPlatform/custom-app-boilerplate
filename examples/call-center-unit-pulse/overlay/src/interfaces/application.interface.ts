@@ -41,6 +41,7 @@ export interface ConfigValues extends Record<string, unknown> {
 	rotationSeconds?: number;
 	excludedGroups?: string;
 	hideInactiveGroups?: boolean;
+	themePreset?: string;
 	fontFamily?: string;
 	backgroundColor?: string;
 	surfaceColor?: string;

@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'so
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
@@ -191,6 +192,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		}
 	]);
 	const updatedAt: Accessor<string> = createMemo((): string => agents()[0]?.timestamp || 'Update time unavailable');
+	const fitTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 38,
+		widthOnly: true,
+		watch: (): string => settings().title
+	});
 	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
 		'--agent-background': settings().backgroundColor,
 		'--agent-surface': settings().surfaceColor,
@@ -238,7 +245,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="agent-header">
 				<div class="agent-header__title">
 					<span>{settings().subtitle}</span>
-					<h1>{settings().title}</h1>
+					<h1 ref={fitTitle}>{settings().title}</h1>
 					<small>{updatedAt()}</small>
 				</div>
 				<div class="agent-summary">

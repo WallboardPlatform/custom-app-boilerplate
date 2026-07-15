@@ -27,6 +27,7 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "airportCode", "purpose": "Short airport identifier." },
 		{ "property": "airportName", "purpose": "Airport name in the board header." },
 		{ "property": "boardTitle", "purpose": "Primary board title." },
@@ -39,6 +40,7 @@
 		{ "property": "accentColor", "purpose": "Status and hierarchy accent color." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset remains legible and preserves the departure-board hierarchy." },
 		{ "scenario": "static-unbound", "expectation": "Representative departures remain visible before a datasource is selected." },
 		{ "scenario": "empty", "expectation": "An explicit empty state replaces the table body." },
 		{ "scenario": "bound-null", "expectation": "A null bound value remains stable and communicates missing data." },

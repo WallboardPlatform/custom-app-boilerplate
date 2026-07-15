@@ -16,6 +16,7 @@ Core rules:
 - Treat `generation-brief.json` as the accepted request contract. Update it when the user changes identity, surface strategy, visual direction, data, settings, states, behavior, or assets.
 - Resolve whether the app is `fixed`, `bounded`, or `adaptive` before implementation. Do not sacrifice the requested composition to unsupported aspect ratios.
 - User-provided visual references and explicit brand direction outrank repository examples. Examples demonstrate engineering patterns, not a default Wallboard visual style.
+- For color-driven apps, provide coordinated Dark and Light presets plus a Custom mode by default. Derive both presets from the accepted visual direction, and preserve missing legacy preset values as Custom on replacement uploads.
 - Build the user-facing widget in `src/components/wb-app/`.
 - Keep the root widget responsive, isolated, and transparent by default.
 - Keep CSS compatible with the legacy Chromium target described by the boilerplate docs.
@@ -34,6 +35,7 @@ Core rules:
 - Use `npm run deliver -- <output-directory>` for final validation and delivery generation. Hand off both the upload ZIP and the separate sanitized source ZIP; never put source files inside the Wallboard upload package.
 - `deliver:unverified` is a browserless transfer mechanism only. Its `_UNVERIFIED` artifacts are not upload-ready and must pass normal `deliver` elsewhere.
 - Inspect every image in `preview/output/` at 100% or zoomed detail; passing overflow checks does not prove that the composition is visually good. Check descenders, baselines, reference fidelity, hierarchy, and repeated template patterns explicitly.
+- Use `useAutoFitText` selectively for variable bounded titles and hero values. Keep safe line-height and vertical padding because box fitting does not prove glyph-ink clearance.
 - In the installation handoff, state that a newly created custom app must be uploaded, enabled, and assigned to the editor's customer (or left unassigned for all customers).
 
 The final deliverable is the generated delivery directory. For a data-bound app, state that current Wallboard versions require datasource creation/import and binding even though the ZIP carries the future provisioning template.

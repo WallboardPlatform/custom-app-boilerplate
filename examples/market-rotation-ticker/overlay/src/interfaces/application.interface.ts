@@ -47,6 +47,7 @@ export interface Settings extends Record<string, unknown> {
 	upIconFile?: string;
 	downIconFile?: string;
 	backgroundColor: string;
+	textColor: string;
 	exchangeTitleColor: string;
 	upColor: string;
 	downColor: string;
@@ -64,6 +65,7 @@ export interface RawFontSettings extends Record<string, string | number | undefi
 }
 
 export interface ConfigValues {
+	themePreset?: string;
 	nasdaqLabel?: string;
 	tsxLabel?: string;
 	dowLabel?: string;

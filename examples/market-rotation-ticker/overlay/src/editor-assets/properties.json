@@ -93,6 +93,14 @@
 			"label": "Surface",
 			"type": "group",
 			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"tooltip": "Dark and Light are coordinated presets. Choose Custom to use the font and color controls.",
+					"options": [
+						{ "label": "Dark", "value": "dark" }, { "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
 				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000" },
 				{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d" },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No valid market data is available." }

@@ -50,6 +50,18 @@
 			"type": "group",
 			"properties": [
 				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
 					"label": "Font family",
 					"type": "select",
 					"property": "fontFamily",

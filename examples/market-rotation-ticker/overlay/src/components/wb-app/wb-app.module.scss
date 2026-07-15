@@ -9,7 +9,7 @@
   min-height: 0;
   overflow: hidden;
   align-items: stretch;
-  color: #fff;
+  color: var(--ticker-text-color, #fff);
   background: var(--ticker-background, #000);
   letter-spacing: 0;
 }
@@ -143,7 +143,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: #fff;
+  color: var(--ticker-text-color, #fff);
   background: var(--fallback-icon-background, #20252b);
   border: 1px solid rgba(255, 255, 255, 0.16);
   font-family: var(--symbol-font-family, Arial, sans-serif);
@@ -240,7 +240,7 @@
   padding: 0 8%;
   align-items: center;
   justify-content: center;
-  color: #aeb4ba;
+  color: var(--ticker-text-color, #aeb4ba);
   font-family: var(--symbol-font-family, Arial, sans-serif);
   font-size: var(--price-font-size, 28px);
   line-height: 1.15;

@@ -117,6 +117,7 @@ const baseConfig: Record<string, unknown> = {
 	maxUpcoming: 4,
 	timeFormat: '24h',
 	showClock: true,
+	themePreset: 'dark',
 	backgroundColor: '#101313',
 	panelColor: '#1b2020',
 	primaryTextColor: '#f5f2e9',
@@ -143,8 +144,14 @@ const previewFixture: PreviewFixture = createFixture('live-agenda-preview', micr
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'light-theme',
+		fixture: createFixture('live-agenda-light-theme', microsoftCalendar, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1280, height: 720, background: 'light' },
+		minimumContentCoverage: { width: 80, height: 75 }
+	},
+	{
 		id: 'microsoft-calendar',
-		fixture: createFixture('live-agenda-microsoft', microsoftCalendar),
+		fixture: createFixture('live-agenda-microsoft', microsoftCalendar, { ...baseConfig, themePreset: 'custom' }),
 		viewport: { width: 1920, height: 1080, background: 'dark' },
 		minimumContentCoverage: { width: 90, height: 75 }
 	},
@@ -190,6 +197,14 @@ export const previewScenarios: PreviewScenario[] = [
 ];
 
 export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	},
 	{
 		id: 'clock-visibility',
 		property: 'showClock',

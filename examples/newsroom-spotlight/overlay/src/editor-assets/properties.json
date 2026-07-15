@@ -40,6 +40,14 @@
 			"label": "Appearance",
 			"type": "group",
 			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Light", "value": "light" }, { "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
 				{ "label": "Outer background", "type": "color", "property": "backgroundColor", "default": "#f2efe8" },
 				{ "label": "Story surface", "type": "color", "property": "panelColor", "default": "#17211f" },
 				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f9f7f0" },

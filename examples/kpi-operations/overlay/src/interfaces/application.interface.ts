@@ -52,6 +52,7 @@ export interface Settings extends Record<string, unknown> {
 }
 
 export interface ConfigValues extends Record<string, unknown> {
+	themePreset?: string;
 	titleText?: string;
 	subtitleText?: string;
 	emptyStateText?: string;

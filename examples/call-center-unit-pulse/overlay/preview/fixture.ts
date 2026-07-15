@@ -17,6 +17,7 @@ const baseConfig: Record<string, unknown> = {
 	rotationSeconds: 3,
 	excludedGroups: 'All BGE,TOTAL,Other',
 	hideInactiveGroups: false,
+	themePreset: 'light',
 	fontFamily: "'Segoe UI', Arial, sans-serif",
 	backgroundColor: '#eef2f5',
 	surfaceColor: '#ffffff',
@@ -80,6 +81,12 @@ const liveUpdateData: UnitDatasource = {
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'dark-theme',
+		fixture: createFixture('unit-pulse-dark-theme', sampleDatasource, { ...baseConfig, themePreset: 'dark' }),
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		minimumContentCoverage: { width: 90, height: 86 }
+	},
+	{
 		id: 'excluded-aggregates',
 		fixture: createFixture('unit-pulse-excluded', sampleDatasource),
 		viewport: { width: 1920, height: 1080, background: 'light' },
@@ -129,6 +136,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'dark',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;

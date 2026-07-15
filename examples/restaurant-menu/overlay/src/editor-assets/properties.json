@@ -33,6 +33,31 @@
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No menu items are available." },
 				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 12, "min": 3, "max": 120, "step": 1 }
 			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#121815" },
+				{ "label": "Header background", "type": "color", "property": "headerBackgroundColor", "default": "#f0ebdf" },
+				{ "label": "Header text", "type": "color", "property": "headerTextColor", "default": "#151a17" },
+				{ "label": "Story background", "type": "color", "property": "storyBackgroundColor", "default": "#dce5db" },
+				{ "label": "Story text", "type": "color", "property": "storyTextColor", "default": "#172019" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f2eee4" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aeb9b2" },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#e66c47" },
+				{ "label": "Accent text", "type": "color", "property": "accentTextColor", "default": "#a3472f" },
+				{ "label": "Rules", "type": "color", "property": "lineColor", "default": "#5d6a63" },
+				{ "label": "Featured items", "type": "color", "property": "featuredColor", "default": "#f3b29e" }
+			]
 		}
 	],
 	"resourceList": [

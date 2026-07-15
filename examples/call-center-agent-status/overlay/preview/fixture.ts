@@ -10,6 +10,7 @@ const baseConfig: Record<string, unknown> = {
 	subtitleText: 'Live workforce activity',
 	emptyStateText: 'No agent records are currently available.',
 	pageDurationSeconds: 3,
+	themePreset: 'light',
 	fontFamily: "'Segoe UI', Arial, sans-serif",
 	backgroundColor: '#e8f0f6',
 	surfaceColor: '#ffffff',
@@ -23,10 +24,14 @@ const baseConfig: Record<string, unknown> = {
 	unknownColor: '#3d86bd'
 };
 
-const createFixture = (id: string, data: unknown): PreviewFixture => ({
+const createFixture = (
+	id: string,
+	data: unknown,
+	configValues: Record<string, unknown> = baseConfig
+): PreviewFixture => ({
 	id,
 	readySelector: '.agent-header h1',
-	configValues: baseConfig,
+	configValues,
 	dataPickerValues: { agentData: data },
 	datasourceIds: { agentData: 'preview-agent-data' },
 	additionalConfig: { licenseType: null, mockDatasource: {}, style: {} }
@@ -50,6 +55,22 @@ const liveUpdateRows: PreviewAgent[] = sampleDatasource.map((row: PreviewAgent, 
 );
 
 export const previewScenarios: PreviewScenario[] = [
+	{
+		id: 'descender-title',
+		fixture: createFixture('agent-status-descender-title', sampleDatasource, {
+			...baseConfig,
+			themePreset: 'dark',
+			titleText: 'Agent grouping status wall'
+		}),
+		viewport: { width: 960, height: 540, background: 'dark' },
+		minimumContentCoverage: { width: 88, height: 84 }
+	},
+	{
+		id: 'dark-theme',
+		fixture: createFixture('agent-status-dark-theme', sampleDatasource, { ...baseConfig, themePreset: 'dark' }),
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		minimumContentCoverage: { width: 90, height: 88 }
+	},
 	{
 		id: 'mixed-states',
 		fixture: createFixture('agent-status-mixed', sampleDatasource),
@@ -100,6 +121,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'dark',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;

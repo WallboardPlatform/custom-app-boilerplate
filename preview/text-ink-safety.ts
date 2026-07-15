@@ -5,6 +5,7 @@ export interface TextInkMeasurement {
 	fontSize: number;
 	lineHeight: number;
 	boxHeight: number;
+	visibleHeight?: number;
 	borderTop: number;
 	borderBottom: number;
 	lineCount: number;
@@ -36,7 +37,11 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 			return [];
 		}
 
-		const availableHeight: number = measurement.boxHeight - measurement.borderTop - measurement.borderBottom;
+		const unclippedHeight: number = measurement.boxHeight - measurement.borderTop - measurement.borderBottom;
+		const availableHeight: number = Math.min(
+			unclippedHeight,
+			measurement.visibleHeight ?? unclippedHeight
+		);
 		const visibleLineCapacity: number = Math.max(
 			1,
 			Math.floor((availableHeight + 0.5) / measurement.lineHeight)

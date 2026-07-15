@@ -58,6 +58,7 @@
 		{ "property": "subtitleText", "purpose": "Operational context line." },
 		{ "property": "emptyStateText", "purpose": "Message shown when no valid agents exist." },
 		{ "property": "pageDurationSeconds", "purpose": "Seconds each eight-agent page remains visible." },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "fontFamily", "purpose": "Display typeface." },
 		{ "property": "backgroundColor", "purpose": "Root canvas color." },
 		{ "property": "surfaceColor", "purpose": "Agent card color." },
@@ -71,6 +72,8 @@
 		{ "property": "unknownColor", "purpose": "Unrecognized state color." }
 	],
 	"states": [
+		{ "scenario": "descender-title", "expectation": "A compact dark placement keeps every descender in the fitted title visibly clear of clipping." },
+		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves agent-state contrast and title ink clearance." },
 		{
 			"scenario": "mixed-states",
 			"expectation": "Ready, busy, ACW, away, offline, and unknown states remain visually distinct."

@@ -33,6 +33,7 @@ export interface Settings extends Record<string, unknown> {
 }
 
 export interface ConfigValues {
+	themePreset?: string;
 	sourceLabel?: string;
 	emptyStateText?: string;
 	rotationSeconds?: number;

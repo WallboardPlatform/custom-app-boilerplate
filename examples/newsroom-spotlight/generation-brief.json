@@ -27,6 +27,7 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "sourceLabel", "purpose": "Editorial source or series label." },
 		{ "property": "emptyStateText", "purpose": "Message shown when no valid stories exist." },
 		{ "property": "rotationSeconds", "purpose": "Duration before the next story is featured." },
@@ -41,6 +42,7 @@
 		{ "property": "accentColor", "purpose": "Series, category, and progress accent color." }
 	],
 	"states": [
+		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves editorial hierarchy and readable story contrast." },
 		{ "scenario": "wallboard-feed", "expectation": "Current Wallboard feed items normalize with media, categories, and epoch-second publication dates." },
 		{ "scenario": "rss-parser", "expectation": "Legacy feed.entries output normalizes enclosure media and HTML-derived snippets." },
 		{ "scenario": "rss-channel", "expectation": "RSS channel.item output normalizes into the same editorial story model." },

@@ -596,6 +596,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const contentHeight: number = Math.max(12, REFERENCE_HEIGHT - (currentSettings.verticalMargin * 2));
 		const variables: Record<string, string> = {
 			'--ticker-background': currentSettings.backgroundColor,
+			'--ticker-text-color': currentSettings.textColor,
 			'--exchange-title-color': currentSettings.exchangeTitleColor,
 			'--up-color': currentSettings.upColor,
 			'--down-color': currentSettings.downColor,

@@ -16,6 +16,7 @@ const baseConfig: Record<string, unknown> = {
 	emptyStateText: 'No active skill records are currently available.',
 	rotationSeconds: 3,
 	maxAgentsShown: 12,
+	themePreset: 'dark',
 	fontFamily: "'Segoe UI', Arial, sans-serif",
 	backgroundColor: '#071b29',
 	surfaceColor: '#0f2a3a',
@@ -29,10 +30,14 @@ const baseConfig: Record<string, unknown> = {
 	unknownColor: '#8c7bd3'
 };
 
-const createFixture = (id: string, data: unknown): PreviewFixture => ({
+const createFixture = (
+	id: string,
+	data: unknown,
+	configValues: Record<string, unknown> = baseConfig
+): PreviewFixture => ({
 	id,
 	readySelector: '.skill-header h1',
-	configValues: baseConfig,
+	configValues,
 	dataPickerValues: { skillData: data },
 	datasourceIds: { skillData: 'preview-skill-data' },
 	additionalConfig: { licenseType: null, mockDatasource: {}, style: {} }
@@ -96,6 +101,12 @@ const liveUpdateDatasource: PreviewSkillDatasource = {
 const previewFixture: PreviewFixture = createFixture('call-center-skill-operations-preview', sampleDatasource);
 
 export const previewScenarios: PreviewScenario[] = [
+	{
+		id: 'light-theme',
+		fixture: createFixture('skill-operations-light-theme', sampleDatasource, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		minimumContentCoverage: { width: 90, height: 88 }
+	},
 	{
 		id: 'mixed-skills',
 		fixture: createFixture('skill-operations-mixed', sampleDatasource),
@@ -162,6 +173,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;
