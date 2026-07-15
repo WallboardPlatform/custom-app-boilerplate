@@ -336,6 +336,28 @@ export const validateBriefAgainstProject = async (
 		fail(context, `states must document every named preview scenario. Brief: ${formatSet(stateScenarioIds)}; fixture: ${formatSet(previewScenarioIds)}.`);
 	}
 
+	for (const policy of brief.dynamicText) {
+		if (!previewScenarioIds.has(policy.evidenceScenario)) {
+			fail(context, `dynamicText '${policy.id}' references unknown evidence scenario '${policy.evidenceScenario}'.`);
+		}
+
+		if (policy.source.type === 'setting') {
+			for (const property of policy.source.properties) {
+				if (!propertySummary.settings.has(property)) {
+					fail(context, `dynamicText '${policy.id}' references unknown setting '${property}'.`);
+				}
+			}
+		}
+
+		if (policy.source.type === 'datasource') {
+			for (const property of policy.source.properties) {
+				if (!briefBindings.has(property)) {
+					fail(context, `dynamicText '${policy.id}' references unknown datasource binding '${property}'.`);
+				}
+			}
+		}
+	}
+
 	const effectIds = new Set<string>();
 	const effectProperties = new Map<string, string>();
 

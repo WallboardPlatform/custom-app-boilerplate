@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a production airport departure board backed by an editable internal table.",
 		"audience": "Airport passengers scanning flight status from a distance.",
@@ -38,6 +38,28 @@
 		{ "property": "backgroundColor", "purpose": "Board background color." },
 		{ "property": "textColor", "purpose": "Primary text color." },
 		{ "property": "accentColor", "purpose": "Status and hierarchy accent color." }
+	],
+	"dynamicText": [
+		{
+			"id": "board-title",
+			"source": { "type": "setting", "properties": ["boardTitle"] },
+			"selectors": [".departures-header h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable board title is primary wayfinding text and should remain complete whenever the available width permits.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "departure-destination",
+			"source": { "type": "datasource", "properties": ["departuresData"] },
+			"selectors": [".departure-row .departure-destination strong"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the destination after preserving the departure time, flight, gate, and status columns.",
+			"rationale": "Timetable row alignment and scan speed are more important than showing an unbounded destination on multiple lines.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset remains legible and preserves the departure-board hierarchy." },

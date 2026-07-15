@@ -8,7 +8,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `2` |
+| `briefVersion` | `3` |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
@@ -16,6 +16,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `surfaces` | Lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; every supported surface has minimum width/height content coverage |
 | `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
 | `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
+| `dynamicText` | Every important variable-length text surface declares its source, selectors, fit/wrap/ellipsis/marquee strategy, readable limits, fallback, rationale, and a stress scenario |
 | `states` | Exactly one expectation for every named `previewScenario` |
 | `behaviors` | Observable timing, motion, pagination, live-update, or interaction rules with scenario or test-file evidence |
 | `assets` | Packaged, datasource-backed, or setting-provided assets; include icon and placeholder |
@@ -31,6 +32,19 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `adaptive` | At least four representative sizes including portrait and square | Declared surfaces plus standard fallback matrix |
 
 If the request does not establish the intended placement, resolve whether this is a small widget, a fixed large status board, a bounded placement family, or a genuinely adaptive app before implementation. More responsiveness is not automatically better when it weakens the requested design.
+
+## Dynamic Text Contract
+
+Every important setting-, datasource-, or computed-text surface with unpredictable length belongs in `dynamicText`. One policy may cover multiple selectors only when they share the same strategy and fallback.
+
+| Strategy | Use | Required limit |
+|----------|-----|----------------|
+| `auto-fit` | Bounded single-line titles and hero values that must remain complete | `minimumFontSize` |
+| `wrap` | Titles or descriptions where additional lines preserve meaning | `maximumLines` |
+| `ellipsis` | Secondary text where documented information loss is acceptable | `maximumLines` |
+| `marquee` | Continuous ticker content whose movement is part of the requested experience | At least one explicit limit |
+
+`fallback` describes what happens after the primary strategy reaches its readable limit. Auto-fit must not shrink indefinitely; wrapping, pagination, a shorter alternate label, or explicitly accepted ellipsis must take over. `evidenceScenario` must use pathological but realistic content, and every declared selector must render in that scenario. The shared visual suite also verifies auto-fit containment and its minimum font size.
 
 ## Visual Direction
 
@@ -71,7 +85,7 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 1. Translate the prompt, images, supplied data, and user decisions into the brief. Treat references as design evidence, not optional inspiration.
 2. Resolve blocking ambiguity about placement and visual direction before implementation. Record non-blocking assumptions.
 3. Choose datasource contracts and editor settings.
-4. Define realistic surfaces, edge states, and observable behavior evidence.
+4. Define realistic surfaces, edge states, dynamic-text policies, and observable behavior evidence.
 5. Run `npm run validate:brief`, then implement the accepted plan.
 6. Run `npm run measure:visual`, inspect its screenshots and coverage report, then update planned coverage with justified measured thresholds.
 7. Run `npm run validate:project` and `npm run validate:visual`; resolve every synchronization or visual failure.

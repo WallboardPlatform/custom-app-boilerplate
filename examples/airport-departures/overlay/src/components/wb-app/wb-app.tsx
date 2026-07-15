@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show }
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
@@ -214,6 +215,12 @@ const getClockValue = (): ClockValue => {
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
+	const fitBoardTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 55,
+		widthOnly: true,
+		watch: (): string => settings().boardTitle
+	});
 	const [clock, setClock] = createSignal<ClockValue>(getClockValue());
 	const [dimensions, setDimensions] = createSignal<Dimensions>({ width: 1920, height: 1080 });
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
@@ -304,7 +311,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<strong>{settings().airportCode}</strong>
 					<div>
 						<span>{settings().airportName}</span>
-						<h1>{settings().boardTitle}</h1>
+						<h1 ref={fitBoardTitle}>{settings().boardTitle}</h1>
 					</div>
 				</div>
 				<div class="departures-terminal">

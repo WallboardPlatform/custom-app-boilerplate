@@ -13,6 +13,7 @@
 		"surfaces",
 		"data",
 		"settings",
+		"dynamicText",
 		"states",
 		"behaviors",
 		"assets",
@@ -20,7 +21,7 @@
 		"visualReview"
 	],
 	"properties": {
-		"briefVersion": { "const": 2 },
+		"briefVersion": { "const": 3 },
 		"request": {
 			"type": "object",
 			"additionalProperties": false,
@@ -107,6 +108,29 @@
 					"property": { "$ref": "#/$defs/nonEmptyString" },
 					"purpose": { "$ref": "#/$defs/nonEmptyString" },
 					"effect": { "$ref": "#/$defs/safeId" }
+				}
+			}
+		},
+		"dynamicText": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "source", "selectors", "strategy", "limits", "fallback", "rationale", "evidenceScenario"],
+				"properties": {
+					"id": { "$ref": "#/$defs/safeId" },
+					"source": { "$ref": "#/$defs/dynamicTextSource" },
+					"selectors": {
+						"type": "array",
+						"minItems": 1,
+						"items": { "$ref": "#/$defs/nonEmptyString" }
+					},
+					"strategy": { "enum": ["auto-fit", "wrap", "ellipsis", "marquee"] },
+					"limits": { "$ref": "#/$defs/dynamicTextLimits" },
+					"fallback": { "$ref": "#/$defs/nonEmptyString" },
+					"rationale": { "$ref": "#/$defs/nonEmptyString" },
+					"evidenceScenario": { "$ref": "#/$defs/safeId" }
 				}
 			}
 		},
@@ -219,6 +243,28 @@
 			"properties": {
 				"width": { "type": "integer", "minimum": 1, "maximum": 100 },
 				"height": { "type": "integer", "minimum": 1, "maximum": 100 }
+			}
+		},
+		"dynamicTextSource": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["type", "properties"],
+			"properties": {
+				"type": { "enum": ["setting", "datasource", "computed"] },
+				"properties": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"dynamicTextLimits": {
+			"type": "object",
+			"additionalProperties": false,
+			"minProperties": 1,
+			"properties": {
+				"minimumFontSize": { "type": "integer", "minimum": 8 },
+				"maximumLines": { "type": "integer", "minimum": 1 }
 			}
 		},
 		"packagedAsset": {

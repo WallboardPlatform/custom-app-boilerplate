@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show }
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
@@ -228,6 +229,12 @@ const getClock = (): { day: string; time: string } => {
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
+	const fitRestaurantName = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 50,
+		widthOnly: true,
+		watch: (): string => settings().restaurantName
+	});
 	const [clock, setClock] = createSignal<{ day: string; time: string }>(getClock());
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
 	const rawData: Accessor<unknown> = createMemo((): unknown => dataSources().menuData?.value);
@@ -298,7 +305,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="menu-header">
 				<div class="menu-brand">
 					<span>{settings().restaurantName.charAt(0)}</span>
-					<div><small>{settings().restaurantLabel}</small><h1>{settings().restaurantName}</h1></div>
+					<div><small>{settings().restaurantLabel}</small><h1 ref={fitRestaurantName}>{settings().restaurantName}</h1></div>
 				</div>
 				<div class="menu-edition">
 					<strong>{settings().editionTitle}</strong>

@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a rotating call-center skill dashboard by aggregating existing per-agent skill-state rows.",
 		"audience": "Call-center supervisors monitoring skill coverage and current agent activity.",
@@ -60,6 +60,28 @@
 		{ "property": "awayColor", "purpose": "Not-ready and auxiliary status color." },
 		{ "property": "offlineColor", "purpose": "Logged-out status color." },
 		{ "property": "unknownColor", "purpose": "Unrecognized status color." }
+	],
+	"dynamicText": [
+		{
+			"id": "dashboard-title",
+			"source": { "type": "setting", "properties": ["titleText"] },
+			"selectors": [".skill-header h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable board title must retain hierarchy without colliding with the live snapshot metadata.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "skill-name",
+			"source": { "type": "datasource", "properties": ["skillData"] },
+			"selectors": [".skill-identity h2"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two lines and preserve the full value through the element title.",
+			"rationale": "A skill name is the page identity and may use two lines, but the gauges and roster must keep their bounded geometry.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{

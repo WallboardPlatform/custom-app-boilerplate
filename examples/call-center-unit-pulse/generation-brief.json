@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a rotating call-center unit dashboard from an existing keyed KPI datasource.",
 		"audience": "Call-center supervisors monitoring unit-level workload and service health on shared displays.",
@@ -59,6 +59,28 @@
 		{ "property": "successColor", "purpose": "Healthy KPI color." },
 		{ "property": "warningColor", "purpose": "Attention KPI color." },
 		{ "property": "dangerColor", "purpose": "Critical KPI color." }
+	],
+	"dynamicText": [
+		{
+			"id": "dashboard-title",
+			"source": { "type": "setting", "properties": ["titleText"] },
+			"selectors": [".unit-header h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable dashboard title must remain distinct from the current business-unit identity and snapshot metadata.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "business-unit-name",
+			"source": { "type": "datasource", "properties": ["groupData"] },
+			"selectors": [".unit-identity h2"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two lines while preserving the complete name through the element title.",
+			"rationale": "The current unit is the page subject and can use two lines without displacing its gauges and metric field.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{

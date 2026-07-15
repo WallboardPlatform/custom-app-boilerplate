@@ -145,7 +145,10 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-labels',
-		fixture: createFixture('airport-departures-long-labels', withRows(longLabelRows)),
+		fixture: createFixture('airport-departures-long-labels', withRows(longLabelRows), {
+			...baseConfig,
+			boardTitle: 'International and regional departures information'
+		}),
 		viewport: { width: 1536, height: 432, background: 'dark' },
 		minimumContentCoverage: { width: 90, height: 85 }
 	},

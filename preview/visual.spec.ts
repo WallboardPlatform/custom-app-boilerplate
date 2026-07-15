@@ -56,11 +56,23 @@ interface BriefSurface {
 	minimumContentCoverage: MinimumContentCoverage;
 }
 
+interface DynamicTextPolicy {
+	id: string;
+	selectors: string[];
+	strategy: 'auto-fit' | 'wrap' | 'ellipsis' | 'marquee';
+	limits: {
+		minimumFontSize?: number;
+		maximumLines?: number;
+	};
+	evidenceScenario: string;
+}
+
 interface GenerationBriefSummary {
 	surfaceStrategy: {
 		mode: 'fixed' | 'bounded' | 'adaptive';
 	};
 	surfaces: BriefSurface[];
+	dynamicText: DynamicTextPolicy[];
 }
 
 const generationBriefPath: string = path.resolve(process.cwd(), 'generation-brief.json');
@@ -214,6 +226,96 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 				return Boolean(element?.textContent?.trim() || element?.tagName.toLowerCase() === 'img');
 			}, preset.readySelector);
+		}
+
+		const dynamicTextPolicies: DynamicTextPolicy[] = generationBrief.dynamicText.filter(
+			(policy: DynamicTextPolicy): boolean => policy.evidenceScenario === preset.scenario
+		);
+
+		for (const policy of dynamicTextPolicies) {
+			for (const selector of policy.selectors) {
+				const elements = page.locator(selector);
+
+				expect(
+					await elements.count(),
+					`dynamicText '${policy.id}' selector '${selector}' must render in scenario '${preset.scenario}'.`
+				).toBeGreaterThan(0);
+
+				const violations = await elements.evaluateAll((matches: Element[], dynamicPolicy: DynamicTextPolicy): string[] => {
+					return matches.flatMap((element: Element, index: number): string[] => {
+						const htmlElement = element as HTMLElement;
+						const bounds = htmlElement.getBoundingClientRect();
+
+						if (bounds.width <= 0 || bounds.height <= 0) {
+							return [];
+						}
+
+						const computedStyle = window.getComputedStyle(htmlElement);
+						const fontSize = Number.parseFloat(computedStyle.fontSize) || 0;
+						const parsedLineHeight = Number.parseFloat(computedStyle.lineHeight);
+						const lineHeight = Number.isFinite(parsedLineHeight) ? parsedLineHeight : fontSize * 1.2;
+						const horizontalOverflow = htmlElement.scrollWidth > htmlElement.clientWidth + 1;
+						const verticalOverflow = htmlElement.scrollHeight > htmlElement.clientHeight + 1;
+						const clipsOverflow = computedStyle.overflowX === 'hidden' || computedStyle.overflowX === 'clip';
+						const belowMinimum = dynamicPolicy.limits.minimumFontSize !== undefined
+							&& fontSize + 0.1 < dynamicPolicy.limits.minimumFontSize;
+						const issues: string[] = [];
+
+						if (belowMinimum) {
+							issues.push(`font ${fontSize}px is below ${dynamicPolicy.limits.minimumFontSize}px`);
+						}
+
+						if (dynamicPolicy.strategy === 'auto-fit' && (horizontalOverflow || verticalOverflow)) {
+							issues.push('auto-fit content still overflows');
+						}
+
+						if (dynamicPolicy.strategy === 'wrap') {
+							if (horizontalOverflow) {
+								issues.push('wrapped content overflows horizontally');
+							}
+
+							if (dynamicPolicy.limits.maximumLines !== undefined) {
+								const verticalPadding = Number.parseFloat(computedStyle.paddingTop)
+									+ Number.parseFloat(computedStyle.paddingBottom);
+								const maximumHeight = lineHeight * dynamicPolicy.limits.maximumLines + verticalPadding + 2;
+
+								if (bounds.height > maximumHeight) {
+									issues.push(`wrap box ${bounds.height}px exceeds ${dynamicPolicy.limits.maximumLines} lines`);
+								}
+
+								if (verticalOverflow && !clipsOverflow) {
+									issues.push('wrapped overflow is not bounded');
+								}
+							}
+						}
+
+						if (dynamicPolicy.strategy === 'ellipsis') {
+							if (dynamicPolicy.limits.maximumLines === 1) {
+								if (computedStyle.whiteSpace !== 'nowrap') {
+									issues.push('single-line ellipsis does not use nowrap');
+								}
+
+								if (computedStyle.textOverflow !== 'ellipsis' || !clipsOverflow) {
+									issues.push('single-line ellipsis is not visibly bounded');
+								}
+							}
+						}
+
+						if (dynamicPolicy.strategy === 'marquee' && computedStyle.whiteSpace !== 'nowrap') {
+							issues.push('marquee content is allowed to wrap');
+						}
+
+						return issues.length > 0
+							? [`match ${index + 1}: ${issues.join(', ')}; ${fontSize}px, ${htmlElement.scrollWidth}x${htmlElement.scrollHeight} scroll area in ${htmlElement.clientWidth}x${htmlElement.clientHeight}`]
+							: [];
+					});
+				}, policy);
+
+				expect(
+					violations,
+					`dynamicText '${policy.id}' ${policy.strategy} policy failed for '${selector}':\n${violations.join('\n')}`
+				).toEqual([]);
+			}
 		}
 
 		const previewError: string | undefined = await page.evaluate((): string | undefined => {
