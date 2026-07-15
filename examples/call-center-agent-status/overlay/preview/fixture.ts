@@ -42,7 +42,11 @@ const longLabelRows: PreviewAgent[] = sampleDatasource
 	.slice(0, 8)
 	.map((row: PreviewAgent, index: number): PreviewAgent =>
 		index === 0
-			? { ...row, Name: 'Alexandria Montgomery-Sutherland', State: 'After Call Work - Customer Documentation' }
+			? {
+					...row,
+					Name: 'Sample Agent with an Exceptionally Long Display Name',
+					State: 'After Call Work - Customer Documentation'
+				}
 			: row
 	);
 const invalidRows: PreviewAgent[] = [

@@ -116,7 +116,9 @@ DOM box containment does not prove that glyphs are intact. Fonts can paint desce
 - Do not repair a title by hiding more overflow; inspect its computed font size, line height, box height, and padding.
 - Treat the shared text-ink failure as a real layout defect. It reports the selector, rendered text, measured ink buffer, and required buffer.
 
-For a variable single-line title or hero value with a bounded box, use `useAutoFitText` to select the largest fitting font size from an explicit minimum and maximum. The hook observes the rendered element with the SDK-compatible `ResizeObserver` environment and re-fits when its watched value changes. It is not a replacement for flex layout, responsive tiers, or ink clearance: retain a safe line height and bottom padding because DOM scroll dimensions do not describe every font's painted glyph bounds.
+For a variable single-line title or hero value with a bounded box, `useAutoFitText` is the default practice. Select the largest fitting font size from an explicit minimum and maximum, watch the displayed value, and retain a safe line height plus bottom padding. The hook observes the rendered element with the SDK-compatible `ResizeObserver` environment. Do not apply it blindly to paragraphs, intentional multi-line headings, table cells, or every repeated list item; those need explicit wrapping, line limits, safe line boxes, and pagination where appropriate. Auto-fit is not a replacement for flex layout or responsive tiers, and DOM scroll dimensions do not describe every font's painted glyph bounds.
+
+When horizontally truncating descender-bearing text with `overflow: hidden`, provide at least `line-height: 1.16` or equivalent bottom clearance. The shared visual validator checks both total glyph-ink space and the clearance below the baseline; a tall box with all spare space above the baseline is still unsafe.
 
 ## Settings
 
@@ -153,6 +155,8 @@ Mapping is not proof that a control works. Declare `previewSettingEffects` in `p
 Do not let a missing datasource produce a blank widget unless blank is the explicit user requirement.
 
 Normalize variable datasource wrappers once at the application boundary, then render a single typed row shape. Accept documented array or serialized forms defensively, but do not spread ad hoc shape checks through visual components.
+
+Bundled fallback data, preview fixtures, datasource templates, placeholders, and source archives must be synthetic. Never copy customer names, employee names, external datasource URLs, record IDs, timestamps, or exact operational values into the repository or delivery artifacts. Preserve the source shape, field vocabulary, state coverage, and representative edge cases while replacing every identifying or operational value.
 
 ## Multi-Instance Safety
 

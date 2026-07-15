@@ -173,14 +173,15 @@
 }
 
 :global(.story-title) {
-  max-height: 3.12em;
+  max-height: 3.48em;
   margin: 0;
+  padding-bottom: 0.1em;
   overflow: hidden;
   color: var(--feed-primary, #f9f7f0);
   font-size: 62px;
   font-weight: 700;
   letter-spacing: 0;
-  line-height: 1.04;
+  line-height: 1.16;
 }
 
 :global(.story-description) {
@@ -366,9 +367,9 @@
   }
 
   :global(.story-title) {
-    max-height: 2.2em;
+    max-height: 2.32em;
     font-size: 34px;
-    line-height: 1.08;
+    line-height: 1.16;
   }
 
   :global(.story-description) {
@@ -439,9 +440,9 @@
   }
 
   :global(.story-title) {
-    max-height: 3.3em;
+    max-height: 3.48em;
     font-size: 25px;
-    line-height: 1.08;
+    line-height: 1.16;
   }
 
   :global(.story-description) {

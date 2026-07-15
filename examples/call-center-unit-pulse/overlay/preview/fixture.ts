@@ -15,7 +15,7 @@ const baseConfig: Record<string, unknown> = {
 	subtitleText: 'Live call-center performance',
 	emptyStateText: 'No unit metrics are currently available.',
 	rotationSeconds: 3,
-	excludedGroups: 'All BGE,TOTAL,Other',
+	excludedGroups: 'ALL_UNITS,TOTAL,OTHER',
 	hideInactiveGroups: false,
 	themePreset: 'light',
 	fontFamily: "'Segoe UI', Arial, sans-serif",
@@ -53,9 +53,9 @@ const selectUnits = (names: string[]): UnitDatasource => ({
 const previewFixture: PreviewFixture = createFixture('call-center-unit-pulse-preview', sampleDatasource);
 const longLabelData: UnitDatasource = {
 	data: {
-		'Customer Experience and Emergency Response Operations': {
-			...sampleDatasource.data.EMR,
-			business_unit: 'Customer Experience and Emergency Response Operations'
+		'Regional Customer Support and Account Resolution': {
+			...sampleDatasource.data['Technical Support'],
+			business_unit: 'Regional Customer Support and Account Resolution'
 		}
 	},
 	json_updated: sampleDatasource.json_updated
@@ -64,15 +64,15 @@ const malformedData: UnitDatasource = {
 	data: {
 		broken: null,
 		missing: { business_unit: '' },
-		GAS: sampleDatasource.data.GAS
+		'Order Support': sampleDatasource.data['Order Support']
 	},
 	json_updated: sampleDatasource.json_updated
 };
 const liveUpdateData: UnitDatasource = {
-	...selectUnits(['DSTATS']),
+	...selectUnits(['Account Services']),
 	data: {
-		DSTATS: {
-			...sampleDatasource.data.DSTATS,
+		'Account Services': {
+			...sampleDatasource.data['Account Services'],
 			Calls_Waiting: 27,
 			Oldest_Call_HMS: '0:03:12'
 		}
@@ -94,7 +94,7 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'inactive-groups',
-		fixture: createFixture('unit-pulse-inactive', selectUnits(['Scheduling'])),
+		fixture: createFixture('unit-pulse-inactive', selectUnits(['Training'])),
 		viewport: { width: 1280, height: 720, background: 'light' },
 		minimumContentCoverage: { width: 88, height: 84 }
 	},
@@ -118,14 +118,14 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'rotation',
-		fixture: createFixture('unit-pulse-rotation', selectUnits(['DSTATS', 'EMR', 'GAS'])),
+		fixture: createFixture('unit-pulse-rotation', selectUnits(['Account Services', 'Customer Care', 'Order Support'])),
 		viewport: { width: 1366, height: 768, background: 'light' },
 		advanceTimeMs: 3500,
 		minimumContentCoverage: { width: 90, height: 86 }
 	},
 	{
 		id: 'live-datasource-update',
-		fixture: createFixture('unit-pulse-live-update', selectUnits(['DSTATS'])),
+		fixture: createFixture('unit-pulse-live-update', selectUnits(['Account Services'])),
 		viewport: { width: 1366, height: 768, background: 'light' },
 		minimumContentCoverage: { width: 90, height: 86 },
 		liveDatasourceUpdate: {

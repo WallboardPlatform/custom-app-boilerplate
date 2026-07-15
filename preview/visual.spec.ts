@@ -376,6 +376,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 						visibleHeight: Math.max(0, visibleBottom - visibleTop),
 						borderTop: Number.parseFloat(style.borderTopWidth) || 0,
 						borderBottom: Number.parseFloat(style.borderBottomWidth) || 0,
+						paddingBottom: Number.parseFloat(style.paddingBottom) || 0,
 						lineCount: Math.max(1, lineTops.size),
 						actualAscent: textMetrics.actualBoundingBoxAscent,
 						actualDescent: textMetrics.actualBoundingBoxDescent

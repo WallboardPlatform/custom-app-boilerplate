@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'so
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
@@ -197,6 +198,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const currentSkill: Accessor<SkillPage | undefined> = createMemo((): SkillPage | undefined => {
 		return skills()[skillIndex() % Math.max(skills().length, 1)];
 	});
+	const fitTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 38,
+		widthOnly: true,
+		watch: (): string => settings().title
+	});
 	const visibleAgents: Accessor<SkillAgentRow[]> = createMemo((): SkillAgentRow[] => {
 		return currentSkill()?.agents.slice(0, settings().maxAgentsShown) ?? [];
 	});
@@ -293,7 +300,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="skill-header">
 				<div>
 					<span>{settings().subtitle}</span>
-					<h1>{settings().title}</h1>
+					<h1 ref={fitTitle}>{settings().title}</h1>
 				</div>
 				<div class="skill-header__meta">
 					<strong>LIVE SKILL SNAPSHOT</strong>

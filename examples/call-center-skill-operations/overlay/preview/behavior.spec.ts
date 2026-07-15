@@ -14,7 +14,7 @@ test('per-agent rows aggregate into the first alphabetical skill and exclude the
 }): Promise<void> => {
 	await openScenario(page);
 
-	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Billing');
+	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Account Services');
 	await expect(page.locator('.skill-roster__grid article')).toHaveCount(3);
 	await expect(page.locator('body')).not.toContainText('_unique_agent');
 	await expect(page.locator('body')).not.toContainText('_skill');
@@ -22,11 +22,11 @@ test('per-agent rows aggregate into the first alphabetical skill and exclude the
 
 test('skill rotation advances alphabetically after the configured duration', async ({ page }): Promise<void> => {
 	await openScenario(page, 'rotation');
-	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Billing');
+	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Account Services');
 
 	await page.waitForTimeout(3300);
 
-	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Customer Retention');
+	await expect(page.locator('.skill-content')).toHaveAttribute('data-skill-name', 'Customer Care');
 });
 
 test('dense rosters respect the cap and disclose remaining agents', async ({ page }): Promise<void> => {
@@ -49,7 +49,7 @@ test('compact light theme keeps the skill and roster surfaces coordinated', asyn
 	const skillName = page.locator('.skill-identity h2');
 	const rosterRow = page.locator('.skill-roster__grid article').first();
 
-	await expect(skillName).toHaveText('Billing');
+	await expect(skillName).toHaveText('Account Services');
 	await expect(skillName).toHaveCSS('overflow-y', 'visible');
 	await expect(rosterRow).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 	await expect(rosterRow).toHaveCSS('color', 'rgb(24, 53, 73)');

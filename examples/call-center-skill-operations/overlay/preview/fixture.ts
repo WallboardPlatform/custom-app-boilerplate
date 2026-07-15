@@ -48,11 +48,11 @@ const longLabelDatasource: PreviewSkillDatasource = {
 	'json_file_update_timestamep (every 3 seconds)': sampleDatasource['json_file_update_timestamep (every 3 seconds)'],
 	data: {
 		long: {
-			...sampleDatasource.data['emergency-devon'],
+			...sampleDatasource.data['technical-agent-10'],
 			unique_agent: 'long-label-agent',
 			resourceid: 41001,
-			agent_name: 'Alexandria Montgomery-Sutherland',
-			skillname: 'Enterprise Emergency Response and Customer Resolution',
+			agent_name: 'Sample Agent with an Exceptionally Long Display Name',
+			skillname: 'Regional Customer Support and Account Resolution',
 			agent_state_reason: 'Customer documentation and escalation follow-up'
 		}
 	}
@@ -61,14 +61,14 @@ const stateSequence: string[] = ['Ready', 'Talking', 'ACW', 'Not Ready', 'Logged
 const denseRows: Record<string, PreviewSkillRow> = Array.from(
 	{ length: 18 },
 	(_: unknown, index: number): PreviewSkillRow => ({
-		Time_Stamp: '2026-07-15 10:42:18.953000',
+		Time_Stamp: '2024-01-15 09:30:00.000000',
 		unique_agent: `dense-${index + 1}`,
-		filter_field: `Queue_Billing_Escalations_${index + 1}`,
+		filter_field: `SAMPLE_Account_Escalations_${index + 1}`,
 		resourceid: 42000 + index,
 		agent_name: `Agent ${String(index + 1).padStart(2, '0')}`,
 		team_id: 21,
-		skillname: 'Billing Escalations',
-		business_unit: 'BILL',
+		skillname: 'Account Services Escalations',
+		business_unit: 'ACCT',
 		agent_state: stateSequence[index % stateSequence.length],
 		agent_state_reason: stateSequence[index % stateSequence.length],
 		reasoncode: '',
@@ -87,11 +87,11 @@ const liveUpdateDatasource: PreviewSkillDatasource = {
 	...sampleDatasource,
 	data: {
 		...sampleDatasource.data,
-		'billing-nora': {
-			...sampleDatasource.data['billing-avery'],
-			unique_agent: 'billing-nora',
+		'account-agent-14': {
+			...sampleDatasource.data['account-agent-01'],
+			unique_agent: 'account-agent-14',
 			resourceid: 43001,
-			agent_name: 'Nora Stone',
+			agent_name: 'Sample Agent 14',
 			agent_state: 'Ready',
 			duration_time: '00:00:11'
 		}
@@ -157,7 +157,7 @@ export const previewScenarios: PreviewScenario[] = [
 				sampleDatasource['json_file_update_timestamep (every 3 seconds)'],
 			data: {
 				unknown: {
-					...sampleDatasource.data['billing-avery'],
+					...sampleDatasource.data['account-agent-01'],
 					unique_agent: 'unknown-agent',
 					resourceid: 44001,
 					agent_state: 'Training',
@@ -183,7 +183,7 @@ export const previewScenarios: PreviewScenario[] = [
 		liveDatasourceUpdate: {
 			property: 'skillData',
 			value: liveUpdateDatasource,
-			expectedText: 'Nora Stone'
+			expectedText: 'Sample Agent 14'
 		}
 	}
 ];

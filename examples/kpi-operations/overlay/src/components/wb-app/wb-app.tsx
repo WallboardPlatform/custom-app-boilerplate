@@ -15,6 +15,7 @@ import {
 import type { ChartConfiguration } from 'chart.js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSourceState } from 'wallboard-app-sdk';
@@ -145,6 +146,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return Math.max(0, Math.min(100, Math.round((latest / settingsSIG().targetValue) * 100)));
 	});
+	const fitTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 50,
+		widthOnly: true,
+		watch: (): string => settingsSIG().title
+	});
 	const [chartReadySIG, setChartReadySIG] = createSignal<boolean>(false);
 	let canvas: HTMLCanvasElement | undefined;
 	let chart: Chart<'line'> | undefined;
@@ -226,7 +233,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="wb-app__header">
 				<div>
 					<span>Operations center</span>
-					<h1>{settingsSIG().title}</h1>
+					<h1 ref={fitTitle}>{settingsSIG().title}</h1>
 					<p>{settingsSIG().subtitle}</p>
 				</div>
 				<b>LIVE</b>

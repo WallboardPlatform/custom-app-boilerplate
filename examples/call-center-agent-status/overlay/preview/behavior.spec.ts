@@ -14,8 +14,8 @@ test('first page contains eight alphabetically sorted agents', async ({ page }):
 
 	const cards = page.locator('.agent-card');
 	await expect(cards).toHaveCount(8);
-	await expect(cards.first()).toHaveAttribute('data-agent-name', 'Avery Morgan');
-	await expect(cards.last()).toHaveAttribute('data-agent-name', 'Harper Lane');
+	await expect(cards.first()).toHaveAttribute('data-agent-name', 'Sample Agent 01');
+	await expect(cards.last()).toHaveAttribute('data-agent-name', 'Sample Agent 08');
 });
 
 test('known state aliases map to semantic tones', async ({ page }): Promise<void> => {
@@ -36,6 +36,6 @@ test('pagination advances to an uneven final page without stretching its count',
 
 	const cards = page.locator('.agent-card');
 	await expect(cards).toHaveCount(5);
-	await expect(cards.first()).toHaveAttribute('data-agent-name', 'Indigo Price');
+	await expect(cards.first()).toHaveAttribute('data-agent-name', 'Sample Agent 09');
 	await expect(page.locator('.wb-app')).toHaveAttribute('data-page-index', '1');
 });
