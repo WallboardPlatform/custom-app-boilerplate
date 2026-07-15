@@ -55,7 +55,14 @@
 				{ "type": "fontFamily", "propertyContainer": "tickerFont" },
 				{ "type": "fontSize", "propertyContainer": "tickerFont" },
 				{ "type": "fontStyle", "propertyContainer": "tickerFont" },
-				{ "type": "fontColor", "propertyContainer": "tickerFont" }
+				{
+					"type": "fontColor",
+					"propertyContainer": "tickerFont",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		},
 		{
@@ -65,7 +72,14 @@
 				{ "type": "fontFamily", "propertyContainer": "priceFont" },
 				{ "type": "fontSize", "propertyContainer": "priceFont" },
 				{ "type": "fontStyle", "propertyContainer": "priceFont" },
-				{ "type": "fontColor", "propertyContainer": "priceFont" }
+				{
+					"type": "fontColor",
+					"propertyContainer": "priceFont",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		},
 		{
@@ -75,7 +89,14 @@
 				{ "type": "fontFamily", "propertyContainer": "changeFont" },
 				{ "type": "fontSize", "propertyContainer": "changeFont" },
 				{ "type": "fontStyle", "propertyContainer": "changeFont" },
-				{ "type": "fontColor", "propertyContainer": "changeFont" }
+				{
+					"type": "fontColor",
+					"propertyContainer": "changeFont",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		},
 		{
@@ -84,9 +105,19 @@
 			"properties": [
 				{ "label": "Up arrow image", "type": "file", "property": "upIconFile", "tooltip": "Optional replacement for the built-in up triangle." },
 				{ "label": "Down arrow image", "type": "file", "property": "downIconFile", "tooltip": "Optional replacement for the built-in down triangle." },
-				{ "label": "Up color", "type": "color", "property": "upColor", "default": "#4fe34f" },
-				{ "label": "Down color", "type": "color", "property": "downColor", "default": "#ff2435" },
-				{ "label": "Fallback logo background", "type": "color", "property": "fallbackIconBackground", "default": "#20252b" }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Up color", "type": "color", "property": "upColor", "default": "#4fe34f" },
+						{ "label": "Down color", "type": "color", "property": "downColor", "default": "#ff2435" },
+						{ "label": "Fallback logo background", "type": "color", "property": "fallbackIconBackground", "default": "#20252b" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		},
 		{
@@ -101,8 +132,18 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000" },
-				{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d" },
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000" },
+						{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No valid market data is available." }
 			]
 		}

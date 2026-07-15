@@ -72,14 +72,24 @@
 						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
 					]
 				},
-				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#eef2f5" },
-				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
-				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#142437" },
-				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#657587" },
-				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#2674c8" },
-				{ "label": "Healthy", "type": "color", "property": "successColor", "default": "#3d9b68" },
-				{ "label": "Attention", "type": "color", "property": "warningColor", "default": "#d89118" },
-				{ "label": "Critical", "type": "color", "property": "dangerColor", "default": "#cf4848" }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#eef2f5" },
+						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#142437" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#657587" },
+						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#2674c8" },
+						{ "label": "Healthy", "type": "color", "property": "successColor", "default": "#3d9b68" },
+						{ "label": "Attention", "type": "color", "property": "warningColor", "default": "#d89118" },
+						{ "label": "Critical", "type": "color", "property": "dangerColor", "default": "#cf4848" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		}
 	],

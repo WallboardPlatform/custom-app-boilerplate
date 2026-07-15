@@ -102,6 +102,21 @@ const previewFixture: PreviewFixture = createFixture('call-center-skill-operatio
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'compact-dark-theme',
+		fixture: createFixture('skill-operations-compact-dark-theme', sampleDatasource),
+		viewport: { width: 932, height: 397, background: 'dark' },
+		minimumContentCoverage: { width: 90, height: 86 }
+	},
+	{
+		id: 'compact-light-theme',
+		fixture: createFixture('skill-operations-compact-light-theme', sampleDatasource, {
+			...baseConfig,
+			themePreset: 'light'
+		}),
+		viewport: { width: 932, height: 397, background: 'light' },
+		minimumContentCoverage: { width: 90, height: 86 }
+	},
+	{
 		id: 'light-theme',
 		fixture: createFixture('skill-operations-light-theme', sampleDatasource, { ...baseConfig, themePreset: 'light' }),
 		viewport: { width: 1920, height: 1080, background: 'light' },

@@ -57,6 +57,14 @@
 		{ "property": "unknownColor", "purpose": "Unrecognized status color." }
 	],
 	"states": [
+		{
+			"scenario": "compact-dark-theme",
+			"expectation": "The dark preset preserves complete glyph ink and readable roster surfaces at the editor-sized 932 by 397 layout."
+		},
+		{
+			"scenario": "compact-light-theme",
+			"expectation": "The light preset coordinates all semantic surfaces and preserves complete glyph ink at the editor-sized 932 by 397 layout."
+		},
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves skill coverage and roster legibility." },
 		{
 			"scenario": "mixed-skills",
