@@ -1,0 +1,66 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create an editorial story spotlight backed by an existing Wallboard feed integration.",
+		"audience": "Visitors and employees reading curated news, updates, or social stories from shared signage.",
+		"primaryGoal": "Rotate through feed entries with strong media and headline hierarchy while preserving usable fallbacks for text-only stories."
+	},
+	"assumptions": [
+		"The customer selects an existing RSS or Wallboard-integrated feed rather than maintaining rows manually.",
+		"Feed media is optional and unsafe or broken URLs must fall back without breaking the story layout."
+	],
+	"app": { "mode": "new", "name": "Newsroom Spotlight", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen editorial feature.", "minimumContentCoverage": { "width": 90, "height": 86 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low news zone.", "minimumContentCoverage": { "width": 92, "height": 84 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait newsroom display.", "minimumContentCoverage": { "width": 88, "height": 88 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editorial tile.", "minimumContentCoverage": { "width": 88, "height": 85 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "feedData", "source": "built-in", "contract": "FEED" }
+		]
+	},
+	"settings": [
+		{ "property": "sourceLabel", "purpose": "Editorial source or series label." },
+		{ "property": "emptyStateText", "purpose": "Message shown when no valid stories exist." },
+		{ "property": "rotationSeconds", "purpose": "Duration before the next story is featured." },
+		{ "property": "maxStories", "purpose": "Maximum number of normalized stories retained for rotation." },
+		{ "property": "showDescription", "purpose": "Controls featured-story supporting copy.", "effect": "description-visibility" },
+		{ "property": "showTimestamp", "purpose": "Controls the featured publication date." },
+		{ "property": "imagePosition", "purpose": "Places featured media left or right.", "effect": "image-position" },
+		{ "property": "backgroundColor", "purpose": "Outer editorial canvas color." },
+		{ "property": "panelColor", "purpose": "Featured-story panel color." },
+		{ "property": "primaryTextColor", "purpose": "Featured primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Featured supporting text color." },
+		{ "property": "accentColor", "purpose": "Series, category, and progress accent color." }
+	],
+	"states": [
+		{ "scenario": "wallboard-feed", "expectation": "Current Wallboard feed items normalize with media, categories, and epoch-second publication dates." },
+		{ "scenario": "rss-parser", "expectation": "Legacy feed.entries output normalizes enclosure media and HTML-derived snippets." },
+		{ "scenario": "rss-channel", "expectation": "RSS channel.item output normalizes into the same editorial story model." },
+		{ "scenario": "empty", "expectation": "An explicit empty state replaces missing feed content." },
+		{ "scenario": "broken-media", "expectation": "A failed story image is replaced by the designed media fallback." },
+		{ "scenario": "long-labels", "expectation": "Long source, category, headline, and description text remain contained." },
+		{ "scenario": "rotation", "expectation": "A multi-item feed advances to the next featured story on schedule." },
+		{ "scenario": "live-datasource-update", "expectation": "A feed refresh updates visible stories without rebuilding the app." }
+	],
+	"behaviors": [
+		{ "id": "feed-normalization", "expectation": "Current Wallboard and legacy RSS wrappers produce the same editorial hierarchy.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "timed-rotation", "expectation": "The next valid story becomes featured after the configured duration.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "media-fallback", "expectation": "Broken or absent feed media uses the designed fallback without a broken image.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-update", "expectation": "Datasource changes update visible story content in place.", "evidence": { "scenario": "live-datasource-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A magazine-like story display with real media weight, disciplined typography, and a restrained upcoming-story rail.",
+		"focus": [
+			"Verify imagery remains legible rather than dark, blurred, or decoratively cropped beyond recognition.",
+			"Verify long headlines and text-only stories retain hierarchy without colliding with the rail or frame edges."
+		]
+	}
+}

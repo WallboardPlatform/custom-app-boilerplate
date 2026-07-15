@@ -39,8 +39,9 @@
 - [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
 - [ ] Generated datasource contract and sample data pass `npm run validate:examples`
 - [ ] Every datasource picker is declared; multi-source apps use `bindings[]` and sanitized `samplePath` fixtures
+- [ ] Every slider and regression-prone visual control has linked `previewSettingEffects` evidence
 - [ ] Internal app name and version identify one Wallboard app record; compatible rebuilds preserve both
-- [ ] `preview/fixture.ts` contains representative settings and datasource data
+- [ ] `preview/fixture.ts` contains representative settings and datasource data; new settings are also typed and mapped
 - [ ] Named preview scenarios cover materially different dynamic and boundary states
 - [ ] Timing, motion, or interaction requirements have dedicated `preview/*.spec.ts` assertions
 - [ ] `npm run validate:visual` passes
@@ -59,4 +60,4 @@ what it does, which the base build doesn't include in the output.
 The zip build contains the newest configuration, so build a zip after every configuration change. Preserve the existing app version for fixes and replacement uploads. A deliberate incompatible version must be uploaded as a separate app.
 
 #### What happens after build
-Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the zip, generation brief, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.
+Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the upload zip, sanitized source zip, generation brief, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.

@@ -23,7 +23,9 @@ jobs:
         example:
           - airport-departures
           - kpi-operations
+          - live-agenda
           - market-rotation-ticker
+          - newsroom-spotlight
           - restaurant-menu
 
     steps:

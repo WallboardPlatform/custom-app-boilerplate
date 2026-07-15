@@ -1,4 +1,4 @@
-import type { PreviewFixture, PreviewScenario } from './fixture.types';
+import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fixture.types';
 
 const previewFixture: PreviewFixture = {
 	id: 'wallboard-local-preview',
@@ -43,5 +43,6 @@ const previewFixture: PreviewFixture = {
 };
 
 export const previewScenarios: PreviewScenario[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [];
 
 export default previewFixture;

@@ -1,0 +1,64 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a time-aware event agenda backed by an existing Wallboard calendar integration.",
+		"audience": "Visitors and employees scanning the current and upcoming programme from shared signage.",
+		"primaryGoal": "Feature the active or next event while keeping the rest of the day readable across common signage layouts."
+	},
+	"assumptions": [
+		"The customer already has a Google, Microsoft, or iCalendar datasource configured in Wallboard.",
+		"Cancelled and malformed events should be ignored without preventing valid events from rendering."
+	],
+	"app": { "mode": "new", "name": "Live Agenda", "version": "1" },
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen venue agenda.", "minimumContentCoverage": { "width": 90, "height": 75 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low programme zone.", "minimumContentCoverage": { "width": 90, "height": 82 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait lobby display.", "minimumContentCoverage": { "width": 85, "height": 85 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact agenda tile.", "minimumContentCoverage": { "width": 85, "height": 85 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "calendarData", "source": "built-in", "contract": "CALENDAR" }
+		]
+	},
+	"settings": [
+		{ "property": "venueName", "purpose": "Venue or room context." },
+		{ "property": "boardTitle", "purpose": "Primary agenda title." },
+		{ "property": "upcomingTitle", "purpose": "Upcoming-event section title." },
+		{ "property": "emptyStateText", "purpose": "Message shown when no valid events remain." },
+		{ "property": "maxUpcoming", "purpose": "Maximum number of upcoming events rendered." },
+		{ "property": "timeFormat", "purpose": "12-hour or 24-hour event times." },
+		{ "property": "showClock", "purpose": "Controls the live header clock.", "effect": "clock-visibility" },
+		{ "property": "backgroundColor", "purpose": "Board background color." },
+		{ "property": "panelColor", "purpose": "Featured-event surface color." },
+		{ "property": "primaryTextColor", "purpose": "Primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Secondary text color." },
+		{ "property": "accentColor", "purpose": "Agenda hierarchy and timeline color.", "effect": "accent-color" },
+		{ "property": "liveColor", "purpose": "Active-event status color." }
+	],
+	"states": [
+		{ "scenario": "microsoft-calendar", "expectation": "Nested Microsoft-style start and end timestamps normalize into a chronological agenda." },
+		{ "scenario": "icalendar", "expectation": "iCalendar summary and flat timestamp fields normalize into the same agenda model." },
+		{ "scenario": "empty", "expectation": "An explicit empty state replaces the agenda body." },
+		{ "scenario": "long-labels", "expectation": "Long titles, descriptions, venues, and locations remain contained." },
+		{ "scenario": "all-day", "expectation": "All-day events use an explicit all-day label instead of misleading clock times." },
+		{ "scenario": "live-datasource-update", "expectation": "Calendar updates replace visible event data without rebuilding the app." }
+	],
+	"behaviors": [
+		{ "id": "provider-normalization", "expectation": "Google or Microsoft and iCalendar responses produce the same stable agenda hierarchy.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "active-event-progress", "expectation": "An event spanning the current time is marked live and reports bounded progress.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-update", "expectation": "A datasource refresh updates the visible programme in place.", "evidence": { "scenario": "live-datasource-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A calm, editorial venue agenda with a strong live-event focal point and a compact chronological timeline.",
+		"focus": [
+			"Verify the featured event and upcoming timeline share the available area without dead zones or clipped copy.",
+			"Verify wide-low and portrait layouts preserve hierarchy rather than merely shrinking the desktop composition."
+		]
+	}
+}

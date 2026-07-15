@@ -1,0 +1,57 @@
+{
+	"version": "1",
+	"name": "Live Agenda",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Calendar datasource",
+			"type": "dataPicker",
+			"property": "calendarData",
+			"dataPickerType": "any",
+			"tooltip": "Select an integrated Google, Microsoft, or iCalendar datasource."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Venue name", "type": "text", "property": "venueName", "default": "North Hall" },
+				{ "label": "Board title", "type": "text", "property": "boardTitle", "default": "Today at the forum" },
+				{ "label": "Upcoming title", "type": "text", "property": "upcomingTitle", "default": "Coming up" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No more events are scheduled." },
+				{ "label": "Upcoming events", "type": "number", "property": "maxUpcoming", "default": 4, "min": 1, "max": 6, "step": 1 },
+				{
+					"label": "Time format",
+					"type": "select",
+					"property": "timeFormat",
+					"default": "24h",
+					"options": [
+						{ "label": "24 hour", "value": "24h" },
+						{ "label": "12 hour", "value": "12h" }
+					]
+				},
+				{ "label": "Show clock", "type": "checkbox", "property": "showClock", "default": true }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#101313" },
+				{ "label": "Event surface", "type": "color", "property": "panelColor", "default": "#1b2020" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f5f2e9" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aeb8b4" },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#64e3bd" },
+				{ "label": "Live status", "type": "color", "property": "liveColor", "default": "#ff6b5f" }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

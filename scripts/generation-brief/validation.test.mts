@@ -158,6 +158,71 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /settings must exactly match/);
 	});
 
+	void it('requires executable effect evidence for slider settings', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'logoScale', purpose: 'Visible logo size.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{ label: 'Logo size', type: 'slider', property: 'logoScale', default: 50 }]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /slider setting 'logoScale'/);
+	});
+
+	void it('accepts a slider with linked preview effect evidence', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'logoScale', purpose: 'Visible logo size.', effect: 'logo-scale' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{ label: 'Logo size', type: 'slider', property: 'logoScale', default: 50 }]
+			})
+		);
+		fs.writeFileSync(
+			context.fixturePath,
+			'export const previewScenarios = [];\nexport const previewSettingEffects = [{ id: \'logo-scale\', property: \'logoScale\', changedValue: 80, selector: \'.logo\', measurement: { type: \'bounding-box\', dimension: \'height\' }, expectation: { type: \'increase\', minimumDelta: 5 } }];\n'
+		);
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('rejects incomplete setting effect evidence', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'logoScale', purpose: 'Visible logo size.', effect: 'logo-scale' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{ label: 'Logo size', type: 'slider', property: 'logoScale', default: 50 }]
+			})
+		);
+		fs.writeFileSync(
+			context.fixturePath,
+			'export const previewScenarios = [];\nexport const previewSettingEffects = [{ id: \'logo-scale\', property: \'logoScale\', selector: \'.logo\' }];\n'
+		);
+
+		await assert.rejects(
+			validateBriefAgainstProject(context, brief),
+			/previewSettingEffects\[0\]\.changedValue must be defined/
+		);
+	});
+
 	void it('rejects a missing packaged asset', async (testContext) => {
 		const brief = createValidBrief();
 		const context = createProject(brief);

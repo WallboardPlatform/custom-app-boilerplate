@@ -14,6 +14,7 @@ export interface GenerationBriefBinding {
 export interface GenerationBriefSetting {
 	property: string;
 	purpose: string;
+	effect?: string;
 }
 
 export interface GenerationBriefState {

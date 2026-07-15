@@ -603,7 +603,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			'--ticker-vertical-margin': `${currentSettings.verticalMargin * currentScale}px`,
 			'--ticker-item-margin': `${currentSettings.itemMargin * currentScale}px`,
 			'--ticker-logo-size': `${contentHeight * (currentSettings.logoScale / 100) * currentScale}px`,
-			'--exchange-title-size': `${currentSettings.tickerFont.size * 0.82 * currentScale}px`,
+			...fontVariables('exchange-title-font', currentSettings.marketLabelFont, currentScale),
 			...fontVariables('symbol-font', currentSettings.tickerFont, currentScale),
 			...fontVariables('price-font', currentSettings.priceFont, currentScale),
 			...fontVariables('change-font', currentSettings.changeFont, currentScale)

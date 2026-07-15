@@ -75,6 +75,18 @@ To add a new setting for the app, create a new object inside the properties arra
 - property - Required for all non-visual settings
 - tooltip - Only for visual for all non-visual settings, not always required, but preferred to have
 
+For every functional setting:
+
+1. Declare it in `src/editor-assets/properties.json`.
+2. Add its raw editor shape to `ConfigValues` in `src/interfaces/application.interface.ts`.
+3. Add its normalized runtime shape to `Settings` in the same interface file.
+4. Map and clamp its default in `src/settings.ts`.
+5. Put a representative value in `preview/fixture.ts`.
+6. Prove slider behavior with `previewSettingEffects`; also add effect evidence for other controls whose visible result could silently stop working.
+7. Add the setting and optional effect ID to `generation-brief.json`, then run `npm run validate:project`.
+
+Keep these representations explicit. Do not generate preview defaults from the mapper: independent values expose mismatches between editor defaults, runtime fallbacks, and test fixtures.
+
 #### Types of settings
 
 | Type in config        | Description                                                                                 | Type in coding        |

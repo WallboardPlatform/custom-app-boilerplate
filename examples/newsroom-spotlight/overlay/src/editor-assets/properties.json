@@ -1,0 +1,56 @@
+{
+	"version": "1",
+	"name": "Newsroom Spotlight",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Feed datasource",
+			"type": "dataPicker",
+			"property": "feedData",
+			"dataPickerType": "any",
+			"tooltip": "Select an integrated Wallboard feed or RSS datasource."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Source label", "type": "text", "property": "sourceLabel", "default": "Field notes" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No stories are available." },
+				{ "label": "Rotation seconds", "type": "number", "property": "rotationSeconds", "default": 8, "min": 2, "max": 120, "step": 1 },
+				{ "label": "Maximum stories", "type": "number", "property": "maxStories", "default": 6, "min": 1, "max": 12, "step": 1 },
+				{ "label": "Show description", "type": "checkbox", "property": "showDescription", "default": true },
+				{ "label": "Show timestamp", "type": "checkbox", "property": "showTimestamp", "default": true },
+				{
+					"label": "Image position",
+					"type": "select",
+					"property": "imagePosition",
+					"default": "left",
+					"options": [
+						{ "label": "Left", "value": "left" },
+						{ "label": "Right", "value": "right" }
+					]
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{ "label": "Outer background", "type": "color", "property": "backgroundColor", "default": "#f2efe8" },
+				{ "label": "Story surface", "type": "color", "property": "panelColor", "default": "#17211f" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f9f7f0" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#b9c4bf" },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#ef5b45" }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

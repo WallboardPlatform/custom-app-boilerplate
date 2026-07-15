@@ -7,10 +7,9 @@ sidebar_position: 1
 This guide shows you how to install and start WB Application Boilerplate.
 Clone the public repository from [WallboardPlatform/custom-app-boilerplate](https://github.com/WallboardPlatform/custom-app-boilerplate).
 
-### Node.js Version: `24.9.0`
+### Node.js versions: `22.22+` or `24.9+`
 
-Make sure you installed the required NodeJS version before trying to install the Boilerplate project!  
-The required NodeJS version is `24.9.0` which can be downloaded from [**here**](https://nodejs.org/en/blog/release/v24.9.0).
+Node.js `24.9.0` is the preferred build runtime. Node.js `22.22.0` and newer `22.x` releases are also supported. Odd-numbered releases and earlier versions are outside the validated range; `package.json.engines` makes npm report incompatible runtimes.
 
 ---
 
@@ -149,7 +148,7 @@ Run the complete acceptance and delivery workflow for an example with:
 npm run example:accept -- restaurant-menu
 ```
 
-For a finished materialized app, run `npm run deliver -- <output-directory>`.
+For a finished materialized app, run `npm run deliver -- <output-directory>`. It returns the Wallboard upload ZIP and a separate sanitized source ZIP for another agent or developer to continue from. Upload only the app ZIP.
 
 ### Development Builds
 

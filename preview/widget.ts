@@ -17,6 +17,7 @@ interface PreviewWindow extends Window {
 	CustomWidget?: Record<string, WidgetRegistration>;
 	__wallboardPreview?: {
 		destroy: () => Promise<void>;
+		pushConfiguration: (configValues: Record<string, unknown>) => void;
 		pushDatasource: (property: string, value: unknown) => void;
 	};
 }
@@ -75,10 +76,18 @@ const mountWidget = async (): Promise<void> => {
 	}
 
 	const eventSubject: Subject<unknown> = new Subject<unknown>();
+	let currentConfigValues: Record<string, unknown> = { ...fixture.configValues };
 	previewWindow.__wallboardPreview = {
 		destroy: async (): Promise<void> => {
 			eventSubject.complete();
 			await registration.destroy(PREVIEW_ROOT_ID);
+		},
+		pushConfiguration: (configValues: Record<string, unknown>): void => {
+			currentConfigValues = { ...currentConfigValues, ...configValues };
+			eventSubject.next({
+				messageType: 'sendConfiguration',
+				configValues: currentConfigValues
+			});
 		},
 		pushDatasource: (property: string, value: unknown): void => {
 			eventSubject.next({
@@ -91,7 +100,7 @@ const mountWidget = async (): Promise<void> => {
 	const config: Record<string, unknown> = {
 		...fixture.additionalConfig,
 		id: fixture.id,
-		configValues: fixture.configValues,
+		configValues: currentConfigValues,
 		dataPickerValues: fixture.dataPickerValues,
 		datasourceIds: fixture.datasourceIds
 	};
