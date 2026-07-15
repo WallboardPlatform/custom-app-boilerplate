@@ -51,10 +51,10 @@
 
 :global(.unit-header) h1 {
 	margin: 5px 0 0;
-	padding-bottom: 2px;
+	padding-bottom: 0.14em;
 	overflow: hidden;
 	font-size: 38px;
-	line-height: 1.08;
+	line-height: 1.16;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -110,11 +110,10 @@
 
 :global(.unit-identity) h2 {
 	margin: 10px 0 14px;
-	padding-bottom: 3px;
-	overflow: hidden;
+	padding-bottom: 0.14em;
 	font-size: 58px;
-	line-height: 1.08;
-	text-overflow: ellipsis;
+	line-height: 1.16;
+	word-wrap: break-word;
 }
 
 :global(.unit-identity) p {
@@ -158,11 +157,11 @@
 }
 
 :global(.unit-gauges) article {
-  display: flex;
-  min-width: 0;
-  margin-right: 22px;
-  overflow: hidden;
-  flex: 1 1 0;
+	display: flex;
+	min-width: 0;
+	margin-right: 22px;
+	overflow: hidden;
+	flex: 1 1 0;
 	flex-direction: column;
 	align-items: center;
 }
@@ -323,7 +322,7 @@
 	font-size: 30px;
 }
 
-@media (max-height: 760px) and (min-width: 900px) {
+@media (max-height: 800px) and (min-width: 900px) {
 	.wb-app {
 		padding: 20px 26px;
 	}
@@ -363,10 +362,10 @@
 		margin-right: 8px;
 	}
 
-  :global(.unit-gauge) {
-    width: 86px;
-    height: 86px;
-  }
+	:global(.unit-gauge) {
+		width: 86px;
+		height: 86px;
+	}
 
 	:global(.unit-gauge) strong {
 		font-size: 17px;

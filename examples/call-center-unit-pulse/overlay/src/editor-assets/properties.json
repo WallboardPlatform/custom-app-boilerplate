@@ -39,7 +39,7 @@
 					"label": "Excluded unit names",
 					"type": "text",
 					"property": "excludedGroups",
-					"default": "All BGE,TOTAL,Other",
+					"default": "ALL_UNITS,TOTAL,OTHER",
 					"tooltip": "Comma-separated unit names omitted from rotation."
 				},
 				{ "label": "Hide inactive units", "type": "checkbox", "property": "hideInactiveGroups", "default": false }

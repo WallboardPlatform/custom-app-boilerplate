@@ -6,9 +6,10 @@
 		"primaryGoal": "Make one business unit and its most important live KPIs readable at a glance before rotating alphabetically."
 	},
 	"assumptions": [
-		"All BGE, TOTAL, and Other are aggregate records excluded by default while DSTATS remains a valid unit.",
+		"ALL_UNITS, TOTAL, and OTHER are synthetic aggregate records excluded by default while the named sample units remain valid.",
 		"Inactive units remain visible by default because staffing and activity expectations require customer confirmation.",
-		"The source is a live snapshot, so the widget does not imply historical trends."
+		"The source is a live snapshot, so the widget does not imply historical trends.",
+		"Bundled sample labels, timestamps, identifiers, and metrics are synthetic and preserve only the supplied datasource shape."
 	],
 	"app": { "mode": "new", "name": "Call Center Unit Pulse", "version": "1" },
 	"surfaceStrategy": {
@@ -44,7 +45,11 @@
 		{ "property": "rotationSeconds", "purpose": "Seconds each unit remains visible." },
 		{ "property": "excludedGroups", "purpose": "Comma-separated aggregate unit names omitted from rotation." },
 		{ "property": "hideInactiveGroups", "purpose": "Optionally excludes units with no staffing or call activity." },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Light, Dark, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
 		{ "property": "fontFamily", "purpose": "Display typeface." },
 		{ "property": "backgroundColor", "purpose": "Root canvas color." },
 		{ "property": "surfaceColor", "purpose": "KPI surface color." },
@@ -56,10 +61,13 @@
 		{ "property": "dangerColor", "purpose": "Critical KPI color." }
 	],
 	"states": [
-		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves operational KPI hierarchy and semantic tones." },
+		{
+			"scenario": "dark-theme",
+			"expectation": "The coordinated dark preset preserves operational KPI hierarchy and semantic tones."
+		},
 		{
 			"scenario": "excluded-aggregates",
-			"expectation": "Configured aggregate labels are absent while real units remain alphabetically ordered."
+			"expectation": "Configured aggregate labels are absent while operational units remain alphabetically ordered."
 		},
 		{
 			"scenario": "inactive-groups",
@@ -98,7 +106,9 @@
 	"visualDirection": {
 		"source": "reference-led",
 		"summary": "A light industrial supervisor console derived from the supplied call-center KPI dashboard reference, with instrument gauges and compact operational readouts.",
-		"references": ["User-provided light Call Center KPI Dashboard reference with dial gauges and grouped operational statistics."],
+		"references": [
+			"User-provided light Call Center KPI Dashboard reference with dial gauges and grouped operational statistics."
+		],
 		"signatureChoices": [
 			"Three instrument-like gauges form a continuous monitoring cluster.",
 			"A light control-room palette and ruled metric field replace dark floating dashboard cards."

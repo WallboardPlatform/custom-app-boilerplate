@@ -12,24 +12,24 @@ const openScenario = async (page: import('@playwright/test').Page, scenario?: st
 test('keyed datasource excludes configured aggregates and starts alphabetically', async ({ page }): Promise<void> => {
 	await openScenario(page);
 
-	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'DSTATS');
-	await expect(page.locator('body')).not.toContainText('All BGE');
+	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'Account Services');
+	await expect(page.locator('body')).not.toContainText('ALL_UNITS');
 	await expect(page.locator('body')).not.toContainText('TOTAL');
 });
 
 test('unit rotation advances after the configured duration', async ({ page }): Promise<void> => {
 	await openScenario(page, 'rotation');
-	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'DSTATS');
+	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'Account Services');
 
 	await page.waitForTimeout(3300);
 
-	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'EMR');
+	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'Customer Care');
 });
 
 test('malformed keyed rows are skipped without hiding valid units', async ({ page }): Promise<void> => {
 	await openScenario(page, 'malformed-records');
 
-	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'GAS');
+	await expect(page.locator('.unit-content')).toHaveAttribute('data-unit-name', 'Order Support');
 	await expect(page.locator('.unit-gauges article')).toHaveCount(3);
 	await expect(page.locator('.unit-metrics article')).toHaveCount(6);
 });

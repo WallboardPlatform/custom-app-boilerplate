@@ -7,7 +7,8 @@
 	},
 	"assumptions": [
 		"The customer already has a Google, Microsoft, or iCalendar datasource configured in Wallboard.",
-		"Cancelled and malformed events should be ignored without preventing valid events from rendering."
+		"Cancelled and malformed events should be ignored without preventing valid events from rendering.",
+		"Bundled calendar names, event details, timestamps, and identifiers are synthetic and preserve only representative provider shapes."
 	],
 	"app": { "mode": "new", "name": "Live Agenda", "version": "1" },
 	"surfaceStrategy": {
@@ -44,7 +45,7 @@
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps current and upcoming agenda items clearly differentiated." },
-		{ "scenario": "microsoft-calendar", "expectation": "Nested Microsoft-style start and end timestamps normalize into a chronological agenda." },
+		{ "scenario": "microsoft-calendar", "expectation": "Nested Microsoft-style timestamps normalize into a chronological Full HD agenda whose title and event descenders remain intact." },
 		{ "scenario": "icalendar", "expectation": "iCalendar summary and flat timestamp fields normalize into the same agenda model." },
 		{ "scenario": "empty", "expectation": "An explicit empty state replaces the agenda body." },
 		{ "scenario": "long-labels", "expectation": "Long titles, descriptions, venues, and locations remain contained." },
@@ -74,7 +75,8 @@
 		"intent": "A calm, editorial venue agenda with a strong live-event focal point and a compact chronological timeline.",
 		"focus": [
 			"Verify the featured event and upcoming timeline share the available area without dead zones or clipped copy.",
-			"Verify wide-low and portrait layouts preserve hierarchy rather than merely shrinking the desktop composition."
+			"Verify wide-low and portrait layouts preserve hierarchy rather than merely shrinking the desktop composition.",
+			"Verify configurable headings and repeated event titles retain visible descenders at Full HD."
 		]
 	}
 }

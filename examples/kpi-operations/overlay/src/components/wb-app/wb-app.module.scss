@@ -50,10 +50,11 @@
 :global(.wb-app__header) h1 {
   max-width: 980px;
   margin: 5px 0 3px;
+  padding-bottom: 0.14em;
   overflow: hidden;
   font-size: 40px;
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.16;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

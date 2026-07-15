@@ -8,12 +8,16 @@ const openScenario = async (page: Page, scenario: string, width: number, height:
 
 	expect(response?.ok()).toBe(true);
 	await page.waitForFunction((): boolean => {
-		return document.documentElement.dataset.previewReady === 'true' || Boolean(document.documentElement.dataset.previewError);
+		return (
+			document.documentElement.dataset.previewReady === 'true' || Boolean(document.documentElement.dataset.previewError)
+		);
 	});
 	expect(await page.evaluate((): string | undefined => document.documentElement.dataset.previewError)).toBeUndefined();
 };
 
-test('normalizes Microsoft-style and iCalendar events into the same agenda hierarchy', async ({ page }): Promise<void> => {
+test('normalizes Microsoft-style and iCalendar events into the same agenda hierarchy', async ({
+	page
+}): Promise<void> => {
 	await openScenario(page, 'microsoft-calendar', 1920, 1080);
 	await expect(page.locator('.wb-app')).toHaveAttribute('data-calendar-source', 'google-or-microsoft');
 	await expect(page.locator('.featured-title')).toHaveText('Designing calm public information');
@@ -47,4 +51,28 @@ test('marks the current event live and reports bounded progress', async ({ page 
 test('uses an explicit all-day label for all-day calendar entries', async ({ page }): Promise<void> => {
 	await openScenario(page, 'all-day', 600, 600);
 	await expect(page.locator('.featured-time')).toHaveText('All day');
+});
+
+test('Full HD headings preserve descender clearance in bounded and repeated labels', async ({
+	page
+}): Promise<void> => {
+	await openScenario(page, 'microsoft-calendar', 1920, 1080);
+
+	for (const selector of ['.agenda-heading h1', '.featured-title', '.upcoming-header h3', '.upcoming-copy h4']) {
+		const metrics = await page
+			.locator(selector)
+			.first()
+			.evaluate((element: HTMLElement) => {
+				const style: CSSStyleDeclaration = window.getComputedStyle(element);
+
+				return {
+					fontSize: Number.parseFloat(style.fontSize),
+					lineHeight: Number.parseFloat(style.lineHeight),
+					paddingBottom: Number.parseFloat(style.paddingBottom)
+				};
+			});
+
+		expect(metrics.lineHeight / metrics.fontSize, `${selector} line height`).toBeGreaterThanOrEqual(1.15);
+		expect(metrics.paddingBottom / metrics.fontSize, `${selector} bottom padding`).toBeGreaterThanOrEqual(0.079);
+	}
 });

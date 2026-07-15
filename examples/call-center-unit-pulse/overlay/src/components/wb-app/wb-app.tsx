@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'so
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
@@ -155,6 +156,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const currentUnit: Accessor<UnitPulseRow | undefined> = createMemo((): UnitPulseRow | undefined => {
 		return units()[unitIndex() % Math.max(units().length, 1)];
 	});
+	const fitTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 38,
+		widthOnly: true,
+		watch: (): string => settings().title
+	});
 	const gauges: Accessor<GaugeValue[]> = createMemo((): GaugeValue[] => {
 		const unit: UnitPulseRow | undefined = currentUnit();
 
@@ -256,7 +263,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="unit-header">
 				<div>
 					<span>{settings().subtitle}</span>
-					<h1>{settings().title}</h1>
+					<h1 ref={fitTitle}>{settings().title}</h1>
 				</div>
 				<div class="unit-header__meta">
 					<strong>LIVE SNAPSHOT</strong>
@@ -283,7 +290,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							</div>
 							<div class="unit-page">
 								<span>ROTATION</span>
-								<strong>{unitIndex() + 1} OF {units().length}</strong>
+								<strong>
+									{unitIndex() + 1} OF {units().length}
+								</strong>
 							</div>
 						</section>
 

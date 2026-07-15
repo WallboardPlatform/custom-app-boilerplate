@@ -8,7 +8,8 @@
 	"assumptions": [
 		"Placeholder rows such as _unique_agent or resourceid zero are not operational data.",
 		"The source contains state and duration records but no call-volume or service-level metrics, so the dashboard does not invent those KPIs.",
-		"Large skill rosters are capped with an explicit remaining-agent count rather than overflowing the assigned area."
+		"Large skill rosters are capped with an explicit remaining-agent count rather than overflowing the assigned area.",
+		"Bundled skill names, agent names, timestamps, identifiers, and durations are synthetic and preserve only the supplied datasource shape."
 	],
 	"app": { "mode": "new", "name": "Call Center Skill Operations", "version": "1" },
 	"surfaceStrategy": {
@@ -43,7 +44,11 @@
 		{ "property": "emptyStateText", "purpose": "Message shown when no valid skills remain." },
 		{ "property": "rotationSeconds", "purpose": "Seconds each skill remains visible." },
 		{ "property": "maxAgentsShown", "purpose": "Maximum roster cards rendered for one skill." },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
 		{ "property": "fontFamily", "purpose": "Display typeface." },
 		{ "property": "backgroundColor", "purpose": "Root canvas color." },
 		{ "property": "surfaceColor", "purpose": "Summary and roster surface color." },
@@ -65,7 +70,10 @@
 			"scenario": "compact-light-theme",
 			"expectation": "The light preset coordinates all semantic surfaces and preserves complete glyph ink at the editor-sized 932 by 397 layout."
 		},
-		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves skill coverage and roster legibility." },
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated light preset preserves skill coverage and roster legibility."
+		},
 		{
 			"scenario": "mixed-skills",
 			"expectation": "Multiple skills group correctly and the active skill shows a complete status distribution."

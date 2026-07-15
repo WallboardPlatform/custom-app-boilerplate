@@ -2,6 +2,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-j
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { AgendaEvent, AgendaSource } from '@interfaces/agenda.interface';
@@ -164,6 +165,18 @@ const relativeStart = (event: AgendaEvent, now: number): string => {
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
+	const fitBoardTitle = useAutoFitText({
+		minFontSize: 18,
+		maxFontSize: 48,
+		widthOnly: true,
+		watch: (): string => settings().boardTitle
+	});
+	const fitUpcomingTitle = useAutoFitText({
+		minFontSize: 14,
+		maxFontSize: 30,
+		widthOnly: true,
+		watch: (): string => settings().upcomingTitle
+	});
 	const [now, setNow] = createSignal<Date>(new Date());
 	const agenda: Accessor<AgendaModel> = createMemo((): AgendaModel => {
 		return normalizeCalendar(dataSources().calendarData?.value);
@@ -223,7 +236,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			<header class="agenda-header">
 				<div class="agenda-heading">
 					<span class="venue-name">{settings().venueName}</span>
-					<h1>{settings().boardTitle}</h1>
+					<h1 ref={fitBoardTitle}>{settings().boardTitle}</h1>
 				</div>
 				<div class="agenda-date">
 					<span>{formatDate(now())}</span>
@@ -262,7 +275,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 						<section class="agenda-upcoming">
 							<div class="upcoming-header">
-								<h3>{settings().upcomingTitle}</h3>
+								<h3 ref={fitUpcomingTitle}>{settings().upcomingTitle}</h3>
 								<span>{upcomingEvents().length} events</span>
 							</div>
 							<div class="upcoming-list">

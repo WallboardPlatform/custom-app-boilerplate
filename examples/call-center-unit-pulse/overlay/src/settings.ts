@@ -45,7 +45,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 		subtitle: textSetting(config.subtitleText, 'Live call-center performance'),
 		emptyState: textSetting(config.emptyStateText, 'No unit metrics are currently available.'),
 		rotationSeconds: Math.max(3, Number(config.rotationSeconds) || 10),
-		excludedGroups: textSetting(config.excludedGroups, 'All BGE,TOTAL,Other'),
+		excludedGroups: textSetting(config.excludedGroups, 'ALL_UNITS,TOTAL,OTHER'),
 		hideInactiveGroups: config.hideInactiveGroups === true,
 		fontFamily: textSetting(config.fontFamily, '\'Segoe UI\', Arial, sans-serif'),
 		...palette

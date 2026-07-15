@@ -57,12 +57,13 @@
 
 :global(.agenda-heading) h1 {
   margin: 0;
+  padding-bottom: 0.14em;
   overflow: hidden;
   color: var(--agenda-primary, #f5f2e9);
   font-size: 48px;
   font-weight: 700;
   letter-spacing: 0;
-  line-height: 1.05;
+  line-height: 1.16;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -151,14 +152,15 @@
 
 :global(.featured-title) {
   display: block;
-  max-height: 2.18em;
+  max-height: 2.46em;
   margin: 0;
+  padding-bottom: 0.14em;
   overflow: hidden;
   color: var(--agenda-primary, #f5f2e9);
   font-size: 62px;
   font-weight: 700;
   letter-spacing: 0;
-  line-height: 1.09;
+  line-height: 1.16;
 }
 
 :global(.featured-content) p {
@@ -184,7 +186,9 @@
 
 :global(.featured-footer) span {
   min-width: 0;
+  padding-bottom: 0.08em;
   overflow: hidden;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -232,9 +236,11 @@
 
 :global(.upcoming-header) h3 {
   margin: 0;
+  padding-bottom: 0.12em;
   color: var(--agenda-primary, #f5f2e9);
   font-size: 30px;
   font-weight: 700;
+  line-height: 1.16;
 }
 
 :global(.upcoming-header) span {
@@ -323,11 +329,12 @@
 
 :global(.upcoming-copy) h4 {
   margin: 0;
+  padding-bottom: 0.12em;
   overflow: hidden;
   color: var(--agenda-primary, #f5f2e9);
   font-size: 25px;
   font-weight: 650;
-  line-height: 1.15;
+  line-height: 1.16;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -335,9 +342,11 @@
 :global(.upcoming-copy) span {
   display: block;
   margin-top: 9px;
+  padding-bottom: 0.08em;
   overflow: hidden;
   color: var(--agenda-secondary, #aeb8b4);
   font-size: 17px;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -429,7 +438,7 @@
 
   :global(.agenda-heading) h1 {
     font-size: 28px;
-    line-height: 1.05;
+    line-height: 1.16;
   }
 
   :global(.agenda-date) {

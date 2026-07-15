@@ -36,6 +36,7 @@ Core rules:
 - `deliver:unverified` is a browserless transfer mechanism only. Its `_UNVERIFIED` artifacts are not upload-ready and must pass normal `deliver` elsewhere.
 - Inspect every image in `preview/output/` at 100% or zoomed detail; passing overflow checks does not prove that the composition is visually good. Check descenders, baselines, reference fidelity, hierarchy, and repeated template patterns explicitly.
 - Use `useAutoFitText` selectively for variable bounded titles and hero values. Keep safe line-height and vertical padding because box fitting does not prove glyph-ink clearance.
+- Keep every bundled sample, fallback, template, placeholder, and source archive synthetic. Preserve data shape and edge cases, never customer records, identifiers, URLs, timestamps, or exact operational values.
 - In the installation handoff, state that a newly created custom app must be uploaded, enabled, and assigned to the editor's customer (or left unassigned for all customers).
 
 The final deliverable is the generated delivery directory. For a data-bound app, state that current Wallboard versions require datasource creation/import and binding even though the ZIP carries the future provisioning template.

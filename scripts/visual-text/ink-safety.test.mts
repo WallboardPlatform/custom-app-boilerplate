@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import {
-	findTextInkRisks,
-	formatTextInkRisks,
-	type TextInkMeasurement
-} from '../../preview/text-ink-safety.ts';
+import { findTextInkRisks, formatTextInkRisks, type TextInkMeasurement } from '../../preview/text-ink-safety.ts';
 
 const clippedHeading = (overrides: Partial<TextInkMeasurement> = {}): TextInkMeasurement => ({
 	selector: 'h1.title',
@@ -16,6 +12,7 @@ const clippedHeading = (overrides: Partial<TextInkMeasurement> = {}): TextInkMea
 	boxHeight: 38,
 	borderTop: 0,
 	borderBottom: 0,
+	paddingBottom: 0,
 	lineCount: 1,
 	actualAscent: 29,
 	actualDescent: 9,
@@ -28,11 +25,18 @@ void describe('text ink safety', () => {
 
 		assert.equal(risks.length, 1);
 		assert.equal(risks[0]?.buffer, 0);
-		assert.match(formatTextInkRisks(risks), /Unit group pulse.*at least 1.33px/);
+		assert.match(formatTextInkRisks(risks), /Unit group pulse.*at least 1.33px and 3.04px/);
 	});
 
 	void it('accepts a clipped heading with enough vertical ink buffer', () => {
-		assert.deepEqual(findTextInkRisks([clippedHeading({ boxHeight: 41 })]), []);
+		assert.deepEqual(findTextInkRisks([clippedHeading({ boxHeight: 45, paddingBottom: 4 })]), []);
+	});
+
+	void it('rejects descender text when total space exists above the baseline but not below it', () => {
+		const risks = findTextInkRisks([clippedHeading({ boxHeight: 42, actualAscent: 27, actualDescent: 7 })]);
+
+		assert.equal(risks.length, 1);
+		assert.equal(risks[0]?.descenderClearance, 0);
 	});
 
 	void it('ignores text that is not vertically clipped', () => {
@@ -47,27 +51,32 @@ void describe('text ink safety', () => {
 	});
 
 	void it('ignores intentionally truncated lines outside the visible clip box', () => {
-		const risks = findTextInkRisks([clippedHeading({
-			text: 'A deliberately long title rendered across three lines',
-			fontSize: 50,
-			lineHeight: 54.5,
-			boxHeight: 109,
-			lineCount: 3,
-			actualAscent: 38,
-			actualDescent: 12
-		})]);
+		const risks = findTextInkRisks([
+			clippedHeading({
+				text: 'A deliberately long title rendered across three lines',
+				fontSize: 50,
+				lineHeight: 54.5,
+				boxHeight: 109,
+				lineCount: 3,
+				actualAscent: 38,
+				actualDescent: 12,
+				paddingBottom: 5
+			})
+		]);
 
 		assert.deepEqual(risks, []);
 	});
 
 	void it('rejects text clipped by an ancestor even when its own box is tall enough', () => {
-		const risks = findTextInkRisks([clippedHeading({
-			lineHeight: 44,
-			boxHeight: 50,
-			visibleHeight: 39,
-			actualAscent: 30,
-			actualDescent: 8
-		})]);
+		const risks = findTextInkRisks([
+			clippedHeading({
+				lineHeight: 44,
+				boxHeight: 50,
+				visibleHeight: 39,
+				actualAscent: 30,
+				actualDescent: 8
+			})
+		]);
 
 		assert.equal(risks.length, 1);
 	});
