@@ -43,7 +43,7 @@
 		{ "scenario": "live-update", "expectation": "Updated metrics replace current values without rebuilding the app." }
 	],
 	"behaviors": [
-		{ "id": "responsive-chart", "expectation": "The trend remains bounded while the KPI hierarchy adapts around it.", "evidence": { "scenario": "long-labels" } },
+		{ "id": "responsive-chart", "expectation": "The trend remains bounded, paints real data, and preserves balanced KPI card geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "live-update", "expectation": "Datasource updates propagate to metric labels and values.", "evidence": { "scenario": "live-update" } }
 	],
 	"assets": [

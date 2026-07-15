@@ -48,7 +48,9 @@ interface GenerationBriefSummary {
 }
 
 const generationBriefPath: string = path.resolve(process.cwd(), 'generation-brief.json');
-const generationBrief: GenerationBriefSummary = JSON.parse(fs.readFileSync(generationBriefPath, 'utf8')) as GenerationBriefSummary;
+const generationBrief: GenerationBriefSummary = JSON.parse(
+	fs.readFileSync(generationBriefPath, 'utf8')
+) as GenerationBriefSummary;
 
 const backgroundForSurface = (surface: BriefSurface): VisualPreset['background'] => {
 	if (surface.role === 'primary') {
@@ -67,32 +69,32 @@ const plannedSurfacePresets: VisualPreset[] = generationBrief.surfaces.map((surf
 	minimumContentCoverage: surface.minimumContentCoverage
 }));
 
-const standardPresets: VisualPreset[] = ([
-	{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
-	{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
-	{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector },
-	{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector },
-	{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector }
-] as VisualPreset[]).filter((standard: VisualPreset): boolean => {
+const standardPresets: VisualPreset[] = (
+	[
+		{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
+		{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
+		{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector },
+		{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector },
+		{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector }
+	] as VisualPreset[]
+).filter((standard: VisualPreset): boolean => {
 	return !plannedSurfacePresets.some((planned: VisualPreset): boolean => {
 		return planned.width === standard.width && planned.height === standard.height;
 	});
 });
 const presets: VisualPreset[] = [...plannedSurfacePresets, ...standardPresets];
 
-const scenarioPresets: VisualPreset[] = previewScenarios.map(
-	(scenario: PreviewScenario): VisualPreset => ({
-		name: `scenario-${scenario.id}`,
-		width: scenario.viewport.width,
-		height: scenario.viewport.height,
-		background: scenario.viewport.background ?? 'checker',
-		scenario: scenario.id,
-		readySelector: scenario.fixture.readySelector ?? previewFixture.readySelector,
-		advanceTimeMs: scenario.advanceTimeMs,
-		minimumContentCoverage: scenario.minimumContentCoverage,
-		liveDatasourceUpdate: scenario.liveDatasourceUpdate
-	})
-);
+const scenarioPresets: VisualPreset[] = previewScenarios.map((scenario: PreviewScenario): VisualPreset => ({
+	name: `scenario-${scenario.id}`,
+	width: scenario.viewport.width,
+	height: scenario.viewport.height,
+	background: scenario.viewport.background ?? 'checker',
+	scenario: scenario.id,
+	readySelector: scenario.fixture.readySelector ?? previewFixture.readySelector,
+	advanceTimeMs: scenario.advanceTimeMs,
+	minimumContentCoverage: scenario.minimumContentCoverage,
+	liveDatasourceUpdate: scenario.liveDatasourceUpdate
+}));
 
 const screenshotDirectory: string = path.resolve(process.cwd(), 'preview', 'output');
 const previewBaseUrl: string = process.env.WALLBOARD_PREVIEW_TEST_PORT
@@ -146,22 +148,20 @@ for (const preset of [...presets, ...scenarioPresets]) {
 		}
 
 		if (preset.liveDatasourceUpdate) {
-			await page.evaluate(
-				(update): void => {
-					const previewWindow = window as Window & {
-						__wallboardPreview?: {
-							pushDatasource: (property: string, value: unknown) => void;
-						};
+			await page.evaluate((update): void => {
+				const previewWindow = window as Window & {
+					__wallboardPreview?: {
+						destroy: () => Promise<void>;
+						pushDatasource: (property: string, value: unknown) => void;
 					};
+				};
 
-					if (!previewWindow.__wallboardPreview) {
-						throw new Error('Preview datasource update bridge is unavailable.');
-					}
+				if (!previewWindow.__wallboardPreview) {
+					throw new Error('Preview datasource update bridge is unavailable.');
+				}
 
-					previewWindow.__wallboardPreview.pushDatasource(update.property, update.value);
-				},
-				preset.liveDatasourceUpdate
-			);
+				previewWindow.__wallboardPreview.pushDatasource(update.property, update.value);
+			}, preset.liveDatasourceUpdate);
 			await page.waitForTimeout(250);
 			await expect(page.getByText(preset.liveDatasourceUpdate.expectedText, { exact: true })).toBeVisible();
 		}
@@ -219,19 +219,19 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 				const allowsOffCanvasContent: boolean = Boolean(element.closest('[data-preview-allow-overflow]'));
 				const clipsTextWithEllipsis: boolean =
-					element.childElementCount === 0
-					&& style.textOverflow === 'ellipsis'
-					&& ['clip', 'hidden'].includes(style.overflowX);
+					element.childElementCount === 0 &&
+					style.textOverflow === 'ellipsis' &&
+					['clip', 'hidden'].includes(style.overflowX);
 
 				if (element instanceof HTMLImageElement && (!element.complete || element.naturalWidth === 0)) {
 					brokenImages.push(describeElement(element));
 				}
 
 				if (
-					!allowsOffCanvasContent
-					&& !clipsTextWithEllipsis
-					&& element.clientWidth > 0
-					&& element.scrollWidth > element.clientWidth + 1
+					!allowsOffCanvasContent &&
+					!clipsTextWithEllipsis &&
+					element.clientWidth > 0 &&
+					element.scrollWidth > element.clientWidth + 1
 				) {
 					horizontalOverflow.push(describeElement(element));
 				}
@@ -249,12 +249,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				if (
 					!allowsOffCanvasContent &&
 					element !== root &&
-					(
-						rect.left < rootRect.left - 1 ||
+					(rect.left < rootRect.left - 1 ||
 						rect.right > rootRect.right + 1 ||
 						rect.top < rootRect.top - 1 ||
-						rect.bottom > rootRect.bottom + 1
-					)
+						rect.bottom > rootRect.bottom + 1)
 				) {
 					outsideRoot.push(describeElement(element));
 				}
@@ -342,4 +340,23 @@ test('preview shell uses the configured app viewport', async ({ page }): Promise
 	await expect(page.locator('#viewport-height')).toHaveValue(appViewport.height.toString());
 	await expect(page.locator('#widget-frame')).toHaveCSS('width', `${appViewport.width}px`);
 	await expect(page.locator('#widget-frame')).toHaveCSS('height', `${appViewport.height}px`);
+});
+
+test('preview bridge destroys the mounted widget', async ({ page }): Promise<void> => {
+	const response = await page.goto('/preview/widget.html?background=checker');
+
+	expect(response?.ok()).toBe(true);
+	await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true');
+	await page.evaluate(async (): Promise<void> => {
+		const previewWindow = window as Window & {
+			__wallboardPreview?: { destroy: () => Promise<void> };
+		};
+
+		if (!previewWindow.__wallboardPreview) {
+			throw new Error('Preview lifecycle bridge is unavailable.');
+		}
+
+		await previewWindow.__wallboardPreview.destroy();
+	});
+	await expect(page.locator('#wallboard-preview-root')).toBeEmpty();
 });

@@ -48,7 +48,7 @@
 		{ "scenario": "quick-edit-update", "expectation": "Edited dish names and prices update without rebuilding the app." }
 	],
 	"behaviors": [
-		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section paginate into balanced menu pages.", "evidence": { "scenario": "last-page" } },
+		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section rotate on schedule into balanced, non-overlapping menu pages.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "quick-edit-update", "expectation": "Datasource edits update placed menu content immediately.", "evidence": { "scenario": "quick-edit-update" } }
 	],
 	"assets": [

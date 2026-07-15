@@ -178,10 +178,11 @@ Avoid:
 2. Set fixture `readySelector` to a config-driven text element when SDK configuration settles after the preview root mounts. Do not add app-specific readiness logic to `visual.spec.ts`.
 3. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
 4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states. Every scenario requires measured `minimumContentCoverage` percentages.
-5. Put measured content-coverage thresholds on every planned generation-brief surface. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count. Keep enough margin for browser rounding while making a compressed or mostly empty composition fail.
-6. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
-7. Inspect every image in `preview/output/`. Content coverage is a bounding-box regression guard; sparse corner content can still satisfy it. Automated checks do not judge hierarchy, composition, or legibility.
-8. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
+5. In behavior tests, use `window.__wallboardPreview.pushDatasource()` for live updates and `window.__wallboardPreview.destroy()` for teardown. Verify that charts, timers, and listeners are released; do not depend on SDK registration keys or mount-selector IDs.
+6. Put measured content-coverage thresholds on every planned generation-brief surface. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count. Keep enough margin for browser rounding while making a compressed or mostly empty composition fail.
+7. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, and every named scenario.
+8. Inspect every image in `preview/output/`. Content coverage is a bounding-box regression guard; sparse corner content can still satisfy it. Automated checks do not judge hierarchy, composition, or legibility.
+9. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
 Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
 

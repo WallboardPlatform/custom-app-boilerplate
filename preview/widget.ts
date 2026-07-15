@@ -16,9 +16,13 @@ interface WidgetRegistration {
 interface PreviewWindow extends Window {
 	CustomWidget?: Record<string, WidgetRegistration>;
 	__wallboardPreview?: {
+		destroy: () => Promise<void>;
 		pushDatasource: (property: string, value: unknown) => void;
 	};
 }
+
+const PREVIEW_ROOT_ID = 'wallboard-preview-root';
+const PREVIEW_ROOT_SELECTOR = `#${PREVIEW_ROOT_ID}`;
 
 const applyBackground = (): void => {
 	const params: URLSearchParams = new URLSearchParams(window.location.search);
@@ -72,6 +76,10 @@ const mountWidget = async (): Promise<void> => {
 
 	const eventSubject: Subject<unknown> = new Subject<unknown>();
 	previewWindow.__wallboardPreview = {
+		destroy: async (): Promise<void> => {
+			eventSubject.complete();
+			await registration.destroy(PREVIEW_ROOT_ID);
+		},
 		pushDatasource: (property: string, value: unknown): void => {
 			eventSubject.next({
 				messageType: 'boundDataChanged',
@@ -88,7 +96,7 @@ const mountWidget = async (): Promise<void> => {
 		datasourceIds: fixture.datasourceIds
 	};
 
-	await registration.create('#wallboard-preview-root', config, eventSubject);
+	await registration.create(PREVIEW_ROOT_SELECTOR, config, eventSubject);
 	markReady();
 };
 
