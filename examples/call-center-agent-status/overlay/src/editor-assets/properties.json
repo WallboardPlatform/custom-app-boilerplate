@@ -1,0 +1,70 @@
+{
+	"version": "1",
+	"name": "Call Center Agent Status",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Agent metrics datasource",
+			"type": "dataPicker",
+			"property": "agentData",
+			"dataPickerType": "any",
+			"tooltip": "Select the existing datasource containing the flat agent status array."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Title", "type": "text", "property": "titleText", "default": "Agent status wall" },
+				{ "label": "Subtitle", "type": "text", "property": "subtitleText", "default": "Live workforce activity" },
+				{
+					"label": "Empty state",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No agent records are currently available."
+				},
+				{
+					"label": "Page duration",
+					"type": "number",
+					"property": "pageDurationSeconds",
+					"default": 10,
+					"min": 3,
+					"max": 120,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Font family",
+					"type": "select",
+					"property": "fontFamily",
+					"default": "'Segoe UI', Arial, sans-serif",
+					"options": [
+						{ "label": "Segoe UI", "value": "'Segoe UI', Arial, sans-serif" },
+						{ "label": "Arial", "value": "Arial, sans-serif" },
+						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e8f0f6" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#18344b" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#667d90" },
+				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#2fa876" },
+				{ "label": "Busy", "type": "color", "property": "busyColor", "default": "#dc5260" },
+				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#d99a27" },
+				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#d9753f" },
+				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#8293a0" },
+				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#3d86bd" }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}

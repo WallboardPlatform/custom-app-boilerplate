@@ -1,0 +1,84 @@
+{
+	"version": "1",
+	"name": "Call Center Skill Operations",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Skill state datasource",
+			"type": "dataPicker",
+			"property": "skillData",
+			"dataPickerType": "any",
+			"tooltip": "Select the existing datasource containing keyed per-agent skill-state records."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Title", "type": "text", "property": "titleText", "default": "Skill operations" },
+				{
+					"label": "Subtitle",
+					"type": "text",
+					"property": "subtitleText",
+					"default": "Live coverage and agent activity"
+				},
+				{
+					"label": "Empty state",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No active skill records are currently available."
+				},
+				{
+					"label": "Rotation seconds",
+					"type": "number",
+					"property": "rotationSeconds",
+					"default": 10,
+					"min": 3,
+					"max": 120,
+					"step": 1
+				},
+				{
+					"label": "Maximum agents shown",
+					"type": "number",
+					"property": "maxAgentsShown",
+					"default": 12,
+					"min": 4,
+					"max": 24,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Font family",
+					"type": "select",
+					"property": "fontFamily",
+					"default": "'Segoe UI', Arial, sans-serif",
+					"options": [
+						{ "label": "Segoe UI", "value": "'Segoe UI', Arial, sans-serif" },
+						{ "label": "Arial", "value": "Arial, sans-serif" },
+						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#071b29" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#0f2a3a" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f2f7f9" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#8fa8b8" },
+				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#3ad0a0" },
+				{ "label": "Active", "type": "color", "property": "activeColor", "default": "#45a9e6" },
+				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#efb84b" },
+				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#ef8151" },
+				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#647985" },
+				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#8c7bd3" }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}

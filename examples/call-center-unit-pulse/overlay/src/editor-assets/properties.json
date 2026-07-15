@@ -1,0 +1,76 @@
+{
+	"version": "1",
+	"name": "Call Center Unit Pulse",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Unit metrics datasource",
+			"type": "dataPicker",
+			"property": "groupData",
+			"dataPickerType": "any",
+			"tooltip": "Select the existing datasource containing keyed business-unit KPI records."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Title", "type": "text", "property": "titleText", "default": "Unit group pulse" },
+				{ "label": "Subtitle", "type": "text", "property": "subtitleText", "default": "Live call-center performance" },
+				{
+					"label": "Empty state",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No unit metrics are currently available."
+				},
+				{
+					"label": "Rotation seconds",
+					"type": "number",
+					"property": "rotationSeconds",
+					"default": 10,
+					"min": 3,
+					"max": 120,
+					"step": 1
+				},
+				{
+					"label": "Excluded unit names",
+					"type": "text",
+					"property": "excludedGroups",
+					"default": "All BGE,TOTAL,Other",
+					"tooltip": "Comma-separated unit names omitted from rotation."
+				},
+				{ "label": "Hide inactive units", "type": "checkbox", "property": "hideInactiveGroups", "default": false }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Font family",
+					"type": "select",
+					"property": "fontFamily",
+					"default": "'Segoe UI', Arial, sans-serif",
+					"options": [
+						{ "label": "Segoe UI", "value": "'Segoe UI', Arial, sans-serif" },
+						{ "label": "Arial", "value": "Arial, sans-serif" },
+						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#eef2f5" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#142437" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#657587" },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#2674c8" },
+				{ "label": "Healthy", "type": "color", "property": "successColor", "default": "#3d9b68" },
+				{ "label": "Attention", "type": "color", "property": "warningColor", "default": "#d89118" },
+				{ "label": "Critical", "type": "color", "property": "dangerColor", "default": "#cf4848" }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}

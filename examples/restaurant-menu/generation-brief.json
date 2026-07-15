@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Turn a photographed restaurant menu into a branded digital menu board with editable dishes and prices.",
 		"audience": "Restaurant guests reading a dinner menu from shared signage.",
@@ -10,6 +10,10 @@
 		"Temporarily unavailable dishes remain in the datasource and are hidden through an availability field."
 	],
 	"app": { "mode": "new", "name": "Cordo Menu Board", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The photographed menu identity must survive full-screen, wide-low, portrait, and compact restaurant signage placements."
+	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen branded dinner menu.", "minimumContentCoverage": { "width": 85, "height": 85 } },
 		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low menu zone with reduced secondary copy.", "minimumContentCoverage": { "width": 90, "height": 85 } },
@@ -55,6 +59,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "Translate the supplied Cordo menu photograph into a digital editorial system while preserving its recognizable restaurant character.",
+		"references": ["User-provided Cordo restaurant menu photograph."],
+		"signatureChoices": [
+			"Course sections keep the source menu's editorial rhythm rather than becoming dashboard cards.",
+			"Restaurant name, edition copy, and menu typography establish the venue before operational metadata."
+		],
+		"avoid": ["Replacing the photographed identity with the boilerplate example palette."]
+	},
 	"visualReview": {
 		"intent": "A polished editorial restaurant menu that feels branded, legible, and intentionally composed rather than template-like.",
 		"focus": [

@@ -8,7 +8,7 @@ Use this before designing or editing a Wallboard custom app. These rules are abo
 |------|----------|
 | Fill the assigned area | Root component uses `width: 100%`, `height: 100%`, `min-width: 0`, `min-height: 0`, and `overflow: hidden`. |
 | Default transparent | Keep the widget background transparent unless the app needs its own panel. If a panel is useful, expose background and opacity settings. |
-| No fixed canvas assumptions | Do not design only for `1920x1080`, `16:9`, or the default size in `properties.json`. Widgets can be tiny, wide, tall, square, or fullscreen. |
+| Honor the surface contract | Implement the accepted `fixed`, `bounded`, or `adaptive` strategy. Do not spend design quality on unsupported aspect ratios or assume unknown ones are supported. |
 | Stable layout | Hover states, changing text, loading states, and empty states must not resize the root layout unexpectedly. |
 | Contained overflow | Text, images, lists, and tables must wrap, truncate, scroll, paginate, or scale intentionally. Never let content spill outside the widget. |
 | One clipping surface | When the app has a panel, put its background, `border-radius`, and `overflow: hidden` on the same full-size element. Nested rounded backgrounds can expose square corners through sub-pixel differences. |
@@ -28,6 +28,8 @@ Root style baseline:
 ```
 
 ## Responsiveness
+
+Responsiveness follows the accepted surface strategy. A fixed LED strip should be exceptional on that strip; a bounded app should cover its declared placement family; only an adaptive app must remain intentionally composed across unknown ratios. If placement is ambiguous, ask before design work begins.
 
 | Situation | Required behavior |
 |-----------|-------------------|
@@ -94,6 +96,21 @@ Run `npm run validate:legacy` after changing app styles. The delivery workflow r
 | Clear hierarchy | One primary message/value, then secondary metadata. |
 | No boilerplate visuals | Replace default icon, placeholder, sample wizard text, and sample content before packaging. |
 | No decorative excess | Avoid UI that looks like a landing page. Signage widgets must be readable and purposeful. |
+| Reference first | User images, existing brand language, and explicit concepts outrank example styling. Preserve their recognizable composition unless the user asks for reinterpretation. |
+| Examples teach mechanics | Reuse engineering patterns from examples without copying their palette, cards, header, accent rail, or pagination treatment by default. |
+
+Design freedom exists inside the production constraints. When no visual direction is supplied, author a domain-specific composition and record its signature choices in `generation-brief.json`; do not fall back automatically to a dark dashboard with a top accent and repeated cards.
+
+Choose pagination for the content and viewing distance. Valid treatments include a numeric counter, progress rail, section labels, dots for a small fixed set, an animated transition with no persistent indicator, or no pagination when all content fits. A top-right `1 / N` counter is not the default.
+
+### Typography ink safety
+
+DOM box containment does not prove that glyphs are intact. Fonts can paint descenders such as `g`, `j`, `p`, `q`, and `y` outside a tight line box while `scrollHeight` still reports no overflow. This is common when `line-height: 1` is combined with `overflow: hidden` or `clip`.
+
+- Leave vertical ink clearance through a safer line height or explicit top/bottom padding on clipped text.
+- Validate representative labels containing ascenders, capitals, punctuation, accents, and descenders.
+- Do not repair a title by hiding more overflow; inspect its computed font size, line height, box height, and padding.
+- Treat the shared text-ink failure as a real layout defect. It reports the selector, rendered text, measured ink buffer, and required buffer.
 
 ## Settings
 
@@ -196,8 +213,8 @@ Avoid:
 5. In behavior tests, use `window.__wallboardPreview.pushDatasource()` for live updates and `window.__wallboardPreview.destroy()` for teardown. Verify that charts, timers, and listeners are released; do not depend on SDK registration keys or mount-selector IDs.
 6. Use `window.__wallboardPreview.pushConfiguration()` indirectly through `previewSettingEffects` to verify editor controls affect the rendered element, not only the mapper or fallback implementation.
 7. Run `npm run measure:visual` after the first real render. Review its report and screenshots, then put measured content-coverage thresholds with regression margin on every planned surface and scenario. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count.
-8. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, every named scenario, and declared setting effects.
-9. Inspect every image in `preview/output/`. Content coverage is a bounding-box regression guard; sparse corner content can still satisfy it. Automated checks do not judge hierarchy, composition, or legibility.
+8. Run `npm run validate:visual`. It checks every declared surface, every named scenario, declared setting effects, and text-ink safety. Adaptive apps also receive the standard full HD, wide-low, landscape, portrait, and square matrix.
+9. Inspect every image in `preview/output/` at its real pixel dimensions and zoom into typography. Content coverage and ink checks are regression guards; automated checks still do not judge reference fidelity, hierarchy, composition, or overall legibility.
 10. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
 Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
@@ -212,7 +229,7 @@ Before returning a zip:
 - `src/editor-assets/icon.png` and `placeholder.png` are app-specific.
 - Editor wizards or layout editors exist only when their URLs are referenced by `properties.json`; copy needed starters from `templates/editor-assets/`.
 - Root background is transparent unless intentionally configured otherwise.
-- Layout behaves at small, wide, tall, and default sizes.
+- Layout behaves at every surface required by the accepted fixed, bounded, or adaptive strategy.
 - Empty, loading, and invalid-data states render cleanly.
 - `npm run validate:visual` passes and every generated screenshot has been inspected.
 - All settings are typed and mapped.

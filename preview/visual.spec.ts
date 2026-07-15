@@ -12,6 +12,12 @@ import type {
 	PreviewSettingEffect,
 	PreviewSettingEffectMeasurement
 } from './fixture.types';
+import {
+	findTextInkRisks,
+	formatTextInkRisks,
+	type TextInkMeasurement,
+	type TextInkRisk
+} from './text-ink-safety';
 
 interface VisualPreset {
 	name: string;
@@ -39,6 +45,7 @@ interface VisualMetrics {
 	verticalOverflow: string[];
 	outsideRoot: string[];
 	brokenImages: string[];
+	textInkMeasurements: TextInkMeasurement[];
 }
 
 interface BriefSurface {
@@ -50,6 +57,9 @@ interface BriefSurface {
 }
 
 interface GenerationBriefSummary {
+	surfaceStrategy: {
+		mode: 'fixed' | 'bounded' | 'adaptive';
+	};
 	surfaces: BriefSurface[];
 }
 
@@ -75,7 +85,7 @@ const plannedSurfacePresets: VisualPreset[] = generationBrief.surfaces.map((surf
 	minimumContentCoverage: surface.minimumContentCoverage
 }));
 
-const standardPresets: VisualPreset[] = (
+const adaptiveStandardPresets: VisualPreset[] = generationBrief.surfaceStrategy.mode === 'adaptive' ? (
 	[
 		{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
 		{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
@@ -87,8 +97,8 @@ const standardPresets: VisualPreset[] = (
 	return !plannedSurfacePresets.some((planned: VisualPreset): boolean => {
 		return planned.width === standard.width && planned.height === standard.height;
 	});
-});
-const presets: VisualPreset[] = [...plannedSurfacePresets, ...standardPresets];
+}) : [];
+const presets: VisualPreset[] = [...plannedSurfacePresets, ...adaptiveStandardPresets];
 
 const scenarioPresets: VisualPreset[] = previewScenarios.map((scenario: PreviewScenario): VisualPreset => ({
 	name: `scenario-${scenario.id}`,
@@ -224,6 +234,9 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			const outsideRoot: string[] = [];
 			const brokenImages: string[] = [];
 			const leafRects: DOMRect[] = [];
+			const textInkMeasurements: TextInkMeasurement[] = [];
+			const canvas: HTMLCanvasElement = document.createElement('canvas');
+			const canvasContext: CanvasRenderingContext2D | null = canvas.getContext('2d');
 
 			const describeElement = (element: HTMLElement): string => {
 				const id: string = element.id ? `#${element.id}` : '';
@@ -233,6 +246,22 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					.join('');
 
 				return `${element.tagName.toLowerCase()}${id}${classes}`;
+			};
+
+			const renderedText = (text: string, transform: string): string => {
+				if (transform === 'uppercase') {
+					return text.toUpperCase();
+				}
+
+				if (transform === 'lowercase') {
+					return text.toLowerCase();
+				}
+
+				if (transform === 'capitalize') {
+					return text.replace(/\b\S/g, (character: string): string => character.toUpperCase());
+				}
+
+				return text;
 			};
 
 			for (const element of elements) {
@@ -298,6 +327,42 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				if (isVisualLeaf) {
 					leafRects.push(rect);
 				}
+
+				const text: string = element.textContent?.trim() ?? '';
+				const lineHeight: number = Number.parseFloat(style.lineHeight);
+
+				if (
+					canvasContext
+					&& element.childElementCount === 0
+					&& text
+					&& ['clip', 'hidden'].includes(style.overflowY)
+					&& Number.isFinite(lineHeight)
+				) {
+					const range: Range = document.createRange();
+					range.selectNodeContents(element);
+					const lineTops: Set<number> = new Set(
+						Array.from(range.getClientRects())
+							.filter((lineRect: DOMRect): boolean => lineRect.width > 0 && lineRect.height > 0)
+							.map((lineRect: DOMRect): number => Math.round(lineRect.top * 2) / 2)
+					);
+					const measuredText: string = renderedText(text, style.textTransform);
+					canvasContext.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+					const textMetrics: TextMetrics = canvasContext.measureText(measuredText);
+
+					textInkMeasurements.push({
+						selector: describeElement(element),
+						text: measuredText.length > 80 ? `${measuredText.slice(0, 77)}...` : measuredText,
+						overflowY: style.overflowY,
+						fontSize: Number.parseFloat(style.fontSize),
+						lineHeight,
+						boxHeight: rect.height,
+						borderTop: Number.parseFloat(style.borderTopWidth) || 0,
+						borderBottom: Number.parseFloat(style.borderBottomWidth) || 0,
+						lineCount: Math.max(1, lineTops.size),
+						actualAscent: textMetrics.actualBoundingBoxAscent,
+						actualDescent: textMetrics.actualBoundingBoxDescent
+					});
+				}
 			}
 
 			const contentBounds = leafRects.reduce(
@@ -329,9 +394,11 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				horizontalOverflow: [...new Set(horizontalOverflow)],
 				verticalOverflow: [...new Set(verticalOverflow)],
 				outsideRoot: [...new Set(outsideRoot)],
-				brokenImages: [...new Set(brokenImages)]
+				brokenImages: [...new Set(brokenImages)],
+				textInkMeasurements
 			};
 		});
+		const textInkRisks: TextInkRisk[] = findTextInkRisks(metrics.textInkMeasurements);
 
 		const safePresetName: string = preset.name.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'surface';
 
@@ -372,6 +439,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 		expect(metrics.verticalOverflow).toEqual([]);
 		expect(metrics.outsideRoot).toEqual([]);
 		expect(metrics.brokenImages).toEqual([]);
+		expect(textInkRisks, `Vertically clipped text ink:\n${formatTextInkRisks(textInkRisks)}`).toEqual([]);
 
 		if (preset.minimumContentCoverage && !coverageMeasurementMode) {
 			expect(metrics.contentWidthCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.width);
