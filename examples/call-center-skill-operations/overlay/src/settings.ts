@@ -6,11 +6,43 @@ const textSetting = (value: string | undefined, fallback: string): string => {
 	return typeof value === 'string' && value.trim() !== '' ? value : fallback;
 };
 
+const mixHexColors = (background: string, foreground: string, foregroundWeight: number, fallback: string): string => {
+	const parse = (value: string): number[] | undefined => {
+		const match: RegExpMatchArray | null = value.match(/^#([0-9a-f]{6})$/i);
+
+		if (!match) {
+			return undefined;
+		}
+
+		return [0, 2, 4].map((offset: number): number => Number.parseInt(match[1].slice(offset, offset + 2), 16));
+	};
+	const backgroundRgb: number[] | undefined = parse(background);
+	const foregroundRgb: number[] | undefined = parse(foreground);
+
+	if (!backgroundRgb || !foregroundRgb) {
+		return fallback;
+	}
+
+	return `#${backgroundRgb
+		.map((channel: number, index: number): string => {
+			const mixed: number = Math.round(channel + (foregroundRgb[index] - channel) * foregroundWeight);
+
+			return mixed.toString(16).padStart(2, '0');
+		})
+		.join('')}`;
+};
+
 export default function mapSettings(config: ConfigValues): Settings {
+	const customBackground: string = textSetting(config.backgroundColor, '#071b29');
+	const customSurface: string = textSetting(config.surfaceColor, '#0f2a3a');
+	const customSecondary: string = textSetting(config.secondaryTextColor, '#8fa8b8');
 	const palette = resolveTheme(themePresetSetting(config.themePreset), {
 		dark: {
 			backgroundColor: '#071b29',
 			surfaceColor: '#0f2a3a',
+			rowSurfaceColor: '#0c2433',
+			dividerColor: '#2d4654',
+			trackColor: '#2a4350',
 			primaryTextColor: '#f2f7f9',
 			secondaryTextColor: '#8fa8b8',
 			readyColor: '#3ad0a0',
@@ -23,6 +55,9 @@ export default function mapSettings(config: ConfigValues): Settings {
 		light: {
 			backgroundColor: '#e9f0f4',
 			surfaceColor: '#ffffff',
+			rowSurfaceColor: '#ffffff',
+			dividerColor: '#c9d6dd',
+			trackColor: '#dfe7eb',
 			primaryTextColor: '#183549',
 			secondaryTextColor: '#687f8e',
 			readyColor: '#258f6f',
@@ -33,8 +68,11 @@ export default function mapSettings(config: ConfigValues): Settings {
 			unknownColor: '#6d5ca8'
 		},
 		custom: {
-			backgroundColor: textSetting(config.backgroundColor, '#071b29'),
-			surfaceColor: textSetting(config.surfaceColor, '#0f2a3a'),
+			backgroundColor: customBackground,
+			surfaceColor: customSurface,
+			rowSurfaceColor: mixHexColors(customBackground, customSurface, 0.62, '#0c2433'),
+			dividerColor: mixHexColors(customBackground, customSecondary, 0.22, '#253a47'),
+			trackColor: mixHexColors(customSurface, customSecondary, 0.22, '#2c4555'),
 			primaryTextColor: textSetting(config.primaryTextColor, '#f2f7f9'),
 			secondaryTextColor: textSetting(config.secondaryTextColor, '#8fa8b8'),
 			readyColor: textSetting(config.readyColor, '#3ad0a0'),

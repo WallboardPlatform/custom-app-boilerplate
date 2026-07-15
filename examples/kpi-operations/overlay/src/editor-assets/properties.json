@@ -75,13 +75,23 @@
 						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
 					]
 				},
-				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#101416" },
-				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1b2226" },
-				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f4f1e8" },
-				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aab5ba" },
-				{ "label": "Chart accent", "type": "color", "property": "accentColor", "default": "#63d7ff" },
-				{ "label": "Positive", "type": "color", "property": "positiveColor", "default": "#63e6bd" },
-				{ "label": "Warning", "type": "color", "property": "warningColor", "default": "#ffbf69" }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#101416" },
+						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1b2226" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f4f1e8" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aab5ba" },
+						{ "label": "Chart accent", "type": "color", "property": "accentColor", "default": "#63d7ff" },
+						{ "label": "Positive", "type": "color", "property": "positiveColor", "default": "#63e6bd" },
+						{ "label": "Warning", "type": "color", "property": "warningColor", "default": "#ffbf69" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		}
 	],

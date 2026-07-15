@@ -25,6 +25,9 @@ export interface Settings extends Record<string, unknown> {
 	fontFamily: string;
 	backgroundColor: string;
 	surfaceColor: string;
+	rowSurfaceColor: string;
+	dividerColor: string;
+	trackColor: string;
 	primaryTextColor: string;
 	secondaryTextColor: string;
 	readyColor: string;

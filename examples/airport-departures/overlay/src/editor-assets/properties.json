@@ -39,9 +39,19 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#111315" },
-				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f5f6f3" },
-				{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#f4c542" }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#111315" },
+						{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f5f6f3" },
+						{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#f4c542" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		}
 	],

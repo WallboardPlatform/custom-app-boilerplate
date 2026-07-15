@@ -52,10 +52,20 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#58e4c1" },
-				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f6f4ed" },
-				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#101516" },
-				{ "label": "Background opacity", "type": "number", "property": "backgroundOpacity", "default": 94, "min": 0, "max": 100, "step": 1 }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#58e4c1" },
+						{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f6f4ed" },
+						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#101516" },
+						{ "label": "Background opacity", "type": "number", "property": "backgroundOpacity", "default": 94, "min": 0, "max": 100, "step": 1 }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		}
 	],

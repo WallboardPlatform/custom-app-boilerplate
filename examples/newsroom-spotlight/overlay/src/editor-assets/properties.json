@@ -48,11 +48,21 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{ "label": "Outer background", "type": "color", "property": "backgroundColor", "default": "#f2efe8" },
-				{ "label": "Story surface", "type": "color", "property": "panelColor", "default": "#17211f" },
-				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f9f7f0" },
-				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#b9c4bf" },
-				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#ef5b45" }
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Outer background", "type": "color", "property": "backgroundColor", "default": "#f2efe8" },
+						{ "label": "Story surface", "type": "color", "property": "panelColor", "default": "#17211f" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f9f7f0" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#b9c4bf" },
+						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#ef5b45" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
 			]
 		}
 	],

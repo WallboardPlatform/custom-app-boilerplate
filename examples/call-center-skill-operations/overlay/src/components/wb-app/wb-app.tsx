@@ -251,6 +251,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
 		'--skill-background': settings().backgroundColor,
 		'--skill-surface': settings().surfaceColor,
+		'--skill-row-surface': settings().rowSurfaceColor,
+		'--skill-divider': settings().dividerColor,
+		'--skill-track': settings().trackColor,
 		'--skill-primary': settings().primaryTextColor,
 		'--skill-secondary': settings().secondaryTextColor,
 		'--skill-ready': settings().readyColor,

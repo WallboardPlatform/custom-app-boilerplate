@@ -103,6 +103,8 @@ Design freedom exists inside the production constraints. When no visual directio
 
 Theme presets are implementation support, not a visual style guide. Derive both curated palettes from the accepted reference, brand, and domain. For replacement uploads, map an absent or unknown preset to `Custom` so existing explicit color settings remain unchanged; use the editor property's default to select the intended preset for new placements.
 
+The standard editor property schema does not rewrite sibling color values when a preset select changes. Put manual color controls in a `Custom colors` group with a `visibilityConditions` rule for `themePreset === "custom"`; otherwise preset users see stale swatches that are not active. Curated presets must also replace every semantic surface, divider, track, and status color. Avoid dark-specific translucent literals outside the resolved palette because they frequently destroy contrast in the light preset.
+
 Choose pagination for the content and viewing distance. Valid treatments include a numeric counter, progress rail, section labels, dots for a small fixed set, an animated transition with no persistent indicator, or no pagination when all content fits. A top-right `1 / N` counter is not the default.
 
 ### Typography ink safety
