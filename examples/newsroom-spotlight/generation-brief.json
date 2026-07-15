@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create an editorial story spotlight backed by an existing Wallboard feed integration.",
 		"audience": "Visitors and employees reading curated news, updates, or social stories from shared signage.",
@@ -10,6 +10,10 @@
 		"Feed media is optional and unsafe or broken URLs must fall back without breaking the story layout."
 	],
 	"app": { "mode": "new", "name": "Newsroom Spotlight", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "Feed stories must support full-screen, split-screen, portrait, and compact editorial placements."
+	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen editorial feature.", "minimumContentCoverage": { "width": 90, "height": 86 } },
 		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low news zone.", "minimumContentCoverage": { "width": 92, "height": 84 } },
@@ -56,6 +60,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "agent-authored",
+		"summary": "A media-led editorial feature whose composition changes with story imagery instead of imitating an operations dashboard.",
+		"references": [],
+		"signatureChoices": [
+			"One inspectable story image carries first-viewport weight.",
+			"The upcoming-story rail reads as editorial sequencing, not KPI pagination."
+		],
+		"avoid": ["Dark nested cards with equal visual weight."]
+	},
 	"visualReview": {
 		"intent": "A magazine-like story display with real media weight, disciplined typography, and a restrained upcoming-story rail.",
 		"focus": [

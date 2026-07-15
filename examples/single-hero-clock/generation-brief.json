@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a highly configurable digital clock that treats the time as one hero element and remains balanced in compact, ultra-wide, square, landscape, and portrait Wallboard zones.",
 		"audience": "Visitors, employees, and operational teams reading time at signage distance.",
@@ -14,6 +14,10 @@
 		"mode": "new",
 		"name": "Single Hero Clock",
 		"version": 1
+	},
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The explicit request covers compact, ultra-wide, landscape, square, and portrait placements."
 	},
 	"surfaces": [
 		{
@@ -89,6 +93,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A single-hero broadcast clock that composes time and metadata differently for each ratio without adopting dashboard chrome.",
+		"references": [],
+		"signatureChoices": [
+			"Time remains one unmistakable hero value in every ratio.",
+			"Tall and ultra-wide modes redistribute metadata instead of merely scaling the landscape layout."
+		],
+		"avoid": ["Wrapping the clock in a generic KPI card."]
+	},
 	"visualReview": {
 		"intent": "A restrained broadcast clock with one unmistakable hero value and supporting metadata placed to make each signage ratio feel deliberately composed.",
 		"focus": [

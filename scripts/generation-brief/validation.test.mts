@@ -19,7 +19,7 @@ const VALID_PNG = Buffer.from(
 );
 
 const createValidBrief = (): GenerationBrief => ({
-	briefVersion: 1,
+	briefVersion: 2,
 	request: {
 		summary: 'Create an operational signage widget.',
 		audience: 'Visitors reading a shared display.',
@@ -27,6 +27,10 @@ const createValidBrief = (): GenerationBrief => ({
 	},
 	assumptions: [],
 	app: { mode: 'new', name: 'Validation Test', version: '1' },
+	surfaceStrategy: {
+		mode: 'adaptive',
+		rationale: 'The request requires use across unknown signage aspect ratios.'
+	},
 	surfaces: [
 		{ id: 'app-default', width: 1920, height: 1080, role: 'primary', purpose: 'Primary display.', minimumContentCoverage: { width: 80, height: 80 } },
 		{ id: 'wide-low', width: 1536, height: 432, role: 'required', purpose: 'Wide display zone.', minimumContentCoverage: { width: 80, height: 70 } },
@@ -51,6 +55,13 @@ const createValidBrief = (): GenerationBrief => ({
 			required: true
 		}
 	],
+	visualDirection: {
+		source: 'agent-authored',
+		summary: 'A clear operational composition authored for the stated audience.',
+		references: [],
+		signatureChoices: ['One dominant status region.', 'Quiet supporting metadata.'],
+		avoid: ['Generic nested dashboard cards.']
+	},
 	visualReview: {
 		intent: 'A readable production signage composition.',
 		focus: ['Check containment.', 'Check hierarchy.']
@@ -137,6 +148,64 @@ void describe('standalone generation brief validation', () => {
 		brief.surfaces[0].id = 'primary/surface';
 
 		assert.throws(() => validateStandaloneBrief(brief), /pattern/);
+	});
+
+	void it('accepts a single explicitly fixed surface', () => {
+		const brief = createValidBrief();
+		brief.surfaceStrategy = {
+			mode: 'fixed',
+			rationale: 'The target is one known LED wall canvas.'
+		};
+		brief.surfaces = [brief.surfaces[0]];
+
+		assert.doesNotThrow(() => validateStandaloneBrief(brief));
+	});
+
+	void it('rejects a fallback surface for a fixed strategy', () => {
+		const brief = createValidBrief();
+		brief.surfaceStrategy = {
+			mode: 'fixed',
+			rationale: 'The target is one known LED wall canvas.'
+		};
+		brief.surfaces = [
+			brief.surfaces[0],
+			brief.surfaces[2]
+		];
+
+		assert.throws(() => validateStandaloneBrief(brief), /must not declare fallback/);
+	});
+
+	void it('requires two representative surfaces for a bounded strategy', () => {
+		const brief = createValidBrief();
+		brief.surfaceStrategy = {
+			mode: 'bounded',
+			rationale: 'The widget is used in a known family of landscape zones.'
+		};
+		brief.surfaces = [brief.surfaces[0]];
+
+		assert.throws(() => validateStandaloneBrief(brief), /at least two representative surfaces/);
+	});
+
+	void it('keeps portrait and square evidence mandatory for adaptive apps', () => {
+		const brief = createValidBrief();
+		brief.surfaces = brief.surfaces.filter((surface) => surface.id !== 'portrait');
+		brief.surfaces.push({
+			id: 'landscape-small',
+			width: 800,
+			height: 450,
+			role: 'fallback',
+			purpose: 'Additional landscape fallback.',
+			minimumContentCoverage: { width: 70, height: 70 }
+		});
+
+		assert.throws(() => validateStandaloneBrief(brief), /portrait fallback/);
+	});
+
+	void it('requires a named reference for reference-led visual direction', () => {
+		const brief = createValidBrief();
+		brief.visualDirection.source = 'reference-led';
+
+		assert.throws(() => validateStandaloneBrief(brief), /at least one user reference/);
 	});
 });
 

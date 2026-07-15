@@ -136,7 +136,7 @@ npx playwright install chromium
 npm run validate:visual
 ```
 
-This captures full HD, wide/low, landscape, portrait, and square screenshots in `preview/output/`. It fails on runtime errors, horizontal or vertical overflow, or visible elements outside the assigned zone. Define `previewScenarios` in `preview/fixture.ts` for empty, long-label, odd-count, last-page, and other materially different states. Inspect every screenshot because automated checks cannot judge hierarchy, density, typography, or unused space.
+This captures every surface declared by the generation brief; adaptive apps also receive the standard full HD, wide/low, landscape, portrait, and square matrix. It fails on runtime errors, overflow, visible elements outside the assigned zone, broken media, or unsafe vertical glyph clearance in clipped text. Define `previewScenarios` in `preview/fixture.ts` for empty, long-label, odd-count, last-page, and other materially different states. Inspect every screenshot because automated checks cannot judge reference fidelity, hierarchy, density, overall typography, or unused space.
 
 Playwright first uses an explicit `WALLBOARD_PLAYWRIGHT_EXECUTABLE_PATH` or `WALLBOARD_PLAYWRIGHT_CHANNEL`, then its cached Chromium, then an installed Chrome or Edge. `PLAYWRIGHT_BROWSERS_PATH` remains supported for a shared Playwright cache. Supported channel values are `chromium`, `chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`, `msedge-beta`, `msedge-dev`, and `msedge-canary`.
 

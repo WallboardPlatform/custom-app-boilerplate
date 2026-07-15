@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a continuously filled rotating market ticker for a 6000 by 136 video-wall strip.",
 		"audience": "Financial-information viewers reading live market movement across an ultra-wide display.",
@@ -11,11 +11,12 @@
 		"Version 1 is preserved for replacement uploads to the existing app record."
 	],
 	"app": { "mode": "replacement", "name": "Market Rotation Ticker", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "fixed",
+		"rationale": "The production requirement is a specific 6000 by 136 LED wall strip, so quality on that canvas outranks unrelated fallback compositions."
+	},
 	"surfaces": [
-		{ "id": "app-default", "width": 6000, "height": 136, "role": "primary", "purpose": "Native ultra-wide video-wall ticker strip.", "minimumContentCoverage": { "width": 95, "height": 15 } },
-		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "fallback", "purpose": "Safe centered ticker fallback on a standard canvas.", "minimumContentCoverage": { "width": 95, "height": 4 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Safe portrait fallback without clipped content.", "minimumContentCoverage": { "width": 95, "height": 1 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Safe square fallback without invalid geometry.", "minimumContentCoverage": { "width": 95, "height": 2 } }
+		{ "id": "app-default", "width": 6000, "height": 136, "role": "primary", "purpose": "Native ultra-wide video-wall ticker strip.", "minimumContentCoverage": { "width": 95, "height": 15 } }
 	],
 	"data": {
 		"mode": "bound",
@@ -69,11 +70,21 @@
 		{ "id": "stock-logos", "source": "datasource", "binding": "stockIcons", "required": false },
 		{ "id": "trend-icons", "source": "setting", "properties": ["upIconFile", "downIconFile"], "required": false }
 	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A purpose-built financial broadcast strip whose cadence, density, and motion are composed for one extreme LED canvas.",
+		"references": [],
+		"signatureChoices": [
+			"Exchange titles temporarily take over the full moving track.",
+			"Canonical and cloned market entries maintain uninterrupted visual density."
+		],
+		"avoid": ["Scaling a conventional dashboard down into the strip."]
+	},
 	"visualReview": {
 		"intent": "A dense broadcast-style financial strip that remains continuously populated and readable at extreme width.",
 		"focus": [
 			"Inspect the full 6000 by 136 frame for empty gaps, partial vertical clipping, and uneven item cadence.",
-			"Verify standard fallback surfaces remain contained even though the primary composition is ultra-wide."
+			"Verify the exchange title and every ticker glyph retain safe vertical ink clearance throughout motion."
 		]
 	}
 }

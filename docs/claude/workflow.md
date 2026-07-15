@@ -35,7 +35,7 @@
 #### Quality Check Checklist
 - [ ] TypeScript compiles without errors
 - [ ] No ESLint warnings
-- [ ] Generation brief matches identity, target surfaces, settings, data bindings, named states, and behavior evidence
+- [ ] Generation brief matches identity, fixed/bounded/adaptive surface strategy, visual direction, settings, data bindings, named states, and behavior evidence
 - [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
 - [ ] Generated datasource contract and sample data pass `npm run validate:examples`
 - [ ] Every datasource picker is declared; multi-source apps use `bindings[]` and sanitized `samplePath` fixtures
@@ -46,6 +46,7 @@
 - [ ] Timing, motion, or interaction requirements have dedicated `preview/*.spec.ts` assertions
 - [ ] `npm run validate:visual` passes
 - [ ] Every image in `preview/output/` was inspected at the generated signage dimensions
+- [ ] Screenshot review checks reference fidelity, typography ink clearance, visual sameness, hierarchy, and pagination treatment
 
 ### 5. Build Phase
 **Decide how to Build the project**:
