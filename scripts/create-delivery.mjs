@@ -37,7 +37,7 @@ const commandEnvironment = {
 	...process.env,
 	DISABLE_MINIO_UPLOAD: 'true',
 	DO_APPLICATION_ZIP: 'false',
-	WALLBOARD_PREVIEW_TEST_PORT: process.env.WALLBOARD_PREVIEW_TEST_PORT ?? String(40000 + (projectPathHash % 20000)),
+	WALLBOARD_PREVIEW_TEST_PORT: process.env.WALLBOARD_PREVIEW_TEST_PORT ?? String(42000 + (projectPathHash % 6000)),
 	SIMPLE_OUTPUT: 'true'
 };
 const packageBaseName = path.basename(metadata.zipFileName, '.zip');
