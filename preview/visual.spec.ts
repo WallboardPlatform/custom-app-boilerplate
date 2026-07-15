@@ -103,6 +103,8 @@ const scenarioPresets: VisualPreset[] = previewScenarios.map((scenario: PreviewS
 }));
 
 const screenshotDirectory: string = path.resolve(process.cwd(), 'preview', 'output');
+const coverageMeasurementDirectory: string = path.join(screenshotDirectory, 'coverage-measurements');
+const coverageMeasurementMode: boolean = process.env.WALLBOARD_VISUAL_MEASURE_ONLY === 'true';
 const previewBaseUrl: string = process.env.WALLBOARD_PREVIEW_TEST_PORT
 	? `http://127.0.0.1:${process.env.WALLBOARD_PREVIEW_TEST_PORT}/`
 	: 'http://127.0.0.1:4173/';
@@ -333,6 +335,24 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 		const safePresetName: string = preset.name.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'surface';
 
+		if (coverageMeasurementMode) {
+			fs.mkdirSync(coverageMeasurementDirectory, { recursive: true });
+			fs.writeFileSync(
+				path.join(coverageMeasurementDirectory, `${safePresetName}-${preset.width}x${preset.height}.json`),
+				`${JSON.stringify({
+					id: preset.name,
+					kind: preset.scenario ? 'scenario' : 'surface',
+					width: preset.width,
+					height: preset.height,
+					measured: {
+						width: metrics.contentWidthCoverage,
+						height: metrics.contentHeightCoverage
+					}
+				}, null, '\t')}\n`,
+				'utf8'
+			);
+		}
+
 		await page.screenshot({
 			path: path.join(screenshotDirectory, `${safePresetName}-${preset.width}x${preset.height}.png`),
 			fullPage: false
@@ -353,7 +373,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 		expect(metrics.outsideRoot).toEqual([]);
 		expect(metrics.brokenImages).toEqual([]);
 
-		if (preset.minimumContentCoverage) {
+		if (preset.minimumContentCoverage && !coverageMeasurementMode) {
 			expect(metrics.contentWidthCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.width);
 			expect(metrics.contentHeightCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.height);
 		}

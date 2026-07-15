@@ -21,6 +21,7 @@ examples/<id>/
 | `market-rotation-ticker` | Five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, standard layouts, empty, invalid prices, missing icons, short data, rotation completion, moving title |
 | `newsroom-spotlight` | Built-in `FEED` integration, current/legacy RSS normalization, media fallback, timed editorial rotation | Default, wide/low, portrait, square, current feed, RSS parser/channel, empty, broken media, long labels, live update |
 | `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page |
+| `single-hero-clock` | Static single-hero pattern, timezone formatting, live timer, ResizeObserver ratio compositions | Default, ultra-wide, compact, portrait, square, minimal, invalid timezone, long label, timer teardown, live config update |
 
 Reference screenshots live beside each example under `screenshots/`.
 

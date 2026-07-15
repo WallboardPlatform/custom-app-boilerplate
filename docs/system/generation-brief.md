@@ -34,7 +34,7 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 
 - Every `states[].scenario` must exist in `preview/fixture.ts`, and every named scenario must be documented by the brief.
 - Surface and scenario IDs use lowercase kebab-case so URLs, test names, and screenshot paths remain portable.
-- Every planned surface and named scenario must define integer `minimumContentCoverage.width` and `.height` percentages from `1` to `100`. Use measured baseline values with regression margin; do not enter arbitrary low thresholds merely to pass validation.
+- Every planned surface and named scenario must define integer `minimumContentCoverage.width` and `.height` percentages from `1` to `100`. Initial values are planning hypotheses only. After the first representative render, run `npm run measure:visual`, review `preview/output/coverage-report.json`, and replace them with measured baselines plus regression margin. Do not lower a threshold merely to silence a layout defect.
 - The shared visual suite renders every planned surface at its declared dimensions, then adds standard fallback dimensions not already covered by the brief.
 - A behavior uses exactly one evidence source:
   - `{"scenario":"last-page"}` for a state proven by the shared visual suite.
@@ -50,8 +50,11 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 3. Choose datasource contracts and editor settings.
 4. Define realistic surfaces, edge states, and observable behavior evidence.
 5. Run `npm run validate:brief`, then implement the accepted plan.
-6. Run `npm run validate:project` and resolve every project synchronization failure.
-7. Inspect screenshots using `visualReview.intent` and `visualReview.focus`, not only mechanical pass/fail results.
-8. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
+6. Run `npm run measure:visual`, inspect its screenshots and coverage report, then update planned coverage with justified measured thresholds.
+7. Run `npm run validate:project` and `npm run validate:visual`; resolve every synchronization or visual failure.
+8. Inspect screenshots using `visualReview.intent` and `visualReview.focus`, not only mechanical pass/fail results.
+9. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
+
+Measurement mode skips only minimum-coverage assertions so the first baseline can be observed. Runtime errors, failed requests, overflow, broken media, behavior tests, and setting-effect assertions remain blocking. The generated report never edits the brief automatically; threshold choice remains an explicit design decision.
 
 Gold-standard briefs live in `examples/*/generation-brief.json`.

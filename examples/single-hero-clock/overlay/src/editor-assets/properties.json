@@ -1,0 +1,58 @@
+{
+	"version": "1",
+	"name": "Single Hero Clock",
+	"interactive": false,
+	"size": {
+		"width": "1280px",
+		"height": "720px"
+	},
+	"properties": [
+		{
+			"label": "Clock",
+			"type": "group",
+			"properties": [
+				{ "label": "Location label", "type": "text", "property": "locationLabel", "default": "Budapest" },
+				{ "label": "Timezone", "type": "text", "property": "timezone", "default": "Europe/Budapest", "tooltip": "IANA timezone, for example Europe/Budapest or America/New_York" },
+				{
+					"label": "Hour format",
+					"type": "select",
+					"property": "hourFormat",
+					"default": "24",
+					"options": [
+						{ "label": "24 hour", "value": "24" },
+						{ "label": "12 hour", "value": "12" }
+					]
+				},
+				{
+					"label": "Date format",
+					"type": "select",
+					"property": "dateFormat",
+					"default": "medium",
+					"options": [
+						{ "label": "Compact", "value": "compact" },
+						{ "label": "Medium", "value": "medium" },
+						{ "label": "Long", "value": "long" }
+					]
+				},
+				{ "label": "Show seconds", "type": "checkbox", "property": "showSeconds", "default": true },
+				{ "label": "Show date", "type": "checkbox", "property": "showDate", "default": true },
+				{ "label": "Show timezone", "type": "checkbox", "property": "showZone", "default": true },
+				{ "label": "Hero scale", "type": "slider", "property": "fontScale", "default": 100, "min": 70, "max": 140, "step": 1 }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#58e4c1" },
+				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f6f4ed" },
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#101516" },
+				{ "label": "Background opacity", "type": "number", "property": "backgroundOpacity", "default": 94, "min": 0, "max": 100, "step": 1 }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	]
+}
