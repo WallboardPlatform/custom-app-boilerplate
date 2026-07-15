@@ -252,9 +252,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						)}
 					</For>
 				</div>
-				<div class="agent-page">
-					<strong>{pageIndex() + 1}</strong>
-					<span>/ {pageCount()}</span>
+				<div class="agent-page" aria-label={`Page ${pageIndex() + 1} of ${pageCount()}`}>
+					<For each={pages()}>
+						{(_page: AgentStatusRow[], index: Accessor<number>): JSX.Element => (
+							<i data-active={index() === pageIndex()} />
+						)}
+					</For>
 				</div>
 			</header>
 
@@ -277,7 +280,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 										<strong>{agent.name}</strong>
 										<span>
 											<i />
-											{agent.state}
+											<b>{agent.state}</b>
 										</span>
 									</div>
 									<time>{agent.duration}</time>

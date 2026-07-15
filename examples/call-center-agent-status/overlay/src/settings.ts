@@ -11,15 +11,15 @@ export default function mapSettings(config: ConfigValues): Settings {
 		emptyState: textSetting(config.emptyStateText, 'No agent records are currently available.'),
 		pageDurationSeconds: Math.max(3, Number(config.pageDurationSeconds) || 10),
 		fontFamily: textSetting(config.fontFamily, '\'Segoe UI\', Arial, sans-serif'),
-		backgroundColor: textSetting(config.backgroundColor, '#111416'),
-		surfaceColor: textSetting(config.surfaceColor, '#1c2225'),
-		primaryTextColor: textSetting(config.primaryTextColor, '#f5f3ec'),
-		secondaryTextColor: textSetting(config.secondaryTextColor, '#aab3b7'),
-		readyColor: textSetting(config.readyColor, '#4fd3a3'),
-		busyColor: textSetting(config.busyColor, '#ff6666'),
-		acwColor: textSetting(config.acwColor, '#f4bd4f'),
-		awayColor: textSetting(config.awayColor, '#e98a50'),
-		offlineColor: textSetting(config.offlineColor, '#758087'),
-		unknownColor: textSetting(config.unknownColor, '#68a7d3')
+		backgroundColor: textSetting(config.backgroundColor, '#e8f0f6'),
+		surfaceColor: textSetting(config.surfaceColor, '#ffffff'),
+		primaryTextColor: textSetting(config.primaryTextColor, '#18344b'),
+		secondaryTextColor: textSetting(config.secondaryTextColor, '#667d90'),
+		readyColor: textSetting(config.readyColor, '#2fa876'),
+		busyColor: textSetting(config.busyColor, '#dc5260'),
+		acwColor: textSetting(config.acwColor, '#d99a27'),
+		awayColor: textSetting(config.awayColor, '#d9753f'),
+		offlineColor: textSetting(config.offlineColor, '#8293a0'),
+		unknownColor: textSetting(config.unknownColor, '#3d86bd')
 	};
 }

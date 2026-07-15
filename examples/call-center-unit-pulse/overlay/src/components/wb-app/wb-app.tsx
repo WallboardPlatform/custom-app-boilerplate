@@ -282,8 +282,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								<p>{unit().staffed} staffed agents across the current operation</p>
 							</div>
 							<div class="unit-page">
-								<strong>{unitIndex() + 1}</strong>
-								<span>/ {units().length}</span>
+								<span>ROTATION</span>
+								<strong>{unitIndex() + 1} OF {units().length}</strong>
 							</div>
 						</section>
 

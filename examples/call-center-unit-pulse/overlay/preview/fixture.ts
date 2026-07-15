@@ -18,14 +18,14 @@ const baseConfig: Record<string, unknown> = {
 	excludedGroups: 'All BGE,TOTAL,Other',
 	hideInactiveGroups: false,
 	fontFamily: "'Segoe UI', Arial, sans-serif",
-	backgroundColor: '#101416',
-	surfaceColor: '#1b2226',
-	primaryTextColor: '#f4f1e8',
-	secondaryTextColor: '#aab5ba',
-	accentColor: '#58c7f3',
-	successColor: '#56d6a7',
-	warningColor: '#f5b942',
-	dangerColor: '#ff6b6b'
+	backgroundColor: '#eef2f5',
+	surfaceColor: '#ffffff',
+	primaryTextColor: '#142437',
+	secondaryTextColor: '#657587',
+	accentColor: '#2674c8',
+	successColor: '#3d9b68',
+	warningColor: '#d89118',
+	dangerColor: '#cf4848'
 };
 
 const createFixture = (
@@ -82,44 +82,44 @@ export const previewScenarios: PreviewScenario[] = [
 	{
 		id: 'excluded-aggregates',
 		fixture: createFixture('unit-pulse-excluded', sampleDatasource),
-		viewport: { width: 1920, height: 1080, background: 'dark' },
+		viewport: { width: 1920, height: 1080, background: 'light' },
 		minimumContentCoverage: { width: 90, height: 86 }
 	},
 	{
 		id: 'inactive-groups',
 		fixture: createFixture('unit-pulse-inactive', selectUnits(['Scheduling'])),
-		viewport: { width: 600, height: 600, background: 'dark' },
-		minimumContentCoverage: { width: 86, height: 84 }
+		viewport: { width: 1280, height: 720, background: 'light' },
+		minimumContentCoverage: { width: 88, height: 84 }
 	},
 	{
 		id: 'empty',
 		fixture: createFixture('unit-pulse-empty', { data: {}, json_updated: sampleDatasource.json_updated }),
-		viewport: { width: 960, height: 540, background: 'dark' },
+		viewport: { width: 960, height: 540, background: 'light' },
 		minimumContentCoverage: { width: 86, height: 55 }
 	},
 	{
 		id: 'malformed-records',
 		fixture: createFixture('unit-pulse-malformed', malformedData),
-		viewport: { width: 960, height: 540, background: 'dark' },
+		viewport: { width: 960, height: 540, background: 'light' },
 		minimumContentCoverage: { width: 86, height: 82 }
 	},
 	{
 		id: 'long-labels',
 		fixture: createFixture('unit-pulse-long-labels', longLabelData),
-		viewport: { width: 1536, height: 432, background: 'dark' },
+		viewport: { width: 1536, height: 432, background: 'light' },
 		minimumContentCoverage: { width: 92, height: 82 }
 	},
 	{
 		id: 'rotation',
 		fixture: createFixture('unit-pulse-rotation', selectUnits(['DSTATS', 'EMR', 'GAS'])),
-		viewport: { width: 1366, height: 768, background: 'dark' },
+		viewport: { width: 1366, height: 768, background: 'light' },
 		advanceTimeMs: 3500,
 		minimumContentCoverage: { width: 90, height: 86 }
 	},
 	{
 		id: 'live-datasource-update',
 		fixture: createFixture('unit-pulse-live-update', selectUnits(['DSTATS'])),
-		viewport: { width: 1366, height: 768, background: 'dark' },
+		viewport: { width: 1366, height: 768, background: 'light' },
 		minimumContentCoverage: { width: 90, height: 86 },
 		liveDatasourceUpdate: {
 			property: 'groupData',

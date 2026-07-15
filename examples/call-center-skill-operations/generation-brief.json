@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a rotating call-center skill dashboard by aggregating existing per-agent skill-state rows.",
 		"audience": "Call-center supervisors monitoring skill coverage and current agent activity.",
@@ -11,6 +11,10 @@
 		"Large skill rosters are capped with an explicit remaining-agent count rather than overflowing the assigned area."
 	],
 	"app": { "mode": "new", "name": "Call Center Skill Operations", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The coverage overview and dense roster are intended for landscape supervisor displays and wide operational bands."
+	},
 	"surfaces": [
 		{
 			"id": "app-default",
@@ -27,22 +31,6 @@
 			"role": "required",
 			"purpose": "Wide skill coverage band.",
 			"minimumContentCoverage": { "width": 92, "height": 84 }
-		},
-		{
-			"id": "portrait",
-			"width": 1080,
-			"height": 1920,
-			"role": "fallback",
-			"purpose": "Portrait skill and roster display.",
-			"minimumContentCoverage": { "width": 88, "height": 84 }
-		},
-		{
-			"id": "square",
-			"width": 600,
-			"height": 600,
-			"role": "fallback",
-			"purpose": "Compact skill coverage tile.",
-			"minimumContentCoverage": { "width": 86, "height": 84 }
 		}
 	],
 	"data": {
@@ -109,11 +97,22 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "agent-authored",
+		"summary": "A technical coverage console with one analytical skill rail, a continuous state distribution, and flat live roster lanes.",
+		"references": [],
+		"signatureChoices": [
+			"Coverage and activity gauges anchor a dedicated analytical side rail.",
+			"Agent records read as live console lanes separated by rules, not independent cards."
+		],
+		"avoid": ["Reusing the light Unit Pulse instrument panel or the Agent Status roster composition."]
+	},
 	"visualReview": {
 		"intent": "A coverage-first operational dashboard with one dominant skill, an honest status distribution, and a dense but calm agent roster.",
 		"focus": [
 			"Verify dense rosters retain equal row geometry and the overflow count remains visible without overlapping the footer.",
-			"Verify sentinel-only and unknown-state data never produce misleading operational totals."
+			"Verify sentinel-only and unknown-state data never produce misleading operational totals.",
+			"Verify skill names and headings preserve descenders without clipping."
 		]
 	}
 }

@@ -52,16 +52,16 @@
 						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
 					]
 				},
-				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#111416" },
-				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1c2225" },
-				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f5f3ec" },
-				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aab3b7" },
-				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#4fd3a3" },
-				{ "label": "Busy", "type": "color", "property": "busyColor", "default": "#ff6666" },
-				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#f4bd4f" },
-				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#e98a50" },
-				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#758087" },
-				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#68a7d3" }
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e8f0f6" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#18344b" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#667d90" },
+				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#2fa876" },
+				{ "label": "Busy", "type": "color", "property": "busyColor", "default": "#dc5260" },
+				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#d99a27" },
+				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#d9753f" },
+				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#8293a0" },
+				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#3d86bd" }
 			]
 		}
 	],

@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a rotating call-center agent status wall backed by an existing agent metrics datasource.",
 		"audience": "Call-center supervisors scanning individual availability and handling performance.",
@@ -11,13 +11,17 @@
 		"The final page may contain fewer than eight agents and must remain visually balanced."
 	],
 	"app": { "mode": "new", "name": "Call Center Agent Status", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "Agent availability must remain scannable in full-screen walls, wide bands, portrait boards, and compact supervisor placements."
+	},
 	"surfaces": [
 		{
 			"id": "app-default",
 			"width": 1920,
 			"height": 1080,
 			"role": "primary",
-			"purpose": "Eight-card supervisor status wall.",
+			"purpose": "Two-column eight-agent supervisor roster.",
 			"minimumContentCoverage": { "width": 90, "height": 88 }
 		},
 		{
@@ -102,11 +106,25 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "A light blue workforce roster derived from the supplied agent-dashboard references, using horizontal agent lanes instead of a dark card wall.",
+		"references": [
+			"User-provided blue Agent Dashboard reference with avatar-led identity and compact metrics.",
+			"User-provided light Call Center KPI Dashboard reference with white analytical surfaces."
+		],
+		"signatureChoices": [
+			"Two-column horizontal roster lanes keep identity and state adjacent to compact handling metrics.",
+			"Pagination is a segmented progress rail rather than a numeric top-right fraction."
+		],
+		"avoid": ["Four-by-two dark cards with large unused centers."]
+	},
 	"visualReview": {
 		"intent": "A disciplined operations wall where state color is fast to scan but never overwhelms names and metrics.",
 		"focus": [
 			"Verify the uneven final page keeps the same card geometry instead of stretching a few cards across the canvas.",
-			"Verify status colors retain sufficient contrast and long names never collide with durations or metrics."
+			"Verify status colors retain sufficient contrast and long names never collide with durations or metrics.",
+			"Verify title and agent-name descenders retain visible ink clearance."
 		]
 	}
 }

@@ -6,11 +6,11 @@
 	min-width: 0;
 	height: 100%;
 	min-height: 0;
-	padding: 34px 40px 38px;
+	padding: 24px 40px 38px 48px;
 	overflow: hidden;
 	flex-direction: column;
 	color: var(--skill-primary);
-	border-top: 5px solid var(--skill-ready);
+	border-left: 8px solid var(--skill-ready);
 	background: var(--skill-background);
 	font-family: var(--skill-font);
 }
@@ -26,6 +26,8 @@
 	margin-bottom: 28px;
 	align-items: flex-start;
 	justify-content: space-between;
+	border-bottom: 1px solid rgba(143, 168, 184, 0.28);
+	padding-bottom: 18px;
 }
 
 :global(.skill-header) > div:first-child {
@@ -48,9 +50,10 @@
 
 :global(.skill-header) h1 {
 	margin: 5px 0 0;
+	padding-bottom: 2px;
 	overflow: hidden;
 	font-size: 38px;
-	line-height: 1;
+	line-height: 1.08;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -91,10 +94,11 @@
 	width: 34%;
 	min-width: 0;
 	min-height: 0;
-	padding: 30px 34px 16px 0;
+	padding: 30px 34px 24px;
 	flex: 0 0 auto;
 	flex-direction: column;
-	border-right: 1px solid #30383c;
+	border: 1px solid rgba(143, 168, 184, 0.22);
+	background: var(--skill-surface);
 }
 
 :global(.skill-identity) {
@@ -103,10 +107,11 @@
 
 :global(.skill-identity) h2 {
 	max-width: 100%;
-	margin: 9px 0 12px;
+	margin: 9px 0 10px;
+	padding-bottom: 3px;
 	overflow: hidden;
 	font-size: 48px;
-	line-height: 1.02;
+	line-height: 1.08;
 	text-overflow: ellipsis;
 }
 
@@ -154,7 +159,7 @@
 }
 
 :global(.skill-gauge__track) {
-	stroke: #2d3539;
+	stroke: rgba(143, 168, 184, 0.22);
 }
 
 :global(.skill-gauge__value) {
@@ -204,7 +209,7 @@
 	width: 100%;
 	height: 9px;
 	overflow: hidden;
-	background: #2d3539;
+	background: rgba(143, 168, 184, 0.22);
 }
 
 :global(.skill-distribution__bar) i {
@@ -273,26 +278,40 @@
 
 :global(.skill-page) {
 	display: flex;
-	margin-top: 8px;
-	align-items: baseline;
+	margin-top: 10px;
+	align-items: center;
+	justify-content: space-between;
 }
 
-:global(.skill-page) strong {
-	color: var(--skill-ready);
-	font-size: 31px;
-}
-
-:global(.skill-page) span {
-	margin-left: 5px;
+:global(.skill-page) > span {
 	color: var(--skill-secondary);
-	font-size: 13px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0;
+}
+
+:global(.skill-page) > div {
+	display: flex;
+	align-items: center;
+}
+
+:global(.skill-page) i {
+	display: block;
+	width: 24px;
+	height: 4px;
+	margin-left: 6px;
+	background: rgba(143, 168, 184, 0.24);
+}
+
+:global(.skill-page) i[data-active='true'] {
+	background: var(--skill-ready);
 }
 
 :global(.skill-roster) {
 	display: flex;
 	min-width: 0;
 	min-height: 0;
-	padding-left: 36px;
+	padding: 22px 0 0 36px;
 	flex: 1 1 auto;
 	flex-direction: column;
 }
@@ -300,7 +319,9 @@
 :global(.skill-roster) > header {
 	display: flex;
 	min-width: 0;
-	margin-bottom: 18px;
+	margin-bottom: 16px;
+	border-bottom: 1px solid rgba(143, 168, 184, 0.22);
+	padding-bottom: 13px;
 	align-items: flex-end;
 	justify-content: space-between;
 }
@@ -341,18 +362,34 @@
 	min-width: 0;
 	margin-right: 15px;
 	margin-bottom: 12px;
-	padding: 16px 17px;
+	padding: 14px 17px 14px 19px;
 	overflow: hidden;
 	flex: 0 0 auto;
 	align-items: center;
-	border: 1px solid #30383c;
-	background: var(--skill-surface);
+	border: 0;
+	border-bottom: 1px solid rgba(143, 168, 184, 0.2);
+	border-left: 4px solid var(--skill-unknown);
+	background: rgba(15, 42, 58, 0.62);
 }
 
 :global(.skill-roster__grid--sparse) article {
-	width: auto;
+	width: 100%;
+	min-height: calc(33.333% - 8px);
+	margin-right: 0;
+	flex: 0 0 auto;
+}
+
+:global(.skill-roster__grid--sparse) article:first-child:nth-last-child(2),
+:global(.skill-roster__grid--sparse) article:first-child:nth-last-child(2) ~ article {
+	min-height: calc(50% - 6px);
+}
+
+:global(.skill-roster__grid--sparse) article:only-child {
 	min-height: 100%;
-	flex: 1 1 0;
+}
+
+:global(.skill-roster__grid--sparse) article:last-child {
+	margin-bottom: 0;
 }
 
 :global(.skill-roster__grid--medium) article {
@@ -389,20 +426,40 @@
 	background: var(--skill-ready);
 }
 
+:global(.skill-roster__grid) article[data-agent-tone='ready'] {
+	border-left-color: var(--skill-ready);
+}
+
 :global(.skill-roster__grid) article[data-agent-tone='active'] > i {
 	background: var(--skill-active);
+}
+
+:global(.skill-roster__grid) article[data-agent-tone='active'] {
+	border-left-color: var(--skill-active);
 }
 
 :global(.skill-roster__grid) article[data-agent-tone='acw'] > i {
 	background: var(--skill-acw);
 }
 
+:global(.skill-roster__grid) article[data-agent-tone='acw'] {
+	border-left-color: var(--skill-acw);
+}
+
 :global(.skill-roster__grid) article[data-agent-tone='away'] > i {
 	background: var(--skill-away);
 }
 
+:global(.skill-roster__grid) article[data-agent-tone='away'] {
+	border-left-color: var(--skill-away);
+}
+
 :global(.skill-roster__grid) article[data-agent-tone='offline'] > i {
 	background: var(--skill-offline);
+}
+
+:global(.skill-roster__grid) article[data-agent-tone='offline'] {
+	border-left-color: var(--skill-offline);
 }
 
 :global(.skill-roster__grid) article > div {
@@ -412,8 +469,10 @@
 
 :global(.skill-roster__grid) article strong {
 	display: block;
+	padding-bottom: 2px;
 	overflow: hidden;
 	font-size: 17px;
+	line-height: 1.12;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -445,7 +504,7 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	border: 1px solid #30383c;
+	border: 1px solid rgba(143, 168, 184, 0.22);
 	background: var(--skill-surface);
 	text-align: center;
 }
@@ -471,7 +530,7 @@
 
 	:global(.skill-overview) {
 		width: 30%;
-		padding: 8px 22px 5px 0;
+		padding: 12px 20px;
 	}
 
 	:global(.skill-identity) h2 {
@@ -506,12 +565,12 @@
 		margin-top: 5px;
 	}
 
-	:global(.skill-page) strong {
-		font-size: 23px;
+	:global(.skill-page) i {
+		width: 16px;
 	}
 
 	:global(.skill-roster) {
-		padding-left: 24px;
+		padding: 8px 0 0 24px;
 	}
 
 	:global(.skill-roster) > header {
@@ -574,9 +633,9 @@
 	:global(.skill-overview) {
 		width: 100%;
 		min-height: 38%;
-		padding: 18px 0 24px;
+		padding: 18px 22px 24px;
 		border-right: 0;
-		border-bottom: 1px solid #30383c;
+		border-bottom: 1px solid rgba(143, 168, 184, 0.22);
 	}
 
 	:global(.skill-identity) h2 {
@@ -698,8 +757,8 @@
 		font-size: 7px;
 	}
 
-	:global(.skill-page) strong {
-		font-size: 21px;
+	:global(.skill-page) i {
+		width: 14px;
 	}
 
 	:global(.skill-roster) {

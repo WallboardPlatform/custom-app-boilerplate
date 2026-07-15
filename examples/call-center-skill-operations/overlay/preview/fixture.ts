@@ -17,16 +17,16 @@ const baseConfig: Record<string, unknown> = {
 	rotationSeconds: 3,
 	maxAgentsShown: 12,
 	fontFamily: "'Segoe UI', Arial, sans-serif",
-	backgroundColor: '#111416',
-	surfaceColor: '#1c2225',
-	primaryTextColor: '#f5f3ec',
-	secondaryTextColor: '#aab3b7',
-	readyColor: '#4fd3a3',
-	activeColor: '#ff6666',
-	acwColor: '#f4bd4f',
-	awayColor: '#e98a50',
-	offlineColor: '#758087',
-	unknownColor: '#68a7d3'
+	backgroundColor: '#071b29',
+	surfaceColor: '#0f2a3a',
+	primaryTextColor: '#f2f7f9',
+	secondaryTextColor: '#8fa8b8',
+	readyColor: '#3ad0a0',
+	activeColor: '#45a9e6',
+	acwColor: '#efb84b',
+	awayColor: '#ef8151',
+	offlineColor: '#647985',
+	unknownColor: '#8c7bd3'
 };
 
 const createFixture = (id: string, data: unknown): PreviewFixture => ({
@@ -139,7 +139,7 @@ export const previewScenarios: PreviewScenario[] = [
 				}
 			}
 		}),
-		viewport: { width: 600, height: 600, background: 'dark' },
+		viewport: { width: 1280, height: 720, background: 'dark' },
 		minimumContentCoverage: { width: 86, height: 70 }
 	},
 	{

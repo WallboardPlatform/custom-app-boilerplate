@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a rotating call-center unit dashboard from an existing keyed KPI datasource.",
 		"audience": "Call-center supervisors monitoring unit-level workload and service health on shared displays.",
@@ -11,6 +11,10 @@
 		"The source is a live snapshot, so the widget does not imply historical trends."
 	],
 	"app": { "mode": "new", "name": "Call Center Unit Pulse", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The supplied operational references are landscape supervisor boards, so the design prioritizes full-screen and wide-low control-room placements."
+	},
 	"surfaces": [
 		{
 			"id": "app-default",
@@ -27,22 +31,6 @@
 			"role": "required",
 			"purpose": "Wide call-center operations band.",
 			"minimumContentCoverage": { "width": 92, "height": 82 }
-		},
-		{
-			"id": "portrait",
-			"width": 1080,
-			"height": 1920,
-			"role": "fallback",
-			"purpose": "Portrait supervisor display.",
-			"minimumContentCoverage": { "width": 88, "height": 88 }
-		},
-		{
-			"id": "square",
-			"width": 600,
-			"height": 600,
-			"role": "fallback",
-			"purpose": "Compact unit KPI tile.",
-			"minimumContentCoverage": { "width": 86, "height": 84 }
 		}
 	],
 	"data": {
@@ -105,11 +93,22 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "A light industrial supervisor console derived from the supplied call-center KPI dashboard reference, with instrument gauges and compact operational readouts.",
+		"references": ["User-provided light Call Center KPI Dashboard reference with dial gauges and grouped operational statistics."],
+		"signatureChoices": [
+			"Three instrument-like gauges form a continuous monitoring cluster.",
+			"A light control-room palette and ruled metric field replace dark floating dashboard cards."
+		],
+		"avoid": ["Dark teal cards with a decorative top accent rail."]
+	},
 	"visualReview": {
 		"intent": "A precise supervisor dashboard with one dominant unit identity, three bounded gauges, and an evenly filled metric field.",
 		"focus": [
 			"Verify wide-low layouts preserve readable gauge geometry and never push the final KPI beyond the right edge.",
-			"Verify inactive and zero-value units still fill the assigned area without visually collapsing."
+			"Verify inactive and zero-value units still fill the assigned area without visually collapsing.",
+			"Verify unit names and the main title preserve descenders without clipping."
 		]
 	}
 }

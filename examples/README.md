@@ -18,9 +18,9 @@ examples/<id>/
 | Example | Capability | Verified states |
 |---------|------------|-----------------|
 | `airport-departures` | Editable `TABLE` flight board, adaptive pagination, status hierarchy | Default, wide/low, portrait, square, empty, invalid rows, long labels, odd/maximum counts, row array, last page, live update |
-| `call-center-agent-status` | Existing flat agent feed, semantic state aliases, eight-card pagination | Mixed states, wide/low, portrait, square, empty, invalid rows, long labels, unknown state, uneven final page, live update |
-| `call-center-skill-operations` | Existing per-agent skill feed, sentinel filtering, grouped skill rotation, capped rosters | Mixed skills, wide/low, portrait, square, sentinel-only empty, long labels, dense roster, unknown state, rotation, live update |
-| `call-center-unit-pulse` | Existing keyed unit feed, aggregate filtering, snapshot gauges, one-unit rotation | Default, wide/low, portrait, square, inactive units, empty, malformed rows, long labels, rotation, live update |
+| `call-center-agent-status` | Existing flat agent feed, semantic state aliases, density-aware roster, segmented pagination | Mixed states, wide/low, portrait, square, empty, invalid rows, long labels, unknown state, uneven final page, live update |
+| `call-center-skill-operations` | Existing per-agent skill feed, sentinel filtering, grouped skill rotation, technical coverage rail, capped flat rosters | Default landscape, wide/low, sentinel-only empty, long labels, dense roster, unknown state, rotation, live update |
+| `call-center-unit-pulse` | Existing keyed unit feed, aggregate filtering, light instrument panel, one-unit rotation | Default landscape, wide/low, inactive units, empty, malformed rows, long labels, rotation, live update |
 | `kpi-operations` | Hierarchical `CUSTOM` contract, KPI cards, responsive Chart.js trend, target progress | Default, wide/low, portrait, square, empty, long labels, live update |
 | `live-agenda` | Built-in `CALENDAR` integration, provider normalization, current-event progress, chronological timeline | Default, wide/low, portrait, square, Microsoft/Google, iCalendar, empty, all-day, long labels, live update |
 | `market-rotation-ticker` | Fixed 6000x136 surface, five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, empty, invalid prices, missing icons, short data, rotation completion, moving title |

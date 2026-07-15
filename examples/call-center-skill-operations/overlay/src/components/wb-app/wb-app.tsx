@@ -360,9 +360,17 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								</div>
 							</div>
 
-							<div class="skill-page">
-								<strong>{skillIndex() + 1}</strong>
-								<span>/ {skills().length}</span>
+							<div class="skill-page" aria-label={`Skill ${skillIndex() + 1} of ${skills().length}`}>
+								<span>
+									SKILL {skillIndex() + 1} OF {skills().length}
+								</span>
+								<div>
+									<For each={skills()}>
+										{(_item: SkillPage, index: Accessor<number>): JSX.Element => (
+											<i data-active={index() === skillIndex()} />
+										)}
+									</For>
+								</div>
 							</div>
 						</aside>
 

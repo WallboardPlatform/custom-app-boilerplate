@@ -66,16 +66,16 @@
 						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
 					]
 				},
-				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#111416" },
-				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1c2225" },
-				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f5f3ec" },
-				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#aab3b7" },
-				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#4fd3a3" },
-				{ "label": "Active", "type": "color", "property": "activeColor", "default": "#ff6666" },
-				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#f4bd4f" },
-				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#e98a50" },
-				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#758087" },
-				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#68a7d3" }
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#071b29" },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#0f2a3a" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f2f7f9" },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#8fa8b8" },
+				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#3ad0a0" },
+				{ "label": "Active", "type": "color", "property": "activeColor", "default": "#45a9e6" },
+				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#efb84b" },
+				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#ef8151" },
+				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#647985" },
+				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#8c7bd3" }
 			]
 		}
 	],
