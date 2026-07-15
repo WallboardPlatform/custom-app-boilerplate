@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Turn a photographed restaurant menu into a branded digital menu board with editable dishes and prices.",
 		"audience": "Restaurant guests reading a dinner menu from shared signage.",
@@ -53,6 +53,28 @@
 		{ "property": "allergenText", "purpose": "Allergen notice." },
 		{ "property": "emptyStateText", "purpose": "Message when no menu rows are available." },
 		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." }
+	],
+	"dynamicText": [
+		{
+			"id": "restaurant-name",
+			"source": { "type": "setting", "properties": ["restaurantName"] },
+			"selectors": [".menu-header h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The restaurant name is the primary brand signal and should adapt before the masthead composition is compressed.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "dish-name",
+			"source": { "type": "datasource", "properties": ["menuData"] },
+			"selectors": [".menu-item__line > strong"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the dish name after reserving the price and leader line; keep the full value in the editable datasource.",
+			"rationale": "Single-line dish and price registration preserves menu scan rhythm across uneven sections and rotating pages.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves the reference-led editorial menu identity." },

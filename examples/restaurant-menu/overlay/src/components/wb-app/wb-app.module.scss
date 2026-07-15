@@ -69,12 +69,13 @@
 
 :global(.menu-brand) h1 {
   margin: 0;
+  padding-bottom: 0.1em;
   overflow: hidden;
   font-family: Georgia, serif;
   font-size: 50px;
   font-weight: 400;
   letter-spacing: 0;
-  line-height: 0.9;
+  line-height: 1.16;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;

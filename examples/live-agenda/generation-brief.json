@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a time-aware event agenda backed by an existing Wallboard calendar integration.",
 		"audience": "Visitors and employees scanning the current and upcoming programme from shared signage.",
@@ -42,6 +42,38 @@
 		{ "property": "secondaryTextColor", "purpose": "Secondary text color." },
 		{ "property": "accentColor", "purpose": "Agenda hierarchy and timeline color.", "effect": "accent-color" },
 		{ "property": "liveColor", "purpose": "Active-event status color." }
+	],
+	"dynamicText": [
+		{
+			"id": "board-title",
+			"source": { "type": "setting", "properties": ["boardTitle"] },
+			"selectors": [".agenda-heading h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable agenda title must remain complete whenever possible without colliding with the date and clock.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "upcoming-heading",
+			"source": { "type": "setting", "properties": ["upcomingTitle"] },
+			"selectors": [".upcoming-header h3"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize before the event count.",
+			"rationale": "The section heading shares a bounded row with a live count and must adapt without moving that count.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "featured-event-title",
+			"source": { "type": "datasource", "properties": ["calendarData"] },
+			"selectors": [".featured-title"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two lines while preserving time, location, and active-event state.",
+			"rationale": "The featured event can carry a two-line editorial title, but the full agenda must remain visible in the assigned zone.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps current and upcoming agenda items clearly differentiated." },

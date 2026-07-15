@@ -17,9 +17,10 @@ const VALID_PNG = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
 	'base64'
 );
+const VALID_PREVIEW_SCENARIOS = 'export const previewScenarios = [{ id: \'long-labels\', minimumContentCoverage: { width: 80, height: 80 } }];\n';
 
 const createValidBrief = (): GenerationBrief => ({
-	briefVersion: 2,
+	briefVersion: 3,
 	request: {
 		summary: 'Create an operational signage widget.',
 		audience: 'Visitors reading a shared display.',
@@ -39,7 +40,19 @@ const createValidBrief = (): GenerationBrief => ({
 	],
 	data: { mode: 'static', bindings: [] },
 	settings: [],
-	states: [],
+	dynamicText: [
+		{
+			id: 'primary-title',
+			source: { type: 'computed', properties: ['primaryTitle'] },
+			selectors: ['.dynamic-title'],
+			strategy: 'auto-fit',
+			limits: { minimumFontSize: 18, maximumLines: 1 },
+			fallback: 'Wrap to two lines if the title still cannot fit at the readable minimum.',
+			rationale: 'The primary title is variable and must remain readable without silent clipping.',
+			evidenceScenario: 'long-labels'
+		}
+	],
+	states: [{ scenario: 'long-labels', expectation: 'Stress text remains readable.' }],
 	behaviors: [],
 	assets: [
 		{
@@ -90,7 +103,7 @@ const createProject = (brief: GenerationBrief): ProjectValidationContext => {
 			properties: []
 		})
 	);
-	fs.writeFileSync(path.join(previewDirectory, 'fixture.ts'), 'export const previewScenarios = [];\n');
+	fs.writeFileSync(path.join(previewDirectory, 'fixture.ts'), VALID_PREVIEW_SCENARIOS);
 
 	return {
 		id: 'test-project',
@@ -141,6 +154,35 @@ void describe('standalone generation brief validation', () => {
 		delete brief.surfaces[0].minimumContentCoverage;
 
 		assert.throws(() => validateStandaloneBrief(brief), /minimumContentCoverage/);
+	});
+
+	void it('requires an explicit dynamic text policy', () => {
+		const brief = createValidBrief() as unknown as Record<string, unknown>;
+		delete brief.dynamicText;
+
+		assert.throws(() => validateStandaloneBrief(brief), /dynamicText/);
+	});
+
+	void it('requires auto-fit policies to declare a readable minimum', () => {
+		const brief = createValidBrief();
+		brief.dynamicText[0].limits = { maximumLines: 1 };
+
+		assert.throws(() => validateStandaloneBrief(brief), /minimumFontSize/);
+	});
+
+	void it('requires bounded wrap policies to declare a maximum line count', () => {
+		const brief = createValidBrief();
+		brief.dynamicText[0].strategy = 'wrap';
+		brief.dynamicText[0].limits = { minimumFontSize: 18 };
+
+		assert.throws(() => validateStandaloneBrief(brief), /maximumLines/);
+	});
+
+	void it('rejects duplicate dynamic text policy identifiers', () => {
+		const brief = createValidBrief();
+		brief.dynamicText.push(cloneBrief(brief).dynamicText[0]);
+
+		assert.throws(() => validateStandaloneBrief(brief), /dynamicText\[\]\.id/);
 	});
 
 	void it('requires filename-safe surface and scenario identifiers', () => {
@@ -218,6 +260,33 @@ void describe('generation brief project synchronization', () => {
 		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
 	});
 
+	void it('rejects dynamic text evidence that is not implemented', async (testContext) => {
+		const brief = createValidBrief();
+		brief.dynamicText[0].evidenceScenario = 'missing-long-labels';
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unknown evidence scenario/);
+	});
+
+	void it('rejects dynamic text policies that reference unknown settings', async (testContext) => {
+		const brief = createValidBrief();
+		brief.dynamicText[0].source = { type: 'setting', properties: ['missingTitle'] };
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unknown setting 'missingTitle'/);
+	});
+
+	void it('rejects dynamic text policies that reference unknown datasource bindings', async (testContext) => {
+		const brief = createValidBrief();
+		brief.dynamicText[0].source = { type: 'datasource', properties: ['missingData'] };
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unknown datasource binding 'missingData'/);
+	});
+
 	void it('rejects editor settings that are not implemented', async (testContext) => {
 		const brief = createValidBrief();
 		brief.settings.push({ property: 'title', purpose: 'Visible heading.' });
@@ -261,7 +330,7 @@ void describe('generation brief project synchronization', () => {
 		);
 		fs.writeFileSync(
 			context.fixturePath,
-			'export const previewScenarios = [];\nexport const previewSettingEffects = [{ id: \'logo-scale\', property: \'logoScale\', changedValue: 80, selector: \'.logo\', measurement: { type: \'bounding-box\', dimension: \'height\' }, expectation: { type: \'increase\', minimumDelta: 5 } }];\n'
+			`${VALID_PREVIEW_SCENARIOS}export const previewSettingEffects = [{ id: 'logo-scale', property: 'logoScale', changedValue: 80, selector: '.logo', measurement: { type: 'bounding-box', dimension: 'height' }, expectation: { type: 'increase', minimumDelta: 5 } }];\n`
 		);
 
 		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
@@ -283,7 +352,7 @@ void describe('generation brief project synchronization', () => {
 		);
 		fs.writeFileSync(
 			context.fixturePath,
-			'export const previewScenarios = [];\nexport const previewSettingEffects = [{ id: \'logo-scale\', property: \'logoScale\', selector: \'.logo\' }];\n'
+			`${VALID_PREVIEW_SCENARIOS}export const previewSettingEffects = [{ id: 'logo-scale', property: 'logoScale', selector: '.logo' }];\n`
 		);
 
 		await assert.rejects(

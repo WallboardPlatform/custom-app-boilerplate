@@ -322,7 +322,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<aside class="skill-overview">
 							<div class="skill-identity">
 								<span>{skill().businessUnit || 'UNASSIGNED UNIT'}</span>
-								<h2>{skill().name}</h2>
+								<h2 title={skill().name}>{skill().name}</h2>
 								<p>{skill().agents.length} agents assigned to this skill</p>
 							</div>
 

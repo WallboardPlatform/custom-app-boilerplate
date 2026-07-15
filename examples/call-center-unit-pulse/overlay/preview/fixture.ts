@@ -112,7 +112,10 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-labels',
-		fixture: createFixture('unit-pulse-long-labels', longLabelData),
+		fixture: createFixture('unit-pulse-long-labels', longLabelData, {
+			...baseConfig,
+			titleText: 'Regional unit performance and service health'
+		}),
 		viewport: { width: 1536, height: 432, background: 'light' },
 		minimumContentCoverage: { width: 92, height: 82 }
 	},

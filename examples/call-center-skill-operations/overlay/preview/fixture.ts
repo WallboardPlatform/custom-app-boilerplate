@@ -140,7 +140,10 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-labels',
-		fixture: createFixture('skill-operations-long-labels', longLabelDatasource),
+		fixture: createFixture('skill-operations-long-labels', longLabelDatasource, {
+			...baseConfig,
+			titleText: 'Regional skill coverage and workforce operations'
+		}),
 		viewport: { width: 1536, height: 432, background: 'dark' },
 		minimumContentCoverage: { width: 92, height: 84 }
 	},

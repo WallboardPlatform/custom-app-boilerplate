@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a rotating call-center agent status wall backed by an existing agent metrics datasource.",
 		"audience": "Call-center supervisors scanning individual availability and handling performance.",
@@ -75,6 +75,28 @@
 		{ "property": "awayColor", "purpose": "Not-ready and auxiliary state color." },
 		{ "property": "offlineColor", "purpose": "Logged-out state color." },
 		{ "property": "unknownColor", "purpose": "Unrecognized state color." }
+	],
+	"dynamicText": [
+		{
+			"id": "dashboard-title",
+			"source": { "type": "setting", "properties": ["titleText"] },
+			"selectors": [".agent-header__title h1"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
+			"rationale": "The configurable dashboard title anchors the board and must adapt before competing with the live summary.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "agent-name",
+			"source": { "type": "datasource", "properties": ["agentData"] },
+			"selectors": [".agent-identity strong"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the name after reserving space for state and duration; expose the full value through the element title.",
+			"rationale": "Fixed-height roster lanes require stable identity, state, and metric alignment across all agents.",
+			"evidenceScenario": "long-labels"
+		}
 	],
 	"states": [
 		{

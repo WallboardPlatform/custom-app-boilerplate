@@ -1,5 +1,5 @@
 {
-	"briefVersion": 2,
+	"briefVersion": 3,
 	"request": {
 		"summary": "Create a highly configurable digital clock that treats the time as one hero element and remains balanced in compact, ultra-wide, square, landscape, and portrait Wallboard zones.",
 		"audience": "Visitors, employees, and operational teams reading time at signage distance.",
@@ -79,6 +79,18 @@
 		{ "property": "textColor", "purpose": "Controls primary time text." },
 		{ "property": "backgroundColor", "purpose": "Controls the optional panel color." },
 		{ "property": "backgroundOpacity", "purpose": "Controls panel opacity, including a transparent canvas mode." }
+	],
+	"dynamicText": [
+		{
+			"id": "location-label",
+			"source": { "type": "setting", "properties": ["locationLabel"] },
+			"selectors": [".clock-location > strong"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the location label while preserving the full configured value in the editor.",
+			"rationale": "The clock time is the single hero element; a pathological place label must not reduce its distance readability or alter the hero geometry.",
+			"evidenceScenario": "long-label"
+		}
 	],
 	"states": [
 		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves clock contrast and single-hero focus." },

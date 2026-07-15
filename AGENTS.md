@@ -36,6 +36,7 @@ Core rules:
 - `deliver:unverified` is a browserless transfer mechanism only. Its `_UNVERIFIED` artifacts are not upload-ready and must pass normal `deliver` elsewhere.
 - Inspect every image in `preview/output/` at 100% or zoomed detail; passing overflow checks does not prove that the composition is visually good. Check descenders, baselines, reference fidelity, hierarchy, and repeated template patterns explicitly.
 - Use `useAutoFitText` selectively for variable bounded titles and hero values. Keep safe line-height and vertical padding because box fitting does not prove glyph-ink clearance.
+- Declare every important variable-length text surface in `generation-brief.json#dynamicText`. Choose auto-fit, wrap, ellipsis, or marquee deliberately; set a readable limit and fallback; prove it with a pathological long-content scenario.
 - Keep every bundled sample, fallback, template, placeholder, and source archive synthetic. Preserve data shape and edge cases, never customer records, identifiers, URLs, timestamps, or exact operational values.
 - In the installation handoff, state that a newly created custom app must be uploaded, enabled, and assigned to the editor's customer (or left unassigned for all customers).
 

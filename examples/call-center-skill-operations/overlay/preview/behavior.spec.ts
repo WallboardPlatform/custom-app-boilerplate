@@ -43,14 +43,15 @@ test('placeholder-only payload renders the operational empty state', async ({ pa
 	await expect(page.locator('.skill-content')).toHaveCount(0);
 });
 
-test('compact light theme keeps the skill and roster surfaces coordinated', async ({ page }): Promise<void> => {
+test('compact light theme keeps the bounded skill name and roster surfaces coordinated', async ({ page }): Promise<void> => {
 	await openScenario(page, 'compact-light-theme');
 
 	const skillName = page.locator('.skill-identity h2');
 	const rosterRow = page.locator('.skill-roster__grid article').first();
 
 	await expect(skillName).toHaveText('Account Services');
-	await expect(skillName).toHaveCSS('overflow-y', 'visible');
+	await expect(skillName).toHaveAttribute('title', 'Account Services');
+	await expect(skillName).toHaveCSS('overflow-y', 'hidden');
 	await expect(rosterRow).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 	await expect(rosterRow).toHaveCSS('color', 'rgb(24, 53, 73)');
 });
