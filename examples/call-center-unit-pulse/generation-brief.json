@@ -1,0 +1,115 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a rotating call-center unit dashboard from an existing keyed KPI datasource.",
+		"audience": "Call-center supervisors monitoring unit-level workload and service health on shared displays.",
+		"primaryGoal": "Make one business unit and its most important live KPIs readable at a glance before rotating alphabetically."
+	},
+	"assumptions": [
+		"All BGE, TOTAL, and Other are aggregate records excluded by default while DSTATS remains a valid unit.",
+		"Inactive units remain visible by default because staffing and activity expectations require customer confirmation.",
+		"The source is a live snapshot, so the widget does not imply historical trends."
+	],
+	"app": { "mode": "new", "name": "Call Center Unit Pulse", "version": "1" },
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen supervisor dashboard.",
+			"minimumContentCoverage": { "width": 90, "height": 86 }
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide call-center operations band.",
+			"minimumContentCoverage": { "width": 92, "height": 82 }
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait supervisor display.",
+			"minimumContentCoverage": { "width": 88, "height": 88 }
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact unit KPI tile.",
+			"minimumContentCoverage": { "width": 86, "height": 84 }
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [{ "property": "groupData", "source": "existing", "contract": "EXISTING" }]
+	},
+	"settings": [
+		{ "property": "titleText", "purpose": "Dashboard title." },
+		{ "property": "subtitleText", "purpose": "Operational context line." },
+		{ "property": "emptyStateText", "purpose": "Message shown when no valid units remain." },
+		{ "property": "rotationSeconds", "purpose": "Seconds each unit remains visible." },
+		{ "property": "excludedGroups", "purpose": "Comma-separated aggregate unit names omitted from rotation." },
+		{ "property": "hideInactiveGroups", "purpose": "Optionally excludes units with no staffing or call activity." },
+		{ "property": "fontFamily", "purpose": "Display typeface." },
+		{ "property": "backgroundColor", "purpose": "Root canvas color." },
+		{ "property": "surfaceColor", "purpose": "KPI surface color." },
+		{ "property": "primaryTextColor", "purpose": "Primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Supporting text color." },
+		{ "property": "accentColor", "purpose": "Primary information accent." },
+		{ "property": "successColor", "purpose": "Healthy KPI color." },
+		{ "property": "warningColor", "purpose": "Attention KPI color." },
+		{ "property": "dangerColor", "purpose": "Critical KPI color." }
+	],
+	"states": [
+		{
+			"scenario": "excluded-aggregates",
+			"expectation": "Configured aggregate labels are absent while real units remain alphabetically ordered."
+		},
+		{
+			"scenario": "inactive-groups",
+			"expectation": "Inactive units remain stable and legible when filtering is disabled."
+		},
+		{ "scenario": "empty", "expectation": "An explicit empty state replaces missing unit records." },
+		{ "scenario": "malformed-records", "expectation": "Malformed records are skipped without breaking valid units." },
+		{ "scenario": "long-labels", "expectation": "A long business-unit name remains contained on a wide-low surface." },
+		{
+			"scenario": "rotation",
+			"expectation": "The next alphabetically sorted unit replaces the current unit on schedule."
+		},
+		{ "scenario": "live-datasource-update", "expectation": "Updated call metrics appear without rebuilding the app." }
+	],
+	"behaviors": [
+		{
+			"id": "keyed-object-normalization",
+			"expectation": "Wrapped keyed objects, direct objects, and arrays normalize to the same unit model.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "timed-unit-rotation",
+			"expectation": "Valid units advance alphabetically after the configured duration.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource refreshes replace visible KPI values in place.",
+			"evidence": { "scenario": "live-datasource-update" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A precise supervisor dashboard with one dominant unit identity, three bounded gauges, and an evenly filled metric field.",
+		"focus": [
+			"Verify wide-low layouts preserve readable gauge geometry and never push the final KPI beyond the right edge.",
+			"Verify inactive and zero-value units still fill the assigned area without visually collapsing."
+		]
+	}
+}

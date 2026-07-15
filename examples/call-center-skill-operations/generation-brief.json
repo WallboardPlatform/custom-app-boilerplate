@@ -1,0 +1,119 @@
+{
+	"briefVersion": 1,
+	"request": {
+		"summary": "Create a rotating call-center skill dashboard by aggregating existing per-agent skill-state rows.",
+		"audience": "Call-center supervisors monitoring skill coverage and current agent activity.",
+		"primaryGoal": "Show one skill per page with status distribution and a legible roster of participating agents."
+	},
+	"assumptions": [
+		"Placeholder rows such as _unique_agent or resourceid zero are not operational data.",
+		"The source contains state and duration records but no call-volume or service-level metrics, so the dashboard does not invent those KPIs.",
+		"Large skill rosters are capped with an explicit remaining-agent count rather than overflowing the assigned area."
+	],
+	"app": { "mode": "new", "name": "Call Center Skill Operations", "version": "1" },
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen skill coverage dashboard.",
+			"minimumContentCoverage": { "width": 90, "height": 88 }
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide skill coverage band.",
+			"minimumContentCoverage": { "width": 92, "height": 84 }
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait skill and roster display.",
+			"minimumContentCoverage": { "width": 88, "height": 84 }
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact skill coverage tile.",
+			"minimumContentCoverage": { "width": 86, "height": 84 }
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [{ "property": "skillData", "source": "existing", "contract": "EXISTING" }]
+	},
+	"settings": [
+		{ "property": "titleText", "purpose": "Dashboard title." },
+		{ "property": "subtitleText", "purpose": "Operational context line." },
+		{ "property": "emptyStateText", "purpose": "Message shown when no valid skills remain." },
+		{ "property": "rotationSeconds", "purpose": "Seconds each skill remains visible." },
+		{ "property": "maxAgentsShown", "purpose": "Maximum roster cards rendered for one skill." },
+		{ "property": "fontFamily", "purpose": "Display typeface." },
+		{ "property": "backgroundColor", "purpose": "Root canvas color." },
+		{ "property": "surfaceColor", "purpose": "Summary and roster surface color." },
+		{ "property": "primaryTextColor", "purpose": "Primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Supporting text color." },
+		{ "property": "readyColor", "purpose": "Ready status color." },
+		{ "property": "activeColor", "purpose": "Talking and busy status color." },
+		{ "property": "acwColor", "purpose": "After-call work status color." },
+		{ "property": "awayColor", "purpose": "Not-ready and auxiliary status color." },
+		{ "property": "offlineColor", "purpose": "Logged-out status color." },
+		{ "property": "unknownColor", "purpose": "Unrecognized status color." }
+	],
+	"states": [
+		{
+			"scenario": "mixed-skills",
+			"expectation": "Multiple skills group correctly and the active skill shows a complete status distribution."
+		},
+		{ "scenario": "empty-sentinel", "expectation": "A placeholder-only payload produces the designed empty state." },
+		{ "scenario": "long-labels", "expectation": "Long skill and agent names remain contained on a wide-low surface." },
+		{
+			"scenario": "dense-roster",
+			"expectation": "A roster above the configured cap reports remaining agents without overflow."
+		},
+		{ "scenario": "unknown-state", "expectation": "Unrecognized states receive the neutral fallback treatment." },
+		{
+			"scenario": "rotation",
+			"expectation": "The next alphabetically sorted skill replaces the current skill on schedule."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "Updated skill membership and states appear without rebuilding the app."
+		}
+	],
+	"behaviors": [
+		{
+			"id": "skill-aggregation",
+			"expectation": "Per-agent rows aggregate into alphabetically sorted skill pages while placeholder rows are removed.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "timed-skill-rotation",
+			"expectation": "Valid skills advance alphabetically after the configured duration.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource refreshes replace the visible roster and status totals in place.",
+			"evidence": { "scenario": "live-datasource-update" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualReview": {
+		"intent": "A coverage-first operational dashboard with one dominant skill, an honest status distribution, and a dense but calm agent roster.",
+		"focus": [
+			"Verify dense rosters retain equal row geometry and the overflow count remains visible without overlapping the footer.",
+			"Verify sentinel-only and unknown-state data never produce misleading operational totals."
+		]
+	}
+}

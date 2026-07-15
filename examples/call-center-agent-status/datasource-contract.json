@@ -1,0 +1,26 @@
+{
+	"contractVersion": 1,
+	"binding": {
+		"property": "agentData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "EXISTING",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Call Center Agent Metrics",
+		"quickEditEligible": false
+	},
+	"acceptedValueShapes": [
+		"direct agent array",
+		"object containing an agents or data array",
+		"JSON string of any documented shape"
+	],
+	"behavior": {
+		"unbound": "render representative sample data for local evaluation",
+		"boundEmpty": "render the configured empty state",
+		"invalidRows": "discard rows without an agent name",
+		"ordering": "sort agents alphabetically and render eight per page"
+	}
+}

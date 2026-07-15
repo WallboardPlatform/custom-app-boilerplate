@@ -1,0 +1,12 @@
+{
+	"title": "Call Center Agent Status",
+	"description": "Eight-agent status grid with case-insensitive state mapping, uneven-page rotation, and live metric updates.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"]
+}
