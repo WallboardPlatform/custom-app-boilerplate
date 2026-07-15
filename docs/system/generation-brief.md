@@ -8,17 +8,40 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `1` |
+| `briefVersion` | `2` |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
-| `surfaces` | At least four realistic sizes; lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; include portrait and square fallbacks; set minimum width/height content coverage for every surface |
+| `surfaceStrategy` | `fixed` for exact canvases, `bounded` for a known family of sizes, or `adaptive` for unknown placements; include the user or product rationale |
+| `surfaces` | Lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; every supported surface has minimum width/height content coverage |
 | `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
 | `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
 | `states` | Exactly one expectation for every named `previewScenario` |
 | `behaviors` | Observable timing, motion, pagination, live-update, or interaction rules with scenario or test-file evidence |
 | `assets` | Packaged, datasource-backed, or setting-provided assets; include icon and placeholder |
+| `visualDirection` | Reference source, concise direction, at least two signature choices, and at least one specific pattern to avoid |
 | `visualReview` | Intended composition plus at least two concrete screenshot-review risks |
+
+## Surface Strategy
+
+| Mode | Contract | Visual suite |
+|------|----------|--------------|
+| `fixed` | One or more exact production canvases; no fallback surfaces | Declared surfaces only |
+| `bounded` | At least two representative sizes from a known placement family | Declared surfaces only |
+| `adaptive` | At least four representative sizes including portrait and square | Declared surfaces plus standard fallback matrix |
+
+If the request does not establish the intended placement, resolve whether this is a small widget, a fixed large status board, a bounded placement family, or a genuinely adaptive app before implementation. More responsiveness is not automatically better when it weakens the requested design.
+
+## Visual Direction
+
+Use this priority order:
+
+1. User-provided images, brand assets, and explicit concepts.
+2. Accepted `visualDirection` choices and target surfaces.
+3. Existing examples for implementation mechanics such as datasource normalization, legacy layout, timing, and packaging.
+4. Agent-authored composition when no stronger direction exists.
+
+Examples are not style templates. Do not inherit their palette, cards, header treatment, or pagination by default. `reference-led` direction must name the supplied reference. `signatureChoices` records what makes this app visually specific; `avoid` prevents a known generic fallback.
 
 ## Data Binding Sources
 
@@ -34,8 +57,8 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 
 - Every `states[].scenario` must exist in `preview/fixture.ts`, and every named scenario must be documented by the brief.
 - Surface and scenario IDs use lowercase kebab-case so URLs, test names, and screenshot paths remain portable.
-- Every planned surface and named scenario must define integer `minimumContentCoverage.width` and `.height` percentages from `1` to `100`. Use measured baseline values with regression margin; do not enter arbitrary low thresholds merely to pass validation.
-- The shared visual suite renders every planned surface at its declared dimensions, then adds standard fallback dimensions not already covered by the brief.
+- Every planned surface and named scenario must define integer `minimumContentCoverage.width` and `.height` percentages from `1` to `100`. Initial values are planning hypotheses only. After the first representative render, run `npm run measure:visual`, review `preview/output/coverage-report.json`, and replace them with measured baselines plus regression margin. Do not lower a threshold merely to silence a layout defect.
+- The shared visual suite always renders every planned surface. It adds standard fallback dimensions only for `adaptive` briefs.
 - A behavior uses exactly one evidence source:
   - `{"scenario":"last-page"}` for a state proven by the shared visual suite.
   - `{"testFile":"preview/behavior.spec.ts"}` for app-specific motion, timing, or interaction assertions.
@@ -45,13 +68,16 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 
 ## Workflow
 
-1. Translate the prompt, images, supplied data, and user decisions into the brief.
-2. Resolve blocking ambiguity before implementation. Record non-blocking assumptions.
+1. Translate the prompt, images, supplied data, and user decisions into the brief. Treat references as design evidence, not optional inspiration.
+2. Resolve blocking ambiguity about placement and visual direction before implementation. Record non-blocking assumptions.
 3. Choose datasource contracts and editor settings.
 4. Define realistic surfaces, edge states, and observable behavior evidence.
 5. Run `npm run validate:brief`, then implement the accepted plan.
-6. Run `npm run validate:project` and resolve every project synchronization failure.
-7. Inspect screenshots using `visualReview.intent` and `visualReview.focus`, not only mechanical pass/fail results.
-8. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
+6. Run `npm run measure:visual`, inspect its screenshots and coverage report, then update planned coverage with justified measured thresholds.
+7. Run `npm run validate:project` and `npm run validate:visual`; resolve every synchronization or visual failure.
+8. Inspect screenshots using `visualDirection`, `visualReview.intent`, and `visualReview.focus`. Review reference fidelity, typography ink clearance, hierarchy, density, and repetitive template patterns, not only mechanical pass/fail results.
+9. Deliver the ZIP, manifest, generation brief, and datasource sidecars together.
+
+Measurement mode skips only minimum-coverage assertions so the first baseline can be observed. Runtime errors, failed requests, overflow, broken media, behavior tests, and setting-effect assertions remain blocking. The generated report never edits the brief automatically; threshold choice remains an explicit design decision.
 
 Gold-standard briefs live in `examples/*/generation-brief.json`.

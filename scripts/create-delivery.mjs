@@ -14,7 +14,16 @@ import { createSourceArchive, readGitProvenance } from './source-archive.mts';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const metadata = readAppMetadata(projectDirectory);
-const requestedOutput = process.argv[2];
+const argumentsList = process.argv.slice(2);
+const unverified = argumentsList.includes('--unverified');
+const unsupportedOptions = argumentsList.filter((argument) => argument.startsWith('--') && argument !== '--unverified');
+const positionalArguments = argumentsList.filter((argument) => !argument.startsWith('--'));
+
+if (unsupportedOptions.length > 0 || positionalArguments.length > 1) {
+	throw new Error('Usage: npm run deliver -- <output-directory> or npm run deliver:unverified -- <output-directory>.');
+}
+
+const requestedOutput = positionalArguments[0];
 const outputDirectory = path.resolve(
 	projectDirectory,
 	requestedOutput ?? path.join('.tmp', 'deliveries', `${metadata.name.replace(/[^\w.-]/g, '_')}-${metadata.version}`)
@@ -31,7 +40,13 @@ const commandEnvironment = {
 	WALLBOARD_PREVIEW_TEST_PORT: process.env.WALLBOARD_PREVIEW_TEST_PORT ?? String(40000 + (projectPathHash % 20000)),
 	SIMPLE_OUTPUT: 'true'
 };
-const sourceArchiveFileName = `${path.basename(metadata.zipFileName, '.zip')}_source.zip`;
+const packageBaseName = path.basename(metadata.zipFileName, '.zip');
+const appZipFileName = unverified ? `${packageBaseName}_UNVERIFIED.zip` : metadata.zipFileName;
+const sourceArchiveFileName = unverified
+	? `${packageBaseName}_UNVERIFIED_source.zip`
+	: `${packageBaseName}_source.zip`;
+const unverifiedReason = process.env.WALLBOARD_UNVERIFIED_REASON?.trim()
+	|| 'Browser visual validation was not run in this environment.';
 
 const runNpmScript = (script) => {
 	const result = spawnSync(npmCommand, ['run', script], {
@@ -72,7 +87,7 @@ const prepareOutputDirectory = () => {
 	}
 
 	const allowedFiles = new Set([
-		metadata.zipFileName,
+		appZipFileName,
 		sourceArchiveFileName,
 		'delivery-manifest.json',
 		'generation-brief.json',
@@ -130,7 +145,11 @@ runNpmScript('validate:examples');
 runNpmScript('typecheck:scripts');
 runNpmScript('lint');
 runNpmScript('validate:legacy');
-runNpmScript('validate:visual');
+
+if (!unverified) {
+	runNpmScript('validate:visual');
+}
+
 runNpmScript('prepare:datasource-package');
 runNpmScript('build:production');
 runNpmScript('validate:package-assets');
@@ -149,7 +168,7 @@ for (const relativePath of requiredFiles) {
 }
 
 prepareOutputDirectory();
-const zipPath = path.join(outputDirectory, metadata.zipFileName);
+const zipPath = path.join(outputDirectory, appZipFileName);
 await createZip(distDirectory, zipPath);
 const sourceArchivePath = path.join(outputDirectory, sourceArchiveFileName);
 const sourceArchive = await createSourceArchive(projectDirectory, sourceArchivePath, outputDirectory);
@@ -212,12 +231,12 @@ if (fs.existsSync(contractPath)) {
 }
 
 const manifest = {
-	deliveryVersion: 2,
+	deliveryVersion: 3,
 	app: {
 		name: metadata.name,
 		version: metadata.version,
 		identity: metadata.identity,
-		zipFile: metadata.zipFileName,
+		zipFile: appZipFileName,
 		uploadRule: 'Create this identity once; replacement builds must be uploaded to the same Wallboard app record.'
 	},
 	source: {
@@ -231,12 +250,18 @@ const manifest = {
 		file: 'generation-brief.json'
 	},
 	datasource,
+	acceptance: {
+		status: unverified ? 'unverified' : 'accepted',
+		uploadReady: !unverified,
+		missingEvidence: unverified ? ['browser visual validation'] : [],
+		reason: unverified ? unverifiedReason : null
+	},
 	validation: {
 		identity: true,
 		generationBrief: true,
 		contract: true,
 		lint: true,
-		visual: true,
+		visual: !unverified,
 		legacyBundle: true,
 		packageAssets: true,
 		sourceArchive: true
@@ -250,5 +275,12 @@ fs.writeFileSync(
 );
 
 console.log(`Delivery created at ${outputDirectory}`);
-console.log(`Uploadable package: ${zipPath}`);
+
+if (unverified) {
+	console.warn(`UNVERIFIED PACKAGE: ${zipPath}`);
+	console.warn('Do not upload this package until npm run deliver passes in a browser-capable environment.');
+} else {
+	console.log(`Uploadable package: ${zipPath}`);
+}
+
 console.log(`Agent-ready source: ${sourceArchivePath}`);

@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a production airport departure board backed by an editable internal table.",
 		"audience": "Airport passengers scanning flight status from a distance.",
@@ -10,6 +10,10 @@
 		"Rows missing core flight identity fields should be ignored instead of breaking the board."
 	],
 	"app": { "mode": "new", "name": "Airport Departures Board", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The board is intended for full-screen, split-screen, portrait, and compact airport signage zones."
+	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen departure board.", "minimumContentCoverage": { "width": 90, "height": 90 } },
 		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Split-screen reader-board zone.", "minimumContentCoverage": { "width": 90, "height": 90 } },
@@ -54,6 +58,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A transport reader board governed by scan speed, column rhythm, and operational status rather than card-based dashboard conventions.",
+		"references": [],
+		"signatureChoices": [
+			"One continuous timetable with strong horizontal registration.",
+			"Status color is reserved for actionable departure changes."
+		],
+		"avoid": ["Independent cards for each flight row."]
+	},
 	"visualReview": {
 		"intent": "A dense, high-contrast transport board optimized for fast scanning rather than decorative presentation.",
 		"focus": [

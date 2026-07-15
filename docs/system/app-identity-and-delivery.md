@@ -46,6 +46,18 @@ The source ZIP is a separate agent/developer handoff and must never be uploaded 
 
 `deliver` always runs visual validation. Package-only diagnostics are not accepted delivery evidence; move the source ZIP to an environment with Playwright support and run `deliver` there instead of bypassing visual checks.
 
+### Browserless handoff
+
+If the current environment cannot run any browser, use:
+
+```bash
+npm run deliver:unverified -- <output-directory>
+```
+
+This runs every non-visual delivery gate and creates `<App_Name>_<version>_UNVERIFIED.zip` plus `<App_Name>_<version>_UNVERIFIED_source.zip`. Manifest version `3` records `acceptance.status: "unverified"`, `acceptance.uploadReady: false`, the missing visual evidence, and `validation.visual: false`. The names and manifest are deliberate guardrails: do not upload or describe these artifacts as accepted. Move the source ZIP to a browser-capable environment and run normal `deliver`; accepted manifests set `acceptance.status: "accepted"` and `acceptance.uploadReady: true`.
+
+Browser resolution order is explicit executable path, explicit Playwright channel, Playwright cache, then installed Chrome/Edge. Configure `WALLBOARD_PLAYWRIGHT_EXECUTABLE_PATH`, `WALLBOARD_PLAYWRIGHT_CHANNEL`, or the standard `PLAYWRIGHT_BROWSERS_PATH` when automatic discovery is unsuitable.
+
 For data-bound apps, the ZIP also contains:
 
 ```text

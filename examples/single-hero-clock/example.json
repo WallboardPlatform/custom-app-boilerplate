@@ -1,0 +1,10 @@
+{
+	"title": "Single Hero Clock",
+	"description": "Static clock archetype with timezone formatting, live ticking, and ResizeObserver-driven compositions for extreme signage ratios.",
+	"remove": [
+		"src/components/wb-app"
+	],
+	"artifacts": [
+		"generation-brief.json"
+	]
+}

@@ -1,0 +1,114 @@
+{
+	"briefVersion": 2,
+	"request": {
+		"summary": "Create a highly configurable digital clock that treats the time as one hero element and remains balanced in compact, ultra-wide, square, landscape, and portrait Wallboard zones.",
+		"audience": "Visitors, employees, and operational teams reading time at signage distance.",
+		"primaryGoal": "Show the selected timezone immediately with a composition that intentionally fills every assigned zone instead of leaving a small centered clock in extreme aspect ratios."
+	},
+	"assumptions": [
+		"The app is static and requires no datasource.",
+		"Timezone values use IANA names and invalid values fall back to UTC without breaking rendering.",
+		"The clock uses a transparent-capable configurable panel and no external media."
+	],
+	"app": {
+		"mode": "new",
+		"name": "Single Hero Clock",
+		"version": 1
+	},
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The explicit request covers compact, ultra-wide, landscape, square, and portrait placements."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1280,
+			"height": 720,
+			"role": "primary",
+			"purpose": "Balanced landscape clock with time, location, date, and timezone hierarchy.",
+			"minimumContentCoverage": { "width": 87, "height": 80 }
+		},
+		{
+			"id": "ultra-wide",
+			"width": 3000,
+			"height": 300,
+			"role": "required",
+			"purpose": "Single-line signage strip using side metadata to keep the complete width intentional.",
+			"minimumContentCoverage": { "width": 89, "height": 43 }
+		},
+		{
+			"id": "compact",
+			"width": 320,
+			"height": 180,
+			"role": "required",
+			"purpose": "Small playlist tile prioritizing time without overflow.",
+			"minimumContentCoverage": { "width": 85, "height": 76 }
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Tall composition that splits hours and minutes into a large vertical hero.",
+			"minimumContentCoverage": { "width": 79, "height": 86 }
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact square clock with clear supporting metadata.",
+			"minimumContentCoverage": { "width": 83, "height": 82 }
+		}
+	],
+	"data": {
+		"mode": "static",
+		"bindings": []
+	},
+	"settings": [
+		{ "property": "locationLabel", "purpose": "Human-readable place label shown with the clock." },
+		{ "property": "timezone", "purpose": "IANA timezone used for time and date formatting." },
+		{ "property": "hourFormat", "purpose": "Selects 12-hour or 24-hour time." },
+		{ "property": "dateFormat", "purpose": "Selects compact, medium, or long date formatting." },
+		{ "property": "showSeconds", "purpose": "Shows or hides the seconds value." },
+		{ "property": "showDate", "purpose": "Shows or hides the formatted date." },
+		{ "property": "showZone", "purpose": "Shows or hides the timezone label." },
+		{ "property": "fontScale", "purpose": "Adjusts the bounded hero scale without changing layout rules.", "effect": "font-scale" },
+		{ "property": "accentColor", "purpose": "Controls accent labels and separators." },
+		{ "property": "textColor", "purpose": "Controls primary time text." },
+		{ "property": "backgroundColor", "purpose": "Controls the optional panel color." },
+		{ "property": "backgroundOpacity", "purpose": "Controls panel opacity, including a transparent canvas mode." }
+	],
+	"states": [
+		{ "scenario": "minimal", "expectation": "Time remains centered and dominant when date, seconds, and timezone are hidden." },
+		{ "scenario": "invalid-timezone", "expectation": "An invalid timezone falls back to UTC and remains production-looking." },
+		{ "scenario": "long-label", "expectation": "A long place label truncates cleanly without changing the hero geometry." }
+	],
+	"behaviors": [
+		{ "id": "live-tick", "expectation": "The rendered epoch-second advances once per second and the timer is removed when the widget is destroyed.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "timezone-update", "expectation": "A configuration update changes the rendered timezone without remounting the app.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "responsive-hero", "expectation": "ResizeObserver switches between wide, standard, compact, and tall hero compositions.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A single-hero broadcast clock that composes time and metadata differently for each ratio without adopting dashboard chrome.",
+		"references": [],
+		"signatureChoices": [
+			"Time remains one unmistakable hero value in every ratio.",
+			"Tall and ultra-wide modes redistribute metadata instead of merely scaling the landscape layout."
+		],
+		"avoid": ["Wrapping the clock in a generic KPI card."]
+	},
+	"visualReview": {
+		"intent": "A restrained broadcast clock with one unmistakable hero value and supporting metadata placed to make each signage ratio feel deliberately composed.",
+		"focus": [
+			"Verify the portrait hour/minute split fills height without making metadata collide.",
+			"Verify the ultra-wide layout uses the full strip without stretching the time characters.",
+			"Verify seconds share the baseline cleanly and compact mode removes secondary content before shrinking the hero excessively."
+		]
+	}
+}

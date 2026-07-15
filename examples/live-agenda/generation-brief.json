@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a time-aware event agenda backed by an existing Wallboard calendar integration.",
 		"audience": "Visitors and employees scanning the current and upcoming programme from shared signage.",
@@ -10,6 +10,10 @@
 		"Cancelled and malformed events should be ignored without preventing valid events from rendering."
 	],
 	"app": { "mode": "new", "name": "Live Agenda", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "Venue agendas are placed in full-screen, split, portrait, and compact signage zones."
+	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen venue agenda.", "minimumContentCoverage": { "width": 90, "height": 75 } },
 		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low programme zone.", "minimumContentCoverage": { "width": 90, "height": 82 } },
@@ -54,6 +58,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "agent-authored",
+		"summary": "A venue programme with an editorial current-event feature and a chronological supporting rail.",
+		"references": [],
+		"signatureChoices": [
+			"The active or next event occupies the main reading field.",
+			"Upcoming events use a continuous timeline rather than repeated cards."
+		],
+		"avoid": ["A generic page counter in the top-right corner."]
+	},
 	"visualReview": {
 		"intent": "A calm, editorial venue agenda with a strong live-event focal point and a compact chronological timeline.",
 		"focus": [

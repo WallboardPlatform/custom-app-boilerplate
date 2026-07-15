@@ -27,6 +27,7 @@ jobs:
           - market-rotation-ticker
           - newsroom-spotlight
           - restaurant-menu
+          - single-hero-clock
 
     steps:
       - name: Check out repository

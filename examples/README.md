@@ -2,6 +2,8 @@
 
 Examples are thin overlays on the current boilerplate, not copied projects. This keeps build tooling, SDK setup, preview behavior, and packaging rules in one source of truth.
 
+Use examples as engineering references, not visual templates. A user-supplied image, brand system, or explicit concept must lead the composition. Borrow normalization, legacy CSS, resize, pagination, chart, test, and packaging techniques without inheriting an example's palette, card grammar, header, accent rail, or page indicator by default.
+
 Each example contains:
 
 ```text
@@ -21,9 +23,10 @@ examples/<id>/
 | `call-center-unit-pulse` | Existing keyed unit feed, aggregate filtering, snapshot gauges, one-unit rotation | Default, wide/low, portrait, square, inactive units, empty, malformed rows, long labels, rotation, live update |
 | `kpi-operations` | Hierarchical `CUSTOM` contract, KPI cards, responsive Chart.js trend, target progress | Default, wide/low, portrait, square, empty, long labels, live update |
 | `live-agenda` | Built-in `CALENDAR` integration, provider normalization, current-event progress, chronological timeline | Default, wide/low, portrait, square, Microsoft/Google, iCalendar, empty, all-day, long labels, live update |
-| `market-rotation-ticker` | Five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, standard layouts, empty, invalid prices, missing icons, short data, rotation completion, moving title |
+| `market-rotation-ticker` | Fixed 6000x136 surface, five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, empty, invalid prices, missing icons, short data, rotation completion, moving title |
 | `newsroom-spotlight` | Built-in `FEED` integration, current/legacy RSS normalization, media fallback, timed editorial rotation | Default, wide/low, portrait, square, current feed, RSS parser/channel, empty, broken media, long labels, live update |
 | `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page |
+| `single-hero-clock` | Static single-hero pattern, timezone formatting, live timer, ResizeObserver ratio compositions | Default, ultra-wide, compact, portrait, square, minimal, invalid timezone, long label, timer teardown, live config update |
 
 Reference screenshots live beside each example under `screenshots/`.
 

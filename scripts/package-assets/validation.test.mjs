@@ -146,4 +146,27 @@ void describe('package asset validation', () => {
 		assert.throws(() => validatePackageAssets(rootDirectory), /resourceList contains duplicates/);
 		assert.throws(() => validatePackageAssets(rootDirectory), /unsafe local paths/);
 	});
+
+	void it('rejects unreferenced editor-asset directories', (testContext) => {
+		const rootDirectory = createPackageProject();
+		testContext.after(() => fs.rmSync(rootDirectory, { recursive: true, force: true }));
+		fs.mkdirSync(path.join(rootDirectory, 'src', 'editor-assets', 'layout-editor'));
+
+		assert.throws(() => validatePackageAssets(rootDirectory), /must be referenced by properties.json or removed/);
+	});
+
+	void it('accepts an editor-asset directory referenced by properties.json', (testContext) => {
+		const rootDirectory = createPackageProject();
+		testContext.after(() => fs.rmSync(rootDirectory, { recursive: true, force: true }));
+		fs.mkdirSync(path.join(rootDirectory, 'src', 'editor-assets', 'layout-editor'));
+		fs.writeFileSync(
+			path.join(rootDirectory, 'src', 'editor-assets', 'properties.json'),
+			JSON.stringify({
+				properties: [{ customSettingsUrl: '/editor-assets/layout-editor/index.html' }],
+				resourceList: ['assets/app.js', 'assets/app-chrome-49.js']
+			})
+		);
+
+		assert.doesNotThrow(() => validatePackageAssets(rootDirectory));
+	});
 });

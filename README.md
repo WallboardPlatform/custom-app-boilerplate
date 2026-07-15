@@ -121,6 +121,14 @@ npm run dev:preview
 
 Open `http://127.0.0.1:5173/preview/`. The preview runs the real application entry point inside an isolated Wallboard-like surface. Use the presets or enter the exact target zone dimensions; the iframe keeps the native widget size and is only visually scaled to fit the browser.
 
+Measure the first real render before finalizing coverage thresholds:
+
+```bash
+npm run measure:visual
+```
+
+This writes `preview/output/coverage-report.json` and suggests each measured value minus a small regression margin. It does not rewrite `generation-brief.json` and does not replace visual acceptance.
+
 Run the automated viewport pass before packaging:
 
 ```bash
@@ -128,7 +136,9 @@ npx playwright install chromium
 npm run validate:visual
 ```
 
-This captures full HD, wide/low, landscape, portrait, and square screenshots in `preview/output/`. It fails on runtime errors, horizontal or vertical overflow, or visible elements outside the assigned zone. Define `previewScenarios` in `preview/fixture.ts` for empty, long-label, odd-count, last-page, and other materially different states. Inspect every screenshot because automated checks cannot judge hierarchy, density, typography, or unused space.
+This captures every surface declared by the generation brief; adaptive apps also receive the standard full HD, wide/low, landscape, portrait, and square matrix. It fails on runtime errors, overflow, visible elements outside the assigned zone, broken media, or unsafe vertical glyph clearance in clipped text. Define `previewScenarios` in `preview/fixture.ts` for empty, long-label, odd-count, last-page, and other materially different states. Inspect every screenshot because automated checks cannot judge reference fidelity, hierarchy, density, overall typography, or unused space.
+
+Playwright first uses an explicit `WALLBOARD_PLAYWRIGHT_EXECUTABLE_PATH` or `WALLBOARD_PLAYWRIGHT_CHANNEL`, then its cached Chromium, then an installed Chrome or Edge. `PLAYWRIGHT_BROWSERS_PATH` remains supported for a shared Playwright cache. Supported channel values are `chromium`, `chrome`, `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`, `msedge-beta`, `msedge-dev`, and `msedge-canary`.
 
 ### Examples and charts
 
@@ -149,6 +159,8 @@ npm run example:accept -- restaurant-menu
 ```
 
 For a finished materialized app, run `npm run deliver -- <output-directory>`. It returns the Wallboard upload ZIP and a separate sanitized source ZIP for another agent or developer to continue from. Upload only the app ZIP.
+
+When no browser is available, `npm run deliver:unverified -- <output-directory>` creates conspicuously named `_UNVERIFIED` artifacts after all non-visual checks. Its manifest sets `acceptance.uploadReady` to `false`; it is a portable handoff for later verification, not an upload-ready delivery. Run normal `deliver` in a browser-capable environment before upload.
 
 ### Development Builds
 
@@ -185,7 +197,7 @@ Production builds are optimized for performance with minimal logging:
     npm run validate:package
 ```
 
-This validates the accepted generation brief, datasource contracts, visual surfaces, Chromium 56 CSS compatibility, cache-listed runtime assets, and editor image integrity before accepting the zip.
+This validates the accepted generation brief, datasource contracts, Chromium 56 CSS compatibility, cache-listed runtime assets, and editor image integrity. Visual acceptance is performed by `npm run validate:visual` or the complete `npm run deliver` workflow.
 
 Pull requests run the complete delivery workflow for every maintained example and retain screenshots plus delivery artifacts as CI evidence.
 

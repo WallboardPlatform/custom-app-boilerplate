@@ -34,7 +34,7 @@ export type GenerationBriefAsset =
 	| { id: string; source: 'setting'; properties: string[]; required: boolean };
 
 export interface GenerationBrief {
-	briefVersion: 1;
+	briefVersion: 2;
 	request: {
 		summary: string;
 		audience: string;
@@ -45,6 +45,10 @@ export interface GenerationBrief {
 		mode: 'new' | 'replacement';
 		name: string;
 		version: string | number;
+	};
+	surfaceStrategy: {
+		mode: 'fixed' | 'bounded' | 'adaptive';
+		rationale: string;
 	};
 	surfaces: Array<{
 		id: string;
@@ -65,6 +69,13 @@ export interface GenerationBrief {
 	states: GenerationBriefState[];
 	behaviors: GenerationBriefBehavior[];
 	assets: GenerationBriefAsset[];
+	visualDirection: {
+		source: 'reference-led' | 'instruction-led' | 'agent-authored';
+		summary: string;
+		references: string[];
+		signatureChoices: string[];
+		avoid: string[];
+	};
 	visualReview: {
 		intent: string;
 		focus: string[];
@@ -131,13 +142,35 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 		fail(id, 'surfaces must contain exactly one primary surface.');
 	}
 
-	if (!brief.surfaces.some((surface) => surface.height > surface.width)) {
-		fail(id, 'surfaces must include portrait fallback validation.');
+	if (brief.surfaceStrategy.mode === 'fixed') {
+		if (brief.surfaces.some((surface) => surface.role === 'fallback')) {
+			fail(id, 'fixed surface strategies must not declare fallback surfaces.');
+		}
+	} else if (brief.surfaceStrategy.mode === 'bounded') {
+		if (brief.surfaces.length < 2) {
+			fail(id, 'bounded surface strategies must declare at least two representative surfaces.');
+		}
+	} else {
+		if (brief.surfaces.length < 4) {
+			fail(id, 'adaptive surface strategies must declare at least four representative surfaces.');
+		}
+
+		if (!brief.surfaces.some((surface) => surface.height > surface.width)) {
+			fail(id, 'adaptive surface strategies must include portrait fallback validation.');
+		}
+
+		if (!brief.surfaces.some((surface) => surface.height === surface.width)) {
+			fail(id, 'adaptive surface strategies must include square fallback validation.');
+		}
 	}
 
-	if (!brief.surfaces.some((surface) => surface.height === surface.width)) {
-		fail(id, 'surfaces must include square fallback validation.');
+	if (brief.visualDirection.source === 'reference-led' && brief.visualDirection.references.length === 0) {
+		fail(id, 'reference-led visual direction must identify at least one user reference.');
 	}
+
+	requireUnique(id, brief.visualDirection.references, 'visualDirection.references');
+	requireUnique(id, brief.visualDirection.signatureChoices, 'visualDirection.signatureChoices');
+	requireUnique(id, brief.visualDirection.avoid, 'visualDirection.avoid');
 
 	const bindingProperties = requireUnique(
 		id,

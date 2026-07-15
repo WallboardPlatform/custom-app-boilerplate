@@ -1,5 +1,5 @@
 {
-	"briefVersion": 1,
+	"briefVersion": 2,
 	"request": {
 		"summary": "Create a responsive operations KPI board with summary metrics, target progress, and a trend chart.",
 		"audience": "Operations teams monitoring fulfillment performance on shared displays.",
@@ -10,6 +10,10 @@
 		"The dashboard renders at most three primary metrics and twenty-four trend points."
 	],
 	"app": { "mode": "new", "name": "KPI Operations", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The same operational story must remain useful in dashboard bands, standard displays, portrait screens, and compact tiles."
+	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1280, "height": 720, "role": "primary", "purpose": "Landscape operations dashboard.", "minimumContentCoverage": { "width": 85, "height": 75 } },
 		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide dashboard band with compressed secondary detail.", "minimumContentCoverage": { "width": 90, "height": 75 } },
@@ -50,6 +54,16 @@
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
 	],
+	"visualDirection": {
+		"source": "agent-authored",
+		"summary": "A restrained analytical composition that makes the current operational exception dominant and the trend explanatory.",
+		"references": [],
+		"signatureChoices": [
+			"One oversized primary KPI anchors the reading order.",
+			"The trend is an integrated evidence field rather than a decorative chart card."
+		],
+		"avoid": ["A uniform grid of equally weighted metric cards."]
+	},
 	"visualReview": {
 		"intent": "A quiet operational dashboard with one dominant metric story, restrained surfaces, and a readable trend.",
 		"focus": [
