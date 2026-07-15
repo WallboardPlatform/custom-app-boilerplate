@@ -150,6 +150,28 @@ export default (): JSX.Element => {
 
 ---
 
+### useAutoFitText
+
+**Purpose:** Fits bounded, variable single-line text to the largest whole-pixel font size inside an explicit range.
+
+Use it for titles or hero values whose content is user- or datasource-controlled. Keep normal responsive CSS as the maximum-size authority; the hook reads the current computed font size, observes the element through `ResizeObserver`, and re-fits when the optional watched accessor changes.
+
+```typescript jsx
+const settings: Accessor<Settings> = useSettings();
+const fitTitle = useAutoFitText({
+  minFontSize: 18,
+  maxFontSize: 38,
+  widthOnly: true,
+  watch: (): string => settings().title
+});
+
+return <h1 ref={fitTitle}>{settings().title}</h1>;
+```
+
+Do not apply it indiscriminately to every label. Flex layout, truncation, pagination, and responsive breakpoints remain the primary tools. A fitted element with `overflow: hidden` still needs safe `line-height` and vertical padding because DOM box dimensions do not guarantee glyph-ink clearance.
+
+---
+
 ### useDataSources
 
 **Purpose:** Returns a reactive accessor for all registered data sources.

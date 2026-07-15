@@ -44,6 +44,14 @@
 			"label": "Appearance",
 			"type": "group",
 			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"tooltip": "Dark and Light are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Dark", "value": "dark" }, { "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
 				{ "label": "Accent color", "type": "color", "property": "accentColor", "default": "#58e4c1" },
 				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#f6f4ed" },
 				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#101516" },

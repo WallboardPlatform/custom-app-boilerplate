@@ -28,6 +28,7 @@ export interface Settings extends Record<string, unknown> {
 }
 
 export interface ConfigValues {
+	themePreset?: string;
 	locationLabel?: string;
 	timezone?: string;
 	hourFormat?: string;

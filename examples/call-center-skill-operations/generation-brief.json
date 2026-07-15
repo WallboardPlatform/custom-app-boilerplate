@@ -43,6 +43,7 @@
 		{ "property": "emptyStateText", "purpose": "Message shown when no valid skills remain." },
 		{ "property": "rotationSeconds", "purpose": "Seconds each skill remains visible." },
 		{ "property": "maxAgentsShown", "purpose": "Maximum roster cards rendered for one skill." },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "fontFamily", "purpose": "Display typeface." },
 		{ "property": "backgroundColor", "purpose": "Root canvas color." },
 		{ "property": "surfaceColor", "purpose": "Summary and roster surface color." },
@@ -56,6 +57,7 @@
 		{ "property": "unknownColor", "purpose": "Unrecognized status color." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves skill coverage and roster legibility." },
 		{
 			"scenario": "mixed-skills",
 			"expectation": "Multiple skills group correctly and the active skill shows a complete status distribution."

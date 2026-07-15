@@ -27,6 +27,18 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom main menu-board background color." },
+		{ "property": "headerBackgroundColor", "purpose": "Custom masthead background color." },
+		{ "property": "headerTextColor", "purpose": "Custom masthead text color." },
+		{ "property": "storyBackgroundColor", "purpose": "Custom editorial story-panel background color." },
+		{ "property": "storyTextColor", "purpose": "Custom editorial story-panel text color." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary menu text color." },
+		{ "property": "secondaryTextColor", "purpose": "Custom supporting menu text color." },
+		{ "property": "accentColor", "purpose": "Custom primary accent color." },
+		{ "property": "accentTextColor", "purpose": "Custom accent color for labels on light surfaces." },
+		{ "property": "lineColor", "purpose": "Custom divider and leader-line color." },
+		{ "property": "featuredColor", "purpose": "Custom featured-item and price color." },
 		{ "property": "restaurantLabel", "purpose": "Small venue category label." },
 		{ "property": "restaurantName", "purpose": "Primary restaurant name." },
 		{ "property": "editionTitle", "purpose": "Menu edition title." },
@@ -43,6 +55,7 @@
 		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves the reference-led editorial menu identity." },
 		{ "scenario": "static-unbound", "expectation": "Representative menu content remains visible before binding." },
 		{ "scenario": "empty", "expectation": "An explicit empty menu message replaces missing dishes." },
 		{ "scenario": "bound-null", "expectation": "A null bound datasource remains stable and does not substitute sample rows." },

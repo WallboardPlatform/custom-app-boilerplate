@@ -29,6 +29,7 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "nasdaqLabel", "purpose": "NASDAQ market title." },
 		{ "property": "tsxLabel", "purpose": "TSX market title." },
 		{ "property": "dowLabel", "purpose": "Dow Jones market title." },
@@ -52,6 +53,7 @@
 		{ "property": "emptyStateText", "purpose": "Message when no market has valid rows." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps exchange, price, and movement indicators legible." },
 		{ "scenario": "scrolling-nasdaq", "expectation": "NASDAQ entries fill the complete 6000-pixel strip while moving." },
 		{ "scenario": "market-rotation", "expectation": "The next exchange title appears after the prior market exits." },
 		{ "scenario": "short-fx-dataset", "expectation": "A short FX dataset repeats safely without exposing an empty strip." },

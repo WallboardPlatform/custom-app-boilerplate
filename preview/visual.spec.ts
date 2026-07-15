@@ -338,6 +338,23 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					&& ['clip', 'hidden'].includes(style.overflowY)
 					&& Number.isFinite(lineHeight)
 				) {
+					let visibleTop: number = rect.top;
+					let visibleBottom: number = rect.bottom;
+					let clippingAncestor: HTMLElement | null = element;
+
+					while (clippingAncestor && clippingAncestor !== root.parentElement) {
+						const ancestorStyle: CSSStyleDeclaration = window.getComputedStyle(clippingAncestor);
+
+						if (['clip', 'hidden'].includes(ancestorStyle.overflowY)) {
+							const ancestorRect: DOMRect = clippingAncestor.getBoundingClientRect();
+
+							visibleTop = Math.max(visibleTop, ancestorRect.top);
+							visibleBottom = Math.min(visibleBottom, ancestorRect.bottom);
+						}
+
+						clippingAncestor = clippingAncestor.parentElement;
+					}
+
 					const range: Range = document.createRange();
 					range.selectNodeContents(element);
 					const lineTops: Set<number> = new Set(
@@ -356,6 +373,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 						fontSize: Number.parseFloat(style.fontSize),
 						lineHeight,
 						boxHeight: rect.height,
+						visibleHeight: Math.max(0, visibleBottom - visibleTop),
 						borderTop: Number.parseFloat(style.borderTopWidth) || 0,
 						borderBottom: Number.parseFloat(style.borderBottomWidth) || 0,
 						lineCount: Math.max(1, lineTops.size),

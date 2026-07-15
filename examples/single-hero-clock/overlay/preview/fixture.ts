@@ -9,6 +9,7 @@ const baseConfig: Record<string, unknown> = {
 	showDate: true,
 	showZone: true,
 	fontScale: 100,
+	themePreset: 'dark',
 	accentColor: '#58e4c1',
 	textColor: '#f6f4ed',
 	backgroundColor: '#101516',
@@ -31,6 +32,12 @@ const createFixture = (id: string, configValues: Record<string, unknown>): Previ
 const previewFixture: PreviewFixture = createFixture('single-hero-clock-default', baseConfig);
 
 export const previewScenarios: PreviewScenario[] = [
+	{
+		id: 'light-theme',
+		fixture: createFixture('single-hero-clock-light-theme', { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1280, height: 720, background: 'light' },
+		minimumContentCoverage: { width: 70, height: 70 }
+	},
 	{
 		id: 'minimal',
 		fixture: createFixture('single-hero-clock-minimal', {
@@ -64,6 +71,14 @@ export const previewScenarios: PreviewScenario[] = [
 ];
 
 export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	},
 	{
 		id: 'font-scale',
 		property: 'fontScale',

@@ -30,6 +30,7 @@ const baseConfig: Record<string, unknown> = {
 	verticalMargin: 4,
 	itemMargin: 22,
 	logoScale: 72,
+	themePreset: 'dark',
 	marketLabelFont: defaultFont(28),
 	tickerFont: defaultFont(34),
 	priceFont: defaultFont(28),
@@ -113,6 +114,12 @@ const previewFixture: PreviewFixture = createFixture('market-rotation-ticker-pre
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'light-theme',
+		fixture: createFixture('market-rotation-light-theme', previewDatasourceValues, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 6000, height: 136, background: 'light' },
+		minimumContentCoverage: { width: 92, height: 15 }
+	},
+	{
 		id: 'scrolling-nasdaq',
 		fixture: {
 			...createFixture('market-rotation-ticker-scrolling', previewDatasourceValues),
@@ -186,6 +193,14 @@ export const previewScenarios: PreviewScenario[] = [
 ];
 
 export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	},
 	{
 		id: 'vertical-margin',
 		property: 'verticalMargin',

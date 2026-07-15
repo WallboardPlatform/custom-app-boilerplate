@@ -44,6 +44,7 @@
 		{ "property": "rotationSeconds", "purpose": "Seconds each unit remains visible." },
 		{ "property": "excludedGroups", "purpose": "Comma-separated aggregate unit names omitted from rotation." },
 		{ "property": "hideInactiveGroups", "purpose": "Optionally excludes units with no staffing or call activity." },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "fontFamily", "purpose": "Display typeface." },
 		{ "property": "backgroundColor", "purpose": "Root canvas color." },
 		{ "property": "surfaceColor", "purpose": "KPI surface color." },
@@ -55,6 +56,7 @@
 		{ "property": "dangerColor", "purpose": "Critical KPI color." }
 	],
 	"states": [
+		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves operational KPI hierarchy and semantic tones." },
 		{
 			"scenario": "excluded-aggregates",
 			"expectation": "Configured aggregate labels are absent while real units remain alphabetically ordered."

@@ -5,6 +5,8 @@ import type {
 	Settings
 } from '@interfaces/application.interface';
 
+import { resolveTheme, themePresetSetting } from '@utils/theme';
+
 const textSetting = (value: string | undefined, fallback: string): string => {
 	return typeof value === 'string' && value.trim() !== '' ? value.trim() : fallback;
 };
@@ -32,6 +34,16 @@ const dateFormatSetting = (value: string | undefined): DateFormat => {
 };
 
 export default (config: ConfigValues): Settings => {
+	const palette = resolveTheme(themePresetSetting(config.themePreset), {
+		dark: { accentColor: '#58e4c1', textColor: '#f6f4ed', backgroundColor: '#101516' },
+		light: { accentColor: '#137c68', textColor: '#172320', backgroundColor: '#f2f5f2' },
+		custom: {
+			accentColor: textSetting(config.accentColor, '#58e4c1'),
+			textColor: textSetting(config.textColor, '#f6f4ed'),
+			backgroundColor: textSetting(config.backgroundColor, '#101516')
+		}
+	});
+
 	return {
 		locationLabel: textSetting(config.locationLabel, 'Budapest'),
 		timezone: textSetting(config.timezone, 'Europe/Budapest'),
@@ -41,9 +53,7 @@ export default (config: ConfigValues): Settings => {
 		showDate: booleanSetting(config.showDate, true),
 		showZone: booleanSetting(config.showZone, true),
 		fontScale: numberSetting(config.fontScale, 100, 70, 140),
-		accentColor: textSetting(config.accentColor, '#58e4c1'),
-		textColor: textSetting(config.textColor, '#f6f4ed'),
-		backgroundColor: textSetting(config.backgroundColor, '#101516'),
+		...palette,
 		backgroundOpacity: numberSetting(config.backgroundOpacity, 94, 0, 100)
 	};
 };

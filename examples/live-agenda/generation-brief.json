@@ -27,6 +27,7 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "venueName", "purpose": "Venue or room context." },
 		{ "property": "boardTitle", "purpose": "Primary agenda title." },
 		{ "property": "upcomingTitle", "purpose": "Upcoming-event section title." },
@@ -42,6 +43,7 @@
 		{ "property": "liveColor", "purpose": "Active-event status color." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps current and upcoming agenda items clearly differentiated." },
 		{ "scenario": "microsoft-calendar", "expectation": "Nested Microsoft-style start and end timestamps normalize into a chronological agenda." },
 		{ "scenario": "icalendar", "expectation": "iCalendar summary and flat timestamp fields normalize into the same agenda model." },
 		{ "scenario": "empty", "expectation": "An explicit empty state replaces the agenda body." },

@@ -249,6 +249,19 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const sectionRows: Accessor<MenuSection[][]> = createMemo((): MenuSection[][] => {
 		return chunk(currentSections(), 2);
 	});
+	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
+		'--menu-background': settings().backgroundColor,
+		'--menu-header-background': settings().headerBackgroundColor,
+		'--menu-header-text': settings().headerTextColor,
+		'--menu-story-background': settings().storyBackgroundColor,
+		'--menu-story-text': settings().storyTextColor,
+		'--menu-primary': settings().primaryTextColor,
+		'--menu-secondary': settings().secondaryTextColor,
+		'--menu-accent': settings().accentColor,
+		'--menu-accent-text': settings().accentTextColor,
+		'--menu-line': settings().lineColor,
+		'--menu-featured': settings().featuredColor
+	}));
 
 	onMount((): void => {
 		const intervalId: number = window.setInterval((): void => {
@@ -277,7 +290,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	return (
-		<div class={`wb-app ${style['wb-app']}`} data-host-ready={Boolean(props.hostElement)}>
+		<div
+			class={`wb-app ${style['wb-app']}`}
+			data-host-ready={Boolean(props.hostElement)}
+			style={themeStyle()}
+		>
 			<header class="menu-header">
 				<div class="menu-brand">
 					<span>{settings().restaurantName.charAt(0)}</span>

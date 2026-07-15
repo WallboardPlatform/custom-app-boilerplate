@@ -66,6 +66,7 @@
 		"bindings": []
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "locationLabel", "purpose": "Human-readable place label shown with the clock." },
 		{ "property": "timezone", "purpose": "IANA timezone used for time and date formatting." },
 		{ "property": "hourFormat", "purpose": "Selects 12-hour or 24-hour time." },
@@ -80,6 +81,7 @@
 		{ "property": "backgroundOpacity", "purpose": "Controls panel opacity, including a transparent canvas mode." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves clock contrast and single-hero focus." },
 		{ "scenario": "minimal", "expectation": "Time remains centered and dominant when date, seconds, and timezone are hidden." },
 		{ "scenario": "invalid-timezone", "expectation": "An invalid timezone falls back to UTC and remains production-looking." },
 		{ "scenario": "long-label", "expectation": "A long place label truncates cleanly without changing the hero geometry." }

@@ -27,6 +27,7 @@
 		]
 	},
 	"settings": [
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "titleText", "purpose": "Dashboard title." },
 		{ "property": "subtitleText", "purpose": "Dashboard context line." },
 		{ "property": "emptyStateText", "purpose": "Missing-data message." },
@@ -42,6 +43,7 @@
 		{ "property": "warningColor", "purpose": "Warning and exception color." }
 	],
 	"states": [
+		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves KPI hierarchy and semantic status contrast." },
 		{ "scenario": "empty", "expectation": "An explicit empty state occupies the dashboard without layout collapse." },
 		{ "scenario": "long-labels", "expectation": "Long metric labels and deltas remain readable in a wide-low surface." },
 		{ "scenario": "live-update", "expectation": "Updated metrics replace current values without rebuilding the app." }

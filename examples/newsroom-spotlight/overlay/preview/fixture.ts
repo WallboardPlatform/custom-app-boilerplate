@@ -129,6 +129,7 @@ const baseConfig: Record<string, unknown> = {
 	showDescription: true,
 	showTimestamp: true,
 	imagePosition: 'left',
+	themePreset: 'light',
 	backgroundColor: '#f2efe8',
 	panelColor: '#17211f',
 	primaryTextColor: '#f9f7f0',
@@ -153,6 +154,12 @@ const createFixture = (
 const previewFixture: PreviewFixture = createFixture('newsroom-spotlight-preview', wallboardFeed);
 
 export const previewScenarios: PreviewScenario[] = [
+	{
+		id: 'dark-theme',
+		fixture: createFixture('newsroom-dark-theme', wallboardFeed, { ...baseConfig, themePreset: 'dark' }),
+		viewport: { width: 1280, height: 720, background: 'dark' },
+		minimumContentCoverage: { width: 80, height: 75 }
+	},
 	{
 		id: 'wallboard-feed',
 		fixture: createFixture('newsroom-wallboard-feed', wallboardFeed),
@@ -212,6 +219,14 @@ export const previewScenarios: PreviewScenario[] = [
 ];
 
 export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'dark',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	},
 	{
 		id: 'description-visibility',
 		property: 'showDescription',

@@ -32,6 +32,17 @@ export interface Settings extends Record<string, unknown> {
 	allergenText: string;
 	emptyStateText: string;
 	pageDurationSeconds: number;
+	backgroundColor: string;
+	headerBackgroundColor: string;
+	headerTextColor: string;
+	storyBackgroundColor: string;
+	storyTextColor: string;
+	primaryTextColor: string;
+	secondaryTextColor: string;
+	accentColor: string;
+	accentTextColor: string;
+	lineColor: string;
+	featuredColor: string;
 }
 
 export interface ConfigValues {
@@ -49,4 +60,16 @@ export interface ConfigValues {
 	allergenText?: string;
 	emptyStateText?: string;
 	pageDurationSeconds?: number;
+	themePreset?: string;
+	backgroundColor?: string;
+	headerBackgroundColor?: string;
+	headerTextColor?: string;
+	storyBackgroundColor?: string;
+	storyTextColor?: string;
+	primaryTextColor?: string;
+	secondaryTextColor?: string;
+	accentColor?: string;
+	accentTextColor?: string;
+	lineColor?: string;
+	featuredColor?: string;
 }

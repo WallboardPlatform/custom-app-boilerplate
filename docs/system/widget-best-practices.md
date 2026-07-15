@@ -92,7 +92,7 @@ Run `npm run validate:legacy` after changing app styles. The delivery workflow r
 | Rule | Practice |
 |------|----------|
 | Canvas-friendly | The widget should look good on top of user-designed content. Avoid heavy default panels unless requested. |
-| Settings-driven theme | Expose primary color, text color, background, and key visibility toggles when relevant. |
+| Coordinated themes | Color-driven apps should expose curated `Dark`, `Light`, and `Custom` presets by default. Presets must change the full semantic palette together; do not expect users to assemble a coherent scheme one color at a time. |
 | Clear hierarchy | One primary message/value, then secondary metadata. |
 | No boilerplate visuals | Replace default icon, placeholder, sample wizard text, and sample content before packaging. |
 | No decorative excess | Avoid UI that looks like a landing page. Signage widgets must be readable and purposeful. |
@@ -100,6 +100,8 @@ Run `npm run validate:legacy` after changing app styles. The delivery workflow r
 | Examples teach mechanics | Reuse engineering patterns from examples without copying their palette, cards, header, accent rail, or pagination treatment by default. |
 
 Design freedom exists inside the production constraints. When no visual direction is supplied, author a domain-specific composition and record its signature choices in `generation-brief.json`; do not fall back automatically to a dark dashboard with a top accent and repeated cards.
+
+Theme presets are implementation support, not a visual style guide. Derive both curated palettes from the accepted reference, brand, and domain. For replacement uploads, map an absent or unknown preset to `Custom` so existing explicit color settings remain unchanged; use the editor property's default to select the intended preset for new placements.
 
 Choose pagination for the content and viewing distance. Valid treatments include a numeric counter, progress rail, section labels, dots for a small fixed set, an animated transition with no persistent indicator, or no pagination when all content fits. A top-right `1 / N` counter is not the default.
 
@@ -111,6 +113,8 @@ DOM box containment does not prove that glyphs are intact. Fonts can paint desce
 - Validate representative labels containing ascenders, capitals, punctuation, accents, and descenders.
 - Do not repair a title by hiding more overflow; inspect its computed font size, line height, box height, and padding.
 - Treat the shared text-ink failure as a real layout defect. It reports the selector, rendered text, measured ink buffer, and required buffer.
+
+For a variable single-line title or hero value with a bounded box, use `useAutoFitText` to select the largest fitting font size from an explicit minimum and maximum. The hook observes the rendered element with the SDK-compatible `ResizeObserver` environment and re-fits when its watched value changes. It is not a replacement for flex layout, responsive tiers, or ink clearance: retain a safe line height and bottom padding because DOM scroll dimensions do not describe every font's painted glyph bounds.
 
 ## Settings
 

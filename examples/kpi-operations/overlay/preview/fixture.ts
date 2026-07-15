@@ -9,6 +9,7 @@ const baseConfig: Record<string, unknown> = {
 	emptyStateText: 'No operational data is available.',
 	targetLabel: 'Daily target',
 	targetValue: 2400,
+	themePreset: 'dark',
 	fontFamily: "'Segoe UI', Arial, sans-serif",
 	backgroundColor: '#101416',
 	surfaceColor: '#1b2226',
@@ -35,6 +36,12 @@ const createFixture = (
 const previewFixture: PreviewFixture = createFixture('kpi-operations-preview', operationsData);
 
 export const previewScenarios: PreviewScenario[] = [
+	{
+		id: 'light-theme',
+		fixture: createFixture('kpi-operations-light-theme', operationsData, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1280, height: 720, background: 'light' },
+		minimumContentCoverage: { width: 80, height: 75 }
+	},
 	{
 		id: 'empty',
 		fixture: createFixture('kpi-operations-empty', null),
@@ -77,6 +84,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;

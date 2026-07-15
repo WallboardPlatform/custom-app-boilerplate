@@ -33,6 +33,7 @@ const baseConfig: Record<string, unknown> = {
 	informationLabel: 'Live flight information',
 	emptyStateText: 'No departures are currently listed.',
 	pageDurationSeconds: 3,
+	themePreset: 'dark',
 	backgroundColor: '#111315',
 	textColor: '#f5f6f3',
 	accentColor: '#f4c542'
@@ -113,6 +114,12 @@ const liveUpdateRows: PreviewDepartureRow[] = sampleDatasource.Departures.rows.m
 
 export const previewScenarios: PreviewScenario[] = [
 	{
+		id: 'light-theme',
+		fixture: createFixture('airport-departures-light-theme', sampleDatasource, { ...baseConfig, themePreset: 'light' }),
+		viewport: { width: 1366, height: 768, background: 'light' },
+		minimumContentCoverage: { width: 90, height: 85 }
+	},
+	{
 		id: 'static-unbound',
 		fixture: {
 			id: 'airport-departures-static',
@@ -186,6 +193,15 @@ export const previewScenarios: PreviewScenario[] = [
 	}
 ];
 
-export const previewSettingEffects: PreviewSettingEffect[] = [];
+export const previewSettingEffects: PreviewSettingEffect[] = [
+	{
+		id: 'theme-preset',
+		property: 'themePreset',
+		changedValue: 'light',
+		selector: '.wb-app',
+		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	}
+];
 
 export default previewFixture;
