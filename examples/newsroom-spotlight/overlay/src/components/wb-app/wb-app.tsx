@@ -137,8 +137,14 @@ const extractRows = (rawValue: unknown): { rows: unknown[]; source: FeedSource }
 		return { rows: value.feed.entries, source: 'rss-parser' };
 	}
 
-	if (isRecord(value.channel) && Array.isArray(value.channel.item)) {
-		return { rows: value.channel.item, source: 'rss-channel' };
+	if (isRecord(value.channel)) {
+		if (Array.isArray(value.channel.items)) {
+			return { rows: value.channel.items, source: 'wallboard-feed' };
+		}
+
+		if (Array.isArray(value.channel.item)) {
+			return { rows: value.channel.item, source: 'rss-channel' };
+		}
 	}
 
 	if (isRecord(value.rss)) {
