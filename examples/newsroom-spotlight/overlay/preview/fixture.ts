@@ -43,8 +43,10 @@ const wallboardItems: Array<Record<string, unknown>> = [
 	}
 ];
 const wallboardFeed: Record<string, unknown> = {
-	title: 'Field Notes',
-	items: wallboardItems
+	channel: {
+		title: 'Field Notes',
+		items: wallboardItems
+	}
 };
 const rssParserFeed: Record<string, unknown> = {
 	feed: {

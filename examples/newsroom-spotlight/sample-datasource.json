@@ -1,38 +1,40 @@
 {
-	"title": "Field Notes",
-	"description": "Stories about design, cities, and shared technology.",
-	"publishDate": 1784053200,
-	"link": "https://example.invalid/field-notes",
-	"items": [
-		{
-			"guid": "field-note-1",
-			"title": "A quieter language for public technology",
-			"description": "Teams are replacing visual noise with clearer systems that respect attention and place.",
-			"publishDate": 1784052300,
-			"link": "https://example.invalid/field-notes/quieter-language",
-			"categories": ["Design"],
-			"media": { "url": "https://example.invalid/media/quieter-language.jpg" },
-			"attachments": []
-		},
-		{
-			"guid": "field-note-2",
-			"title": "The station that became a civic room",
-			"description": "A transport renovation uses information, light, and local materials to create a calmer daily ritual.",
-			"publishDate": 1784049600,
-			"link": "https://example.invalid/field-notes/civic-room",
-			"categories": ["Cities"],
-			"media": { "url": "https://example.invalid/media/civic-room.jpg" },
-			"attachments": []
-		},
-		{
-			"guid": "field-note-3",
-			"title": "Small energy systems, visible impact",
-			"description": "A neighbourhood dashboard makes shared energy use understandable without turning it into a control panel.",
-			"publishDate": 1784046000,
-			"link": "https://example.invalid/field-notes/visible-impact",
-			"categories": ["Climate"],
-			"media": { "url": "https://example.invalid/media/visible-impact.jpg" },
-			"attachments": []
-		}
-	]
+	"channel": {
+		"title": "Field Notes",
+		"description": "Stories about design, cities, and shared technology.",
+		"publishDate": 1784053200,
+		"link": "https://example.invalid/field-notes",
+		"items": [
+			{
+				"guid": "field-note-1",
+				"title": "A quieter language for public technology",
+				"description": "Teams are replacing visual noise with clearer systems that respect attention and place.",
+				"publishDate": 1784052300,
+				"link": "https://example.invalid/field-notes/quieter-language",
+				"categories": ["Design"],
+				"media": { "url": "https://example.invalid/media/quieter-language.jpg" },
+				"attachments": []
+			},
+			{
+				"guid": "field-note-2",
+				"title": "The station that became a civic room",
+				"description": "A transport renovation uses information, light, and local materials to create a calmer daily ritual.",
+				"publishDate": 1784049600,
+				"link": "https://example.invalid/field-notes/civic-room",
+				"categories": ["Cities"],
+				"media": { "url": "https://example.invalid/media/civic-room.jpg" },
+				"attachments": []
+			},
+			{
+				"guid": "field-note-3",
+				"title": "Small energy systems, visible impact",
+				"description": "A neighbourhood dashboard makes shared energy use understandable without turning it into a control panel.",
+				"publishDate": 1784046000,
+				"link": "https://example.invalid/field-notes/visible-impact",
+				"categories": ["Climate"],
+				"media": { "url": "https://example.invalid/media/visible-impact.jpg" },
+				"attachments": []
+			}
+		]
+	}
 }

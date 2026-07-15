@@ -22,7 +22,7 @@ const openScenario = async (
 	expect(await page.evaluate((): string | undefined => document.documentElement.dataset.previewError)).toBeUndefined();
 };
 
-test('normalizes current Wallboard and legacy RSS feed wrappers', async ({ page }): Promise<void> => {
+test('normalizes the current Wallboard channel and legacy RSS feed wrappers', async ({ page }): Promise<void> => {
 	await openScenario(page, 'wallboard-feed', { width: 1920, height: 1080 });
 	await expect(page.locator('.wb-app')).toHaveAttribute('data-feed-source', 'wallboard-feed');
 	await expect(page.locator('.story-title')).toHaveText('A quieter language for public technology');
