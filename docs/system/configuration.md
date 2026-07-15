@@ -65,6 +65,8 @@ Run `npm run validate:package` after every production build. It validates genera
 
 ## App Settings
 
+The base project is static-first: `src/editor-assets/` contains only assets referenced by its settings. Popup wizards and the layout editor are opt-in templates under `templates/editor-assets/`; copy only the required template into `src/editor-assets/` and reference its URL from `properties.json`. Package validation rejects unreferenced editor-asset directories so unused minified bundles cannot leak into the ZIP.
+
 The apps settings is defined inside the `properties.json`, under the `properties` key as an array.
 
 ### Adding new settings

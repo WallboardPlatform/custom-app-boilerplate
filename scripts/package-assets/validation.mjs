@@ -16,6 +16,22 @@ const IMAGE_EXTENSION_PATTERN = /\.(?:png|jpe?g|gif|webp|svg)(?:[?#].*)?$/i;
 
 const normalizePath = (value) => value.split(path.sep).join('/');
 
+const collectStringValues = (value) => {
+	if (typeof value === 'string') {
+		return [value];
+	}
+
+	if (Array.isArray(value)) {
+		return value.flatMap(collectStringValues);
+	}
+
+	if (value && typeof value === 'object') {
+		return Object.values(value).flatMap(collectStringValues);
+	}
+
+	return [];
+};
+
 const listFiles = (directory) => {
 	if (!fs.existsSync(directory)) {
 		return [];
@@ -113,6 +129,16 @@ export const validatePackageAssets = (rootDirectory) => {
 	}
 
 	const properties = JSON.parse(fs.readFileSync(propertiesPath, 'utf8'));
+	const sourceEditorAssets = path.dirname(propertiesPath);
+	const editorAssetReferences = collectStringValues(properties).map((value) => normalizePath(value));
+	const unusedEditorAssetDirectories = fs.readdirSync(sourceEditorAssets, { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.filter((entry) => {
+			const referenceFragment = `/editor-assets/${entry.name}/`;
+
+			return !editorAssetReferences.some((reference) => reference.includes(referenceFragment));
+		})
+		.map((entry) => `src/editor-assets/${entry.name}`);
 	const resourceList = Array.isArray(properties.resourceList) ? properties.resourceList : [];
 	const localResources = resourceList.filter(
 		(resource) => typeof resource === 'string' && !/^[a-z]+:\/\//i.test(resource)
@@ -183,6 +209,12 @@ export const validatePackageAssets = (rootDirectory) => {
 
 	if (invalidPngs.length > 0) {
 		failures.push(`Editor images are invalid:\n  ${invalidPngs.join('\n  ')}`);
+	}
+
+	if (unusedEditorAssetDirectories.length > 0) {
+		failures.push(
+			`Editor-asset directories must be referenced by properties.json or removed:\n  ${unusedEditorAssetDirectories.join('\n  ')}`
+		);
 	}
 
 	if (failures.length > 0) {

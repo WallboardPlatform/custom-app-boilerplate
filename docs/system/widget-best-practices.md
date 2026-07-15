@@ -53,6 +53,19 @@ For equal-height table rows, use a flex column body and `flex: 1 1 0` on each vi
 
 The SDK includes a `ResizeObserver` compatibility layer. When flexbox and fixed breakpoints are insufficient, observe the root element, assign a small/wide/tall size class, and drive a limited set of CSS variables from that class. Keep the layout deterministic and avoid continuous resize-driven DOM rebuilding.
 
+### Single hero elements
+
+Clocks, countdowns, QR codes, counters, and one-value KPI tiles have nothing useful to stack in a tall zone. Treat the hero and its supporting metadata as one composition instead of leaving a card-sized element in the center.
+
+| Ratio | Composition |
+|-------|-------------|
+| Wide/low | Keep the hero centered and readable; place short metadata in bounded side regions so the strip feels intentional. |
+| Tall | Let the hero use vertical structure, such as stacked hour/minute or value/unit groups; anchor metadata above and below. |
+| Compact | Remove secondary labels before shrinking the hero below signage readability. |
+| Square/landscape | Keep one dominant value and distribute supporting metadata at stable edges. |
+
+Use `ResizeObserver` to derive a small set of ratio classes and one bounded root scale from both measured width and height. Keep flexbox responsible for distribution. Do not independently guess every font size, use browser viewport units, or continuously rebuild the DOM. See `examples/single-hero-clock` for the maintained static pattern.
+
 ## Legacy CSS Safety
 
 The production build targets Chrome 56 CSS, but it cannot safely rewrite every modern layout feature. Keep source styles compatible with the legacy Chromium target required by the boilerplate.
@@ -179,10 +192,10 @@ Avoid:
 1. Put representative settings and datasource values in `preview/fixture.ts`.
 2. Set fixture `readySelector` to a config-driven text element when SDK configuration settles after the preview root mounts. Do not add app-specific readiness logic to `visual.spec.ts`.
 3. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
-4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states. Every scenario requires measured `minimumContentCoverage` percentages.
+4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
 5. In behavior tests, use `window.__wallboardPreview.pushDatasource()` for live updates and `window.__wallboardPreview.destroy()` for teardown. Verify that charts, timers, and listeners are released; do not depend on SDK registration keys or mount-selector IDs.
 6. Use `window.__wallboardPreview.pushConfiguration()` indirectly through `previewSettingEffects` to verify editor controls affect the rendered element, not only the mapper or fallback implementation.
-7. Put measured content-coverage thresholds on every planned generation-brief surface. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count. Keep enough margin for browser rounding while making a compressed or mostly empty composition fail.
+7. Run `npm run measure:visual` after the first real render. Review its report and screenshots, then put measured content-coverage thresholds with regression margin on every planned surface and scenario. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count.
 8. Run `npm run validate:visual`. It reads the app-default dimensions from `properties.json`, checks full HD, `1536x432` wide/low, landscape, portrait, square, every named scenario, and declared setting effects.
 9. Inspect every image in `preview/output/`. Content coverage is a bounding-box regression guard; sparse corner content can still satisfy it. Automated checks do not judge hierarchy, composition, or legibility.
 10. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
@@ -197,7 +210,7 @@ Before returning a zip:
 
 - `src/editor-assets/properties.json` has a unique `name`. Existing-app fixes preserve `version`; incompatible variants use a new version and a separate upload.
 - `src/editor-assets/icon.png` and `placeholder.png` are app-specific.
-- Unused sample wizard and layout-editor configuration and assets are removed from `properties.json` and `src/editor-assets/`.
+- Editor wizards or layout editors exist only when their URLs are referenced by `properties.json`; copy needed starters from `templates/editor-assets/`.
 - Root background is transparent unless intentionally configured otherwise.
 - Layout behaves at small, wide, tall, and default sizes.
 - Empty, loading, and invalid-data states render cleanly.

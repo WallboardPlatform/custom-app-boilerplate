@@ -120,12 +120,15 @@ npm run prettify
 ### Local visual preview
 ```bash
 npm run dev:preview
+npm run measure:visual
 npm run validate:visual
 ```
 
 The interactive preview is available at `http://127.0.0.1:5173/preview/`. Keep `preview/fixture.ts` aligned with the app's settings and datasource values. Add named `previewScenarios` for materially different states; use `advanceTimeMs` to validate rotating or paginated end states.
 
 Declare `previewSettingEffects` for every slider and for other controls with regression-prone visual output. These tests push configuration through the SDK event path and must measure the affected rendered element.
+
+Use `measure:visual` after the first representative render. Review `preview/output/coverage-report.json`, then set measured generation-brief thresholds with regression margin. The command skips only coverage assertions; runtime, overflow, media, behavior, and setting-effect checks still run. Playwright can use `WALLBOARD_PLAYWRIGHT_EXECUTABLE_PATH`, `WALLBOARD_PLAYWRIGHT_CHANNEL`, a shared `PLAYWRIGHT_BROWSERS_PATH`, its cached Chromium, or installed Chrome/Edge.
 
 ### Datasource contract validation
 ```bash
@@ -144,6 +147,8 @@ npm run deliver -- <output-directory>
 ```
 
 This is the final handoff command. It validates the app, creates the uploadable zip plus a separate sanitized source zip, preserves the generation brief, packages datasource templates when present, and writes a machine-readable delivery manifest. Follow `docs/system/app-identity-and-delivery.md`; internal app name plus version must be unique across Wallboard app records.
+
+`npm run deliver:unverified -- <output-directory>` exists only for environments with no runnable browser. It creates `_UNVERIFIED` artifacts with `acceptance.uploadReady: false`; never present or upload them as accepted delivery. A browser-capable environment must run normal `deliver` first.
 
 ## Architecture Overview
 

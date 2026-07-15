@@ -24,6 +24,7 @@ void describe('source archive filtering', (): void => {
 			'node_modules/package/index.js',
 			'preview/output/default.png',
 			'preview/.playwright/state.json',
+			'templates/editor-assets/layout-editor/index.html',
 			'certificate.pem',
 			'legacy-delivery.rar',
 			'delivery.zip'
@@ -39,6 +40,7 @@ void describe('source archive filtering', (): void => {
 			'credentials.example.json',
 			'service-account.example.json',
 			'src/components/wb-app/wb-app.tsx',
+			'src/templates/card.tsx',
 			'preview/fixture.ts',
 			'sample-datasource.json',
 			'docs/system/configuration.md'
