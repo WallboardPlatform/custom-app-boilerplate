@@ -29,7 +29,7 @@ const pushConfiguration = async (page: Page, configValues: Record<string, unknow
 test('ticks every second and remains disposed after destroy', async ({ page }): Promise<void> => {
 	await page.clock.install({ time: new Date('2026-07-15T12:00:00Z') });
 	await openClock(page);
-	const root = page.locator('.wb-app');
+	const root = page.locator('.wb-single-hero-clock-root');
 	const initialEpoch: number = Number(await root.getAttribute('data-epoch-second'));
 
 	await page.clock.fastForward(1000);
@@ -45,21 +45,21 @@ test('ticks every second and remains disposed after destroy', async ({ page }): 
 test('updates timezone through the real configuration event path', async ({ page }): Promise<void> => {
 	await page.clock.install({ time: new Date('2026-07-15T12:00:00Z') });
 	await openClock(page);
-	await expect(page.locator('.clock-hours')).toHaveText('14');
+	await expect(page.locator('.wb-single-hero-clock-hours')).toHaveText('14');
 
 	await pushConfiguration(page, { timezone: 'Asia/Tokyo', locationLabel: 'Tokyo' });
-	await expect(page.locator('.wb-app')).toHaveAttribute('data-timezone', 'Asia/Tokyo');
-	await expect(page.locator('.clock-hours')).toHaveText('21');
-	await expect(page.locator('.clock-location strong')).toHaveText('Tokyo');
+	await expect(page.locator('.wb-single-hero-clock-root')).toHaveAttribute('data-timezone', 'Asia/Tokyo');
+	await expect(page.locator('.wb-single-hero-clock-hours')).toHaveText('21');
+	await expect(page.locator('.wb-single-hero-clock-location strong')).toHaveText('Tokyo');
 });
 
 test('switches hero composition when its assigned zone changes', async ({ page }): Promise<void> => {
 	await openClock(page, 3000, 300);
-	await expect(page.locator('.wb-app')).toHaveAttribute('data-layout', 'ultra-wide');
+	await expect(page.locator('.wb-single-hero-clock-root')).toHaveAttribute('data-layout', 'ultra-wide');
 
 	await page.setViewportSize({ width: 1080, height: 1920 });
-	await expect(page.locator('.wb-app')).toHaveAttribute('data-layout', 'tall');
+	await expect(page.locator('.wb-single-hero-clock-root')).toHaveAttribute('data-layout', 'tall');
 
 	await page.setViewportSize({ width: 320, height: 180 });
-	await expect(page.locator('.wb-app')).toHaveAttribute('data-layout', 'compact');
+	await expect(page.locator('.wb-single-hero-clock-root')).toHaveAttribute('data-layout', 'compact');
 });

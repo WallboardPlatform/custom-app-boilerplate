@@ -1,5 +1,5 @@
 {
-	"briefVersion": 3,
+	"briefVersion": 4,
 	"request": {
 		"summary": "Create a highly configurable digital clock that treats the time as one hero element and remains balanced in compact, ultra-wide, square, landscape, and portrait Wallboard zones.",
 		"audience": "Visitors, employees, and operational teams reading time at signage distance.",
@@ -65,6 +65,10 @@
 		"mode": "static",
 		"bindings": []
 	},
+	"presentation": {
+		"themes": ["dark", "light", "custom"],
+		"density": "sparse"
+	},
 	"settings": [
 		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
 		{ "property": "locationLabel", "purpose": "Human-readable place label shown with the clock." },
@@ -84,7 +88,7 @@
 		{
 			"id": "location-label",
 			"source": { "type": "setting", "properties": ["locationLabel"] },
-			"selectors": [".clock-location > strong"],
+			"selectors": [".wb-single-hero-clock-location > strong"],
 			"strategy": "ellipsis",
 			"limits": { "maximumLines": 1 },
 			"fallback": "Ellipsize the location label while preserving the full configured value in the editor.",

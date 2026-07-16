@@ -51,7 +51,7 @@ export type GenerationBriefAsset =
 	| { id: string; source: 'setting'; properties: string[]; required: boolean };
 
 export interface GenerationBrief {
-	briefVersion: 3;
+	briefVersion: 3 | 4;
 	request: {
 		summary: string;
 		audience: string;
@@ -82,13 +82,17 @@ export interface GenerationBrief {
 		mode: 'static' | 'bound';
 		bindings: GenerationBriefBinding[];
 	};
+	presentation?: {
+		themes: Array<'dark' | 'light' | 'custom'>;
+		density: 'sparse' | 'balanced' | 'dense';
+	};
 	settings: GenerationBriefSetting[];
 	dynamicText: GenerationBriefDynamicTextPolicy[];
 	states: GenerationBriefState[];
 	behaviors: GenerationBriefBehavior[];
 	assets: GenerationBriefAsset[];
 	visualDirection: {
-		source: 'reference-led' | 'instruction-led' | 'agent-authored';
+		source: 'reference-led' | 'instruction-led' | 'creative-led' | 'agent-authored';
 		summary: string;
 		references: string[];
 		signatureChoices: string[];
@@ -184,6 +188,14 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 
 	if (brief.visualDirection.source === 'reference-led' && brief.visualDirection.references.length === 0) {
 		fail(id, 'reference-led visual direction must identify at least one user reference.');
+	}
+
+	if (brief.briefVersion === 4 && brief.visualDirection.source === 'agent-authored') {
+		fail(id, 'v4 visual direction uses \'creative-led\' instead of legacy \'agent-authored\'.');
+	}
+
+	if (brief.presentation) {
+		requireUnique(id, brief.presentation.themes, 'presentation.themes');
 	}
 
 	requireUnique(id, brief.visualDirection.references, 'visualDirection.references');

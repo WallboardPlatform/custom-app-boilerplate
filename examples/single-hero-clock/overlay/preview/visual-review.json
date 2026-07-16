@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "682134116ef59774421e6161218292739d1be126dededa73bdc5982b86867da6",
-	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"sourceHash": "f5479f107dfd79559aeda817d3297f9bee9e4e5a82d693365f84bd0600b65770",
+	"reviewedAt": "2026-07-16T14:52:39.936Z",
 	"reviewer": "Codex independent visual review",
 	"criteria": [
 		{
@@ -47,7 +47,7 @@
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+			"notes": "Compared with all other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
 		}
 	],
 	"screenshots": [
@@ -79,22 +79,22 @@
 		{
 			"file": "scenario-invalid-timezone-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; invalid timezone data falls back to UTC without breaking composition or labels."
 		},
 		{
 			"file": "scenario-light-theme-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+			"notes": "Inspected at rendered size; light surfaces, text, and accents remain coordinated and readable."
 		},
 		{
 			"file": "scenario-long-label-320x180.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+			"notes": "Inspected at rendered size; the long dynamic location label fits without clipped or partial glyphs."
 		},
 		{
 			"file": "scenario-minimal-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; the minimal state keeps the time dominant and avoids accidental dead space."
 		},
 		{
 			"file": "square-600x600.png",
@@ -104,7 +104,7 @@
 		{
 			"file": "ultra-wide-3000x300.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; the single-row composition stays balanced and fully visible at 10:1."
 		},
 		{
 			"file": "wide-low-1536x432.png",

@@ -8,13 +8,13 @@
 
 ## 2. Resolve Decisions
 
-- Confirm or infer audience, primary message, placement family, data source, visual direction, and delivery mode.
+- Confirm or infer audience, primary message, placement family, data contract, visual direction, required themes, density, and delivery mode.
 - Ask only when surface or data ambiguity would materially change the result. Record safe assumptions.
 - Choose `fixed`, `bounded`, or `adaptive`; examples are engineering references, never automatic style templates.
 
 ## 3. Freeze The Brief
 
-Create `generation-brief.json` with identity, surfaces, data bindings, settings, dynamic-text policies, states, behaviors, assets, visual direction, and review risks. Run:
+Create a v4 `generation-brief.json` with identity, surfaces, data bindings, presentation, settings, dynamic-text policies, states, behaviors, assets, visual direction, and review risks. Run:
 
 ```bash
 npm run validate:brief
