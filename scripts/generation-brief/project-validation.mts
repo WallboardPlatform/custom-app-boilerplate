@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { normalizeDatasourceBindings } from '../datasource-provisioning.mjs';
 import { readPngDimensions } from '../png-validation.mjs';
 import type { GenerationBrief } from './validation.mts';
+import { validateStyleIsolation } from './style-isolation.mts';
 
 export interface ProjectValidationContext {
 	id: string;
@@ -236,6 +237,10 @@ export const validateBriefAgainstProject = async (
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
 	const propertySummary = collectProperties(context, properties.properties);
 
+	if (brief.briefVersion === 4) {
+		validateStyleIsolation(context.applicationDirectory);
+	}
+
 	if (brief.app.name !== properties.name) {
 		fail(context, 'app.name must match properties.json name.');
 	}
@@ -297,6 +302,10 @@ export const validateBriefAgainstProject = async (
 
 	if (!setsMatch(plannedSettings, propertySummary.settings)) {
 		fail(context, `settings must exactly match editor properties. Brief: ${formatSet(plannedSettings)}; properties: ${formatSet(propertySummary.settings)}.`);
+	}
+
+	if (brief.briefVersion === 4 && (brief.presentation?.themes.length ?? 0) > 1 && !plannedSettings.has('themePreset')) {
+		fail(context, 'multiple presentation themes require a \'themePreset\' editor property.');
 	}
 
 	if (!fs.existsSync(context.fixturePath)) {

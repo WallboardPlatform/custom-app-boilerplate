@@ -18,7 +18,7 @@ const baseConfig: Record<string, unknown> = {
 
 const createFixture = (id: string, configValues: Record<string, unknown>): PreviewFixture => ({
 	id,
-	readySelector: '.clock-time',
+	readySelector: '.wb-single-hero-clock-time',
 	configValues,
 	dataPickerValues: {},
 	datasourceIds: {},
@@ -75,7 +75,7 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		id: 'theme-preset',
 		property: 'themePreset',
 		changedValue: 'light',
-		selector: '.wb-app',
+		selector: '.wb-single-hero-clock-root',
 		measurement: { type: 'computed-style', property: 'background-color' },
 		expectation: { type: 'change' }
 	},
@@ -83,7 +83,7 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		id: 'font-scale',
 		property: 'fontScale',
 		changedValue: 125,
-		selector: '.clock-time',
+		selector: '.wb-single-hero-clock-time',
 		measurement: { type: 'bounding-box', dimension: 'width' },
 		expectation: { type: 'increase', minimumDelta: 20 }
 	}

@@ -7,7 +7,7 @@
 ```scss
 .app-root {
 	@include reset-styles();
-	display: flex;
+	display: block;
 	width: 100%;
 	height: 100%;
 	min-width: 0;
@@ -34,8 +34,8 @@ Custom apps render inside the editor's shared document, not a shadow root. Host 
 - If a global class is necessary, prefix it with a unique app slug: `wb-restaurant-menu-category`, not `menu-category`, `card`, `title`, `content`, or `wb-app`.
 - Prefix global keyframes and custom properties with the same app slug.
 - Keep `:global(...)` inside the owning module and target only that app namespace.
-- `reset-styles()` uses `all: initial`; explicitly restore a formatting context such as `display: block` or `display: flex` on every reset root.
-- Add a behavior test that injects hostile rules for the generic class names the app might otherwise use and verifies every required page/state remains unchanged.
+- `reset-styles()` uses `all: initial`; restore `display: block` by default. Use flex only with an explicit direction and child sizing plan.
+- v4 briefs receive one shared representative editor-host cascade probe. Add an app-specific collision test only for deliberate global or third-party classes not covered by that probe.
 
 See `examples/restaurant-menu` for the namespace and hostile-host regression pattern.
 

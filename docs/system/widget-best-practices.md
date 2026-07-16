@@ -12,13 +12,14 @@ Use this before designing or editing a Wallboard custom app. These rules are abo
 | Stable layout | Hover states, changing text, loading states, and empty states must not resize the root layout unexpectedly. |
 | Contained overflow | Text, images, lists, and tables must wrap, truncate, scroll, paginate, or scale intentionally. Never let content spill outside the widget. |
 | One clipping surface | When the app has a panel, put its background, `border-radius`, and `overflow: hidden` on the same full-size element. Nested rounded backgrounds can expose square corners through sub-pixel differences. |
-| Explicit root display | `reset-styles()` applies `all: initial`; restore `display: block`, `flex`, or another intended formatting context on the reset root. |
+| Explicit root display | `reset-styles()` applies `all: initial`; restore `display: block` by default. Flex requires an explicit direction and child sizing plan. |
 
 Root style baseline:
 
 ```scss
 .wb-app {
   @include reset-styles();
+  display: block;
   width: 100%;
   height: 100%;
   min-width: 0;

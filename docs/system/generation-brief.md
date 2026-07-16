@@ -8,13 +8,14 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `3` |
+| `briefVersion` | `4` for new or edited briefs; v3 remains accepted for existing examples and packages |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
 | `surfaceStrategy` | `fixed` for exact canvases, `bounded` for a known family of sizes, or `adaptive` for unknown placements; include the user or product rationale |
 | `surfaces` | Lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; every supported surface has minimum width/height content coverage |
 | `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
+| `presentation` | Required themes plus `sparse`, `balanced`, or `dense` information density |
 | `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
 | `dynamicText` | Every important variable-length text surface declares its source, selectors, fit/wrap/ellipsis/marquee strategy, readable limits, fallback, rationale, and a stress scenario |
 | `states` | Exactly one expectation for every named `previewScenario` |
@@ -56,6 +57,12 @@ Use this priority order:
 4. Agent-authored composition when no stronger direction exists.
 
 Examples are not style templates. Do not inherit their palette, cards, header treatment, or pagination by default. `reference-led` direction must name the supplied reference. `signatureChoices` records what makes this app visually specific; `avoid` prevents a known generic fallback.
+
+`instruction-led` means the user's explicit concept leads without a visual reference. `creative-led` leaves composition and art direction to the agent because no stronger direction exists. Legacy v3 briefs may contain `agent-authored`; new v4 briefs use `creative-led`.
+
+## Presentation
+
+Declare only themes the app must support. Color-driven apps normally use `dark`, `light`, and `custom`; a fixed branded experience may intentionally require one theme. Multiple themes require a `themePreset` editor property. Density describes the accepted information load, not a reusable visual style: `sparse` for one hero/message, `balanced` for mixed hierarchy, and `dense` for scan-heavy operational or tabular surfaces.
 
 ## Data Binding Sources
 

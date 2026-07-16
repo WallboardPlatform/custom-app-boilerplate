@@ -10,9 +10,9 @@ import style from '@components/wb-app/wb-app.module.scss';
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
-		'--starter-accent': settings().accentColor,
-		'--starter-background': settings().backgroundColor,
-		'--starter-text': settings().textColor
+		'--wb-starter-accent': settings().accentColor,
+		'--wb-starter-background': settings().backgroundColor,
+		'--wb-starter-text': settings().textColor
 	}));
 
 	return (

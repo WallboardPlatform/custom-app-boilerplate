@@ -68,6 +68,7 @@ interface DynamicTextPolicy {
 }
 
 interface GenerationBriefSummary {
+	briefVersion: 3 | 4;
 	surfaceStrategy: {
 		mode: 'fixed' | 'bounded' | 'adaptive';
 	};
@@ -153,6 +154,56 @@ const readSettingEffectValue = async (
 		},
 		effect.measurement
 	);
+};
+
+const readHostStyleFingerprint = async (page: Page): Promise<unknown[]> => {
+	return page.evaluate((): unknown[] => {
+		const mount = document.getElementById('wallboard-preview-root');
+
+		if (!mount) {
+			throw new Error('Preview root was not found.');
+		}
+
+		return Array.from(mount.querySelectorAll<HTMLElement>('.wallboard-application, .wallboard-application *'))
+			.filter((element): boolean => {
+				const style = window.getComputedStyle(element);
+				const rect = element.getBoundingClientRect();
+
+				return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+			})
+			.map((element, index): unknown => {
+				const style = window.getComputedStyle(element);
+				const rect = element.getBoundingClientRect();
+				const round = (value: number): number => Math.round(value * 100) / 100;
+
+				return {
+					index,
+					tag: element.tagName,
+					classes: element.className,
+					rect: [round(rect.left), round(rect.top), round(rect.width), round(rect.height)],
+					style: [
+						style.display,
+						style.position,
+						style.boxSizing,
+						style.marginTop,
+						style.marginRight,
+						style.marginBottom,
+						style.marginLeft,
+						style.paddingTop,
+						style.paddingRight,
+						style.paddingBottom,
+						style.paddingLeft,
+						style.color,
+						style.backgroundColor,
+						style.fontSize,
+						style.lineHeight,
+						style.textAlign,
+						style.overflowX,
+						style.overflowY
+					]
+				};
+			});
+	});
 };
 
 for (const preset of [...presets, ...scenarioPresets]) {
@@ -571,6 +622,41 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			expect(metrics.contentWidthCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.width);
 			expect(metrics.contentHeightCoverage).toBeGreaterThanOrEqual(preset.minimumContentCoverage.height);
 		}
+	});
+}
+
+if (generationBrief.briefVersion === 4) {
+	test('representative editor host styles do not change the app', async ({ page }): Promise<void> => {
+		const primarySurface = generationBrief.surfaces.find((surface) => surface.role === 'primary') as BriefSurface;
+
+		await page.setViewportSize({ width: primarySurface.width, height: primarySurface.height });
+		const response = await page.goto('/preview/widget.html?background=checker');
+
+		expect(response?.ok()).toBe(true);
+		await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true');
+		const baseline = await readHostStyleFingerprint(page);
+
+		await page.addStyleTag({
+			content: `
+				.wallboard-application .wb-app,
+				.wallboard-application .app,
+				.wallboard-application .widget,
+				.wallboard-application .content,
+				.wallboard-application .header,
+				.wallboard-application .title,
+				.wallboard-application .card,
+				.wallboard-application .row,
+				.wallboard-application .column {
+					display: inline;
+					margin: 13px;
+					padding: 9px;
+					color: rgb(255, 0, 255);
+					background-color: rgb(0, 255, 0);
+				}
+			`
+		});
+
+		expect(await readHostStyleFingerprint(page)).toEqual(baseline);
 	});
 }
 

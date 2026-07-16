@@ -20,7 +20,7 @@ const VALID_PNG = Buffer.from(
 const VALID_PREVIEW_SCENARIOS = 'export const previewScenarios = [{ id: \'long-labels\', minimumContentCoverage: { width: 80, height: 80 } }];\n';
 
 const createValidBrief = (): GenerationBrief => ({
-	briefVersion: 3,
+	briefVersion: 4,
 	request: {
 		summary: 'Create an operational signage widget.',
 		audience: 'Visitors reading a shared display.',
@@ -39,6 +39,7 @@ const createValidBrief = (): GenerationBrief => ({
 		{ id: 'square', width: 600, height: 600, role: 'fallback', purpose: 'Square fallback.', minimumContentCoverage: { width: 70, height: 70 } }
 	],
 	data: { mode: 'static', bindings: [] },
+	presentation: { themes: ['dark'], density: 'balanced' },
 	settings: [],
 	dynamicText: [
 		{
@@ -69,7 +70,7 @@ const createValidBrief = (): GenerationBrief => ({
 		}
 	],
 	visualDirection: {
-		source: 'agent-authored',
+		source: 'creative-led',
 		summary: 'A clear operational composition authored for the stated audience.',
 		references: [],
 		signatureChoices: ['One dominant status region.', 'Quiet supporting metadata.'],
@@ -125,6 +126,29 @@ void describe('standalone generation brief validation', () => {
 		brief.unexpected = true;
 
 		assert.throws(() => validateStandaloneBrief(brief), /additional properties/);
+	});
+
+	void it('keeps legacy v3 briefs compatible without presentation decisions', () => {
+		const brief = createValidBrief();
+		brief.briefVersion = 3;
+		delete brief.presentation;
+		brief.visualDirection.source = 'agent-authored';
+
+		assert.doesNotThrow(() => validateStandaloneBrief(brief));
+	});
+
+	void it('requires presentation decisions for v4 briefs', () => {
+		const brief = createValidBrief();
+		delete brief.presentation;
+
+		assert.throws(() => validateStandaloneBrief(brief), /presentation/);
+	});
+
+	void it('uses creative-led instead of agent-authored in v4 briefs', () => {
+		const brief = createValidBrief();
+		brief.visualDirection.source = 'agent-authored';
+
+		assert.throws(() => validateStandaloneBrief(brief), /creative-led/);
 	});
 
 	void it('rejects incompatible datasource source and contract pairs', () => {
@@ -258,6 +282,49 @@ void describe('generation brief project synchronization', () => {
 		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
 
 		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('requires a theme preset property for multiple v4 themes', async (testContext) => {
+		const brief = createValidBrief();
+		brief.presentation = { themes: ['dark', 'light', 'custom'], density: 'balanced' };
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /themePreset/);
+	});
+
+	void it('rejects unscoped global classes in v4 app components', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		const componentDirectory = path.join(context.applicationDirectory, 'src', 'components', 'wb-app');
+		fs.mkdirSync(componentDirectory, { recursive: true });
+		fs.writeFileSync(path.join(componentDirectory, 'widget.tsx'), 'export const Widget = () => <div class="card title" />;\n');
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unscoped global class 'card'/);
+	});
+
+	void it('accepts uniquely namespaced global classes and custom properties', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		const componentDirectory = path.join(context.applicationDirectory, 'src', 'components', 'wb-app');
+		fs.mkdirSync(componentDirectory, { recursive: true });
+		fs.writeFileSync(path.join(componentDirectory, 'widget.tsx'), 'export const Widget = () => <div class="wb-validation-widget-card" />;\n');
+		fs.writeFileSync(path.join(componentDirectory, 'widget.module.scss'), ':global(.wb-validation-widget-card) { color: var(--wb-validation-widget-text); }\n');
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('rejects unscoped global selectors and custom properties in v4 styles', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		const componentDirectory = path.join(context.applicationDirectory, 'src', 'components', 'wb-app');
+		fs.mkdirSync(componentDirectory, { recursive: true });
+		fs.writeFileSync(path.join(componentDirectory, 'widget.module.scss'), ':global(.card) { color: var(--accent); }\n');
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unscoped :global class 'card'/);
 	});
 
 	void it('rejects dynamic text evidence that is not implemented', async (testContext) => {

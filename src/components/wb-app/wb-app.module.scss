@@ -13,8 +13,8 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	background: var(--starter-background);
-	color: var(--starter-text);
+	background: var(--wb-starter-background);
+	color: var(--wb-starter-text);
 	font-family: Arial, sans-serif;
 	text-align: center;
 }
@@ -26,7 +26,7 @@
 .wb-app > span {
 	max-width: 88%;
 	overflow: hidden;
-	color: var(--starter-accent);
+	color: var(--wb-starter-accent);
 	font-size: 16px;
 	font-weight: 700;
 	text-overflow: ellipsis;
@@ -37,7 +37,7 @@
 	max-width: 88%;
 	margin: 18px 0 0;
 	overflow: hidden;
-	color: var(--starter-text);
+	color: var(--wb-starter-text);
 	font-size: 48px;
 	font-weight: 700;
 	line-height: 1.1;

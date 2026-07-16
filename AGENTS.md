@@ -35,7 +35,8 @@ Build production Wallboard widgets, not demo pages. Start with:
 Before implementation, create `generation-brief.json` and pass `npm run validate:brief`.
 
 - Resolve `fixed`, `bounded`, or `adaptive` placement. If placement materially changes the design and is unknown, ask the user.
-- User references, brand assets, and explicit concepts lead. Examples teach mechanics, not palette, card grammar, headers, or pagination style.
+- Set `reference-led`, `instruction-led`, or `creative-led` direction. User references, brand assets, and explicit concepts lead; examples teach mechanics, not style.
+- Record required themes and `sparse`, `balanced`, or `dense` presentation. Do not add responsive density or theme variants the accepted use case does not need.
 - Declare every important variable text surface and its `auto-fit`, `wrap`, `ellipsis`, or `marquee` strategy, readable limit, fallback, and stress scenario.
 - Use coordinated Dark, Light, and Custom themes for color-driven apps unless the accepted direction calls for a different scheme. Presets resolve the entire semantic palette; show manual swatches only in Custom mode.
 - Prefer built-in `FEED` or `CALENDAR` when requested data matches them. Otherwise use an explicit user contract, then editable `TABLE`; use `CUSTOM` only when a table would lose necessary structure.
