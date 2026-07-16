@@ -5,6 +5,7 @@ export interface TextInkMeasurement {
 	fontSize: number;
 	lineHeight: number;
 	boxHeight: number;
+	layoutHeight?: number;
 	visibleHeight?: number;
 	borderTop: number;
 	borderBottom: number;
@@ -42,8 +43,15 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 			return [];
 		}
 
-		const unclippedHeight: number = measurement.boxHeight - measurement.borderTop - measurement.borderBottom;
-		const availableHeight: number = Math.min(unclippedHeight, measurement.visibleHeight ?? unclippedHeight);
+		const layoutHeight: number = measurement.layoutHeight ?? measurement.boxHeight;
+		const viewportScale: number = measurement.layoutHeight && measurement.boxHeight > 0
+			? measurement.boxHeight / measurement.layoutHeight
+			: 1;
+		const visibleHeight: number | undefined = measurement.visibleHeight === undefined
+			? undefined
+			: measurement.visibleHeight / viewportScale;
+		const unclippedHeight: number = layoutHeight - measurement.borderTop - measurement.borderBottom;
+		const availableHeight: number = Math.min(unclippedHeight, visibleHeight ?? unclippedHeight);
 		const availableTextHeight: number = Math.max(0, availableHeight - measurement.paddingBottom);
 		const glyphHeight: number = measurement.actualAscent + measurement.actualDescent;
 		const inkLead: number = Math.max(0, (measurement.lineHeight - glyphHeight) / 2);

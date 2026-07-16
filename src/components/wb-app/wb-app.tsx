@@ -17,7 +17,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	return (
 		<div
-			class={`wb-app ${style['wb-app']}`}
+			class={style['wb-app']}
+			data-preview-id="starter-root"
 			data-host-ready={Boolean(props.hostElement)}
 			style={themeStyle()}
 		>

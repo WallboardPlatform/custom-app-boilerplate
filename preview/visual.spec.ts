@@ -365,6 +365,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 
 				return text;
 			};
+			const clipsVerticalOverflow = (style: CSSStyleDeclaration): boolean => {
+				return ['clip', 'hidden'].includes(style.overflowY)
+					&& !['contents', 'inline'].includes(style.display);
+			};
 
 			for (const element of elements) {
 				const style: CSSStyleDeclaration = window.getComputedStyle(element);
@@ -437,7 +441,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					canvasContext
 					&& element.childElementCount === 0
 					&& text
-					&& ['clip', 'hidden'].includes(style.overflowY)
+					&& clipsVerticalOverflow(style)
 					&& Number.isFinite(lineHeight)
 				) {
 					let visibleTop: number = rect.top;
@@ -447,7 +451,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					while (clippingAncestor && clippingAncestor !== root.parentElement) {
 						const ancestorStyle: CSSStyleDeclaration = window.getComputedStyle(clippingAncestor);
 
-						if (['clip', 'hidden'].includes(ancestorStyle.overflowY)) {
+						if (clipsVerticalOverflow(ancestorStyle)) {
 							const ancestorRect: DOMRect = clippingAncestor.getBoundingClientRect();
 
 							visibleTop = Math.max(visibleTop, ancestorRect.top);
@@ -475,6 +479,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 						fontSize: Number.parseFloat(style.fontSize),
 						lineHeight,
 						boxHeight: rect.height,
+						layoutHeight: element.offsetHeight || undefined,
 						visibleHeight: Math.max(0, visibleBottom - visibleTop),
 						borderTop: Number.parseFloat(style.borderTopWidth) || 0,
 						borderBottom: Number.parseFloat(style.borderBottomWidth) || 0,

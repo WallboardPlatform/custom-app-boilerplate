@@ -58,7 +58,7 @@
 		{
 			"id": "restaurant-name",
 			"source": { "type": "setting", "properties": ["restaurantName"] },
-			"selectors": [".menu-header h1"],
+			"selectors": [".wb-restaurant-menu-header h1"],
 			"strategy": "auto-fit",
 			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
@@ -68,7 +68,7 @@
 		{
 			"id": "dish-name",
 			"source": { "type": "datasource", "properties": ["menuData"] },
-			"selectors": [".menu-item__line > strong"],
+			"selectors": [".wb-restaurant-menu-item__line > strong"],
 			"strategy": "ellipsis",
 			"limits": { "maximumLines": 1 },
 			"fallback": "Ellipsize the dish name after reserving the price and leader line; keep the full value in the editable datasource.",

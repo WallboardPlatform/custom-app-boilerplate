@@ -189,19 +189,19 @@ const createSections = (rows: MenuRow[]): MenuSection[] => {
 };
 
 const MenuCategory = (props: { section: MenuSection }): JSX.Element => (
-	<section class="menu-category">
+	<section class="wb-restaurant-menu-category">
 		<header>
 			<span>{props.section.number}</span>
 			<h2>{props.section.title}</h2>
 			<Show when={props.section.continuation}><small>continued</small></Show>
 		</header>
-		<div class="menu-category__items">
+		<div class="wb-restaurant-menu-category__items">
 			<For each={props.section.items}>
 				{(item: MenuItem): JSX.Element => (
-					<div class="menu-item" classList={{ 'menu-item--featured': item.featured }}>
-						<div class="menu-item__line">
+					<div class="wb-restaurant-menu-item" classList={{ 'wb-restaurant-menu-item--featured': item.featured }}>
+						<div class="wb-restaurant-menu-item__line">
 							<strong>{item.name}</strong>
-							<Show when={item.badge}><span class="menu-item__badge">{item.badge}</span></Show>
+							<Show when={item.badge}><span class="wb-restaurant-menu-item__badge">{item.badge}</span></Show>
 							<i />
 							<b>{item.price}</b>
 						</div>
@@ -257,17 +257,17 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		return chunk(currentSections(), 2);
 	});
 	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
-		'--menu-background': settings().backgroundColor,
-		'--menu-header-background': settings().headerBackgroundColor,
-		'--menu-header-text': settings().headerTextColor,
-		'--menu-story-background': settings().storyBackgroundColor,
-		'--menu-story-text': settings().storyTextColor,
-		'--menu-primary': settings().primaryTextColor,
-		'--menu-secondary': settings().secondaryTextColor,
-		'--menu-accent': settings().accentColor,
-		'--menu-accent-text': settings().accentTextColor,
-		'--menu-line': settings().lineColor,
-		'--menu-featured': settings().featuredColor
+		'--wb-restaurant-menu-background': settings().backgroundColor,
+		'--wb-restaurant-menu-header-background': settings().headerBackgroundColor,
+		'--wb-restaurant-menu-header-text': settings().headerTextColor,
+		'--wb-restaurant-menu-story-background': settings().storyBackgroundColor,
+		'--wb-restaurant-menu-story-text': settings().storyTextColor,
+		'--wb-restaurant-menu-primary': settings().primaryTextColor,
+		'--wb-restaurant-menu-secondary': settings().secondaryTextColor,
+		'--wb-restaurant-menu-accent': settings().accentColor,
+		'--wb-restaurant-menu-accent-text': settings().accentTextColor,
+		'--wb-restaurant-menu-line': settings().lineColor,
+		'--wb-restaurant-menu-featured': settings().featuredColor
 	}));
 
 	onMount((): void => {
@@ -298,16 +298,16 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	return (
 		<div
-			class={`wb-app ${style['wb-app']}`}
+			class={`wb-restaurant-menu-root ${style['wb-app']}`}
 			data-host-ready={Boolean(props.hostElement)}
 			style={themeStyle()}
 		>
-			<header class="menu-header">
-				<div class="menu-brand">
+			<header class="wb-restaurant-menu-header">
+				<div class="wb-restaurant-menu-brand">
 					<span>{settings().restaurantName.charAt(0)}</span>
 					<div><small>{settings().restaurantLabel}</small><h1 ref={fitRestaurantName}>{settings().restaurantName}</h1></div>
 				</div>
-				<div class="menu-edition">
+				<div class="wb-restaurant-menu-edition">
 					<strong>{settings().editionTitle}</strong>
 					<span>{settings().editionSubtitle}</span>
 					<Show when={pageCount() > 1}><em>{pageIndex() + 1} / {pageCount()}</em></Show>
@@ -319,7 +319,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			</header>
 
 			<main>
-				<aside class="menu-story">
+				<aside class="wb-restaurant-menu-story">
 					<div>
 						<span>{settings().storyEyebrow}</span>
 						<h2>{settings().storyTitle}</h2>
@@ -336,11 +336,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					</footer>
 				</aside>
 
-				<div class="menu-board">
-					<Show when={currentSections().length > 0} fallback={<div class="menu-empty">{settings().emptyStateText}</div>}>
+				<div class="wb-restaurant-menu-board">
+					<Show when={currentSections().length > 0} fallback={<div class="wb-restaurant-menu-empty">{settings().emptyStateText}</div>}>
 						<For each={sectionRows()}>
 							{(row: MenuSection[]): JSX.Element => (
-								<div class="menu-board__row" classList={{ 'menu-board__row--single': row.length === 1 }}>
+								<div class="wb-restaurant-menu-board__row" classList={{ 'wb-restaurant-menu-board__row--single': row.length === 1 }}>
 									<For each={row}>{(section: MenuSection): JSX.Element => <MenuCategory section={section} />}</For>
 								</div>
 							)}

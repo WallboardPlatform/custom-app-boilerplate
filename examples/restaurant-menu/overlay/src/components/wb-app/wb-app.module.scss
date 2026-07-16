@@ -8,36 +8,36 @@
   min-height: 0;
   overflow: hidden;
   flex-direction: column;
-  color: var(--menu-primary);
-  background: var(--menu-background);
+  color: var(--wb-restaurant-menu-primary);
+  background: var(--wb-restaurant-menu-background);
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-:global(.wb-app) > *,
-:global(.wb-app) > * * {
+:global(.wb-restaurant-menu-root) > *,
+:global(.wb-restaurant-menu-root) > * * {
   @include box-sizing();
 }
 
-:global(.menu-header) {
+:global(.wb-restaurant-menu-header) {
   display: flex;
   height: 142px;
   min-height: 0;
   padding: 24px 42px;
   flex: 0 0 auto;
   align-items: center;
-  color: var(--menu-header-text);
-  border-bottom: 6px solid var(--menu-accent);
-  background: var(--menu-header-background);
+  color: var(--wb-restaurant-menu-header-text);
+  border-bottom: 6px solid var(--wb-restaurant-menu-accent);
+  background: var(--wb-restaurant-menu-header-background);
 }
 
-:global(.menu-brand) {
+:global(.wb-restaurant-menu-brand) {
   display: flex;
   min-width: 0;
   flex: 1 1 0;
   align-items: center;
 }
 
-:global(.menu-brand) > span {
+:global(.wb-restaurant-menu-brand) > span {
   display: flex;
   width: 68px;
   height: 68px;
@@ -45,29 +45,29 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  color: var(--menu-header-background);
-  background: var(--menu-header-text);
+  color: var(--wb-restaurant-menu-header-background);
+  background: var(--wb-restaurant-menu-header-text);
   font-family: Georgia, serif;
   font-size: 42px;
   font-style: italic;
   line-height: 1;
 }
 
-:global(.menu-brand) > div {
+:global(.wb-restaurant-menu-brand) > div {
   min-width: 0;
 }
 
-:global(.menu-brand) small {
+:global(.wb-restaurant-menu-brand) small {
   display: block;
   margin-bottom: 2px;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 
-:global(.menu-brand) h1 {
+:global(.wb-restaurant-menu-brand) h1 {
   margin: 0;
   padding-bottom: 0.1em;
   overflow: hidden;
@@ -81,7 +81,7 @@
   white-space: nowrap;
 }
 
-:global(.menu-edition) {
+:global(.wb-restaurant-menu-edition) {
   display: flex;
   min-width: 0;
   flex: 1 1 0;
@@ -91,13 +91,13 @@
   text-align: center;
 }
 
-:global(.menu-edition) > * {
+:global(.wb-restaurant-menu-edition) > * {
   width: 100%;
   min-width: 0;
   max-width: 100%;
 }
 
-:global(.menu-edition) strong {
+:global(.wb-restaurant-menu-edition) strong {
   margin-bottom: 5px;
   overflow: hidden;
   font-family: Georgia, serif;
@@ -107,9 +107,9 @@
   white-space: nowrap;
 }
 
-:global(.menu-edition) span {
+:global(.wb-restaurant-menu-edition) span {
   overflow: hidden;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-size: 12px;
   letter-spacing: 1px;
   text-overflow: ellipsis;
@@ -117,16 +117,16 @@
   white-space: nowrap;
 }
 
-:global(.menu-edition) em {
+:global(.wb-restaurant-menu-edition) em {
   margin-top: 8px;
-  color: var(--menu-accent-text);
+  color: var(--wb-restaurant-menu-accent-text);
   font-size: 11px;
   font-style: normal;
   font-weight: 700;
   letter-spacing: 1px;
 }
 
-:global(.menu-header) time {
+:global(.wb-restaurant-menu-header) time {
   display: flex;
   min-width: 0;
   flex: 1 1 0;
@@ -135,29 +135,29 @@
   justify-content: center;
 }
 
-:global(.menu-header) time span {
+:global(.wb-restaurant-menu-header) time span {
   margin-bottom: 3px;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-:global(.menu-header) time strong {
+:global(.wb-restaurant-menu-header) time strong {
   font-size: 32px;
   font-weight: 500;
   letter-spacing: 0;
 }
 
-:global(.wb-app) main {
+:global(.wb-restaurant-menu-root) main {
   display: flex;
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
 }
 
-:global(.menu-story) {
+:global(.wb-restaurant-menu-story) {
   display: flex;
   width: 29%;
   min-width: 0;
@@ -166,21 +166,21 @@
   flex: 0 0 auto;
   flex-direction: column;
   justify-content: space-between;
-  color: var(--menu-story-text);
-  background: var(--menu-story-background);
+  color: var(--wb-restaurant-menu-story-text);
+  background: var(--wb-restaurant-menu-story-background);
 }
 
-:global(.menu-story) > div > span,
-:global(.menu-story) section small {
+:global(.wb-restaurant-menu-story) > div > span,
+:global(.wb-restaurant-menu-story) section small {
   display: block;
-  color: var(--menu-accent-text);
+  color: var(--wb-restaurant-menu-accent-text);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 
-:global(.menu-story) h2 {
+:global(.wb-restaurant-menu-story) h2 {
   margin: 18px 0 20px;
   font-family: Georgia, serif;
   font-size: 43px;
@@ -190,23 +190,23 @@
   white-space: pre-line;
 }
 
-:global(.menu-story) > div > p {
+:global(.wb-restaurant-menu-story) > div > p {
   max-width: 360px;
   margin: 0;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-family: Georgia, serif;
   font-size: 17px;
   line-height: 1.55;
 }
 
-:global(.menu-story) section {
+:global(.wb-restaurant-menu-story) section {
   position: relative;
   padding: 25px 0;
-  border-top: 1px solid var(--menu-line);
-  border-bottom: 1px solid var(--menu-line);
+  border-top: 1px solid var(--wb-restaurant-menu-line);
+  border-bottom: 1px solid var(--wb-restaurant-menu-line);
 }
 
-:global(.menu-story) section strong {
+:global(.wb-restaurant-menu-story) section strong {
   display: block;
   margin-top: 8px;
   font-family: Georgia, serif;
@@ -214,18 +214,18 @@
   font-weight: 400;
 }
 
-:global(.menu-story) section b {
+:global(.wb-restaurant-menu-story) section b {
   position: absolute;
   right: 0;
   bottom: 23px;
-  color: var(--menu-accent-text);
+  color: var(--wb-restaurant-menu-accent-text);
   font-size: 28px;
   font-weight: 600;
 }
 
-:global(.menu-story) footer {
+:global(.wb-restaurant-menu-story) footer {
   display: flex;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -233,11 +233,11 @@
   text-transform: uppercase;
 }
 
-:global(.menu-story) footer span:first-child {
+:global(.wb-restaurant-menu-story) footer span:first-child {
   margin-bottom: 7px;
 }
 
-:global(.menu-board) {
+:global(.wb-restaurant-menu-board) {
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -246,39 +246,39 @@
   flex-direction: column;
 }
 
-:global(.menu-board__row) {
+:global(.wb-restaurant-menu-board__row) {
   display: flex;
   min-width: 0;
   min-height: 0;
   flex: 1 1 0;
 }
 
-:global(.menu-board__row:first-child) {
+:global(.wb-restaurant-menu-board__row:first-child) {
   margin-bottom: 28px;
 }
 
-:global(.menu-board__row:first-child:last-child) {
+:global(.wb-restaurant-menu-board__row:first-child:last-child) {
   margin-bottom: 0;
 }
 
-:global(.menu-category) {
+:global(.wb-restaurant-menu-category) {
   display: flex;
   min-width: 0;
   min-height: 0;
   flex: 1 1 0;
   flex-direction: column;
-  border-top: 1px solid var(--menu-line);
+  border-top: 1px solid var(--wb-restaurant-menu-line);
 }
 
-:global(.menu-category:first-child) {
+:global(.wb-restaurant-menu-category:first-child) {
   margin-right: 48px;
 }
 
-:global(.menu-board__row--single) .menu-category:first-child {
+:global(.wb-restaurant-menu-board__row--single) .wb-restaurant-menu-category:first-child {
   margin-right: 0;
 }
 
-:global(.menu-category) > header {
+:global(.wb-restaurant-menu-category) > header {
   display: flex;
   min-width: 0;
   padding: 16px 0 18px;
@@ -286,15 +286,15 @@
   align-items: baseline;
 }
 
-:global(.menu-category) > header span {
+:global(.wb-restaurant-menu-category) > header span {
   margin-right: 13px;
-  color: var(--menu-accent);
+  color: var(--wb-restaurant-menu-accent);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
 
-:global(.menu-category) > header h2 {
+:global(.wb-restaurant-menu-category) > header h2 {
   min-width: 0;
   margin: 0;
   flex: 0 1 auto;
@@ -306,10 +306,10 @@
   overflow-wrap: break-word;
 }
 
-:global(.menu-category) > header small {
+:global(.wb-restaurant-menu-category) > header small {
   margin-left: 10px;
   overflow: hidden;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -318,7 +318,7 @@
   white-space: nowrap;
 }
 
-:global(.menu-category__items) {
+:global(.wb-restaurant-menu-category__items) {
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -327,17 +327,17 @@
   justify-content: space-around;
 }
 
-:global(.menu-item) {
+:global(.wb-restaurant-menu-item) {
   min-width: 0;
 }
 
-:global(.menu-item__line) {
+:global(.wb-restaurant-menu-item__line) {
   display: flex;
   min-width: 0;
   align-items: baseline;
 }
 
-:global(.menu-item__line) strong {
+:global(.wb-restaurant-menu-item__line) strong {
   overflow: hidden;
   flex: 0 1 auto;
   font-size: 18px;
@@ -346,16 +346,16 @@
   white-space: nowrap;
 }
 
-:global(.menu-item--featured) .menu-item__line strong {
-  color: var(--menu-featured);
+:global(.wb-restaurant-menu-item--featured) .wb-restaurant-menu-item__line strong {
+  color: var(--wb-restaurant-menu-featured);
 }
 
-:global(.menu-item__badge) {
+:global(.wb-restaurant-menu-item__badge) {
   max-width: 110px;
   margin-left: 9px;
   overflow: hidden;
   flex: 0 1 auto;
-  color: var(--menu-accent);
+  color: var(--wb-restaurant-menu-accent);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -364,25 +364,25 @@
   white-space: nowrap;
 }
 
-:global(.menu-item__line) i {
+:global(.wb-restaurant-menu-item__line) i {
   min-width: 14px;
   height: 1px;
   margin: 0 11px 4px;
   flex: 1 1 auto;
-  border-bottom: 1px dotted var(--menu-line);
+  border-bottom: 1px dotted var(--wb-restaurant-menu-line);
 }
 
-:global(.menu-item__line) b {
+:global(.wb-restaurant-menu-item__line) b {
   flex: 0 0 auto;
-  color: var(--menu-featured);
+  color: var(--wb-restaurant-menu-featured);
   font-size: 18px;
   font-weight: 600;
 }
 
-:global(.menu-item) p {
+:global(.wb-restaurant-menu-item) p {
   margin: 5px 0 0;
   overflow: hidden;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-family: Georgia, serif;
   font-size: 13px;
   font-style: italic;
@@ -391,7 +391,7 @@
   white-space: nowrap;
 }
 
-:global(.menu-empty) {
+:global(.wb-restaurant-menu-empty) {
   display: flex;
   width: 100%;
   min-width: 0;
@@ -399,7 +399,7 @@
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  color: var(--menu-secondary);
+  color: var(--wb-restaurant-menu-secondary);
   font-family: Georgia, serif;
   font-size: 30px;
   font-style: italic;
@@ -407,109 +407,109 @@
 }
 
 @media (max-height: 620px) {
-  :global(.menu-header) {
+  :global(.wb-restaurant-menu-header) {
     height: 90px;
     padding: 13px 28px;
     border-bottom-width: 4px;
   }
 
-  :global(.menu-brand) > span {
+  :global(.wb-restaurant-menu-brand) > span {
     width: 50px;
     height: 50px;
     margin-right: 13px;
     font-size: 31px;
   }
 
-  :global(.menu-brand) h1 {
+  :global(.wb-restaurant-menu-brand) h1 {
     font-size: 35px;
   }
 
-  :global(.menu-edition) strong {
+  :global(.wb-restaurant-menu-edition) strong {
     font-size: 19px;
   }
 
-  :global(.menu-header) time strong {
+  :global(.wb-restaurant-menu-header) time strong {
     font-size: 24px;
   }
 
-  :global(.menu-story) {
+  :global(.wb-restaurant-menu-story) {
     padding: 25px 28px 20px;
   }
 
-  :global(.menu-story) h2 {
+  :global(.wb-restaurant-menu-story) h2 {
     margin: 9px 0 11px;
     font-size: 27px;
   }
 
-  :global(.menu-story) > div > p {
+  :global(.wb-restaurant-menu-story) > div > p {
     font-size: 13px;
     line-height: 1.35;
   }
 
-  :global(.menu-story) section {
+  :global(.wb-restaurant-menu-story) section {
     padding: 12px 0;
   }
 
-  :global(.menu-story) section strong,
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section strong,
+  :global(.wb-restaurant-menu-story) section b {
     font-size: 20px;
   }
 
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section b {
     bottom: 11px;
   }
 
-  :global(.menu-board) {
+  :global(.wb-restaurant-menu-board) {
     padding: 20px 28px;
   }
 
-  :global(.menu-board__row:first-child) {
+  :global(.wb-restaurant-menu-board__row:first-child) {
     margin-bottom: 14px;
   }
 
-  :global(.menu-category:first-child) {
+  :global(.wb-restaurant-menu-category:first-child) {
     margin-right: 32px;
   }
 
-  :global(.menu-category) > header {
+  :global(.wb-restaurant-menu-category) > header {
     padding: 8px 0 7px;
   }
 
-  :global(.menu-category) > header h2 {
+  :global(.wb-restaurant-menu-category) > header h2 {
     font-size: 23px;
   }
 
-  :global(.menu-item__line) strong,
-  :global(.menu-item__line) b {
+  :global(.wb-restaurant-menu-item__line) strong,
+  :global(.wb-restaurant-menu-item__line) b {
     font-size: 14px;
   }
 
-  :global(.menu-item__badge),
-  :global(.menu-category) > header small {
+  :global(.wb-restaurant-menu-item__badge),
+  :global(.wb-restaurant-menu-category) > header small {
     display: none;
   }
 
-  :global(.menu-item) p {
+  :global(.wb-restaurant-menu-item) p {
     margin-top: 2px;
     font-size: 10px;
   }
 }
 
 @media (max-width: 900px), (min-height: 900px) and (max-width: 1200px) {
-  :global(.menu-header) {
+  :global(.wb-restaurant-menu-header) {
     height: 112px;
     padding: 18px 24px;
   }
 
-  :global(.menu-edition) {
+  :global(.wb-restaurant-menu-edition) {
     display: none;
   }
 
-  :global(.wb-app) main {
+  :global(.wb-restaurant-menu-root) main {
     flex-direction: column;
   }
 
-  :global(.menu-story) {
+  :global(.wb-restaurant-menu-story) {
     display: flex;
     width: auto;
     min-height: 0;
@@ -519,136 +519,136 @@
     align-items: center;
   }
 
-  :global(.menu-story) > div {
+  :global(.wb-restaurant-menu-story) > div {
     min-width: 0;
     flex: 1 1 auto;
   }
 
-  :global(.menu-story) h2 {
+  :global(.wb-restaurant-menu-story) h2 {
     margin: 8px 0 0;
     font-size: 29px;
   }
 
-  :global(.menu-story) > div > p,
-  :global(.menu-story) footer {
+  :global(.wb-restaurant-menu-story) > div > p,
+  :global(.wb-restaurant-menu-story) footer {
     display: none;
   }
 
-  :global(.menu-story) section {
+  :global(.wb-restaurant-menu-story) section {
     width: 220px;
     margin-left: 28px;
     padding: 18px 0;
     flex: 0 0 auto;
   }
 
-  :global(.menu-story) section strong,
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section strong,
+  :global(.wb-restaurant-menu-story) section b {
     font-size: 22px;
   }
 
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section b {
     bottom: 17px;
   }
 
-  :global(.menu-board) {
+  :global(.wb-restaurant-menu-board) {
     padding: 24px 28px;
   }
 
-  :global(.menu-category:first-child) {
+  :global(.wb-restaurant-menu-category:first-child) {
     margin-right: 28px;
   }
 }
 
 @media (max-width: 640px) {
-  :global(.menu-header) {
+  :global(.wb-restaurant-menu-header) {
     height: 86px;
     padding: 12px 20px;
     border-bottom-width: 4px;
   }
 
-  :global(.menu-brand) > span {
+  :global(.wb-restaurant-menu-brand) > span {
     width: 46px;
     height: 46px;
     margin-right: 12px;
     font-size: 29px;
   }
 
-  :global(.menu-brand) h1 {
+  :global(.wb-restaurant-menu-brand) h1 {
     font-size: 31px;
   }
 
-  :global(.menu-header) time span {
+  :global(.wb-restaurant-menu-header) time span {
     display: none;
   }
 
-  :global(.menu-header) time strong {
+  :global(.wb-restaurant-menu-header) time strong {
     font-size: 22px;
   }
 
-  :global(.menu-story) {
+  :global(.wb-restaurant-menu-story) {
     padding: 16px 20px;
     flex-basis: 25%;
   }
 
-  :global(.menu-story) h2 {
+  :global(.wb-restaurant-menu-story) h2 {
     font-size: 23px;
   }
 
-  :global(.menu-story) section {
+  :global(.wb-restaurant-menu-story) section {
     width: 155px;
     margin-left: 18px;
     padding: 12px 0;
   }
 
-  :global(.menu-story) section strong,
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section strong,
+  :global(.wb-restaurant-menu-story) section b {
     font-size: 16px;
   }
 
-  :global(.menu-story) section b {
+  :global(.wb-restaurant-menu-story) section b {
     bottom: 11px;
   }
 
-  :global(.menu-board) {
+  :global(.wb-restaurant-menu-board) {
     padding: 16px 20px;
   }
 
-  :global(.menu-board__row:first-child) {
+  :global(.wb-restaurant-menu-board__row:first-child) {
     margin-bottom: 12px;
   }
 
-  :global(.menu-category:first-child) {
+  :global(.wb-restaurant-menu-category:first-child) {
     margin-right: 20px;
   }
 
-  :global(.menu-category) > header {
+  :global(.wb-restaurant-menu-category) > header {
     padding: 7px 0 5px;
   }
 
-  :global(.menu-category) > header span {
+  :global(.wb-restaurant-menu-category) > header span {
     margin-right: 7px;
     font-size: 9px;
   }
 
-  :global(.menu-category) > header h2 {
+  :global(.wb-restaurant-menu-category) > header h2 {
     font-size: 19px;
   }
 
-  :global(.menu-item__line) strong,
-  :global(.menu-item__line) b {
+  :global(.wb-restaurant-menu-item__line) strong,
+  :global(.wb-restaurant-menu-item__line) b {
     font-size: 12px;
   }
 
-  :global(.menu-item) p {
+  :global(.wb-restaurant-menu-item) p {
     display: none;
   }
 
-  :global(.menu-item__badge),
-  :global(.menu-category) > header small {
+  :global(.wb-restaurant-menu-item__badge),
+  :global(.wb-restaurant-menu-category) > header small {
     display: none;
   }
 
-  :global(.menu-empty) {
+  :global(.wb-restaurant-menu-empty) {
     font-size: 22px;
   }
 }
