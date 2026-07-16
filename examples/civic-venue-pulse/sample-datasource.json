@@ -1,0 +1,52 @@
+{
+	"calendar": {
+		"calendarDetails": {
+			"id": "foundry-programs@example.invalid",
+			"name": "Foundry Arts Center Programs",
+			"timeZone": "America/New_York"
+		},
+		"events": [
+			{
+				"id": "foundry-program-1",
+				"status": "confirmed",
+				"title": "Open Studio: Clay and Light",
+				"description": "Drop-in workshop with teaching artists in the ceramics studio.",
+				"location": "Kiln Workshop",
+				"start": { "dateTime": "2026-07-16T18:00:00-04:00", "timeStamp": "1784248800000" },
+				"end": { "dateTime": "2026-07-16T19:15:00-04:00", "timeStamp": "1784253300000" }
+			},
+			{
+				"id": "foundry-program-2",
+				"status": "confirmed",
+				"title": "Foundry Courtyard Jazz",
+				"description": "A quiet outdoor set before evening gallery hours.",
+				"location": "Courtyard",
+				"start": { "dateTime": "2026-07-16T19:30:00-04:00", "timeStamp": "1784254200000" },
+				"end": { "dateTime": "2026-07-16T20:20:00-04:00", "timeStamp": "1784257200000" }
+			}
+		]
+	},
+	"feed": {
+		"channel": {
+			"title": "Foundry Venue Notes",
+			"description": "Synthetic visitor announcements for the Foundry Arts Center.",
+			"items": [
+				{
+					"guid": "foundry-note-1",
+					"title": "Courtyard doors open from Maple Street",
+					"description": "<p>Use the Maple Street entry for tonight's outdoor program.</p>",
+					"publishDate": 1784245200,
+					"categories": ["Visitor note"],
+					"media": { "url": "https://example.invalid/foundry/courtyard.jpg" }
+				},
+				{
+					"guid": "foundry-note-2",
+					"title": "Print lab demonstrations continue upstairs",
+					"description": "Teaching artists will reset the press between sessions.",
+					"publishDate": 1784239800,
+					"categories": ["Program note"]
+				}
+			]
+		}
+	}
+}
