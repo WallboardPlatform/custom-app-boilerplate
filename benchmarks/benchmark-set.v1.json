@@ -1,0 +1,192 @@
+{
+	"benchmarkVersion": 1,
+	"frozenAt": "2026-07-15",
+	"agentIsolation": {
+		"source": "Normal agent-ready source archive generated from the benchmark branch.",
+		"allowedContext": ["task prompt", "declared task inputs"],
+		"forbiddenContext": ["benchmark definition", "hidden acceptance criteria", "scorecard", "other task results", "conversation history"]
+	},
+	"scoreDefinition": {
+		"binaryGates": [
+			"briefValid",
+			"projectValid",
+			"visualValid",
+			"packageValid",
+			"legacyBundleValid",
+			"datasourceContractValid",
+			"fictionalDataOnly",
+			"versionPolicyValid"
+		],
+		"ratedDimensions": [
+			{ "id": "promptFidelity", "max": 5 },
+			{ "id": "referenceFidelity", "max": 5 },
+			{ "id": "visualSpecificity", "max": 5 },
+			{ "id": "distanceReadability", "max": 5 },
+			{ "id": "dynamicTextSafety", "max": 5 },
+			{ "id": "surfaceComposition", "max": 5 },
+			{ "id": "dataAndStateBehavior", "max": 5 },
+			{ "id": "assetAndThemeQuality", "max": 5 },
+			{ "id": "originality", "max": 5 },
+			{ "id": "deliveryQuality", "max": 5 }
+		],
+		"firstPassUsable": "All binary gates pass, no rated dimension is below 3, total rated score is at least 40/50, and the evaluator accepts the ZIP as upload-ready."
+	},
+	"tasks": [
+		{
+			"id": "b01-harbor-menu",
+			"title": "Reference-led harbor restaurant menu",
+			"coverageTags": ["reference-image", "fixed", "bound", "table", "menu", "portrait", "uneven-data"],
+			"inputs": ["references/harbor-menu-reference.svg"],
+			"prompt": "Build a production Wallboard menu board for the fictional Harbor & Pine restaurant. The primary and only required canvas is 1080x1920 portrait. Use the supplied reference image as the visual lead: preserve its editorial hierarchy, asymmetric spacing, warm palette, and typographic character without tracing it literally. Menu content must come from an editable generated TABLE datasource with category, item, description, price, dietary label, and availability. Categories can contain different item counts, unavailable rows must be handled intentionally, and long names must remain readable. Include polished empty, one-category, many-category, long-label, and uneven-last-page states. Keep app version 1.",
+			"hiddenAcceptance": [
+				"The result reads as a restaurant menu, not a dashboard or card grid.",
+				"The reference controls hierarchy, palette, and rhythm while the implementation remains original.",
+				"Variable category sizes paginate or rebalance without blank lower regions or clipped prices.",
+				"The generated datasource is TABLE-based and contains only fictional sample dishes."
+			]
+		},
+		{
+			"id": "b02-market-ribbon",
+			"title": "Fixed ultra-wide market ribbon",
+			"coverageTags": ["fixed", "bound", "ticker", "multi-source", "assets", "extreme-aspect"],
+			"inputs": [],
+			"prompt": "Create a Wallboard market ribbon for an exact 6000x136 video-wall zone. Rotate fictional NASDAQ, TSX, Dow, and CAD/USD datasets supplied as four independent existing datasource bindings plus one File System logo binding. Each market begins with a moving exchange title, then continuously scrolls symbols, price, and change from right to left. The final canonical item must leave fully before switching, while trailing clones keep the entire strip populated. Filter invalid prices, tolerate missing logos, expose speed/margins/type/logo/colors/icons, preserve independent live updates, and remain Chrome 49/56 compatible. This is fixed-size signage, not an adaptive dashboard. Keep version 1 and use sanitized representative fixtures only.",
+			"hiddenAcceptance": [
+				"The fixed 6000x136 strip has no startup, loop, or transition gap.",
+				"Market title motion and final-item exit are behavior-tested, not inferred from screenshots.",
+				"All five existing bindings remain separate and fixtures contain no supplied production URLs or records.",
+				"Missing logos fall back cleanly without broken requests."
+			]
+		},
+		{
+			"id": "b03-airport-departures",
+			"title": "Adaptive editable airport departures",
+			"coverageTags": ["adaptive", "bound", "table", "pagination", "long-text", "operational"],
+			"inputs": [],
+			"prompt": "Build an adaptive airport departures board for the fictional Northwind International Airport. The customer will maintain flights in an editable generated TABLE datasource with time, destination, flight, airline, gate, status, and remarks. Support 1920x1080, 1536x432, 1080x1920, and 600x600. Prioritize scan speed and distance readability; do not use a card per flight. Rows per page must adapt to height, short and final pages must use the zone intentionally, and long destinations/statuses must not damage other columns. Cover empty, malformed, delayed/cancelled, maximum-content, odd-count, last-page, and live-update states. Keep version 1.",
+			"hiddenAcceptance": [
+				"Uses an editable TABLE contract and defensive row normalization.",
+				"Maintains timetable alignment across all requested ratios without clipping descenders or edge columns.",
+				"Pagination behavior and live updates have executable evidence.",
+				"Partial pages avoid top compression and excessive unused space."
+			]
+		},
+		{
+			"id": "b04-solar-operations",
+			"title": "Bounded solar operations dashboard",
+			"coverageTags": ["bounded", "bound", "custom", "charts", "dashboard", "light-theme"],
+			"inputs": [],
+			"prompt": "Create a premium solar-facility operations board for fictional Lumen Ridge Energy. It is used only at 1920x1080 and 3840x1080. A generated datasource may use CUSTOM only if the time-series and site hierarchy cannot be represented losslessly as one editable table. Show current output, daily yield, target progress, site availability, alerts, and a 24-hour production trend. Use Chart.js selectively, with a light-first visual direction inspired by technical print graphics rather than dark KPI cards. Provide coordinated Light, Dark, and Custom themes. Handle no data, one point, dense series, long site names, offline sites, and live updates. Keep version 1.",
+			"hiddenAcceptance": [
+				"The bounded two-surface composition is deliberately tuned instead of broadly adaptive.",
+				"Chart instances resize and clean up correctly, and plots remain legible from signage distance.",
+				"CUSTOM is justified by the hierarchical/time-series shape; otherwise TABLE is used.",
+				"Light mode is a first-class coherent design, not inverted dark colors."
+			]
+		},
+		{
+			"id": "b05-city-arts-feed",
+			"title": "Editorial city arts feed",
+			"coverageTags": ["adaptive", "bound", "feed", "media", "editorial", "pagination"],
+			"inputs": [],
+			"prompt": "Build an editorial Wallboard feature for fictional Meridian City Arts using the built-in FEED datasource contract. Rotate current stories with title, summary, date, category, and media when available. Make imagery and typography lead the composition; avoid a dashboard header plus repeated cards. Support 1920x1080, 1536x432, 1080x1920, and 600x600. Normalize current and legacy RSS shapes, sanitize rich text, and provide intentional broken-image, no-media, empty-feed, long-headline, single-item, and live-update states. Rotation must not reset on unrelated updates. Keep version 1.",
+			"hiddenAcceptance": [
+				"Uses the built-in FEED contract rather than inventing a generic TABLE mapper.",
+				"The composition remains editorial and media-led across ratios with a strong no-media fallback.",
+				"Long headlines use an explicit readable strategy and never clip glyphs.",
+				"Rich content is sanitized and rotation behavior is tested."
+			]
+		},
+		{
+			"id": "b06-clinic-agenda",
+			"title": "Compact clinic calendar agenda",
+			"coverageTags": ["bounded", "bound", "calendar", "compact", "timeline", "long-text"],
+			"inputs": [],
+			"prompt": "Create a calm patient-facing agenda for the fictional Cedar Clinic using Wallboard's built-in CALENDAR contract. It will run only at 800x480 reception screens and 1920x1080 lobby displays. Show current appointment context, what is next, and a short chronological agenda without exposing patient names; fixtures must use fictional appointment types and rooms. Normalize Microsoft, Google, and iCalendar shapes. Handle all-day events, overlaps, empty calendar, long event names, missing locations, and live updates. The compact version may intentionally remove secondary detail before shrinking primary text. Keep version 1.",
+			"hiddenAcceptance": [
+				"Uses built-in CALENDAR and never includes personal health information.",
+				"The 800x480 hierarchy is intentionally compact rather than a scaled-down full-HD board.",
+				"Provider normalization and live updates are covered by executable scenarios.",
+				"Current/next state and overlapping events remain unambiguous."
+			]
+		},
+		{
+			"id": "b07-world-clock",
+			"title": "Static single-hero world clock",
+			"coverageTags": ["adaptive", "static", "single-hero", "compact", "portrait", "time"],
+			"inputs": [],
+			"prompt": "Create a distinctive datasource-free world clock centered on one hero local time for fictional Atlas House, with up to three supporting city times. Support 320x180, 1280x720, 3000x300, 1080x1920, and 600x600. The time must dominate from a distance; compositions may change by ratio rather than forcing one responsive layout. Expose timezone, 12/24-hour mode, seconds, date, city labels, typeface, theme, and transparency. Invalid timezones fall back safely. Test ticking, cleanup, configuration updates, long labels, minimal mode, and extreme ratios. Do not wrap it in a generic KPI card. Keep version 1.",
+			"hiddenAcceptance": [
+				"Each extreme ratio has an intentional single-hero composition with no large accidental void.",
+				"Live timing and teardown are behavior-tested.",
+				"Long labels do not reduce the hero time below readable limits.",
+				"The app remains visually specific without a datasource."
+			]
+		},
+		{
+			"id": "b08-pharmacy-queue",
+			"title": "Fixed compact pharmacy queue",
+			"coverageTags": ["fixed", "bound", "table", "compact", "queue", "single-hero"],
+			"inputs": [],
+			"prompt": "Build a fixed 480x270 pharmacy pickup queue for the fictional Greenline Pharmacy. An editable TABLE datasource contains ticket, counter, state, and optional short note. One currently-called ticket is the hero; a small secondary list shows the next tickets. Use high-contrast accessible status cues without relying on color alone. The tiny canvas must remain readable at distance, so remove secondary content before shrinking the hero. Handle empty, one ticket, long ticket/counter labels, many waiting tickets, unknown states, and live edits. Keep version 1.",
+			"hiddenAcceptance": [
+				"The exact compact surface is respected without unnecessary adaptive variants.",
+				"Hero ticket remains complete and readable under stress.",
+				"TABLE sample data is fictional and quick-edit friendly.",
+				"State meaning survives grayscale and long labels never overlap."
+			]
+		},
+		{
+			"id": "b09-andon-column",
+			"title": "Portrait manufacturing Andon column",
+			"coverageTags": ["bounded", "bound", "table", "portrait", "uneven-data", "operational"],
+			"inputs": [],
+			"prompt": "Create a portrait Andon status column for fictional Northstar Assembly at 480x1920 and 1080x1920. An editable TABLE datasource lists line, station, state, reason, owner role, and elapsed duration. The board should read as one vertical operational instrument, not a collection of dashboard cards. Group by line, make exceptions visible at distance, and handle different station counts per line, unknown states, long reasons, all-normal, all-stopped, empty, final partial group, and live updates. Use shape/text as well as color for state. Keep version 1.",
+			"hiddenAcceptance": [
+				"Portrait height is used intentionally with deterministic grouping and no bottom void on short groups.",
+				"Long reasons and durations retain readable hierarchy without clipping.",
+				"Uneven data and final group behavior are tested.",
+				"The visual language is industrial and linear rather than generic cards."
+			]
+		},
+		{
+			"id": "b10-museum-welcome",
+			"title": "Reference-led museum welcome poster",
+			"coverageTags": ["reference-image", "fixed", "static", "poster", "assets", "single-hero"],
+			"inputs": ["references/museum-welcome-reference.svg"],
+			"prompt": "Build a fixed 1920x1080 welcome screen for the fictional Calder Museum. Use the supplied poster reference as the primary design evidence: retain its bold asymmetric type, geometric image field, generous negative space, and sharp color relationships. The app is datasource-free but exposes exhibition title, subtitle, date, venue, logo/image, theme colors, and visibility controls. Long exhibition names must remain intentional, not clipped or reduced to tiny type. Include minimal, long-title, no-image, alternate-colors, and transparent-background scenarios. Avoid dashboard chrome, cards, and standard top-header pagination. Keep version 1.",
+			"hiddenAcceptance": [
+				"Reference fidelity is obvious in composition and typography without literal copying.",
+				"The supplied or packaged visual is included safely with no broken runtime URL.",
+				"Static settings and theme controls visibly work and remain coherent.",
+				"Long-title handling preserves poster impact and glyph ink."
+			]
+		},
+		{
+			"id": "b11-campus-directory",
+			"title": "Adaptive campus directory",
+			"coverageTags": ["adaptive", "bound", "table", "directory", "pagination", "light-theme"],
+			"inputs": [],
+			"prompt": "Create a light-first campus wayfinding directory for fictional Rivermark College. An editable TABLE datasource contains building, floor, department, room, direction, and accessibility note. Support 1920x1080, 1536x432, 1080x1920, and 600x600. Group and sort entries deterministically, preserve wayfinding scan paths, and avoid independent cards per row. Handle one building, many buildings, unequal floor sizes, long departments, missing rooms, accessibility notes, empty data, final partial page, and live edits. Offer coordinated Light, Dark, and Custom themes. Keep version 1.",
+			"hiddenAcceptance": [
+				"TABLE fallback enables quick editing without losing required structure.",
+				"Grouping and pagination keep labels aligned and partial pages composed.",
+				"Light and dark modes both meet readable contrast with synchronized color controls.",
+				"The layout looks like wayfinding, not an operations dashboard."
+			]
+		},
+		{
+			"id": "b12-recognition-mosaic",
+			"title": "Employee recognition photo mosaic",
+			"coverageTags": ["adaptive", "bound", "table", "media", "mosaic", "uneven-data", "creative"],
+			"inputs": [],
+			"prompt": "Create an upbeat employee recognition wall for fictional Paper Kite Studio. Use an editable TABLE datasource with name, role, achievement, team, image URL, and optional short quote. Support 1920x1080, 1536x432, 1080x1920, and 600x600. Let photos and achievements drive a playful editorial mosaic; do not default to equal KPI cards, a dark dashboard, or the boilerplate examples' standard header/page-dot treatment. Handle one person, two people, odd and prime counts, missing/broken photos, very long names/achievements, empty data, last page, and live edits. Use tasteful fictional placeholders and keep version 1.",
+			"hiddenAcceptance": [
+				"Uneven counts produce intentional mosaic compositions rather than stretched final cards.",
+				"Broken images resolve to polished fictional fallbacks without failed requests.",
+				"The visual result is original, upbeat, and materially different from operations examples.",
+				"Dynamic names and achievements remain readable across ratios."
+			]
+		}
+	]
+}

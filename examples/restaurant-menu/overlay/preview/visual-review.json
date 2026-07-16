@@ -1,0 +1,121 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "7a158c73c76ab41f18eace7e21b5155871d95b11c2c040f59e7a46dbcd05449f",
+	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The menu handles editable structured courses, uneven categories, paging, static fallback, long labels, and realistic service states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Typography, restaurant masthead, editorial rhythm, and restrained palette preserve the supplied Cordo menu photograph."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Cordo branding, course typography, dotted leaders, and editorial menu columns make the design venue-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Generated identity assets and light and dark menu surfaces are complete, coordinated, and package-safe."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-bound-null-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-empty-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-last-page-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+		},
+		{
+			"file": "scenario-long-labels-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+		},
+		{
+			"file": "scenario-quick-edit-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-row-array-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-static-unbound-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		}
+	],
+	"unresolvedFindings": []
+}

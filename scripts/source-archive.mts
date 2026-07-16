@@ -22,7 +22,7 @@ const EXCLUDED_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
 	'out',
 	'output'
 ]);
-const EXCLUDED_ROOT_DIRECTORY_NAMES: ReadonlySet<string> = new Set(['templates']);
+const EXCLUDED_ROOT_DIRECTORY_NAMES: ReadonlySet<string> = new Set(['benchmarks', 'templates']);
 const EXCLUDED_FILE_NAMES: ReadonlySet<string> = new Set([
 	'.netrc',
 	'.npmrc',

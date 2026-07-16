@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+	<rect width="1080" height="1920" fill="#f1e8d8"/>
+	<rect x="54" y="54" width="972" height="1812" fill="#173f37"/>
+	<path d="M54 1220 L1026 870 L1026 1866 L54 1866 Z" fill="#cc5b3f"/>
+	<circle cx="830" cy="312" r="168" fill="#e6b94d"/>
+	<circle cx="830" cy="312" r="112" fill="#173f37"/>
+	<text x="112" y="176" fill="#f1e8d8" font-family="Georgia, serif" font-size="38" letter-spacing="7">HARBOR &amp; PINE</text>
+	<text x="106" y="390" fill="#f1e8d8" font-family="Georgia, serif" font-size="146">Evening</text>
+	<text x="106" y="526" fill="#f1e8d8" font-family="Georgia, serif" font-size="146">menu</text>
+	<line x1="110" y1="605" x2="626" y2="605" stroke="#e6b94d" stroke-width="8"/>
+	<text x="112" y="700" fill="#e6b94d" font-family="Arial, sans-serif" font-size="30" font-weight="700">FROM THE SHORE</text>
+	<text x="112" y="778" fill="#f1e8d8" font-family="Georgia, serif" font-size="54">Charred leek broth</text>
+	<text x="112" y="830" fill="#c9d6cb" font-family="Arial, sans-serif" font-size="25">smoked mussel, dill oil</text>
+	<text x="878" y="790" fill="#f1e8d8" font-family="Georgia, serif" font-size="46">14</text>
+	<text x="112" y="922" fill="#f1e8d8" font-family="Georgia, serif" font-size="54">Salt-baked trout</text>
+	<text x="112" y="974" fill="#c9d6cb" font-family="Arial, sans-serif" font-size="25">fennel, sea greens, rye</text>
+	<text x="878" y="934" fill="#f1e8d8" font-family="Georgia, serif" font-size="46">28</text>
+	<text x="112" y="1130" fill="#173f37" font-family="Arial, sans-serif" font-size="30" font-weight="700">FROM THE GARDEN</text>
+	<text x="112" y="1260" fill="#f1e8d8" font-family="Georgia, serif" font-size="54">Roasted squash</text>
+	<text x="112" y="1312" fill="#f6d8ca" font-family="Arial, sans-serif" font-size="25">hazelnut, sage, cultured cream</text>
+	<text x="878" y="1272" fill="#f1e8d8" font-family="Georgia, serif" font-size="46">22</text>
+	<text x="112" y="1412" fill="#f1e8d8" font-family="Georgia, serif" font-size="54">Pear &amp; bay tart</text>
+	<text x="112" y="1464" fill="#f6d8ca" font-family="Arial, sans-serif" font-size="25">brown butter, creme fraiche</text>
+	<text x="878" y="1424" fill="#f1e8d8" font-family="Georgia, serif" font-size="46">12</text>
+	<text x="112" y="1732" fill="#173f37" font-family="Arial, sans-serif" font-size="26" font-weight="700">DINNER 17:30 - 22:00</text>
+	<text x="702" y="1732" fill="#173f37" font-family="Arial, sans-serif" font-size="26">PIER 8</text>
+</svg>

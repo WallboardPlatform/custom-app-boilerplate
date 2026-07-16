@@ -1,64 +1,54 @@
-# Development Workflow
+# Generation Workflow
 
-## Development Process
+## 1. Discover
 
-### 1. Discovery Phase
-**Before implementing ANY feature**:
-- Navigate to `src/`
-- Study existing components, services, hooks, contexts, stores and interfaces in relevant directories
-- Read the provided documentation in the `docs/` folder
+- Read `AGENTS.md`, the prompt, supplied images/data, and relevant source files.
+- Inspect existing components, settings, interfaces, fixture, and editor properties before changing them.
+- Read only task-relevant system docs. Verify documentation against source when they disagree.
 
-### 2. Thinking Phase
-**After reading all the relevant files**:
-- Translate the accepted request into `generation-brief.json` and run `npm run validate:brief` before editing project artifacts
-- Think of a way to retain the existing patterns
-- Retain the gained knowledge of the project
-- Think of the easiest and most efficient way to implement the request
+## 2. Resolve Decisions
 
-### 3. Implementation Phase
-**Import management**:
-- Check existing files for import patterns
-- Copy import sections from similar files in the same module
-- Fix missing imports based on compiler errors
-- Remove unused imports during final review
+- Confirm or infer audience, primary message, placement family, data source, visual direction, and delivery mode.
+- Ask only when surface or data ambiguity would materially change the result. Record safe assumptions.
+- Choose `fixed`, `bounded`, or `adaptive`; examples are engineering references, never automatic style templates.
 
-### 4. Quality Check Phase
-**Code Quality Standards**:
-- Follow existing SolidJS patterns and conventions
-- Use TypeScript for all new code (avoid plain JavaScript)
-- Follow the given code styling guideline
-- Implement proper error handling and logging
-- Ensure responsive design works across devices and on legacy chrome versions
-- Follow existing naming conventions and file organization
-- Run `npm run validate:project` to prove the implementation matches the accepted generation brief
+## 3. Freeze The Brief
 
-#### Quality Check Checklist
-- [ ] TypeScript compiles without errors
-- [ ] No ESLint warnings
-- [ ] Generation brief matches identity, fixed/bounded/adaptive surface strategy, visual direction, settings, data bindings, named states, and behavior evidence
-- [ ] Datasource mode is explicit: built-in contract, generated `TABLE`, justified `CUSTOM`, or static
-- [ ] Generated datasource contract and sample data pass `npm run validate:examples`
-- [ ] Every datasource picker is declared; multi-source apps use `bindings[]` and sanitized `samplePath` fixtures
-- [ ] Every slider and regression-prone visual control has linked `previewSettingEffects` evidence
-- [ ] Internal app name and version identify one Wallboard app record; compatible rebuilds preserve both
-- [ ] `preview/fixture.ts` contains representative settings and datasource data; new settings are also typed and mapped
-- [ ] Named preview scenarios cover materially different dynamic and boundary states
-- [ ] Timing, motion, or interaction requirements have dedicated `preview/*.spec.ts` assertions
-- [ ] `npm run validate:visual` passes
-- [ ] Every image in `preview/output/` was inspected at the generated signage dimensions
-- [ ] Screenshot review checks reference fidelity, typography ink clearance, visual sameness, hierarchy, and pagination treatment
+Create `generation-brief.json` with identity, surfaces, data bindings, settings, dynamic-text policies, states, behaviors, assets, visual direction, and review risks. Run:
 
-### 5. Build Phase
-**Decide how to Build the project**:
-- If there has been a change to the `src/editor-assets/properties.json` file, 
-then build the project with the `build:development:zip` tool
-- If there have been only minor changes and the `src/editor-assets/properties.json` file was not modified, 
-then build the project with the `build:development` tool
+```bash
+npm run validate:brief
+```
 
-#### Why the use of zip build
-The Wallboard ecosystem reads the `properties.json` as the basis, on what the custom app looks like,
-what it does, which the base build doesn't include in the output.
-The zip build contains the newest configuration, so build a zip after every configuration change. Preserve the existing app version for fixes and replacement uploads. A deliberate incompatible version must be uploaded as a separate app.
+Do this before editing implementation artifacts.
 
-#### What happens after build
-Run `npm run deliver -- <output-directory>` before delivery. It performs the complete validation matrix and writes the upload zip, sanitized source zip, generation brief, manifest, and datasource sidecars. See `app-identity-and-delivery.md`.
+## 4. Implement
+
+- Keep platform infrastructure unchanged and follow existing SolidJS/SCSS patterns.
+- Build the visual hierarchy from the accepted reference/domain before adding controls or edge states.
+- Normalize data at the boundary, keep settings synchronized across all representations, and use reusable project capabilities for themes, sanitization, text fitting, charts, assets, and cleanup.
+- Add named preview scenarios as each materially different state is implemented; add behavior tests for timing, rotation, interaction, and teardown.
+
+## 5. Visual Review Loop
+
+1. Render the exact primary surface first, then every declared surface and stress scenario.
+2. Inspect screenshots against the prompt, references, `visualDirection`, and `visualReview`.
+3. Check distance readability, hierarchy, density, theme contrast, full essential text, accepted secondary prefixes/descenders, edge padding, unused space, partial pages, broken media, and sameness with repository examples.
+4. Revise composition and behavior, not thresholds, when a defect appears.
+5. Run `npm run measure:visual` only after a representative render; set coverage thresholds from measured evidence plus regression margin.
+6. Repeat until screenshots are intentional, then run `npm run validate:project` and `npm run validate:visual`.
+7. Run `npm run prepare:visual-review`, record the completed inspection in `preview/visual-review.json`, and pass `npm run validate:visual-review`.
+
+Automated checks cannot judge visual quality. Passing overflow and coverage checks never replaces screenshot inspection. The review fingerprint follows reachable app source, app-specific fixtures/tests, editor assets, and contracts, so unrelated unused boilerplate changes do not stale accepted evidence.
+
+## 6. Deliver
+
+Run:
+
+```bash
+npm run deliver -- <output-directory>
+```
+
+This executes identity, brief/project, datasource, lint, script typecheck, visual, legacy, build, and asset gates; then writes the upload ZIP, sanitized source ZIP, manifest, brief, and datasource sidecars. Inspect ZIP contents and installation notes before handoff.
+
+Browserless `deliver:unverified` is a transfer path only. Normal delivery must pass in a browser-capable environment before upload.

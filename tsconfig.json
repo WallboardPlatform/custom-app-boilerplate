@@ -50,7 +50,6 @@
       "vite-plugin-solid-svg/types-component-solid",
       "types"
     ],
-
     /* Other Options */
     "forceConsistentCasingInFileNames": true,
     "preserveConstEnums": true,

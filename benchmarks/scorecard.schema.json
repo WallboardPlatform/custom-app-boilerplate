@@ -1,0 +1,92 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Wallboard blind benchmark scorecard",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["benchmarkVersion", "taskId", "runId", "agent", "firstPass", "final", "timing", "artifacts", "notes"],
+	"properties": {
+		"benchmarkVersion": { "const": 1 },
+		"taskId": { "type": "string", "pattern": "^b[0-9]{2}-[a-z0-9-]+$" },
+		"runId": { "type": "string", "minLength": 1 },
+		"agent": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["provider", "model", "freshContext"],
+			"properties": {
+				"provider": { "type": "string", "minLength": 1 },
+				"model": { "type": "string", "minLength": 1 },
+				"freshContext": { "const": true }
+			}
+		},
+		"firstPass": { "$ref": "#/$defs/evaluation" },
+		"final": { "$ref": "#/$defs/evaluation" },
+		"timing": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["firstPassMinutes", "totalMinutes", "correctionRounds"],
+			"properties": {
+				"firstPassMinutes": { "type": "number", "minimum": 0 },
+				"totalMinutes": { "type": "number", "minimum": 0 },
+				"correctionRounds": { "type": "integer", "minimum": 0 }
+			}
+		},
+		"artifacts": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["workspace", "firstPassDelivery", "finalDelivery", "screenshots"],
+			"properties": {
+				"workspace": { "type": "string" },
+				"firstPassDelivery": { "type": "string" },
+				"finalDelivery": { "type": "string" },
+				"screenshots": { "type": "array", "items": { "type": "string" } }
+			}
+		},
+		"notes": { "type": "array", "items": { "type": "string" } }
+	},
+	"$defs": {
+		"evaluation": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["binaryGates", "ratings", "ratedTotal", "uploadReady", "usable", "failureCategories"],
+			"properties": {
+				"binaryGates": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["briefValid", "projectValid", "visualValid", "packageValid", "legacyBundleValid", "datasourceContractValid", "fictionalDataOnly", "versionPolicyValid"],
+					"properties": {
+						"briefValid": { "type": "boolean" },
+						"projectValid": { "type": "boolean" },
+						"visualValid": { "type": "boolean" },
+						"packageValid": { "type": "boolean" },
+						"legacyBundleValid": { "type": "boolean" },
+						"datasourceContractValid": { "type": "boolean" },
+						"fictionalDataOnly": { "type": "boolean" },
+						"versionPolicyValid": { "type": "boolean" }
+					}
+				},
+				"ratings": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["promptFidelity", "referenceFidelity", "visualSpecificity", "distanceReadability", "dynamicTextSafety", "surfaceComposition", "dataAndStateBehavior", "assetAndThemeQuality", "originality", "deliveryQuality"],
+					"properties": {
+						"promptFidelity": { "$ref": "#/$defs/rating" },
+						"referenceFidelity": { "$ref": "#/$defs/rating" },
+						"visualSpecificity": { "$ref": "#/$defs/rating" },
+						"distanceReadability": { "$ref": "#/$defs/rating" },
+						"dynamicTextSafety": { "$ref": "#/$defs/rating" },
+						"surfaceComposition": { "$ref": "#/$defs/rating" },
+						"dataAndStateBehavior": { "$ref": "#/$defs/rating" },
+						"assetAndThemeQuality": { "$ref": "#/$defs/rating" },
+						"originality": { "$ref": "#/$defs/rating" },
+						"deliveryQuality": { "$ref": "#/$defs/rating" }
+					}
+				},
+				"ratedTotal": { "type": "integer", "minimum": 0, "maximum": 50 },
+				"uploadReady": { "type": "boolean" },
+				"usable": { "type": "boolean" },
+				"failureCategories": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+			}
+		},
+		"rating": { "type": "integer", "minimum": 0, "maximum": 5 }
+	}
+}

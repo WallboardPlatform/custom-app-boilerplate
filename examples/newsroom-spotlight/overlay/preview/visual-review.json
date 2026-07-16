@@ -1,0 +1,126 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "13a2e68de6b0d5885d4146681580f9374ed699c0485fa18997275e4d029f5137",
+	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The feature supports current feed wrappers, media fallback, editorial rotation, live updates, and long copy across target ratios."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "not-applicable",
+			"notes": "No external visual reference was declared; the agent-authored editorial-feature brief is the review authority."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Media-led asymmetric spreads and an editorial story rail clearly separate this example from operations dashboards."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Story media, designed fallback artwork, and corrected light and dark contrast render without missing resources."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-broken-media-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-dark-theme-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+		},
+		{
+			"file": "scenario-empty-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-long-labels-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+		},
+		{
+			"file": "scenario-rotation-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-rss-channel-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-rss-parser-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-wallboard-feed-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		}
+	],
+	"unresolvedFindings": []
+}

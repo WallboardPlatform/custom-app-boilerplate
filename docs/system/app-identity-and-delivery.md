@@ -34,17 +34,18 @@ The command runs identity, generation-brief project synchronization, datasource,
 |- <App_Name>_<version>_source.zip
 |- delivery-manifest.json
 |- generation-brief.json
+|- visual-review.json
 |- datasource-contract.json   # data-bound apps only
 `- sample-datasource.json     # data-bound apps only
 ```
 
 Use a new directory or reuse the directory from the previous delivery of the same app. The command replaces known delivery files and fails rather than mixing a new manifest with unrelated or stale artifacts.
 
-`generation-brief.json` records the accepted identity, surfaces, data strategy, settings, states, behavior evidence, assets, and visual-review focus. Keep it with the delivery for traceability; it is not uploaded as part of the app ZIP.
+`generation-brief.json` records the accepted contract. `visual-review.json` proves that every current screenshot was inspected against the current reachable app source, prompt/reference direction, readability, theme contrast, composition, text safety, assets, and example sameness. Both remain delivery sidecars, not app-ZIP files.
 
 The source ZIP is a separate agent/developer handoff and must never be uploaded as the Wallboard app package. It contains the buildable project while excluding `.npmrc`, environment files, `config.json`, private keys, archives, dependencies, generated output, caches, preview screenshots, and the delivery directory. The manifest records its SHA-256 hash, file count, Git commit when available, and whether the working tree was clean. A dirty source archive remains complete, but its commit alone does not reproduce the local changes.
 
-`deliver` always runs visual validation. Package-only diagnostics are not accepted delivery evidence; move the source ZIP to an environment with Playwright support and run `deliver` there instead of bypassing visual checks.
+`deliver` always runs visual validation and rejects missing, incomplete, or stale visual-review evidence. Package-only diagnostics are not accepted delivery evidence; move the source ZIP to an environment with Playwright support and run `deliver` there instead of bypassing visual checks.
 
 ### Browserless handoff
 

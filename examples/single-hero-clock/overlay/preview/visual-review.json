@@ -1,0 +1,116 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "bf7ca6312279b1a9973107ed055681940ca0932fb8ec1f135ec89d42829c9b26",
+	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The clock keeps time dominant while redistributing metadata for compact, portrait, square, landscape, and ultra-wide zones."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "not-applicable",
+			"notes": "No external visual reference was declared; the instruction-led single-hero clock brief is the review authority."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Ratio-specific metadata placement and one unambiguous time hero avoid dashboard chrome and generic cards."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Light and dark surfaces, timezone labels, seconds, and invalid-timezone fallback remain visually coherent."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "compact-320x180.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-invalid-timezone-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-light-theme-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+		},
+		{
+			"file": "scenario-long-label-320x180.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+		},
+		{
+			"file": "scenario-minimal-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "ultra-wide-3000x300.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		}
+	],
+	"unresolvedFindings": []
+}

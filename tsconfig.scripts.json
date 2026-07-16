@@ -15,6 +15,7 @@
 		"types": ["node"]
 	},
 	"include": [
+		"benchmarks/**/*.mts",
 		"scripts/**/*.mts",
 		"scripts/**/*.mjs"
 	]

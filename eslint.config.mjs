@@ -17,7 +17,7 @@ export default tseslint.config(
 
 	// ✅ Typed TypeScript files (with full type information)
 	{
-		files: ['**/src/**/*.{ts,tsx}', 'scripts/**/*.mts'],
+		files: ['**/src/**/*.{ts,tsx}', 'benchmarks/**/*.mts', 'scripts/**/*.mts'],
 
 		languageOptions: {
 			parserOptions: {
@@ -150,6 +150,13 @@ export default tseslint.config(
 				{ blankLine: 'always', prev: '*', next: 'while' }
 			]
 		},
+	},
+
+	{
+		files: ['benchmarks/**/*.mts'],
+		rules: {
+			'no-console': 'off'
+		}
 	},
 
 	// ✅ Override for non-TypeScript / config files

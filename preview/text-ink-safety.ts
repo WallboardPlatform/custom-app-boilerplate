@@ -21,6 +21,8 @@ export interface TextInkRisk extends TextInkMeasurement {
 	requiredBuffer: number;
 	descenderClearance: number;
 	requiredDescenderClearance: number;
+	completeLineCount: number;
+	partialLinePixels: number;
 }
 
 const round = (value: number): number => Math.round(value * 100) / 100;
@@ -42,10 +44,20 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 
 		const unclippedHeight: number = measurement.boxHeight - measurement.borderTop - measurement.borderBottom;
 		const availableHeight: number = Math.min(unclippedHeight, measurement.visibleHeight ?? unclippedHeight);
-		const visibleLineCapacity: number = Math.max(1, Math.floor((availableHeight + 0.5) / measurement.lineHeight));
-		const visibleLineCount: number = Math.min(measurement.lineCount, visibleLineCapacity);
-		const inkHeight: number =
-			(visibleLineCount - 1) * measurement.lineHeight + measurement.actualAscent + measurement.actualDescent;
+		const availableTextHeight: number = Math.max(0, availableHeight - measurement.paddingBottom);
+		const glyphHeight: number = measurement.actualAscent + measurement.actualDescent;
+		const inkLead: number = Math.max(0, (measurement.lineHeight - glyphHeight) / 2);
+		const completeLineCapacity: number = availableTextHeight >= inkLead + glyphHeight
+			? Math.floor((availableTextHeight - inkLead - glyphHeight + 0.5) / measurement.lineHeight) + 1
+			: 0;
+		const visibleLineCount: number = Math.min(measurement.lineCount, Math.max(1, completeLineCapacity));
+		const nextLineInkTop: number = completeLineCapacity * measurement.lineHeight + inkLead;
+		const partialLinePixels: number = measurement.lineCount > completeLineCapacity
+			? Math.max(0, Math.min(glyphHeight, availableTextHeight - nextLineInkTop))
+			: 0;
+		const inkHeight: number = completeLineCapacity > 0
+			? (visibleLineCount - 1) * measurement.lineHeight + inkLead + glyphHeight
+			: glyphHeight;
 		const buffer: number = availableHeight - inkHeight;
 		const requiredBuffer: number = requiredTextInkBuffer(measurement.fontSize);
 		const hasDescender: boolean = /[gjpqy]/.test(measurement.text);
@@ -53,20 +65,21 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 			measurement.paddingBottom + Math.max(0, (measurement.lineHeight - measurement.fontSize) / 2);
 		const requiredDescenderClearance: number = hasDescender ? Math.max(0.75, measurement.fontSize * 0.08) : 0;
 
-		if (buffer >= requiredBuffer && descenderClearance >= requiredDescenderClearance) {
+		if (partialLinePixels <= 1 && buffer >= requiredBuffer && descenderClearance >= requiredDescenderClearance) {
 			return [];
 		}
 
 		return [
 			{
 				...measurement,
-				lineCount: visibleLineCount,
 				availableHeight: round(availableHeight),
 				inkHeight: round(inkHeight),
 				buffer: round(buffer),
 				requiredBuffer: round(requiredBuffer),
 				descenderClearance: round(descenderClearance),
-				requiredDescenderClearance: round(requiredDescenderClearance)
+				requiredDescenderClearance: round(requiredDescenderClearance),
+				completeLineCount: visibleLineCount,
+				partialLinePixels: round(partialLinePixels)
 			}
 		];
 	});
@@ -75,7 +88,11 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 export const formatTextInkRisks = (risks: TextInkRisk[]): string => {
 	return risks
 		.map((risk: TextInkRisk): string => {
-			return `${risk.selector} "${risk.text}" has ${risk.buffer}px total text-ink buffer and ${risk.descenderClearance}px descender clearance; at least ${risk.requiredBuffer}px and ${risk.requiredDescenderClearance}px are required.`;
+			const partialLine = risk.partialLinePixels > 1
+				? ` It exposes ${risk.partialLinePixels}px of a clipped text line.`
+				: '';
+
+			return `${risk.selector} "${risk.text}" has ${risk.buffer}px total text-ink buffer and ${risk.descenderClearance}px descender clearance; at least ${risk.requiredBuffer}px and ${risk.requiredDescenderClearance}px are required.${partialLine}`;
 		})
 		.join('\n');
 };

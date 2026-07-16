@@ -38,11 +38,14 @@ cd <target-directory>
 npm run setup
 npm run validate:examples
 npm run validate:visual
+npm run prepare:visual-review
 npm run validate:package
 ```
 
 The explicit target must be new or empty. Run `npm run validate:examples` in the boilerplate before materialization and again in the materialized project after changing its contract or sample data. Files listed in `example.json.artifacts` are copied to the materialized project root but are not bundled into the app zip.
 
-Run `npm run example:accept -- <id>` for the clean materialization, complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, every screenshot is inspected, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
+For maintained evidence, run `npm run example:review:prepare -- <id>`, inspect every image under `.tmp/review/<id>/preview/output`, complete its `visual-review.json`, then run `npm run example:review:promote -- <id>`. Promotion validates the current fingerprint and replaces the example's screenshots/review together.
+
+Run `npm run example:accept -- <id>` for clean materialization, the complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, its promoted review is current, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
 
 Every example includes a standalone-valid generation brief whose settings and evidence also pass project synchronization against the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.
