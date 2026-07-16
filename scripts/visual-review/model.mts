@@ -51,6 +51,9 @@ const SOURCE_EXTENSIONS: string[] = [
 	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json',
 	'.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.woff', '.woff2', '.ttf'
 ];
+const TEXT_SOURCE_EXTENSIONS = new Set([
+	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json', '.svg'
+]);
 const SOURCE_ALIASES: Readonly<Record<string, string>> = {
 	'@components': 'src/components',
 	'@contexts': 'src/contexts',
@@ -232,7 +235,12 @@ export const createVisualReviewSourceHash = (projectDirectory: string): string =
 	for (const filePath of collectVisualReviewSourceFiles(projectDirectory)) {
 		hash.update(normalizeRelativePath(path.relative(projectDirectory, filePath)));
 		hash.update('\0');
-		hash.update(fs.readFileSync(filePath));
+		const contents: Buffer = fs.readFileSync(filePath);
+		const normalizedContents: Buffer | string = TEXT_SOURCE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
+			? contents.toString('utf8').replace(/\r\n?/g, '\n')
+			: contents;
+
+		hash.update(normalizedContents);
 		hash.update('\0');
 	}
 

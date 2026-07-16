@@ -68,6 +68,18 @@ void describe('visual review model', (): void => {
 		assert.equal(createVisualReviewSourceHash(projectDirectory), before);
 	});
 
+	void it('normalizes text line endings in the source hash', (context): void => {
+		const projectDirectory: string = createProject();
+		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
+		const sourcePath: string = path.join(projectDirectory, 'src', 'app.tsx');
+
+		fs.writeFileSync(sourcePath, 'export const first = 1;\nexport const second = 2;\n');
+		const lfHash: string = createVisualReviewSourceHash(projectDirectory);
+		fs.writeFileSync(sourcePath, 'export const first = 1;\r\nexport const second = 2;\r\n');
+
+		assert.equal(createVisualReviewSourceHash(projectDirectory), lfHash);
+	});
+
 	void it('ignores generated datasource sidecars but tracks their root sources', (context): void => {
 		const projectDirectory: string = createProject();
 		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
