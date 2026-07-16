@@ -12,6 +12,7 @@ Use this before designing or editing a Wallboard custom app. These rules are abo
 | Stable layout | Hover states, changing text, loading states, and empty states must not resize the root layout unexpectedly. |
 | Contained overflow | Text, images, lists, and tables must wrap, truncate, scroll, paginate, or scale intentionally. Never let content spill outside the widget. |
 | One clipping surface | When the app has a panel, put its background, `border-radius`, and `overflow: hidden` on the same full-size element. Nested rounded backgrounds can expose square corners through sub-pixel differences. |
+| Explicit root display | `reset-styles()` applies `all: initial`; restore `display: block`, `flex`, or another intended formatting context on the reset root. |
 
 Root style baseline:
 
@@ -186,6 +187,8 @@ Avoid:
 
 Never rely on editor-only behavior for the displayer. Test the display output as a standalone widget surface through the local preview and validated build output.
 
+The editor does not provide CSS isolation. Follow the module, namespace, and hostile-host test rules in [styling.md](styling.md#editor-style-isolation).
+
 ## Performance
 
 Signage devices may be low-powered and long-running.
@@ -223,12 +226,13 @@ Avoid:
 3. Set the intended default dimensions in `properties.json`, then run `npm run dev:preview` and inspect the app-default surface.
 4. Define named `previewScenarios` for every materially different state: empty, maximum content, odd item count, last page, longest labels, and error fallback as applicable. Use `advanceTimeMs` for rotating states.
 5. In behavior tests, use `window.__wallboardPreview.pushDatasource()` for live updates and `window.__wallboardPreview.destroy()` for teardown. Verify that charts, timers, and listeners are released; do not depend on SDK registration keys or mount-selector IDs.
-6. Use `window.__wallboardPreview.pushConfiguration()` indirectly through `previewSettingEffects` to verify editor controls affect the rendered element, not only the mapper or fallback implementation.
-7. Run `npm run measure:visual` after the first real render. Review its report and screenshots, then put measured content-coverage thresholds with regression margin on every planned surface and scenario. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count.
-8. Run `npm run validate:visual`. It checks every declared surface, every named scenario, declared setting effects, and text-ink safety. Adaptive apps also receive the standard full HD, wide-low, landscape, portrait, and square matrix.
-9. Inspect every image in `preview/output/` at its real pixel dimensions and zoom into typography. Content coverage and ink checks are regression guards; automated checks still do not judge reference fidelity, hierarchy, composition, or overall legibility.
-10. Run `npm run prepare:visual-review`, record every screenshot and review criterion, and pass `npm run validate:visual-review`.
-11. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
+6. If the app uses global selectors, inject conflicting generic host CSS and prove the app-specific namespace keeps each required page/state unchanged.
+7. Use `window.__wallboardPreview.pushConfiguration()` indirectly through `previewSettingEffects` to verify editor controls affect the rendered element, not only the mapper or fallback implementation.
+8. Run `npm run measure:visual` after the first real render. Review its report and screenshots, then put measured content-coverage thresholds with regression margin on every planned surface and scenario. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count.
+9. Run `npm run validate:visual`. It checks every declared surface, every named scenario, declared setting effects, and text-ink safety. Adaptive apps also receive the standard full HD, wide-low, landscape, portrait, and square matrix.
+10. Inspect every image in `preview/output/` at its real pixel dimensions and zoom into typography. Content coverage and ink checks are regression guards; automated checks still do not judge reference fidelity, hierarchy, composition, or overall legibility.
+11. Run `npm run prepare:visual-review`, record every screenshot and review criterion, and pass `npm run validate:visual-review`.
+12. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
 Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
 

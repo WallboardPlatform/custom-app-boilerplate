@@ -56,7 +56,7 @@ const openLastPageScenario = async (page: Page): Promise<void> => {
 
 	expect(response?.ok()).toBe(true);
 	await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true');
-	await expect(page.locator('.menu-edition em')).toHaveText('1 / 2');
+	await expect(page.locator('.wb-restaurant-menu-edition em')).toHaveText('1 / 2');
 };
 
 const advanceToFinalPage = async (page: Page): Promise<void> => {
@@ -79,7 +79,7 @@ const advanceToFinalPage = async (page: Page): Promise<void> => {
 
 		pageTransition.invoke();
 	});
-	await expect(page.locator('.menu-edition em')).toHaveText('2 / 2');
+	await expect(page.locator('.wb-restaurant-menu-edition em')).toHaveText('2 / 2');
 };
 
 test.beforeEach(async ({ page }): Promise<void> => {
@@ -88,15 +88,15 @@ test.beforeEach(async ({ page }): Promise<void> => {
 });
 
 test('transitions after the configured duration and renders the uneven final page', async ({ page }): Promise<void> => {
-	await expect(page.locator('.menu-category')).toHaveCount(4);
-	await expect(page.locator('.menu-item')).toHaveCount(10);
+	await expect(page.locator('.wb-restaurant-menu-category')).toHaveCount(4);
+	await expect(page.locator('.wb-restaurant-menu-item')).toHaveCount(10);
 
 	await advanceToFinalPage(page);
 
-	const finalPage = await page.locator('.menu-category').evaluateAll((categories: Element[]) => {
+	const finalPage = await page.locator('.wb-restaurant-menu-category').evaluateAll((categories: Element[]) => {
 		return categories.map((category: Element) => ({
 			title: category.querySelector('h2')?.textContent?.trim() ?? '',
-			itemCount: category.querySelectorAll('.menu-item').length
+			itemCount: category.querySelectorAll('.wb-restaurant-menu-item').length
 		}));
 	});
 
@@ -105,9 +105,9 @@ test('transitions after the configured duration and renders the uneven final pag
 		{ title: 'Desserts', itemCount: 3 },
 		{ title: 'After dinner', itemCount: 2 }
 	]);
-	expect(await page.locator('.menu-board__row').count()).toBe(2);
-	expect(await page.locator('.menu-category').count()).toBe(3);
-	expect(await page.locator('.menu-item').count()).toBe(8);
+	expect(await page.locator('.wb-restaurant-menu-board__row').count()).toBe(2);
+	expect(await page.locator('.wb-restaurant-menu-category').count()).toBe(3);
+	expect(await page.locator('.wb-restaurant-menu-item').count()).toBe(8);
 });
 
 test('keeps uneven final-page categories balanced, contained, and non-overlapping', async ({ page }): Promise<void> => {
@@ -126,13 +126,13 @@ test('keeps uneven final-page categories balanced, contained, and non-overlappin
 				width: rect.width
 			};
 		};
-		const rows: HTMLElement[] = Array.from(document.querySelectorAll<HTMLElement>('.menu-board__row'));
+		const rows: HTMLElement[] = Array.from(document.querySelectorAll<HTMLElement>('.wb-restaurant-menu-board__row'));
 
 		return rows.map((row: HTMLElement) => ({
 			rect: toRectangle(row),
-			categories: Array.from(row.querySelectorAll<HTMLElement>('.menu-category')).map((category: HTMLElement) => ({
+			categories: Array.from(row.querySelectorAll<HTMLElement>('.wb-restaurant-menu-category')).map((category: HTMLElement) => ({
 				rect: toRectangle(category),
-				items: Array.from(category.querySelectorAll<HTMLElement>('.menu-item')).map(toRectangle)
+				items: Array.from(category.querySelectorAll<HTMLElement>('.wb-restaurant-menu-item')).map(toRectangle)
 			}))
 		}));
 	});
@@ -190,4 +190,43 @@ test('keeps uneven final-page categories balanced, contained, and non-overlappin
 			expect(overlapsHorizontally && overlapsVertically).toBe(false);
 		}
 	}
+});
+
+test('keeps its layout isolated from generic editor menu selectors', async ({ page }): Promise<void> => {
+	const layoutSnapshot = async (): Promise<string> => {
+		return page.locator('.wb-restaurant-menu-root').evaluate((root: Element): string => {
+			const selectors: string[] = [
+				'.wb-restaurant-menu-header',
+				'.wb-restaurant-menu-board__row',
+				'.wb-restaurant-menu-category',
+				'.wb-restaurant-menu-item'
+			];
+
+			return JSON.stringify(selectors.map((selector: string) => {
+				return Array.from(root.querySelectorAll<HTMLElement>(selector)).map((element: HTMLElement) => {
+					const rect: DOMRect = element.getBoundingClientRect();
+
+					return [rect.left, rect.top, rect.width, rect.height];
+				});
+			}));
+		});
+	};
+	const firstPageBefore: string = await layoutSnapshot();
+
+	await page.addStyleTag({
+		content: [
+			'.wb-app { display: inline !important; }',
+			'.menu-header { position: absolute !important; }',
+			'.menu-board { display: flex !important; }',
+			'.menu-category { width: 50% !important; max-width: 50% !important; }',
+			'.menu-item { display: inline !important; }'
+		].join('\n')
+	});
+
+	await expect(page.locator('.wb-app, .menu-header, .menu-board, .menu-category, .menu-item')).toHaveCount(0);
+	expect(await layoutSnapshot()).toBe(firstPageBefore);
+
+	await advanceToFinalPage(page);
+	await expect(page.locator('.wb-restaurant-menu-category')).toHaveCount(3);
+	await expect(page.locator('.wb-restaurant-menu-item')).toHaveCount(8);
 });

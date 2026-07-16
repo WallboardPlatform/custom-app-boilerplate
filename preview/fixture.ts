@@ -2,7 +2,7 @@ import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fi
 
 const previewFixture: PreviewFixture = {
 	id: 'wallboard-local-preview',
-	readySelector: '.wb-app',
+	readySelector: '[data-preview-id="starter-root"]',
 	configValues: {
 		title: 'Local preview',
 		accentColor: '#15c39a',

@@ -19,11 +19,11 @@
 	text-align: center;
 }
 
-:global(.wb-app > *) {
+.wb-app > * {
 	@include box-sizing();
 }
 
-:global(.wb-app > span) {
+.wb-app > span {
 	max-width: 88%;
 	overflow: hidden;
 	color: var(--starter-accent);
@@ -33,7 +33,7 @@
 	white-space: nowrap;
 }
 
-:global(.wb-app > h1) {
+.wb-app > h1 {
 	max-width: 88%;
 	margin: 18px 0 0;
 	overflow: hidden;

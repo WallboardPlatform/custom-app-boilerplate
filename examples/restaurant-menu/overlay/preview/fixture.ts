@@ -55,7 +55,7 @@ const createFixture = (
 	configValues: Record<string, unknown> = baseConfig
 ): PreviewFixture => ({
 	id,
-	readySelector: '.menu-header h1',
+	readySelector: '.wb-restaurant-menu-header h1',
 	configValues,
 	dataPickerValues: { menuData: data },
 	datasourceIds: { menuData: 'preview-menu-data' },
@@ -165,7 +165,7 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		id: 'theme-preset',
 		property: 'themePreset',
 		changedValue: 'light',
-		selector: '.wb-app',
+		selector: '.wb-restaurant-menu-root',
 		measurement: { type: 'computed-style', property: 'background-color' },
 		expectation: { type: 'change' }
 	}

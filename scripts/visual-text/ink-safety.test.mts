@@ -99,4 +99,31 @@ void describe('text ink safety', () => {
 
 		assert.equal(risks.length, 1);
 	});
+
+	void it('normalizes transformed viewport heights before comparing local font metrics', () => {
+		assert.deepEqual(findTextInkRisks([
+			clippedHeading({
+				boxHeight: 22.5,
+				layoutHeight: 45,
+				visibleHeight: 22.5,
+				paddingBottom: 4
+			})
+		]), []);
+	});
+
+	void it('still rejects ancestor clipping inside a transformed composition', () => {
+		const risks = findTextInkRisks([
+			clippedHeading({
+				lineHeight: 44,
+				boxHeight: 25,
+				layoutHeight: 50,
+				visibleHeight: 19.5,
+				actualAscent: 30,
+				actualDescent: 8
+			})
+		]);
+
+		assert.equal(risks.length, 1);
+		assert.equal(risks[0]?.availableHeight, 39);
+	});
 });
