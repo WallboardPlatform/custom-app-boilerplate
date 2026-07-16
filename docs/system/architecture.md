@@ -1,302 +1,89 @@
 # Architecture
 
-This document provides an in-depth architectural overview of Custom App development.
-Understanding this architecture is essential for generating correct, maintainable code that integrates properly with the Wallboard platform.
+## Runtime Model
 
----
+A custom app is a SolidJS frontend registered through `wallboard-app-sdk`.
 
-## CRITICAL: Do Not Modify the Architecture
+| Environment | Changes at runtime |
+|-------------|--------------------|
+| Editor | Settings, datasource mocks, selection, and interaction state |
+| Displayer | Datasources, commands, and internal state; saved settings are stable until configuration changes |
 
-**The folder structure and file organization is fixed and must not be changed.**
+Many instances can share one page. Each SDK `create()` call receives its own DI child container, state manager, host selector, and SolidJS tree. Keep DOM queries, IDs, timers, observers, subscriptions, caches, and mutable state instance-local.
 
-Every folder and file has its designated place. When creating new code:
-- **Do NOT create new folders** outside the established structure
-- **Do NOT move or rename existing files**
-- **Do NOT create files in arbitrary locations**
+## Protected And Extension Paths
 
-**Where to find placement rules:**
-- Creating a **hook** → See `hooks.md` for exact location and pattern
-- Creating a **service** → See `services.md` for exact location and pattern
-- Creating a **context** → See `contexts.md` for exact location and pattern
-- Creating a **component** → See `components.md` for exact location and pattern
-- Creating an **interface** → See `interfaces.md` for exact location and pattern
-- Adding **styles** → See `styling.md` for exact location and pattern
-- Adding **settings** → See `configuration.md` for exact location and pattern
+| Path | Rule |
+|------|------|
+| `src/index.tsx` | Protected SDK registration/render entry; never edit |
+| `src/contexts/system/` | Protected providers |
+| `src/hooks/system/` | Protected platform hooks |
+| `src/services/service.abstract.ts` | Protected service base |
+| `src/styles/_index.scss`, `mixin.scss`, `reset.scss`, `styles.scss` | Protected reset/mixins/global infrastructure |
+| `src/styles/animation.css` | App-wide keyframe extension point |
+| `src/components/wb-app/` | App root and main UI |
+| `src/components/wb-*/` | Optional app components |
+| `src/hooks/custom/` | App-specific reactive hooks |
+| `src/contexts/custom/` | Optional shared feature state |
+| `src/services/*.service.ts` | Optional stateless domain services; register in `src/services.ts` |
+| `src/interfaces/`, `src/utils/` | App models and pure helpers |
 
-Each documentation file specifies:
-- The exact folder where new files should be created
-- The naming convention to follow
-- The pattern/template to use
-- What is read-only infrastructure vs. what can be customized
+Do not move or rename protected files. Create only folders justified by the app.
 
-**Read-only infrastructure files (NEVER modify):**
-- `src/index.tsx`
-- `vite-env.d.ts`
-- `src/contexts/application.context.tsx`
-- `src/contexts/dependency-injection.context.tsx`
-- `src/contexts/interceptor.context.tsx`
-- `src/services/service.abstract.ts`
-- All files in `src/hooks/` (except custom hooks in `src/hooks/custom/`)
+## Initialization And Providers
 
----
+`src/index.tsx` constructs `Application` with metadata, service classes, render function, and settings mapper. The SDK registers `window.CustomWidget[identity].create()` and `.destroy()`.
 
-## System Overview
+Creation flow:
 
-Custom apps are frontend web applications that run inside the Wallboard platform.
-They operate in two distinct environments:
-- **Editor** - Content editing mode where all settings can be modified
-- **Displayer** - Presentation mode where only internal state changes (data sources, selections, external commands)
-
-The architecture consists of two main parts:
-1. **wallboard-app-sdk** - Core library providing platform integration, services, and reactive state management
-2. **Custom App (boilerplate)** - Your application built on top of the SDK
-
-```
-Wallboard Platform
-       |
-       v
-+------------------+
-| CustomWidgetAPI  |  <-- Platform bridge (window.CustomWidgetAPI)
-+------------------+
-       |
-       v
-+------------------+
-| wallboard-app-sdk|  <-- SDK layer (Application, StateManager, Services)
-+------------------+
-       |
-       v
-+------------------+
-| Custom App       |  <-- Your application (components, hooks, services)
-+------------------+
+```text
+platform create -> child DI container -> metadata/SDK/app services
+-> StateManager -> ApplicationProvider -> DIProvider -> InterceptorProvider
+-> WbApp
 ```
 
----
+The provider order is fixed because DI depends on application state and interception depends on DI services. Destruction tears down SolidJS, state subscriptions, service lifecycle hooks, and the child container.
 
-## Initialization Flow
+## Reactive Flow
 
-Understanding the initialization sequence is critical for knowing when certain APIs are available.
+`properties.json` defines editor fields. `src/settings.ts` maps raw `ConfigValues` to runtime `Settings`.
 
-### 1. Platform Registration
-
-When the app loads, `index.tsx` creates an `Application` instance:
-
-```typescript
-new Application({
-    name: configJson.name,
-    version: configJson.version,
-    license: configJson.license,
-    mode: import.meta.env.MODE,
-    services: serviceClasses,
-    render: application,
-    settingsMapper: mapSettings
-});
+```text
+platform events -> StateManager debounce -> RxJS settings$/dataSources$
+-> system hooks convert streams to SolidJS accessors -> components
 ```
 
-This registers `window.CustomWidget[appName].create()` and `.destroy()` methods that the platform calls.
+Datasource-related events include `sendConfiguration`, `boundDataChanged`, `sendMockDatasources`, `sendMockDatasourceById`, and `sendDatasource`. Read them through `useDataSources()`; do not subscribe to platform globals directly.
 
-### 2. Instance Creation
+Use:
 
-When Wallboard platform needs to display your widget:
+- `useSettings()` for mapped settings.
+- `useDataSources()` for bound values.
+- `useConfig()` only for a raw configuration field not represented elsewhere.
+- `useExternalCommandListener()` for declared commands.
+- `useService()` for registered app services.
+- `getMetadata()` for SDK factories such as logging.
 
-```
-Platform calls: window.CustomWidget['AppName_1.0.0'].create(selector, config, event$)
-                                    |
-                                    v
-                    +----------------------------------+
-                    | Application.create()             |
-                    | - Creates child DI container     |
-                    | - Registers core services        |
-                    | - Registers app services         |
-                    | - Creates StateManager           |
-                    | - Calls render function          |
-                    +----------------------------------+
-```
+Never call `window.CustomWidgetAPI` directly when an SDK hook/service exists.
 
-### 3. Service Registration Order
+## Root Component
 
-Services are registered in this specific order (order matters for dependencies):
+`WbApp` receives `hostElement`; use it or component refs to scope DOM work.
 
-1. **MetadataProvider** - Singleton holding app metadata (id, name, version, license, build mode)
-2. **EventInjectable** - Platform event observable (`event$`) for configuration changes
-3. **SDKService** - Initializes polyfills, license validation, creates logger
-4. **App Services** - Your custom services from `services.ts`
-
-## Reactive Data Flow
-
-Data flows through the system via RxJS observables converted to SolidJS accessors.
-
-### Configuration Flow
-
-```
-properties.json (editor schema)
-       |
-       v
-Platform Event: 'sendConfiguration'
-       |
-       v
-StateManager.handleConfigurationChange()
-       |
-       v
-Debounce (100ms)
-       |
-       v
-settingsSubject.next() / dataSourcesSubject.next()
-       |
-       v
-Observable streams (settings$, dataSources$)
-       |
-       v
-SolidJS from() conversion in hooks
-       |
-       v
-Accessor<Settings> / Accessor<DataSources>
-       |
-       v
-Components via useSettings() / useDataSources()
-```
-
-### Data Source Flow
-
-Data sources are external data bound to the widget. They come from multiple platform events:
-
-| Event                    | Description                        |
-|--------------------------|------------------------------------|
-| `sendConfiguration`      | Data picker and config values      |
-| `boundDataChanged`       | Single datasource update           |
-| `sendMockDatasources`    | All mock datasources (editor mode) |
-| `sendMockDatasourceById` | Single mock datasource             |
-| `sendDatasource`         | Internal datasource update         |
-
-All events go through debouncing before updating `dataSourcesSubject`.
-
----
-
-## Platform Communication
-
-### window.CustomWidgetAPI
-
-The platform exposes the communication methods via `window.CustomWidgetAPI`.
-
-**IMPORTANT** - Never use the objects methods directly. Use the SDK methods instead, to achieve the desired result.
-
-### External Commands
-
-Commands from Wallboard platform (e.g., "go to page 3") come through `externalCommand$`:
-
-```typescript
-useExternalCommandListener((command: IExternalCommandService): void => {
-    const cmd: string = command.getCommand();
-    const value: unknown = command.getParameter('value');
-
-    if (cmd === 'setPageTo') {
-        setCurrentPage(value as number);
-    }
-});
-```
-
-Commands are defined in `properties.json` under `externalCommands`.
-
----
-
-### WbApp - The Root Component
-
-`WbApp` is the entry point for your UI. It receives `hostElement` as a prop:
-
-```typescript jsx
+```tsx
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
-    const settings: Accessor<Settings> = useSettings();
-    const dataSources: Accessor<DataSources> = useDataSources();
+	const settings: Accessor<Settings> = useSettings();
 
-    return (
-        <div class={`wb-app ${style['wb-app']}`}>
-            {/* Your app content */}
-        </div>
-    );
+	return (
+		<div class={`wb-app ${style['wb-app']}`} data-ready={Boolean(props.hostElement)}>
+			{settings().title}
+		</div>
+	);
 };
 ```
 
-**Never modify `index.tsx`** - it handles the SDK integration. Customize through `WbApp`.
+## Build
 
----
+Vite emits `dist/assets/app.js`; Webpack/Babel emits `app-chrome-49.js`. Editor assets include generated `config.json`, icon, placeholder, and declared sidecars. Bundles are IIFEs to avoid global collisions. Development includes debug logging/source maps; production uses INFO-level logging and no source maps.
 
-## Build Output
-
-### Development vs Production
-
-| Aspect       | Development           | Production        |
-|--------------|-----------------------|-------------------|
-| Logging      | DEBUG level, colorful | INFO level, plain |
-| Source maps  | Yes                   | No                |
-| Minification | Yes                   | Yes (Terser)      |
-
-### Output Files
-
-```
-dist/
-  assets/
-    app.js -> Main bundle (IIFE format, ES6 target with ESNext module)
-    app-chrome-49.js -> Legacy bundle (IIFE format, Webpacked with babel for Chrome 49 from app.js)
-  editor-assets/
-    icon.png
-    placeholder.png
-    properties.json
-```
-
-### IIFE Format
-
-The build outputs IIFE (Immediately Invoked Function Expression) to avoid global scope pollution:
-
-```javascript
-(function() {
-    // Your app code, isolated
-})();
-```
-
----
-
-## Lifecycle Summary
-
-### Instance Lifecycle
-
-```
-Platform calls create() -> DI container created -> Services registered
-         |
-         v
-StateManager initialized -> settings$, dataSources$ ready
-         |
-         v
-render() called -> Providers mounted -> WbApp renders
-         |
-         v
-[App running - reacts to settings/datasource/command changes]
-         |
-         v
-Platform calls destroy() -> StateManager.destroy() -> subscriptions cleaned
-         |
-         v
-SDKService.terminate() -> container cleared -> instance removed
-```
-
-### Service Lifecycle
-
-```
-registerAppServices() -> Service constructor runs
-         |
-         v
-DIProvider.onMount() -> service.onConstruct() called
-         |
-         v
-[Service available via useService()]
-         |
-         v
-DIProvider.onCleanup() -> service.onDestruct() called
-```
-
-### Logging
-If you want to log/warn/error something inside a component, create a logger from the `wallboard-app-sdk` with this pattern:
-```typescript
-const logger: ILoggerService = createLogger(metadata, 'ComponentName');
-logger.info('Message', data);
-```
-
-If you want to log/warn/error something inside a service, use the `Service` parent class's logger.
+Use SDK `createLogger` in components and the service base logger in services. Temporary timing uses `performance.now()`, not `Date.now()`.

@@ -1,0 +1,37 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "directoryData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "Directory",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Rivermark Campus Directory",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "building", "type": "string", "required": true },
+		{ "name": "floor", "type": "string", "required": true },
+		{ "name": "department", "type": "string", "required": true },
+		{ "name": "room", "type": "string", "required": false },
+		{ "name": "direction", "type": "string", "required": true },
+		{ "name": "accessibilityNote", "type": "string", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing Directory",
+		"selected Directory table object",
+		"processed Directory row array"
+	],
+	"behavior": {
+		"unbound": "render bundled fictional Rivermark College sample rows",
+		"boundEmpty": "render the configured empty state",
+		"invalidRows": "skip rows missing building, floor, department, or direction",
+		"ordering": "sort naturally by building, floor, department, room, direction, and accessibilityNote; preserve source order for exact duplicates",
+		"pagination": "derive page capacity from the assigned surface, balance sparse final pages, and rotate pages"
+	}
+}

@@ -12,5 +12,6 @@
 		"generation-brief.json",
 		"datasource-contract.json",
 		"sample-datasource.json"
-	]
+	],
+	"referenceScreenshots": ["app-default-6000x136.png", "scenario-light-theme-6000x136.png"]
 }

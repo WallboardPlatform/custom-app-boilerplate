@@ -1,0 +1,69 @@
+{
+	"version": "1",
+	"name": "Northstar Assembly Andon Column",
+	"interactive": false,
+	"size": {
+		"width": "1080px",
+		"height": "1920px"
+	},
+	"properties": [
+		{
+			"label": "Andon status datasource",
+			"type": "dataPicker",
+			"property": "andonData",
+			"dataPickerType": "any",
+			"tooltip": "Select the editable AndonStatus table. Leave unbound to show representative Northstar Assembly data."
+		},
+		{
+			"label": "Board content",
+			"type": "group",
+			"properties": [
+				{ "label": "Board title", "type": "text", "property": "boardTitle", "default": "NORTHSTAR ASSEMBLY" },
+				{ "label": "Board subtitle", "type": "text", "property": "boardSubtitle", "default": "PRODUCTION ANDON" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No station status rows are available." },
+				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 10, "min": 3, "max": 120, "step": 1 }
+			]
+		},
+		{
+			"label": "Board theme",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "dark",
+					"tooltip": "Dark and Light are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#111615" },
+						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#1c2422" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f4f6f2" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#a6b2ae" },
+						{ "label": "Normal", "type": "color", "property": "normalColor", "default": "#35c879" },
+						{ "label": "Attention", "type": "color", "property": "attentionColor", "default": "#f0b43a" },
+						{ "label": "Stopped", "type": "color", "property": "stoppedColor", "default": "#f05252" },
+						{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#8c9a9e" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

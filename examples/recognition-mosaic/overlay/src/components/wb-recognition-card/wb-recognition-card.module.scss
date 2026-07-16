@@ -1,0 +1,384 @@
+.recognition-card {
+	@include reset-styles();
+	@include box-sizing();
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--recognition-card-background);
+	color: var(--recognition-card-ink);
+	font-family: Arial, Helvetica, sans-serif;
+	border: 5px solid var(--recognition-background);
+}
+
+:global(.recognition-card),
+:global(.recognition-card *) {
+	@include box-sizing();
+}
+
+:global(.recognition-card[data-tone='accent']) {
+	--recognition-card-background: var(--recognition-accent);
+	--recognition-card-ink: var(--recognition-accent-ink);
+}
+
+:global(.recognition-card[data-tone='highlight']) {
+	--recognition-card-background: var(--recognition-highlight);
+	--recognition-card-ink: var(--recognition-highlight-ink);
+}
+
+:global(.recognition-card[data-tone='cool']) {
+	--recognition-card-background: var(--recognition-cool);
+	--recognition-card-ink: var(--recognition-cool-ink);
+}
+
+:global(.recognition-card[data-tone='surface']) {
+	--recognition-card-background: var(--recognition-surface);
+	--recognition-card-ink: var(--recognition-surface-ink);
+}
+
+:global(.recognition-card__media) {
+	position: relative;
+	flex: 0 0 52%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--recognition-card-background);
+}
+
+:global(.recognition-card__media > img) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 32%;
+	filter: saturate(0.9) contrast(1.03);
+}
+
+:global(.recognition-card__media > img.recognition-card__image--loading) {
+	visibility: hidden;
+}
+
+:global(.recognition-card__initials) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background: var(--recognition-card-background);
+}
+
+:global(.recognition-card__initials::before),
+:global(.recognition-card__initials::after),
+:global(.recognition-card__initials > i) {
+	position: absolute;
+	display: block;
+	content: '';
+	transform: rotate(18deg);
+}
+
+:global(.recognition-card__initials::before) {
+	top: 13%;
+	right: 13%;
+	width: 54%;
+	height: 58%;
+	background: var(--recognition-cool);
+}
+
+:global(.recognition-card__initials::after) {
+	bottom: 14%;
+	left: 4%;
+	width: 58%;
+	height: 62%;
+	background: var(--recognition-highlight);
+}
+
+:global(.recognition-card__initials > i) {
+	right: 9%;
+	bottom: 12%;
+	width: 22%;
+	height: 24%;
+	background: var(--recognition-accent);
+}
+
+:global(.recognition-card__initials > span) {
+	position: relative;
+	z-index: 1;
+	font-size: 72px;
+	font-weight: 800;
+	line-height: 1.12;
+	letter-spacing: 0;
+}
+
+:global(.recognition-card__number) {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	display: flex;
+	width: 42px;
+	height: 42px;
+	align-items: center;
+	justify-content: center;
+	background: var(--recognition-background);
+	color: var(--recognition-text);
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1;
+}
+
+:global(.recognition-card__copy) {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	padding: 20px 22px 18px;
+	overflow: hidden;
+}
+
+:global(.recognition-card__meta) {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	min-width: 0;
+	margin-bottom: 9px;
+}
+
+:global(.recognition-card__team),
+:global(.recognition-card__role) {
+	min-width: 0;
+	overflow: hidden;
+	font-size: 12px;
+	font-weight: 800;
+	line-height: 1.24;
+	letter-spacing: 0;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+:global(.recognition-card__team) {
+	flex: 0 1 auto;
+	padding-left: 10px;
+	border-left: 4px solid currentColor;
+}
+
+:global(.recognition-card__role) {
+	flex: 1 1 auto;
+	margin-left: 10px;
+	opacity: 0.74;
+}
+
+:global(.recognition-card__name) {
+	display: -webkit-box;
+	flex: 0 0 auto;
+	margin: 0;
+	overflow: hidden;
+	font-size: 31px;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-weight: 800;
+	line-height: 1.18;
+	letter-spacing: 0;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+:global(.recognition-card__achievement) {
+	display: -webkit-box;
+	flex: 0 1 auto;
+	margin: 9px 0 0;
+	overflow: hidden;
+	font-size: 20px;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-weight: 650;
+	line-height: 1.24;
+	letter-spacing: 0;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 4;
+}
+
+:global(.recognition-card__quote) {
+	display: -webkit-box;
+	flex: 0 0 auto;
+	margin: auto 0 0;
+	padding: 10px 0 1px 14px;
+	overflow: hidden;
+	border-left: 2px solid currentColor;
+	font-size: 13px;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-style: italic;
+	font-weight: 600;
+	line-height: 1.24;
+	letter-spacing: 0;
+	opacity: 0.82;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.recognition-card--lead :global(.recognition-card__name) {
+	font-size: 44px;
+}
+
+.recognition-card--lead :global(.recognition-card__achievement) {
+	font-size: 25px;
+}
+
+.recognition-card--lead :global(.recognition-card__quote) {
+	font-size: 15px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card:not(.recognition-card--lead)) {
+	flex-direction: row;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card:not(.recognition-card--lead) .recognition-card__media) {
+	flex: 0 0 40%;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__copy) {
+	padding: 12px 14px 11px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__meta) {
+	margin-bottom: 4px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__name) {
+	font-size: 21px;
+	line-height: 1.18;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__achievement) {
+	margin-top: 5px;
+	font-size: 14px;
+	line-height: 1.22;
+	-webkit-line-clamp: 3;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__quote) {
+	display: none;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-card__team),
+:global(.wb-app[data-layout='wide'] .recognition-card__role) {
+	font-size: 9px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card--lead) {
+	flex-direction: row;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card--lead .recognition-card__media) {
+	flex: 0 0 44%;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card__name) {
+	font-size: 34px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card__achievement) {
+	font-size: 23px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card__quote) {
+	font-size: 15px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card--lead .recognition-card__name) {
+	font-size: 52px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-card--lead .recognition-card__achievement) {
+	font-size: 32px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__copy) {
+	padding: 10px 11px 9px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__meta) {
+	margin-bottom: 4px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__team),
+:global(.wb-app[data-layout='square'] .recognition-card__role) {
+	font-size: 8px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__name) {
+	font-size: 21px;
+	line-height: 1.18;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__achievement) {
+	margin-top: 4px;
+	font-size: 13px;
+	line-height: 1.22;
+	-webkit-line-clamp: 3;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__quote) {
+	margin-top: auto;
+	padding: 5px 0 1px 7px;
+	font-size: 9px;
+	line-height: 1.2;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__number) {
+	top: 7px;
+	right: 7px;
+	width: 28px;
+	height: 28px;
+	font-size: 9px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-card__initials > span) {
+	font-size: 42px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__copy) {
+	padding: 12px 14px 11px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__meta) {
+	margin-bottom: 5px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__team),
+:global(.wb-app[data-layout='compact'] .recognition-card__role) {
+	font-size: 9px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__name) {
+	font-size: 22px;
+	line-height: 1.18;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__achievement) {
+	margin-top: 5px;
+	font-size: 14px;
+	line-height: 1.22;
+	-webkit-line-clamp: 3;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card__quote) {
+	padding-top: 5px;
+	font-size: 10px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card--lead .recognition-card__name) {
+	font-size: 31px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-card--lead .recognition-card__achievement) {
+	font-size: 18px;
+}

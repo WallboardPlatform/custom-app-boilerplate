@@ -112,7 +112,9 @@ Choose pagination for the content and viewing distance. Valid treatments include
 DOM box containment does not prove that glyphs are intact. Fonts can paint descenders such as `g`, `j`, `p`, `q`, and `y` outside a tight line box while `scrollHeight` still reports no overflow. This is common when `line-height: 1` is combined with `overflow: hidden` or `clip`.
 
 - Leave vertical ink clearance through a safer line height or explicit top/bottom padding on clipped text.
+- A clip box may hide later lines, but it must not expose only part of the next line; size it to complete line-ink regions.
 - Validate representative labels containing ascenders, capitals, punctuation, accents, and descenders.
+- For ellipsized text, inspect both ends: the readable prefix must start unobscured at the expected edge and only the tail may disappear. Width/overflow checks alone do not detect a masked prefix or wrong scroll origin.
 - Do not repair a title by hiding more overflow; inspect its computed font size, line height, box height, and padding.
 - Treat the shared text-ink failure as a real layout defect. It reports the selector, rendered text, measured ink buffer, and required buffer.
 
@@ -225,7 +227,8 @@ Avoid:
 7. Run `npm run measure:visual` after the first real render. Review its report and screenshots, then put measured content-coverage thresholds with regression margin on every planned surface and scenario. The metric uses visible text, media, charts, SVGs, and background images; empty structural boxes do not count.
 8. Run `npm run validate:visual`. It checks every declared surface, every named scenario, declared setting effects, and text-ink safety. Adaptive apps also receive the standard full HD, wide-low, landscape, portrait, and square matrix.
 9. Inspect every image in `preview/output/` at its real pixel dimensions and zoom into typography. Content coverage and ink checks are regression guards; automated checks still do not judge reference fidelity, hierarchy, composition, or overall legibility.
-10. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
+10. Run `npm run prepare:visual-review`, record every screenshot and review criterion, and pass `npm run validate:visual-review`.
+11. Iterate until the primary information remains readable and balanced at every required size, then build the zip.
 
 Do not validate only in a convenient card-sized mock. The preview iframe must use the real widget dimensions; scaling the iframe visually is acceptable because it preserves its layout viewport.
 
@@ -241,7 +244,7 @@ Before returning a zip:
 - Root background is transparent unless intentionally configured otherwise.
 - Layout behaves at every surface required by the accepted fixed, bounded, or adaptive strategy.
 - Empty, loading, and invalid-data states render cleanly.
-- `npm run validate:visual` passes and every generated screenshot has been inspected.
+- `npm run validate:visual` and `npm run validate:visual-review` pass; every generated screenshot has current inspection evidence.
 - All settings are typed and mapped.
 - No unscoped global DOM selectors or shared mutable state.
 - `npm run lint` passes.

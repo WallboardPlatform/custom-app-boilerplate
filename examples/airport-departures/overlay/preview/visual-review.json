@@ -1,0 +1,136 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "4e8c8b1c6bf1da8ca065e7a6cdebb583a7869665760fca2e938274aad4b0e09e",
+	"reviewedAt": "2026-07-16T09:50:00.000Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The operational departure board preserves fast row scanning, status hierarchy, pagination, and all declared edge states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "not-applicable",
+			"notes": "No external visual reference was declared; the instruction-led transport brief is the review authority."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Continuous timetable registration, amber information rails, and gate/status columns make this specific to airport operations."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Dark, light, and custom-derived tokens now coordinate all surfaces; status colors and gate treatments remain readable."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-bound-null-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-empty-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-invalid-rows-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-last-page-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-light-theme-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-long-labels-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+		},
+		{
+			"file": "scenario-maximum-content-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-odd-count-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-row-array-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-static-unbound-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		}
+	],
+	"unresolvedFindings": []
+}

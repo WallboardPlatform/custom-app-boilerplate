@@ -8,6 +8,8 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { DepartureDatasource, DepartureRow, DepartureStatusTone } from '@interfaces/departure.interface';
 
+import { mixHexColors, readableTextColor } from '@utils/theme';
+
 import style from '@components/wb-app/wb-app.module.scss';
 
 import sampleDatasourceJson from '../../../sample-datasource.json';
@@ -241,11 +243,23 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const currentRows: Accessor<DepartureRow[]> = createMemo((): DepartureRow[] => {
 		return pages()[pageIndex() % pageCount()] ?? [];
 	});
-	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => ({
-		'--board-background': settings().backgroundColor,
-		'--board-text': settings().textColor,
-		'--board-accent': settings().accentColor
-	}));
+	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => {
+		const backgroundColor: string = settings().backgroundColor;
+		const textColor: string = settings().textColor;
+		const accentColor: string = settings().accentColor;
+
+		return {
+			'--board-background': backgroundColor,
+			'--board-text': textColor,
+			'--board-accent': accentColor,
+			'--board-on-accent': readableTextColor(accentColor),
+			'--board-header-surface': mixHexColors(backgroundColor, textColor, 0.05),
+			'--board-row-alternate': mixHexColors(backgroundColor, textColor, 0.035),
+			'--board-chrome-surface': mixHexColors(backgroundColor, textColor, 0.08),
+			'--board-border': mixHexColors(backgroundColor, textColor, 0.2),
+			'--board-muted': mixHexColors(textColor, backgroundColor, 0.4)
+		};
+	});
 
 	onMount((): void => {
 		const updateDimensions = (width: number, height: number): void => {

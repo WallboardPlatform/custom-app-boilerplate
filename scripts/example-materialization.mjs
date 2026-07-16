@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const excludedRoots = new Set(['.git', '.tmp', 'dist', 'examples', 'node_modules', 'templates']);
+const excludedRoots = new Set(['.git', '.tmp', 'benchmarks', 'dist', 'examples', 'node_modules', 'templates']);
 
 const resolveInside = (directory, relativePath, label) => {
 	const resolvedPath = path.resolve(directory, relativePath);

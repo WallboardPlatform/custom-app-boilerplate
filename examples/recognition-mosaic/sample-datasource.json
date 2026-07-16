@@ -1,0 +1,71 @@
+{
+	"Recognitions": {
+		"header": {
+			"name": "string",
+			"role": "string",
+			"achievement": "text",
+			"team": "string",
+			"imageUrl": "string",
+			"quote": "text"
+		},
+		"rows": [
+			{
+				"name": "Maya Rowan",
+				"role": "Creative Producer",
+				"achievement": "Turned the Horizon launch into a calm, clear two-week studio sprint.",
+				"team": "Studio Operations",
+				"imageUrl": "https://media.example.com/paper-kite/maya-rowan.png",
+				"quote": "Make the brave idea feel possible."
+			},
+			{
+				"name": "Theo Brooks",
+				"role": "Motion Designer",
+				"achievement": "Built a reusable motion toolkit that gave every campaign a sharper rhythm.",
+				"team": "Motion Lab",
+				"imageUrl": "https://media.example.com/paper-kite/theo-brooks.png",
+				"quote": "Good movement should feel inevitable."
+			},
+			{
+				"name": "Ren Sato",
+				"role": "Senior Strategist",
+				"achievement": "Connected six weeks of research into one idea the whole client team could use.",
+				"team": "Strategy",
+				"imageUrl": "https://media.example.com/paper-kite/ren-sato.png",
+				"quote": "Clarity is a generous creative act."
+			},
+			{
+				"name": "Elena Vale",
+				"role": "Craft Director",
+				"achievement": "Led the print workshop that transformed rough sketches into a tactile launch system.",
+				"team": "Design Craft",
+				"imageUrl": "https://media.example.com/paper-kite/elena-vale.png",
+				"quote": "The detail is where an idea earns trust."
+			},
+			{
+				"name": "Arun Mehta",
+				"role": "Design Technologist",
+				"achievement": "Prototyped an accessible installation in three days and shared the tools with everyone.",
+				"team": "Prototype Room",
+				"imageUrl": "https://media.example.com/paper-kite/arun-mehta.png",
+				"quote": "Build the question, then test it."
+			},
+			{
+				"name": "Inez Park",
+				"role": "Experience Writer",
+				"achievement": "Reframed a complex service journey in language that made customers feel understood.",
+				"team": "Experience",
+				"imageUrl": "",
+				"quote": "Every useful word makes room for someone."
+			},
+			{
+				"name": "Jules Nwosu",
+				"role": "Community Lead",
+				"achievement": "Created the open-studio series that brought local makers and new voices into the work.",
+				"team": "Community",
+				"imageUrl": "",
+				"quote": "A studio gets better when the door stays open."
+			}
+		],
+		"connectors": {}
+	}
+}

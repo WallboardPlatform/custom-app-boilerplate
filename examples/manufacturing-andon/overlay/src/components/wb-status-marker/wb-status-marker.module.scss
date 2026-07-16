@@ -1,0 +1,121 @@
+.state-marker {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	justify-content: center;
+	line-height: 1.2;
+}
+
+.state-marker::before {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: block;
+	width: 80%;
+	height: 80%;
+	content: '';
+	transform: translate(-50%, -50%);
+}
+
+.state-marker__glyph {
+	position: relative;
+	z-index: 1;
+	display: block;
+	padding: 2px;
+	font-weight: 900;
+	line-height: 1.2;
+}
+
+.state-marker--hero {
+	width: 104px;
+	height: 104px;
+}
+
+.state-marker--hero .state-marker__glyph {
+	font-size: 24px;
+}
+
+.state-marker--row {
+	width: 58px;
+	height: 58px;
+}
+
+.state-marker--row .state-marker__glyph {
+	font-size: 14px;
+}
+
+.state-marker--legend {
+	width: 28px;
+	height: 28px;
+}
+
+.state-marker--legend .state-marker__glyph {
+	font-size: 8px;
+}
+
+.state-marker--normal {
+	color: var(--andon-on-normal);
+}
+
+.state-marker--normal::before {
+	border-radius: 50%;
+	background: var(--andon-normal);
+}
+
+.state-marker--attention {
+	color: var(--andon-on-attention);
+}
+
+.state-marker--attention::before {
+	width: 66%;
+	height: 66%;
+	border-radius: 3px;
+	background: var(--andon-attention);
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.state-marker--stopped {
+	color: var(--andon-on-stopped);
+}
+
+.state-marker--stopped::before {
+	width: 76%;
+	height: 76%;
+	border: 3px solid var(--andon-on-stopped);
+	border-radius: 2px;
+	background: var(--andon-stopped);
+	box-shadow: 0 0 0 3px var(--andon-stopped);
+}
+
+.state-marker--unknown {
+	color: var(--andon-unknown);
+}
+
+.state-marker--unknown::before {
+	width: 72%;
+	height: 72%;
+	border: 4px solid var(--andon-unknown);
+	border-radius: 50%;
+	background: var(--andon-surface);
+}
+
+@media (max-width: 600px) {
+	.state-marker--hero {
+		width: 76px;
+		height: 76px;
+	}
+
+	.state-marker--hero .state-marker__glyph {
+		font-size: 18px;
+	}
+
+	.state-marker--row {
+		width: 46px;
+		height: 46px;
+	}
+
+	.state-marker--row .state-marker__glyph {
+		font-size: 11px;
+	}
+}

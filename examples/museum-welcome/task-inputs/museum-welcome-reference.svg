@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+	<rect width="1920" height="1080" fill="#eeeae2"/>
+	<rect x="0" y="0" width="690" height="1080" fill="#ed3f2f"/>
+	<rect x="690" y="0" width="1230" height="298" fill="#185bd8"/>
+	<rect x="1270" y="298" width="650" height="782" fill="#f3c625"/>
+	<circle cx="990" cy="670" r="270" fill="#111111"/>
+	<circle cx="990" cy="670" r="170" fill="#eeeae2"/>
+	<text x="78" y="118" fill="#111111" font-family="Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="5">CALDER MUSEUM</text>
+	<text x="72" y="382" fill="#eeeae2" font-family="Arial, sans-serif" font-size="164" font-weight="800">FORM</text>
+	<text x="72" y="535" fill="#eeeae2" font-family="Arial, sans-serif" font-size="164" font-weight="800">IN</text>
+	<text x="72" y="688" fill="#eeeae2" font-family="Arial, sans-serif" font-size="164" font-weight="800">MOTION</text>
+	<text x="78" y="946" fill="#111111" font-family="Arial, sans-serif" font-size="35" font-weight="700">14 SEP - 22 JAN</text>
+	<text x="760" y="184" fill="#eeeae2" font-family="Arial, sans-serif" font-size="88" font-weight="700">WELCOME</text>
+	<text x="1330" y="412" fill="#111111" font-family="Arial, sans-serif" font-size="34" font-weight="700">GALLERY 2</text>
+	<text x="1330" y="510" fill="#111111" font-family="Georgia, serif" font-size="68">Kinetic sculpture</text>
+	<text x="1330" y="588" fill="#111111" font-family="Georgia, serif" font-size="68">and modern light</text>
+	<line x1="1330" y1="672" x2="1800" y2="672" stroke="#111111" stroke-width="8"/>
+	<text x="1330" y="770" fill="#111111" font-family="Arial, sans-serif" font-size="32">OPEN TODAY</text>
+	<text x="1330" y="834" fill="#111111" font-family="Arial, sans-serif" font-size="48" font-weight="700">10:00 - 20:00</text>
+</svg>

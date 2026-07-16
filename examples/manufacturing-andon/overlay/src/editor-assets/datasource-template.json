@@ -1,0 +1,26 @@
+{
+	"AndonStatus": {
+		"header": {
+			"line": "string",
+			"station": "string",
+			"state": "string",
+			"reason": "string",
+			"ownerRole": "string",
+			"elapsedDuration": "string"
+		},
+		"rows": [
+			{ "line": "LINE A / FINAL ASSEMBLY", "station": "A-10 FRAME LOAD", "state": "Running", "reason": "Cycle within standard", "ownerRole": "Cell Operator", "elapsedDuration": "00:18" },
+			{ "line": "LINE A / FINAL ASSEMBLY", "station": "A-20 TORQUE CELL", "state": "Attention", "reason": "Fastener replenishment due", "ownerRole": "Material Handler", "elapsedDuration": "04:27" },
+			{ "line": "LINE A / FINAL ASSEMBLY", "station": "A-30 VISION CHECK", "state": "Normal", "reason": "Inspection sequence active", "ownerRole": "Quality Technician", "elapsedDuration": "00:42" },
+			{ "line": "LINE B / MODULE BUILD", "station": "B-10 COMPONENT PICK", "state": "Normal", "reason": "Kitting complete", "ownerRole": "Cell Operator", "elapsedDuration": "01:05" },
+			{ "line": "LINE B / MODULE BUILD", "station": "B-20 PRESS FIT", "state": "Stopped", "reason": "Guard interlock open", "ownerRole": "Maintenance", "elapsedDuration": "07:14" },
+			{ "line": "LINE C / END-OF-LINE", "station": "C-10 FUNCTION TEST", "state": "Normal", "reason": "Test cycle in progress", "ownerRole": "Test Operator", "elapsedDuration": "00:33" },
+			{ "line": "LINE C / END-OF-LINE", "station": "C-20 LEAK TEST", "state": "Waiting", "reason": "Awaiting upstream unit", "ownerRole": "Line Lead", "elapsedDuration": "02:48" },
+			{ "line": "LINE C / END-OF-LINE", "station": "C-30 LABEL APPLY", "state": "Running", "reason": "Cycle within standard", "ownerRole": "Cell Operator", "elapsedDuration": "00:21" },
+			{ "line": "LINE C / END-OF-LINE", "station": "C-40 RELEASE", "state": "Normal", "reason": "Release queue clear", "ownerRole": "Quality Technician", "elapsedDuration": "00:54" },
+			{ "line": "LINE D / PACKOUT", "station": "D-10 PACK", "state": "Normal", "reason": "Packaging materials available", "ownerRole": "Packout Operator", "elapsedDuration": "01:16" },
+			{ "line": "LINE D / PACKOUT", "station": "D-20 PALLET RELEASE", "state": "Normal", "reason": "Outbound lane available", "ownerRole": "Logistics Coordinator", "elapsedDuration": "00:39" }
+		],
+		"connectors": {}
+	}
+}

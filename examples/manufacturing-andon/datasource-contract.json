@@ -1,0 +1,38 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "andonData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "AndonStatus",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Northstar Assembly Andon Status",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "line", "type": "string", "required": true },
+		{ "name": "station", "type": "string", "required": true },
+		{ "name": "state", "type": "string", "required": true },
+		{ "name": "reason", "type": "string", "required": false },
+		{ "name": "ownerRole", "type": "string", "required": false },
+		{ "name": "elapsedDuration", "type": "string", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing AndonStatus",
+		"selected AndonStatus table object",
+		"processed AndonStatus row array"
+	],
+	"behavior": {
+		"unbound": "render bundled synthetic Northstar Assembly sample rows",
+		"boundEmpty": "render the configured empty state",
+		"invalidRows": "discard rows missing line or station",
+		"ordering": "preserve datasource row order for first line appearance and station order",
+		"states": "map documented synonyms to Normal, Attention, or Stopped and render all other values as Unknown",
+		"pagination": "group by line, keep line groups intact when possible, and split oversized lines with continuation labels"
+	}
+}

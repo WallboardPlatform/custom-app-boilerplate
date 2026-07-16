@@ -56,7 +56,7 @@ void describe('text ink safety', () => {
 				text: 'A deliberately long title rendered across three lines',
 				fontSize: 50,
 				lineHeight: 54.5,
-				boxHeight: 109,
+				boxHeight: 114,
 				lineCount: 3,
 				actualAscent: 38,
 				actualDescent: 12,
@@ -65,6 +65,25 @@ void describe('text ink safety', () => {
 		]);
 
 		assert.deepEqual(risks, []);
+	});
+
+	void it('rejects a clipped box that exposes part of the next line', () => {
+		const risks = findTextInkRisks([
+			clippedHeading({
+				text: 'A title wrapping across three lines',
+				fontSize: 50,
+				lineHeight: 54.5,
+				boxHeight: 121,
+				lineCount: 3,
+				actualAscent: 38,
+				actualDescent: 12,
+				paddingBottom: 5
+			})
+		]);
+
+		assert.equal(risks.length, 1);
+		assert.equal(risks[0]?.partialLinePixels, 4.75);
+		assert.match(formatTextInkRisks(risks), /exposes 4.75px of a clipped text line/);
 	});
 
 	void it('rejects text clipped by an ancestor even when its own box is tall enough', () => {

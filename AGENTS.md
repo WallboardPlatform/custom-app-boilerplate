@@ -1,43 +1,63 @@
-# AGENTS.md
+# Wallboard Custom App Agents
 
-Agent instructions for Wallboard custom app generation.
+Build production Wallboard widgets, not demo pages. Start with:
 
-Before implementing a custom app:
+1. `docs/claude/workflow.md`
+2. `docs/system/generation-brief.md`
+3. `docs/system/widget-best-practices.md`
+4. Only the topic docs needed by the task:
 
-1. Read `README.md`.
-2. Read `CLAUDE.md`.
-3. Read `docs/claude/workflow.md`.
-4. Read all files in `docs/system/`, especially `docs/system/widget-best-practices.md`.
-5. Create `generation-brief.json` and run `npm run validate:brief` before implementation. Run `npm run validate:project` after implementation to prove that the project still matches the accepted brief.
+| Need | Read |
+|------|------|
+| Data binding | `datasource-contracts.md` |
+| Settings/editor schema | `configuration.md`, `interfaces.md` |
+| SolidJS/component structure | `solidjs-patterns.md`, `components.md` |
+| Hooks, services, contexts, stores | matching system doc |
+| CSS/layout | `styling.md` |
+| Charts | `charting.md` |
+| Reusable mechanics | `capabilities.md` |
+| Packaging/replacement | `app-identity-and-delivery.md` |
 
-Core rules:
+`README.md` is the setup and command reference. Do not preload unrelated system docs.
 
-- Do not edit `src/index.tsx`.
-- Treat `generation-brief.json` as the accepted request contract. Update it when the user changes identity, surface strategy, visual direction, data, settings, states, behavior, or assets.
-- Resolve whether the app is `fixed`, `bounded`, or `adaptive` before implementation. Do not sacrifice the requested composition to unsupported aspect ratios.
-- User-provided visual references and explicit brand direction outrank repository examples. Examples demonstrate engineering patterns, not a default Wallboard visual style.
-- For color-driven apps, provide coordinated Dark and Light presets plus a Custom mode by default. Derive both presets from the accepted visual direction, and preserve missing legacy preset values as Custom on replacement uploads.
-- Build the user-facing widget in `src/components/wb-app/`.
-- Keep the root widget responsive, isolated, and transparent by default.
-- Keep CSS compatible with the legacy Chromium target described by the boilerplate docs.
-- Map every editor property through `src/settings.ts` and `src/interfaces/application.interface.ts`.
-- Keep `preview/fixture.ts` representative of the app's settings and datasource shape.
-- When adding a setting, update `properties.json`, `ConfigValues`, `Settings`, `settings.ts`, the preview fixture, and the generation brief together. Every slider needs linked `previewSettingEffects` evidence that changes the actual rendered element.
-- Classify data-bound widgets using `docs/system/datasource-contracts.md`: explicit or built-in contract first, otherwise `TABLE`; use `CUSTOM` only when tabular data would lose required structure.
-- For multiple independent existing sources, declare every picker in `bindings[]`, keep one sanitized sample bundle with per-binding `samplePath` values, and preserve the sources' separate refresh lifecycles.
-- Add named preview scenarios for empty, maximum-content, odd-count, last-page, and long-label states that materially change layout.
-- After the first representative render, run `npm run measure:visual`; review its report and give every planned surface and named scenario measured minimum content-coverage thresholds with regression margin.
-- Put app-specific timing, animation, or interaction assertions in an additional `preview/*.spec.ts` file; keep the shared visual suite generic.
-- Import packaged media statically (for example `import mark from './mark.png'`); never use `new URL(..., import.meta.url)` for runtime images.
-- Preserve `properties.json.version` when rebuilding or fixing an existing app. A deliberate incompatible version is a separate app upload and must be called out to the user.
-- Treat `properties.json` name plus version as the runtime identity. Never create a second Wallboard app record with the same identity; replacement builds go to the existing record.
-- Run `npm run setup` before installing dependencies in a fresh clone.
-- Use `npm run deliver -- <output-directory>` for final validation and delivery generation. Hand off both the upload ZIP and the separate sanitized source ZIP; never put source files inside the Wallboard upload package.
-- `deliver:unverified` is a browserless transfer mechanism only. Its `_UNVERIFIED` artifacts are not upload-ready and must pass normal `deliver` elsewhere.
-- Inspect every image in `preview/output/` at 100% or zoomed detail; passing overflow checks does not prove that the composition is visually good. Check descenders, baselines, reference fidelity, hierarchy, and repeated template patterns explicitly.
-- Use `useAutoFitText` selectively for variable bounded titles and hero values. Keep safe line-height and vertical padding because box fitting does not prove glyph-ink clearance.
-- Declare every important variable-length text surface in `generation-brief.json#dynamicText`. Choose auto-fit, wrap, ellipsis, or marquee deliberately; set a readable limit and fallback; prove it with a pathological long-content scenario.
-- Keep every bundled sample, fallback, template, placeholder, and source archive synthetic. Preserve data shape and edge cases, never customer records, identifiers, URLs, timestamps, or exact operational values.
-- In the installation handoff, state that a newly created custom app must be uploaded, enabled, and assigned to the editor's customer (or left unassigned for all customers).
+## Non-Negotiable
 
-The final deliverable is the generated delivery directory. For a data-bound app, state that current Wallboard versions require datasource creation/import and binding even though the ZIP carries the future provisioning template.
+- Never edit `src/index.tsx`, `src/contexts/system/`, `src/hooks/system/`, `src/services/service.abstract.ts`, or the reset/mixin files under `src/styles/`. `src/styles/animation.css` is the app keyframe extension point.
+- Put app UI in `src/components/wb-app/`; add app-specific components, hooks, services, interfaces, and utilities only in their established custom locations.
+- Keep HTML/CSS compatible with Chromium 56 and produce the Chrome 49 bundle. TypeScript is transpiled; CSS is not fully backported.
+- Scope DOM work, timers, observers, subscriptions, and mutable state per widget instance; clean all resources on destroy.
+- Preserve `properties.json` name and version for compatible replacement uploads. A deliberate incompatible version is a separate app and must be identified as such. New apps start at version `1`.
+- Preserve the supplied scaffold: do not replace `package.json`, `package-tools/`, validators, preview harness, or delivery scripts. Implement the app in the existing source/preview/config surfaces and finish with the repository's `npm run deliver` workflow.
+- Use only fictional representative data in source, fixtures, templates, placeholders, screenshots, and archives. Never retain customer records, URLs, IDs, credentials, timestamps, or exact operational values.
+
+## Request Contract
+
+Before implementation, create `generation-brief.json` and pass `npm run validate:brief`.
+
+- Resolve `fixed`, `bounded`, or `adaptive` placement. If placement materially changes the design and is unknown, ask the user.
+- User references, brand assets, and explicit concepts lead. Examples teach mechanics, not palette, card grammar, headers, or pagination style.
+- Declare every important variable text surface and its `auto-fit`, `wrap`, `ellipsis`, or `marquee` strategy, readable limit, fallback, and stress scenario.
+- Use coordinated Dark, Light, and Custom themes for color-driven apps unless the accepted direction calls for a different scheme. Presets resolve the entire semantic palette; show manual swatches only in Custom mode.
+- Prefer built-in `FEED` or `CALENDAR` when requested data matches them. Otherwise use an explicit user contract, then editable `TABLE`; use `CUSTOM` only when a table would lose necessary structure.
+- Keep independent existing datasources as independent bindings and refresh lifecycles.
+
+## Implementation Contract
+
+- Map each functional editor property across `properties.json`, `ConfigValues`, `Settings`, `settings.ts`, `preview/fixture.ts`, and the generation brief.
+- Every slider and regression-prone visual control needs executable `previewSettingEffects` evidence.
+- Normalize datasource variants once at the boundary; render one typed model. Provide stable loading, empty, invalid, broken-media, maximum-content, long-text, odd-count, last-page, and live-update states where relevant.
+- Root layout fills its surface, starts transparent unless a panel is intentional, and contains all overflow. Use flexbox, measured ratio classes, and bounded CSS variables rather than viewport assumptions.
+- Use `useAutoFitText` for bounded single-line primary text that must remain complete. Use wrapping, line limits, pagination, or accepted ellipsis elsewhere. Preserve descender and baseline ink with safe line-height and vertical padding.
+- Never ellipsize essential identity, direction, safety, accessibility, or action text on a declared target surface. Reallocate columns, stack fields, wrap, paginate, or change the ratio composition before losing it.
+- Import packaged media statically and list every emitted runtime asset in `resourceList`; never build component media URLs with `new URL(..., import.meta.url)`.
+- Use Chart.js by default for normal charts; import only required modules, size the parent explicitly, disable unnecessary signage animation, and destroy instances.
+
+## Evidence And Delivery
+
+1. Add realistic primary surfaces and named stress scenarios to `preview/fixture.ts`; app-specific motion/timing belongs in `preview/*.spec.ts`.
+2. Run `npm run measure:visual` after the first representative render. Inspect the report and screenshots, then set measured coverage thresholds with regression margin.
+3. Run `npm run validate:project` and `npm run validate:visual`.
+4. Run `npm run prepare:visual-review`. Inspect every screenshot at real dimensions, complete `preview/visual-review.json`, revise/rerun when needed, then pass `npm run validate:visual-review`.
+5. Run `npm run deliver -- <output-directory>`. Return the upload ZIP and separate sanitized source ZIP. `_UNVERIFIED` browserless artifacts are handoff-only and not upload-ready.
+
+For installation, explain that a new app must be uploaded, enabled, and assigned to the editor customer (or left unassigned for all customers). Data-bound apps also require datasource creation/selection and binding on current Wallboard versions.

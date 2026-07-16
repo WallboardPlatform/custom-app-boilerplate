@@ -1,0 +1,116 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "962aacfbc65bb343289c2b6a3d8c63af5a414360f123edc60a56fdd305687f05",
+	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The agenda preserves current-event emphasis, chronological upcoming events, calendar normalization, live progress, and all-day states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "not-applicable",
+			"notes": "No external visual reference was declared; the agent-authored venue-programme brief is the review authority."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "An editorial current-event field paired with a continuous chronological rail gives the agenda a venue-specific identity."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Dark and light themes coordinate feature, timeline, progress, and empty-state treatments without external assets."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-all-day-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-empty-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+		},
+		{
+			"file": "scenario-icalendar-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-light-theme-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "scenario-long-labels-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+		},
+		{
+			"file": "scenario-microsoft-calendar-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+		}
+	],
+	"unresolvedFindings": []
+}

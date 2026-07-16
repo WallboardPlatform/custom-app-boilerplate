@@ -1,0 +1,78 @@
+{
+	"version": "1",
+	"name": "Greenline Pharmacy Pickup Queue",
+	"interactive": false,
+	"size": {
+		"width": "480px",
+		"height": "270px"
+	},
+	"properties": [
+		{
+			"label": "Pickup queue datasource",
+			"type": "dataPicker",
+			"property": "queueData",
+			"dataPickerType": "any",
+			"tooltip": "Select the PharmacyQueue table. Leave unbound to show representative sample tickets."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Pharmacy name",
+					"type": "text",
+					"property": "pharmacyName",
+					"default": "Greenline Pharmacy"
+				},
+				{
+					"label": "Empty queue message",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No pickup tickets are waiting."
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the colors below.",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e9f1ed" },
+						{ "label": "Called ticket background", "type": "color", "property": "heroBackgroundColor", "default": "#07594b" },
+						{ "label": "Next queue surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#17372f" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#52675f" },
+						{ "label": "Waiting accent", "type": "color", "property": "accentColor", "default": "#8a5a00" },
+						{ "label": "Hold and unknown accent", "type": "color", "property": "alertColor", "default": "#b34332" }
+					],
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

@@ -1,0 +1,35 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "queueData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "PharmacyQueue",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Greenline Pharmacy Pickup Queue",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "ticket", "type": "string", "required": true },
+		{ "name": "counter", "type": "string", "required": true },
+		{ "name": "state", "type": "string", "required": true },
+		{ "name": "note", "type": "string", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing PharmacyQueue",
+		"selected PharmacyQueue table object",
+		"processed PharmacyQueue row array"
+	],
+	"behavior": {
+		"unbound": "render bundled synthetic sample rows",
+		"boundEmpty": "render the configured empty queue message",
+		"invalidRows": "skip rows without a ticket and use Counter pending when counter is blank",
+		"ordering": "preserve datasource row order",
+		"selection": "use the first called row as the hero, hide completed rows, and show at most three waiting, hold, or unknown rows"
+	}
+}

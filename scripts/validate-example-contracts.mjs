@@ -6,6 +6,8 @@ import {
 	getDatasourceDefinition,
 	normalizeDatasourceBindings
 } from './datasource-provisioning.mjs';
+import { validateSyntheticSample } from './example-data-privacy.mjs';
+import { selectReferenceScreenshots } from './example-screenshots.mjs';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const examplesDirectory = path.join(rootDirectory, 'examples');
@@ -205,6 +207,16 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 		fail(exampleId, 'all datasource bindings must use one shared sampleData bundle.');
 	}
 
+	const [sampleDataPath] = sampleDataPaths;
+	const absoluteSampleDataPath = path.resolve(exampleDirectory, sampleDataPath);
+
+	if (!absoluteSampleDataPath.startsWith(`${exampleDirectory}${path.sep}`) || !fs.existsSync(absoluteSampleDataPath)) {
+		fail(exampleId, `sample datasource '${sampleDataPath}' was not found inside the example.`);
+	}
+
+	const syntheticSample = JSON.parse(fs.readFileSync(absoluteSampleDataPath, 'utf8'));
+	validateSyntheticSample(exampleId, contract, syntheticSample);
+
 	for (const binding of bindings) {
 		const bindingProperty = requireString(exampleId, binding.property, 'binding.property');
 		const dataPickerType = requireString(exampleId, binding.dataPickerType, `${bindingProperty}.dataPickerType`);
@@ -279,6 +291,20 @@ if (fs.existsSync(examplesDirectory)) {
 
 		const exampleId = entry.name;
 		const exampleDirectory = path.join(examplesDirectory, exampleId);
+		const manifest = JSON.parse(fs.readFileSync(path.join(exampleDirectory, 'example.json'), 'utf8'));
+		const screenshotDirectory = path.join(exampleDirectory, 'screenshots');
+		const promotedScreenshots = fs.existsSync(screenshotDirectory)
+			? fs.readdirSync(screenshotDirectory).filter((file) => file.endsWith('.png'))
+			: [];
+		const selectedScreenshots = selectReferenceScreenshots(manifest, promotedScreenshots);
+
+		if (
+			promotedScreenshots.length !== selectedScreenshots.length
+			|| promotedScreenshots.some((file) => !selectedScreenshots.includes(file))
+		) {
+			fail(exampleId, 'screenshots/ must contain exactly the one or two referenceScreenshots.');
+		}
+
 		const contractPath = path.join(exampleDirectory, 'datasource-contract.json');
 		const propertiesPath = path.join(exampleDirectory, 'overlay', 'src', 'editor-assets', 'properties.json');
 

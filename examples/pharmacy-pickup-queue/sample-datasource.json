@@ -1,0 +1,18 @@
+{
+	"PharmacyQueue": {
+		"header": {
+			"ticket": "string",
+			"counter": "string",
+			"state": "string",
+			"note": "string"
+		},
+		"rows": [
+			{ "ticket": "A104", "counter": "Counter 2", "state": "called", "note": "Prescription ready" },
+			{ "ticket": "A105", "counter": "Counter 1", "state": "waiting", "note": "" },
+			{ "ticket": "A106", "counter": "Counter 3", "state": "waiting", "note": "Bring photo ID" },
+			{ "ticket": "A107", "counter": "Counter 2", "state": "on hold", "note": "Pharmacist review" },
+			{ "ticket": "A108", "counter": "Counter 1", "state": "waiting", "note": "" }
+		],
+		"connectors": {}
+	}
+}

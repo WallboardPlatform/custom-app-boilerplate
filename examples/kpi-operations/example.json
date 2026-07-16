@@ -12,5 +12,6 @@
 		"generation-brief.json",
 		"datasource-contract.json",
 		"sample-datasource.json"
-	]
+	],
+	"referenceScreenshots": ["app-default-1280x720.png", "portrait-1080x1920.png"]
 }

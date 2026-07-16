@@ -1,0 +1,108 @@
+{
+	"version": "1",
+	"name": "Paper Kite Recognition Mosaic",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Recognition data",
+			"type": "group",
+			"properties": [
+				{
+					"label": "People and achievements",
+					"type": "dataPicker",
+					"property": "recognitionData",
+					"dataPickerType": "any",
+					"tooltip": "Bind an editable table with name, role, achievement, team, imageUrl, and optional quote columns."
+				}
+			]
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Studio name",
+					"type": "text",
+					"property": "studioName",
+					"default": "Paper Kite Studio"
+				},
+				{
+					"label": "Wall title",
+					"type": "text",
+					"property": "wallTitle",
+					"default": "Work worth celebrating"
+				},
+				{
+					"label": "Empty state message",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "Fresh recognition is taking shape."
+				},
+				{
+					"label": "Show quotes",
+					"type": "checkbox",
+					"property": "showQuotes",
+					"default": true
+				},
+				{
+					"label": "Page duration (seconds)",
+					"type": "number",
+					"property": "pageDurationSeconds",
+					"default": 8,
+					"min": 3,
+					"max": 60,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					},
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f4f0e8" },
+						{ "label": "Paper surface", "type": "color", "property": "surfaceColor", "default": "#fffaf2" },
+						{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#18362f" },
+						{ "label": "Supporting text", "type": "color", "property": "mutedTextColor", "default": "#5e6c66" },
+						{ "label": "Coral accent", "type": "color", "property": "accentColor", "default": "#e95545" },
+						{ "label": "Warm highlight", "type": "color", "property": "highlightColor", "default": "#f5c84c" },
+						{ "label": "Cool accent", "type": "color", "property": "coolColor", "default": "#2775bd" }
+					]
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js",
+		"assets/index.jpg",
+		"assets/index2.jpg",
+		"assets/index3.jpg",
+		"assets/index4.jpg",
+		"assets/index5.jpg"
+	]
+}

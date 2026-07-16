@@ -9,6 +9,7 @@ import { collectSourceFiles, readGitProvenance, shouldExcludeSourcePath } from '
 void describe('source archive filtering', (): void => {
 	void it('excludes credentials, generated output, caches, and archives', (): void => {
 		for (const relativePath of [
+			'benchmarks/benchmark-set.v1.json',
 			'.npmrc',
 			'packages/widget/.npmrc',
 			'.netrc',

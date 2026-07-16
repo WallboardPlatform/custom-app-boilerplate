@@ -1,0 +1,608 @@
+.wb-app {
+	@include reset-styles();
+	@include box-sizing();
+	width: 100%;
+	height: 100%;
+	display: block;
+	min-width: 0;
+	min-height: 0;
+	padding: 28px;
+	overflow: hidden;
+	background: var(--recognition-background);
+	color: var(--recognition-text);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+:global(.wb-app),
+:global(.wb-app *) {
+	@include box-sizing();
+}
+
+:global(.recognition-stage) {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+:global(.recognition-intro) {
+	display: flex;
+	flex: 0 0 21%;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	padding: 10px 28px 10px 4px;
+	overflow: hidden;
+	border-right: 2px solid var(--recognition-text);
+}
+
+:global(.recognition-mark) {
+	position: relative;
+	flex: 0 0 58px;
+	width: 90px;
+	height: 58px;
+	margin-bottom: 28px;
+}
+
+:global(.recognition-mark::before),
+:global(.recognition-mark::after),
+:global(.recognition-mark > i) {
+	position: absolute;
+	display: block;
+	width: 34px;
+	height: 34px;
+	content: '';
+	transform: rotate(45deg);
+}
+
+:global(.recognition-mark::before) {
+	top: 2px;
+	left: 4px;
+	background: var(--recognition-accent);
+}
+
+:global(.recognition-mark::after) {
+	top: 2px;
+	left: 37px;
+	background: var(--recognition-highlight);
+}
+
+:global(.recognition-mark > i:nth-child(1)) {
+	top: 26px;
+	left: 20px;
+	background: var(--recognition-cool);
+}
+
+:global(.recognition-mark > i:nth-child(2)) {
+	top: 25px;
+	left: 52px;
+	width: 18px;
+	height: 18px;
+	background: var(--recognition-text);
+}
+
+:global(.recognition-mark > i:nth-child(3)) {
+	top: 47px;
+	left: 52px;
+	width: 13px;
+	height: 13px;
+	background: var(--recognition-accent);
+}
+
+:global(.recognition-intro__copy) {
+	display: flex;
+	flex: 0 1 auto;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+:global(.recognition-brand) {
+	display: block;
+	width: 100%;
+	padding: 1px 0 3px;
+	overflow: hidden;
+	color: var(--recognition-muted);
+	font-size: 24px;
+	font-weight: 800;
+	line-height: 1.18;
+	letter-spacing: 0;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+:global(.recognition-title) {
+	display: block;
+	width: 100%;
+	margin: 18px 0 0;
+	padding: 1px 0 6px;
+	overflow: hidden;
+	font-size: 54px;
+	font-weight: 800;
+	line-height: 1.05;
+	letter-spacing: 0;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.recognition-intro__copy > p) {
+	margin: 18px 0 0;
+	color: var(--recognition-muted);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.25;
+	letter-spacing: 0;
+}
+
+:global(.recognition-folio) {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	margin-top: auto;
+	padding-top: 26px;
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.2;
+}
+
+:global(.recognition-folio > i) {
+	display: block;
+	flex: 1 1 auto;
+	height: 2px;
+	margin: 0 10px;
+	background: var(--recognition-text);
+}
+
+:global(.recognition-folio > small) {
+	margin-left: 8px;
+	color: var(--recognition-muted);
+	font-size: 11px;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+:global(.recognition-board) {
+	display: flex;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+	margin-left: 18px;
+	overflow: hidden;
+}
+
+:global(.recognition-cards) {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+:global(.recognition-cards > .recognition-card--lead) {
+	flex: 0 0 44%;
+}
+
+:global(.recognition-support) {
+	display: flex;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
+	min-width: 0;
+	min-height: 0;
+}
+
+:global(.recognition-support[data-support-count='1'] > .recognition-card) {
+	width: 100%;
+	height: 100%;
+}
+
+:global(.recognition-support[data-support-count='2'] > .recognition-card) {
+	width: 50%;
+	height: 100%;
+}
+
+:global(.recognition-support[data-support-count='3'] > .recognition-card:first-child) {
+	width: 100%;
+	height: 49%;
+}
+
+:global(.recognition-support[data-support-count='3'] > .recognition-card:nth-child(2)),
+:global(.recognition-support[data-support-count='3'] > .recognition-card:nth-child(3)) {
+	width: 50%;
+	height: 51%;
+}
+
+:global(.recognition-support[data-support-count='4'] > .recognition-card) {
+	width: 50%;
+	height: 50%;
+}
+
+:global(.wb-app[data-visible-count='1'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 100%;
+	flex-direction: row;
+}
+
+:global(.wb-app[data-visible-count='1'] .recognition-card--lead .recognition-card__media) {
+	flex-basis: 58%;
+}
+
+:global(.wb-app[data-visible-count='2'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 56%;
+}
+
+:global(.recognition-empty) {
+	position: relative;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background: var(--recognition-surface);
+	color: var(--recognition-surface-ink);
+	text-align: center;
+}
+
+:global(.recognition-empty > span) {
+	position: relative;
+	z-index: 1;
+	margin-top: 28px;
+	font-size: 14px;
+	font-weight: 800;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+:global(.recognition-empty > h2) {
+	position: relative;
+	z-index: 1;
+	max-width: 68%;
+	margin: 14px 0 0;
+	font-size: 48px;
+	font-weight: 800;
+	line-height: 1.12;
+	letter-spacing: 0;
+}
+
+:global(.recognition-empty__shape) {
+	position: relative;
+	width: 180px;
+	height: 126px;
+}
+
+:global(.recognition-empty__shape::before),
+:global(.recognition-empty__shape::after),
+:global(.recognition-empty__shape > i) {
+	position: absolute;
+	display: block;
+	content: '';
+	transform: rotate(45deg);
+}
+
+:global(.recognition-empty__shape::before) {
+	top: 8px;
+	left: 32px;
+	width: 86px;
+	height: 86px;
+	background: var(--recognition-accent);
+}
+
+:global(.recognition-empty__shape::after) {
+	top: 6px;
+	right: 18px;
+	width: 74px;
+	height: 74px;
+	background: var(--recognition-highlight);
+}
+
+:global(.recognition-empty__shape > i:nth-child(1)) {
+	left: 48px;
+	bottom: 0;
+	width: 68px;
+	height: 68px;
+	background: var(--recognition-cool);
+}
+
+:global(.recognition-empty__shape > i:nth-child(2)) {
+	right: 28px;
+	bottom: 10px;
+	width: 32px;
+	height: 32px;
+	background: var(--recognition-surface-ink);
+}
+
+:global(.recognition-empty__shape > i:nth-child(3)) {
+	left: 12px;
+	bottom: 18px;
+	width: 28px;
+	height: 28px;
+	background: var(--recognition-highlight);
+}
+
+:global(.wb-app[data-layout='wide']) {
+	padding: 12px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-intro) {
+	flex-basis: 20%;
+	padding: 4px 18px 4px 2px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-mark) {
+	flex-basis: 58px;
+	width: 90px;
+	height: 38px;
+	margin-bottom: 12px;
+	transform: scale(0.68);
+	transform-origin: top left;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-brand) {
+	font-size: 16px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-title) {
+	margin-top: 7px;
+	padding-bottom: 4px;
+	font-size: 30px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-intro__copy > p) {
+	margin-top: 8px;
+	font-size: 12px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-folio) {
+	padding-top: 8px;
+	font-size: 13px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-board) {
+	margin-left: 8px;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 34%;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-support[data-support-count='3'] > .recognition-card:first-child) {
+	width: 50%;
+	height: 50%;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-support[data-support-count='3'] > .recognition-card:nth-child(2)),
+:global(.wb-app[data-layout='wide'] .recognition-support[data-support-count='3'] > .recognition-card:nth-child(3)) {
+	width: 50%;
+	height: 50%;
+}
+
+:global(.wb-app[data-layout='wide'] .recognition-support[data-support-count='3'] > .recognition-card:nth-child(3)) {
+	margin-left: 50%;
+}
+
+:global(.wb-app[data-layout='portrait']) {
+	padding: 26px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-stage) {
+	flex-direction: column;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-intro) {
+	flex: 0 0 17%;
+	width: 100%;
+	flex-direction: row;
+	align-items: center;
+	padding: 8px 4px 20px;
+	border-right: 0;
+	border-bottom: 2px solid var(--recognition-text);
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-mark) {
+	flex: 0 0 96px;
+	margin: 0 30px 0 0;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-intro__copy) {
+	flex: 1 1 auto;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-brand) {
+	font-size: 22px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-title) {
+	margin-top: 10px;
+	font-size: 48px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-intro__copy > p) {
+	margin-top: 8px;
+	font-size: 16px;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-folio) {
+	flex: 0 0 170px;
+	margin: 0 0 0 22px;
+	padding: 0;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-board) {
+	width: 100%;
+	margin: 14px 0 0;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-cards) {
+	flex-direction: column;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-cards > .recognition-card--lead) {
+	flex: 0 0 47%;
+	width: 100%;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-support) {
+	flex: 0 0 53%;
+	width: 100%;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-support[data-support-count='2'] > .recognition-card) {
+	width: 50%;
+	height: 100%;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-support[data-support-count='3'] > .recognition-card:first-child) {
+	width: 100%;
+	height: 48%;
+	flex-direction: row;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-support[data-support-count='3'] > .recognition-card:first-child .recognition-card__media) {
+	flex: 0 0 43%;
+}
+
+:global(.wb-app[data-layout='portrait'] .recognition-support[data-support-count='3'] > .recognition-card:nth-child(2)),
+:global(.wb-app[data-layout='portrait'] .recognition-support[data-support-count='3'] > .recognition-card:nth-child(3)) {
+	width: 50%;
+	height: 52%;
+}
+
+:global(.wb-app[data-layout='square']) {
+	padding: 10px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-stage) {
+	flex-direction: column;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-intro) {
+	flex: 0 0 24%;
+	width: 100%;
+	flex-direction: row;
+	align-items: center;
+	padding: 3px 2px 8px;
+	border-right: 0;
+	border-bottom: 2px solid var(--recognition-text);
+}
+
+:global(.wb-app[data-layout='square'] .recognition-mark) {
+	flex: 0 0 90px;
+	width: 90px;
+	margin: 0 12px 0 0;
+	transform: scale(0.7);
+	transform-origin: center left;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-intro__copy) {
+	flex: 1 1 auto;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-brand) {
+	font-size: 13px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-title) {
+	margin-top: 4px;
+	padding-bottom: 2px;
+	font-size: 24px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-intro__copy > p) {
+	margin-top: 3px;
+	font-size: 9px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-folio) {
+	flex: 0 0 94px;
+	margin: 0 0 0 9px;
+	padding: 0;
+	font-size: 10px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-folio > i) {
+	margin: 0 4px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-folio > small) {
+	margin-left: 4px;
+	font-size: 7px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-board) {
+	width: 100%;
+	margin: 6px 0 0;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 58%;
+}
+
+:global(.wb-app[data-layout='square'][data-visible-count='1'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 100%;
+}
+
+:global(.wb-app[data-layout='square'][data-visible-count='1'] .recognition-card--lead .recognition-card__media) {
+	flex-basis: 48%;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-empty > h2) {
+	max-width: 84%;
+	font-size: 27px;
+}
+
+:global(.wb-app[data-layout='square'] .recognition-empty__shape) {
+	transform: scale(0.6);
+}
+
+:global(.wb-app[data-layout='square'] .recognition-empty > span) {
+	margin-top: 6px;
+	font-size: 10px;
+}
+
+:global(.wb-app[data-layout='compact']) {
+	padding: 12px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-intro) {
+	flex-basis: 24%;
+	padding: 5px 14px 5px 2px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-mark) {
+	flex-basis: 58px;
+	margin-bottom: 12px;
+	transform: scale(0.68);
+	transform-origin: top left;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-brand) {
+	font-size: 15px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-title) {
+	margin-top: 7px;
+	padding-bottom: 4px;
+	font-size: 27px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-intro__copy > p) {
+	margin-top: 8px;
+	font-size: 12px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-folio) {
+	padding-top: 8px;
+	font-size: 12px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-board) {
+	margin-left: 8px;
+}
+
+:global(.wb-app[data-layout='compact'] .recognition-cards > .recognition-card--lead) {
+	flex-basis: 56%;
+}

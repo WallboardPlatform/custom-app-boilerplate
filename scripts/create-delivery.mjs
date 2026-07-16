@@ -91,6 +91,7 @@ const prepareOutputDirectory = () => {
 		sourceArchiveFileName,
 		'delivery-manifest.json',
 		'generation-brief.json',
+		'visual-review.json',
 		'datasource-contract.json',
 		'sample-datasource.json'
 	]);
@@ -148,6 +149,7 @@ runNpmScript('validate:legacy');
 
 if (!unverified) {
 	runNpmScript('validate:visual');
+	runNpmScript('validate:visual-review');
 }
 
 runNpmScript('prepare:datasource-package');
@@ -177,9 +179,15 @@ const gitProvenance = readGitProvenance(projectDirectory);
 const contractPath = path.join(projectDirectory, 'datasource-contract.json');
 const briefPath = path.join(projectDirectory, 'generation-brief.json');
 const brief = readJson(briefPath);
+const visualReviewPath = path.join(projectDirectory, 'preview', 'visual-review.json');
+const visualReview = unverified ? null : readJson(visualReviewPath);
 let datasource = null;
 
 fs.copyFileSync(briefPath, path.join(outputDirectory, 'generation-brief.json'));
+
+if (visualReview) {
+	fs.copyFileSync(visualReviewPath, path.join(outputDirectory, 'visual-review.json'));
+}
 
 if (fs.existsSync(contractPath)) {
 	const contract = readJson(contractPath);
@@ -249,6 +257,13 @@ const manifest = {
 		briefVersion: brief.briefVersion,
 		file: 'generation-brief.json'
 	},
+	visualReview: visualReview ? {
+		file: 'visual-review.json',
+		reviewVersion: visualReview.reviewVersion,
+		sourceHash: visualReview.sourceHash,
+		reviewedAt: visualReview.reviewedAt,
+		reviewer: visualReview.reviewer
+	} : null,
 	datasource,
 	acceptance: {
 		status: unverified ? 'unverified' : 'accepted',
@@ -262,6 +277,7 @@ const manifest = {
 		contract: true,
 		lint: true,
 		visual: !unverified,
+		visualReview: !unverified,
 		legacyBundle: true,
 		packageAssets: true,
 		sourceArchive: true

@@ -1,0 +1,218 @@
+{
+	"briefVersion": 3,
+	"request": {
+		"summary": "Create a light-first campus wayfinding directory backed by an editable internal table.",
+		"audience": "Rivermark College students, visitors, and staff scanning campus directions from a distance.",
+		"primaryGoal": "Keep building, floor, department, room, direction, and accessibility information easy to scan across landscape, strip, portrait, and square signage."
+	},
+	"assumptions": [
+		"Directory rows are maintained in a Wallboard TABLE and should update without rebuilding the app.",
+		"Natural sorting by building, floor, department, room, direction, and accessibility note provides a deterministic order without adding maintenance-only columns.",
+		"The directory may rotate automatically when the normalized rows do not fit on one page."
+	],
+	"app": {
+		"mode": "new",
+		"name": "Rivermark Campus Directory",
+		"version": "1"
+	},
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The requested surfaces span full-screen landscape, a wide reader strip, portrait signage, and a compact square placement."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Primary full-screen campus directory.",
+			"minimumContentCoverage": { "width": 92, "height": 90 }
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide, low-height concourse or lobby signage zone.",
+			"minimumContentCoverage": { "width": 92, "height": 89 }
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Portrait wayfinding kiosk display.",
+			"minimumContentCoverage": { "width": 93, "height": 92 }
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "required",
+			"purpose": "Compact square playlist zone.",
+			"minimumContentCoverage": { "width": 92, "height": 88 }
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{
+				"property": "directoryData",
+				"source": "generated",
+				"contract": "TABLE"
+			}
+		]
+	},
+	"settings": [
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Light, Dark, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{ "property": "campusName", "purpose": "College name shown in the directory header." },
+		{ "property": "directoryTitle", "purpose": "Primary directory title." },
+		{ "property": "locationLabel", "purpose": "Current directory location or orientation context." },
+		{ "property": "emptyStateText", "purpose": "Message shown when the bound table has no valid directory rows." },
+		{ "property": "pageDurationSeconds", "purpose": "Seconds each directory page remains visible.", "effect": "page-duration" },
+		{ "property": "backgroundColor", "purpose": "Custom theme background color." },
+		{ "property": "textColor", "purpose": "Custom theme primary text color." },
+		{ "property": "accentColor", "purpose": "Custom theme wayfinding accent color." },
+		{ "property": "accessibilityColor", "purpose": "Custom theme accessibility marker color." }
+	],
+	"dynamicText": [
+		{
+			"id": "directory-title",
+			"source": { "type": "setting", "properties": ["directoryTitle"] },
+			"selectors": [".directory-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
+			"fallback": "At the readable minimum, preserve one line and ellipsize only the tail.",
+			"rationale": "The configurable directory title is the primary orientation label.",
+			"evidenceScenario": "long-departments"
+		},
+		{
+			"id": "compact-department-name",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--compact .directory-department-name"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the department tail after preserving its readable prefix, room, and direction.",
+			"rationale": "Row alignment and a stable scan path are more useful than wrapping one unusually long department across neighboring rows.",
+			"evidenceScenario": "long-departments"
+		},
+		{
+			"id": "compact-direction-text",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--compact .directory-direction-text"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize secondary route detail while keeping the direction prefix and arrow visible.",
+			"rationale": "Directions must stay on the same horizontal scan line as their destination.",
+			"evidenceScenario": "long-departments"
+		},
+		{
+			"id": "compact-accessibility-note",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--compact .directory-accessibility-note"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Keep the ACCESS marker visible and ellipsize only the detailed note.",
+			"rationale": "Accessibility guidance remains identifiable even when its optional note is long.",
+			"evidenceScenario": "long-departments"
+		},
+		{
+			"id": "portrait-department-name",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--portrait .directory-department-name"],
+			"strategy": "wrap",
+			"limits": { "minimumFontSize": 20, "maximumLines": 2 },
+			"fallback": "Paginate before reducing or clipping the destination name.",
+			"rationale": "Portrait rows use vertical space to keep each destination readable in the scan path.",
+			"evidenceScenario": "portrait-long-essential-fields"
+		},
+		{
+			"id": "portrait-direction-text",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--portrait .directory-direction-text"],
+			"strategy": "wrap",
+			"limits": { "minimumFontSize": 16, "maximumLines": 2 },
+			"fallback": "Paginate before reducing or clipping primary route guidance.",
+			"rationale": "Directions are primary wayfinding data and must remain complete on portrait signage.",
+			"evidenceScenario": "portrait-long-essential-fields"
+		},
+		{
+			"id": "portrait-accessibility-note",
+			"source": { "type": "datasource", "properties": ["directoryData"] },
+			"selectors": [".directory--portrait .directory-accessibility-note"],
+			"strategy": "wrap",
+			"limits": { "minimumFontSize": 16, "maximumLines": 2 },
+			"fallback": "Paginate before reducing or clipping accessibility guidance.",
+			"rationale": "Accessibility guidance is primary wayfinding data and must remain complete on portrait signage.",
+			"evidenceScenario": "portrait-long-essential-fields"
+		}
+	],
+	"states": [
+		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves hierarchy and contrast." },
+		{ "scenario": "custom-theme", "expectation": "Custom semantic colors remain coordinated and readable." },
+		{ "scenario": "single-building", "expectation": "One building uses the full directory without redundant repeated cards." },
+		{ "scenario": "many-buildings", "expectation": "Many building and floor groups remain ordered and paginated." },
+		{ "scenario": "unequal-floors", "expectation": "Large and small floor groups preserve a continuous scan path." },
+		{ "scenario": "long-departments", "expectation": "Long departments, directions, and accessibility notes remain bounded at the wide-low target." },
+		{ "scenario": "portrait-long-essential-fields", "expectation": "Long destination, direction, and accessibility values wrap completely at readable sizes on portrait signage." },
+		{ "scenario": "missing-rooms", "expectation": "Missing room values use a clear fallback without dropping otherwise valid rows." },
+		{ "scenario": "static-unbound", "expectation": "Representative fictional directory content is shown before a datasource is selected." },
+		{ "scenario": "empty", "expectation": "An explicit calm empty state replaces the row area." },
+		{ "scenario": "invalid-rows", "expectation": "Malformed rows are skipped while valid entries continue rendering." },
+		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same typed directory model." },
+		{ "scenario": "final-partial-page", "expectation": "The last page is balanced and uses the available row area without clipping or top compression." },
+		{ "scenario": "live-datasource-update", "expectation": "A table edit updates the visible directory without rebuilding the app." }
+	],
+	"behaviors": [
+		{
+			"id": "deterministic-grouping",
+			"expectation": "Rows sort naturally by building, floor, department, room, direction, and accessibility note, with group labels repeated at page boundaries.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "balanced-pagination",
+			"expectation": "Page size adapts to the surface, rotates on schedule, and balances the final page while preserving row order.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "portrait-essential-completeness",
+			"expectation": "Portrait pagination reserves stacked full-width bands for direction and accessibility text without ellipsis, overflow, or type below 16px.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource changes update visible department and room details in place.",
+			"evidence": { "scenario": "live-datasource-update" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A light-first campus reader board with civic wayfinding clarity, restrained academic character, and one continuous directory surface.",
+		"references": [],
+		"signatureChoices": [
+			"A strong locator rail carries building and floor changes down the left edge of the continuous table.",
+			"Three campus-route colors form a compact orientation motif while accessibility uses a distinct, consistent marker."
+		],
+		"avoid": [
+			"Independent cards for each directory row.",
+			"A generic dashboard of floating panels or decorative gradients."
+		]
+	},
+	"visualReview": {
+		"intent": "A calm, high-legibility campus directory whose grouped rows read in one stable top-to-bottom path at every requested surface.",
+		"focus": [
+			"Verify group changes remain immediately visible without consuming excessive row width or repeating on every row.",
+			"Verify long department and accessibility text only loses its tail and never obscures room or direction information.",
+			"Verify the wide-low and square surfaces retain usable hierarchy rather than becoming compressed desktop layouts.",
+			"Verify partial pages distribute rows intentionally and all theme presets preserve sufficient contrast."
+		]
+	}
+}

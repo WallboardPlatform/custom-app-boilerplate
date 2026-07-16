@@ -1,0 +1,13 @@
+{
+	"title": "Museum Welcome",
+	"description": "Reference-led fixed Full HD poster with packaged artwork, deliberate negative space, and non-dashboard composition.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json", "task-inputs/museum-welcome-reference.svg"],
+	"referenceScreenshots": ["full-hd-1920x1080.png", "scenario-long-title-1920x1080.png"]
+}

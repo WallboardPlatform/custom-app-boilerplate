@@ -1,0 +1,174 @@
+{
+	"briefVersion": 3,
+	"request": {
+		"summary": "Create a portrait Andon status column for fictional Northstar Assembly from editable station-status rows.",
+		"audience": "Production supervisors, line leads, and operators monitoring assembly flow from a distance.",
+		"primaryGoal": "Group stations by production line and make active exceptions immediately identifiable without losing normal-state context."
+	},
+	"assumptions": [
+		"The 1080 by 1920 placement is the default surface and the 480 by 1920 placement is the required narrow member of the same portrait family.",
+		"Datasource row order defines line and station order so the requested table can remain limited to operational fields.",
+		"Recognized state synonyms map to Normal, Attention, or Stopped; every other non-empty state remains visible as Unknown.",
+		"When all line groups cannot fit, pages rotate and keep a line together unless that line alone exceeds one page.",
+		"All bundled names, roles, reasons, durations, and operational values are fictional."
+	],
+	"app": { "mode": "new", "name": "Northstar Assembly Andon Column", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The requested product is a tall operational column with two explicit portrait widths and one shared vertical hierarchy."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1080,
+			"height": 1920,
+			"role": "primary",
+			"purpose": "Full portrait production Andon display.",
+			"minimumContentCoverage": { "width": 87, "height": 90 }
+		},
+		{
+			"id": "narrow-column",
+			"width": 480,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Narrow portrait Andon column for constrained production zones.",
+			"minimumContentCoverage": { "width": 88, "height": 92 }
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [{ "property": "andonData", "source": "generated", "contract": "TABLE" }]
+	},
+	"settings": [
+		{ "property": "boardTitle", "purpose": "Assembly organization name in the instrument header." },
+		{ "property": "boardSubtitle", "purpose": "Operational board label beneath the organization name." },
+		{ "property": "emptyStateText", "purpose": "Message shown when a bound datasource has no valid station rows." },
+		{ "property": "pageDurationSeconds", "purpose": "Seconds each line-group page remains visible when pagination is required." },
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom semantic palette.",
+			"effect": "theme-preset"
+		},
+		{ "property": "backgroundColor", "purpose": "Custom instrument background color." },
+		{ "property": "surfaceColor", "purpose": "Custom line-header and station-lane surface color." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Custom supporting text color." },
+		{ "property": "normalColor", "purpose": "Custom Normal state color." },
+		{ "property": "attentionColor", "purpose": "Custom Attention state color." },
+		{ "property": "stoppedColor", "purpose": "Custom Stopped state color." },
+		{ "property": "unknownColor", "purpose": "Custom Unknown state color." }
+	],
+	"dynamicText": [
+		{
+			"id": "board-title",
+			"source": { "type": "setting", "properties": ["boardTitle"] },
+			"selectors": [".andon-brand__name"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "At the readable minimum, retain the complete configured title on one line by using the full header width.",
+			"rationale": "The organization name is the persistent board identity and must remain complete at both portrait widths.",
+			"evidenceScenario": "long-reasons"
+		},
+		{
+			"id": "line-and-station-labels",
+			"source": { "type": "datasource", "properties": ["andonData"] },
+			"selectors": [".line-section__name", ".station-row__name"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Preserve the readable prefix and ellipsize only the tail after one line.",
+			"rationale": "Line and station identity must stay aligned with the state marker and duration column.",
+			"evidenceScenario": "long-reasons"
+		},
+		{
+			"id": "station-reasons",
+			"source": { "type": "datasource", "properties": ["andonData"] },
+			"selectors": [".station-row__reason"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two complete lines while preserving the full reason in the title attribute.",
+			"rationale": "Exception reasons carry the operational meaning and receive two lines before secondary metadata is reduced.",
+			"evidenceScenario": "long-reasons"
+		},
+		{
+			"id": "station-ownership",
+			"source": { "type": "datasource", "properties": ["andonData"] },
+			"selectors": [".station-row__owner", ".station-row__elapsed"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Keep the leading role or duration text and ellipsize the remaining tail.",
+			"rationale": "Ownership and elapsed time are secondary metadata that must not displace station identity or reason.",
+			"evidenceScenario": "long-reasons"
+		},
+		{
+			"id": "empty-message",
+			"source": { "type": "setting", "properties": ["emptyStateText"] },
+			"selectors": [".andon-empty__message"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 3 },
+			"fallback": "Clamp after three complete lines inside the centered empty-state band.",
+			"rationale": "The board must communicate an intentional no-data state instead of appearing broken.",
+			"evidenceScenario": "empty"
+		}
+	],
+	"states": [
+		{ "scenario": "mixed-line-load", "expectation": "Different station counts remain grouped by line with exceptions visually dominant." },
+		{ "scenario": "light-theme", "expectation": "The coordinated light palette preserves state hierarchy and readable contrast." },
+		{ "scenario": "unknown-state", "expectation": "An unrecognized state remains visible with the Unknown marker shape and label." },
+		{ "scenario": "long-reasons", "expectation": "Long names, reasons, roles, and durations remain bounded at 480 by 1920." },
+		{ "scenario": "all-normal", "expectation": "The board reports stable flow without manufacturing an exception headline." },
+		{ "scenario": "all-stopped", "expectation": "Stopped stations dominate the instrument while every station remains distinguishable." },
+		{ "scenario": "empty", "expectation": "A bound empty table shows the configured quiet empty state." },
+		{ "scenario": "invalid-rows", "expectation": "Rows missing line or station are discarded while valid rows continue to render." },
+		{ "scenario": "maximum-content", "expectation": "A large table paginates by complete line groups without overflowing the portrait surface." },
+		{ "scenario": "final-partial-group", "expectation": "The final page shows a continued line group with its remaining stations and explicit continuation context." },
+		{ "scenario": "live-update", "expectation": "A datasource update changes the visible station state and reason without rebuilding the app." }
+	],
+	"behaviors": [
+		{
+			"id": "line-grouping-and-state-normalization",
+			"expectation": "Rows group in source order and recognized state synonyms map to the four explicit visual tones.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "bounded-group-pagination",
+			"expectation": "Pages keep normal line groups intact and split only an oversized line with a continuation label.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "timed-page-rotation-and-cleanup",
+			"expectation": "Multi-page data advances at the configured duration and all instance-local resources release on destroy.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "live-datasource-update",
+			"expectation": "A pushed datasource value replaces station content in place.",
+			"evidence": { "scenario": "live-update" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A single tall industrial signal instrument with a persistent severity rail, compact line bands, and flat station lanes rather than dashboard cards.",
+		"references": [],
+		"signatureChoices": [
+			"A continuous left status spine carries distinct circle, diamond, square, and neutral marker geometry through every station lane.",
+			"The header condenses site identity, live summary, and exception count into one stacked instrument readout.",
+			"Line groups are separated by full-width ruled headers and share one uninterrupted body surface."
+		],
+		"avoid": [
+			"Card grids, decorative gradients, oversized marketing typography, and color-only state communication."
+		]
+	},
+	"visualReview": {
+		"intent": "The display should read from top to bottom as one production instrument, with stopped and attention states visible from across a floor while normal stations remain calm and scannable.",
+		"focus": [
+			"Verify the 480-pixel column keeps complete station prefixes, reason line ink, owner metadata, and elapsed durations without horizontal spill.",
+			"Verify sparse final pages still look intentional and continuation labels are unambiguous.",
+			"Verify all-normal and all-stopped datasets change hierarchy without collapsing the shared geometry.",
+			"Verify marker geometry and state words remain distinguishable without relying on hue."
+		]
+	}
+}
