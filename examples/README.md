@@ -12,6 +12,7 @@ examples/<id>/
 |- generation-brief.json  # validated request, design, data, and evidence contract
 |- datasource-contract.json  # optional generator metadata for data-bound examples
 |- sample-datasource.json     # optional native Wallboard datasource data
+|- screenshots/          # one or two representative reviewed renders
 `- overlay/          # files copied over a clean boilerplate materialization
 ```
 
@@ -19,16 +20,19 @@ examples/<id>/
 |---------|------------|-----------------|
 | `airport-departures` | Editable `TABLE` flight board, adaptive pagination, status hierarchy | Default, wide/low, portrait, square, empty, invalid rows, long labels, odd/maximum counts, row array, last page, live update |
 | `call-center-agent-status` | Existing flat agent feed, semantic state aliases, density-aware roster, segmented pagination | Mixed states, wide/low, portrait, square, empty, invalid rows, long labels, unknown state, uneven final page, live update |
-| `call-center-skill-operations` | Existing per-agent skill feed, sentinel filtering, grouped skill rotation, technical coverage rail, capped flat rosters | Default landscape, wide/low, sentinel-only empty, long labels, dense roster, unknown state, rotation, live update |
-| `call-center-unit-pulse` | Existing keyed unit feed, aggregate filtering, light instrument panel, one-unit rotation | Default landscape, wide/low, inactive units, empty, malformed rows, long labels, rotation, live update |
+| `campus-directory` | Editable `TABLE` wayfinding board, grouped routes, complete direction and accessibility text | Landscape, wide/low, portrait, square, empty, invalid rows, long essential fields, unequal groups, partial page, live update |
 | `kpi-operations` | Hierarchical `CUSTOM` contract, KPI cards, responsive Chart.js trend, target progress | Default, wide/low, portrait, square, empty, long labels, live update |
 | `live-agenda` | Built-in `CALENDAR` integration, provider normalization, current-event progress, chronological timeline | Default, wide/low, portrait, square, Microsoft/Google, iCalendar, empty, all-day, long labels, live update |
+| `manufacturing-andon` | Portrait production instrument, grouped lines, shape-and-text status markers, dense rotation | 1080 and 480 portrait, normal/stopped/unknown states, empty, invalid rows, long reasons, dense and partial pages, live update |
 | `market-rotation-ticker` | Fixed 6000x136 surface, five existing bindings, heterogeneous response normalization, File System logo lookup, continuous marquee | 6000x136, empty, invalid prices, missing icons, short data, rotation completion, moving title |
+| `museum-welcome` | Reference-led fixed Full HD poster, packaged artwork, deliberate negative space, non-dashboard composition | Default, alternate colors, missing/broken media, long title, minimal, transparent background |
 | `newsroom-spotlight` | Built-in `FEED` integration, current/legacy RSS normalization, media fallback, timed editorial rotation | Default, wide/low, portrait, square, current feed, RSS parser/channel, empty, broken media, long labels, live update |
+| `pharmacy-pickup-queue` | Fixed 480x270 queue surface, semantic service states, bounded overflow | Light/dark, empty, invalid rows, long labels, single/many tickets, row array, live update |
+| `recognition-mosaic` | Photo-led editorial wall, packaged media, asymmetric layouts, designed fallbacks | Landscape, portrait, square, wide/low, light/dark, missing media, long copy, odd counts, partial page, live update |
 | `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page |
 | `single-hero-clock` | Static single-hero pattern, timezone formatting, live timer, ResizeObserver ratio compositions | Default, ultra-wide, compact, portrait, square, minimal, invalid timezone, long label, timer teardown, live config update |
 
-Reference screenshots live beside each example under `screenshots/`.
+Each manifest names one or two `referenceScreenshots` committed under `screenshots/`. Full visual matrices are generated during acceptance and uploaded as CI artifacts; they are not stored in Git.
 
 Materialize without changing this worktree:
 
@@ -44,8 +48,10 @@ npm run validate:package
 
 The explicit target must be new or empty. Run `npm run validate:examples` in the boilerplate before materialization and again in the materialized project after changing its contract or sample data. Files listed in `example.json.artifacts` are copied to the materialized project root but are not bundled into the app zip.
 
-For maintained evidence, run `npm run example:review:prepare -- <id>`, inspect every image under `.tmp/review/<id>/preview/output`, complete its `visual-review.json`, then run `npm run example:review:promote -- <id>`. Promotion validates the current fingerprint and replaces the example's screenshots/review together.
+For maintained evidence, run `npm run example:review:prepare -- <id>`, inspect every image under `.tmp/review/<id>/preview/output`, complete its `visual-review.json`, then run `npm run example:review:promote -- <id>`. Promotion validates the current fingerprint and copies only the manifest's one or two representative screenshots while retaining review records for the full matrix.
 
 Run `npm run example:accept -- <id>` for clean materialization, the complete validation matrix, and delivery bundle. An example is accepted only when its default and named scenarios pass, its promoted review is current, packaged assets pass validation, datasource live updates work when applicable, and its zip works after a real Wallboard upload.
 
 Every example includes a standalone-valid generation brief whose settings and evidence also pass project synchronization against the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.
+
+Repository contracts cap tracked images at 10 MiB and estimated Markdown context at 25,000 tokens. Promote examples only when they add a distinct capability; replace overlapping examples instead of growing the catalog indefinitely.

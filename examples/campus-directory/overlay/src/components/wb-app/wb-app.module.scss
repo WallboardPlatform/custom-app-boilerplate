@@ -1,0 +1,901 @@
+/* <editor-fold desc="Campus directory"> --------------------------- */
+
+.wb-app {
+	@include reset-styles();
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	background: var(--directory-background);
+	color: var(--directory-text);
+	font-family: Arial, Helvetica, sans-serif;
+	letter-spacing: 0;
+}
+
+:global(.wb-app),
+:global(.wb-app) * {
+	@include box-sizing();
+}
+
+:global(.directory-header) {
+	flex: 0 0 16%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--directory-surface);
+}
+
+:global(.directory-header-content) {
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	display: flex;
+	align-items: center;
+	padding: 2.2% 3.2% 1.8%;
+}
+
+:global(.directory-mark) {
+	position: relative;
+	flex: 0 0 84px;
+	height: 84px;
+	overflow: hidden;
+	background: var(--directory-accent);
+	color: var(--directory-on-accent);
+}
+
+:global(.directory-mark > span) {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 52px;
+	font-weight: 700;
+	line-height: 1.1;
+}
+
+:global(.directory-mark > i) {
+	position: absolute;
+	right: 7px;
+	bottom: 7px;
+	width: 28px;
+	height: 28px;
+	border: 6px solid var(--directory-on-accent);
+	border-radius: 50%;
+	opacity: 0.23;
+}
+
+:global(.directory-brand-copy) {
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	margin-left: 22px;
+}
+
+:global(.directory-campus-name) {
+	display: block;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--directory-accent);
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-transform: uppercase;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-title) {
+	width: 100%;
+	max-width: 920px;
+	height: 70px;
+	margin: 7px 0 0;
+	overflow: hidden;
+	color: var(--directory-text);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 58px;
+	font-weight: 700;
+	line-height: 1.16;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-meta) {
+	min-width: 0;
+	flex: 0 0 28%;
+	margin-left: 28px;
+	padding-left: 28px;
+	border-left: 2px solid var(--directory-border);
+	text-align: right;
+}
+
+:global(.directory-meta-label) {
+	display: block;
+	color: var(--directory-tertiary-accent);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+:global(.directory-location) {
+	display: block;
+	margin-top: 7px;
+	overflow: hidden;
+	font-size: 22px;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-summary) {
+	display: block;
+	margin-top: 8px;
+	overflow: hidden;
+	color: var(--directory-muted);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-route-stripe) {
+	flex: 0 0 8px;
+	display: flex;
+}
+
+:global(.directory-route-stripe > span) {
+	flex: 1 1 0;
+	height: 100%;
+	background: var(--directory-accent);
+}
+
+:global(.directory-route-stripe > span:nth-child(2)) {
+	background: var(--directory-secondary-accent);
+}
+
+:global(.directory-route-stripe > span:nth-child(3)) {
+	background: var(--directory-tertiary-accent);
+}
+
+:global(.directory-column-head) {
+	flex: 0 0 52px;
+	min-width: 0;
+	display: flex;
+	align-items: stretch;
+	background: var(--directory-surface-strong);
+	border-bottom: 1px solid var(--directory-border);
+	color: var(--directory-muted);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+:global(.directory-locator-head),
+:global(.directory-locator) {
+	min-width: 0;
+	flex: 0 0 19%;
+}
+
+:global(.directory-locator-head) {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 24px 0 3.2%;
+	background: var(--directory-locator);
+}
+
+:global(.directory-row-content) {
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	display: flex;
+	align-items: stretch;
+}
+
+:global(.directory-column-head .directory-row-content > span) {
+	display: flex;
+	align-items: center;
+	padding: 0 18px;
+}
+
+:global(.directory-department) {
+	min-width: 0;
+	flex: 0 0 38%;
+}
+
+:global(.directory-room) {
+	min-width: 0;
+	flex: 0 0 14%;
+}
+
+:global(.directory-direction) {
+	min-width: 0;
+	flex: 0 0 28%;
+}
+
+:global(.directory-accessibility) {
+	min-width: 0;
+	flex: 0 0 20%;
+}
+
+:global(.directory-list) {
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+:global(.directory-row) {
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 0;
+	display: flex;
+	overflow: hidden;
+	border-bottom: 1px solid var(--directory-border);
+}
+
+:global(.directory-row:nth-child(even)) {
+	background: var(--directory-surface);
+}
+
+:global(.directory-row--building-start) {
+	box-shadow: inset 0 3px 0 var(--directory-accent);
+}
+
+:global(.directory-locator) {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 8px 24px 8px 3.2%;
+	overflow: hidden;
+	background: var(--directory-locator);
+}
+
+:global(.directory-building) {
+	display: block;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--directory-accent);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-floor) {
+	display: block;
+	min-width: 0;
+	margin-top: 7px;
+	overflow: hidden;
+	color: var(--directory-text);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.18;
+	text-transform: uppercase;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-group-line) {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 3.2%;
+	width: 4px;
+	background: var(--directory-accent);
+	opacity: 0.34;
+}
+
+:global(.directory-row .directory-row-content > div) {
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	padding: 8px 18px;
+	overflow: hidden;
+}
+
+:global(.directory-row .directory-room),
+:global(.directory-row .directory-direction),
+:global(.directory-row .directory-accessibility) {
+	border-left: 1px solid var(--directory-border);
+}
+
+:global(.directory-department-name) {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-room > span) {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	color: var(--directory-secondary-accent);
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-row .directory-direction) {
+	background: var(--directory-route);
+}
+
+:global(.directory-direction > b) {
+	flex: 0 0 auto;
+	margin-right: 12px;
+	color: var(--directory-secondary-accent);
+	font-size: 28px;
+	line-height: 1;
+}
+
+:global(.directory-direction-text) {
+	min-width: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-row .directory-accessibility) {
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	background: var(--directory-access-surface);
+}
+
+:global(.directory-accessibility > b) {
+	display: block;
+	max-width: 100%;
+	margin-bottom: 5px;
+	overflow: hidden;
+	color: var(--directory-access);
+	font-size: 11px;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-accessibility-note),
+:global(.directory-accessibility-empty) {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.directory-accessibility-empty) {
+	color: var(--directory-muted);
+}
+
+:global(.directory-empty) {
+	min-height: 0;
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 5%;
+	text-align: center;
+}
+
+:global(.directory-empty > div) {
+	display: flex;
+	width: 68px;
+	height: 68px;
+	align-items: center;
+	justify-content: center;
+	border: 3px solid var(--directory-accent);
+	color: var(--directory-accent);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 36px;
+	font-weight: 700;
+}
+
+:global(.directory-empty > strong) {
+	margin-top: 20px;
+	font-size: 17px;
+	line-height: 1.2;
+}
+
+:global(.directory-empty > p) {
+	max-width: 620px;
+	margin: 9px 0 0;
+	color: var(--directory-muted);
+	font-size: 16px;
+	line-height: 1.35;
+}
+
+:global(.directory-footer) {
+	flex: 0 0 56px;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	padding: 0 3.2%;
+	background: var(--directory-surface-strong);
+	font-size: 12px;
+	line-height: 1.2;
+}
+
+:global(.directory-progress) {
+	min-width: 0;
+	flex: 1 1 auto;
+	display: flex;
+	height: 7px;
+	overflow: hidden;
+	background: var(--directory-border);
+}
+
+:global(.directory-progress > span) {
+	flex: 1 1 0;
+	height: 100%;
+	border-right: 2px solid var(--directory-surface-strong);
+}
+
+:global(.directory-progress > span:last-child) {
+	border-right: 0;
+}
+
+:global(.directory-progress > span.is-active) {
+	background: var(--directory-accent);
+}
+
+:global(.directory-range) {
+	flex: 0 0 auto;
+	margin-left: 22px;
+	color: var(--directory-text);
+	white-space: nowrap;
+}
+
+:global(.directory-page-label) {
+	flex: 0 0 auto;
+	margin-left: 22px;
+	color: var(--directory-muted);
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+:global(.directory--compact .directory-header) {
+	flex-basis: 92px;
+}
+
+:global(.directory--compact .directory-header-content) {
+	padding-top: 12px;
+	padding-bottom: 10px;
+}
+
+:global(.directory--compact .directory-mark) {
+	flex-basis: 56px;
+	height: 56px;
+}
+
+:global(.directory--compact .directory-mark > span) {
+	font-size: 36px;
+}
+
+:global(.directory--compact .directory-brand-copy) {
+	margin-left: 15px;
+}
+
+:global(.directory--compact .directory-campus-name) {
+	font-size: 11px;
+}
+
+:global(.directory--compact .directory-title) {
+	height: 44px;
+	margin-top: 1px;
+	font-size: 34px;
+	line-height: 1.2;
+}
+
+:global(.directory--compact .directory-meta) {
+	margin-left: 18px;
+	padding-left: 18px;
+}
+
+:global(.directory--compact .directory-meta-label),
+:global(.directory--compact .directory-summary) {
+	font-size: 10px;
+}
+
+:global(.directory--compact .directory-location) {
+	margin-top: 4px;
+	font-size: 15px;
+}
+
+:global(.directory--compact .directory-summary) {
+	margin-top: 4px;
+}
+
+:global(.directory--compact .directory-route-stripe) {
+	flex-basis: 6px;
+}
+
+:global(.directory--compact .directory-column-head) {
+	flex-basis: 34px;
+	font-size: 10px;
+}
+
+:global(.directory--compact .directory-building) {
+	font-size: 15px;
+}
+
+:global(.directory--compact .directory-floor) {
+	margin-top: 3px;
+	font-size: 10px;
+}
+
+:global(.directory--compact .directory-department-name) {
+	font-size: 17px;
+}
+
+:global(.directory--compact .directory-room > span),
+:global(.directory--compact .directory-direction-text) {
+	font-size: 13px;
+}
+
+:global(.directory--compact .directory-direction > b) {
+	margin-right: 8px;
+	font-size: 22px;
+}
+
+:global(.directory--compact .directory-accessibility > b) {
+	margin-bottom: 2px;
+	font-size: 9px;
+}
+
+:global(.directory--compact .directory-accessibility-note),
+:global(.directory--compact .directory-accessibility-empty) {
+	font-size: 11px;
+}
+
+:global(.directory--compact .directory-footer) {
+	flex-basis: 38px;
+	font-size: 10px;
+}
+
+:global(.directory--portrait .directory-header) {
+	flex-basis: 180px;
+}
+
+:global(.directory--portrait .directory-locator-head),
+:global(.directory--portrait .directory-locator) {
+	flex-basis: 24%;
+}
+
+:global(.directory--portrait .directory-locator-head) {
+	padding-right: 14px;
+	padding-left: 24px;
+}
+
+:global(.directory--portrait .directory-locator) {
+	padding-right: 14px;
+	padding-left: 24px;
+}
+
+:global(.directory--portrait .directory-building) {
+	font-size: 20px;
+}
+
+:global(.directory--portrait .directory-group-line) {
+	left: 24px;
+}
+
+:global(.directory--portrait .directory-column-head .directory-row-content) {
+	flex-wrap: wrap;
+}
+
+:global(.directory--portrait .directory-column-head .directory-row-content > span) {
+	height: 50%;
+	padding: 0 18px;
+}
+
+:global(.directory--portrait .directory-column-head .directory-department) {
+	flex-basis: 72%;
+}
+
+:global(.directory--portrait .directory-column-head .directory-room) {
+	flex-basis: 28%;
+	border-left: 1px solid var(--directory-border);
+	color: var(--directory-secondary-accent);
+}
+
+:global(.directory--portrait .directory-column-head .directory-direction) {
+	flex-basis: 72%;
+	border-top: 1px solid var(--directory-border);
+}
+
+:global(.directory--portrait .directory-column-head .directory-accessibility) {
+	flex-basis: 28%;
+	border-top: 1px solid var(--directory-border);
+	border-left: 1px solid var(--directory-border);
+	color: var(--directory-access);
+}
+
+:global(.directory--portrait .directory-row .directory-row-content) {
+	flex-wrap: wrap;
+	align-content: stretch;
+}
+
+:global(.directory--portrait .directory-row .directory-row-content > div) {
+	width: auto;
+	padding: 10px 18px;
+}
+
+:global(.directory--portrait .directory-row .directory-department) {
+	height: 30%;
+	flex-basis: 72%;
+}
+
+:global(.directory--portrait .directory-row .directory-room) {
+	height: 30%;
+	flex-basis: 28%;
+}
+
+:global(.directory--portrait .directory-row .directory-direction) {
+	height: 35%;
+	flex-basis: 100%;
+	border-top: 1px solid var(--directory-border);
+	border-left: 0;
+}
+
+:global(.directory--portrait .directory-row .directory-accessibility) {
+	height: 35%;
+	flex-basis: 100%;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	border-top: 1px solid var(--directory-border);
+	border-left: 0;
+}
+
+:global(.directory--portrait .directory-department-name) {
+	display: -webkit-box;
+	overflow: hidden;
+	font-size: 22px;
+	line-height: 1.22;
+	text-overflow: clip;
+	white-space: normal;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+:global(.directory--portrait .directory-room > span) {
+	font-size: 18px;
+}
+
+:global(.directory--portrait .directory-direction > b) {
+	margin-right: 14px;
+	font-size: 30px;
+}
+
+:global(.directory--portrait .directory-direction-text) {
+	display: -webkit-box;
+	overflow: hidden;
+	font-size: 18px;
+	line-height: 1.3;
+	text-overflow: clip;
+	white-space: normal;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+:global(.directory--portrait .directory-accessibility > b) {
+	flex: 0 0 auto;
+	margin: 0 14px 0 0;
+	font-size: 12px;
+}
+
+:global(.directory--portrait .directory-accessibility-note),
+:global(.directory--portrait .directory-accessibility-empty) {
+	display: -webkit-box;
+	width: auto;
+	min-width: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	font-size: 16px;
+	line-height: 1.3;
+	text-overflow: clip;
+	white-space: normal;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+:global(.directory--portrait .directory-column-head) {
+	flex-basis: 58px;
+}
+
+:global(.directory--portrait .directory-footer) {
+	flex-basis: 62px;
+}
+
+:global(.directory--narrow .directory-header) {
+	flex-basis: 112px;
+}
+
+:global(.directory--narrow .directory-header-content) {
+	padding: 12px 18px 10px;
+}
+
+:global(.directory--narrow .directory-mark) {
+	flex-basis: 54px;
+	height: 54px;
+}
+
+:global(.directory--narrow .directory-mark > span) {
+	font-size: 34px;
+}
+
+:global(.directory--narrow .directory-brand-copy) {
+	margin-left: 13px;
+}
+
+:global(.directory--narrow .directory-campus-name) {
+	font-size: 10px;
+}
+
+:global(.directory--narrow .directory-title) {
+	height: 38px;
+	margin-top: 3px;
+	font-size: 31px;
+}
+
+:global(.directory--narrow .directory-meta) {
+	flex-basis: 25%;
+	margin-left: 10px;
+	padding-left: 10px;
+}
+
+:global(.directory--narrow .directory-meta-label) {
+	font-size: 8px;
+}
+
+:global(.directory--narrow .directory-location) {
+	margin-top: 4px;
+	font-size: 11px;
+	white-space: normal;
+}
+
+:global(.directory--narrow .directory-summary) {
+	display: none;
+}
+
+:global(.directory--narrow .directory-route-stripe) {
+	flex-basis: 6px;
+}
+
+:global(.directory--narrow .directory-column-head) {
+	flex-basis: 38px;
+	font-size: 8px;
+}
+
+:global(.directory--narrow .directory-locator-head),
+:global(.directory--narrow .directory-locator) {
+	flex-basis: 28%;
+}
+
+:global(.directory--narrow .directory-locator-head) {
+	padding: 0 10px 0 18px;
+}
+
+:global(.directory--narrow .directory-column-head .directory-row-content) {
+	flex-wrap: wrap;
+}
+
+:global(.directory--narrow .directory-column-head .directory-row-content > span) {
+	height: 50%;
+	padding: 0 8px;
+}
+
+:global(.directory--narrow .directory-row .directory-row-content) {
+	flex-wrap: wrap;
+	align-content: stretch;
+}
+
+:global(.directory--narrow .directory-department) {
+	flex-basis: 68%;
+}
+
+:global(.directory--narrow .directory-room) {
+	flex-basis: 32%;
+}
+
+:global(.directory--narrow .directory-direction) {
+	flex-basis: 56%;
+}
+
+:global(.directory--narrow .directory-accessibility) {
+	flex-basis: 44%;
+}
+
+:global(.directory--narrow .directory-row .directory-row-content > div) {
+	height: 50%;
+	padding: 5px 8px;
+}
+
+:global(.directory--narrow .directory-row .directory-direction) {
+	border-top: 1px solid var(--directory-border);
+	border-left: 0;
+}
+
+:global(.directory--narrow .directory-row .directory-accessibility) {
+	border-top: 1px solid var(--directory-border);
+}
+
+:global(.directory--narrow .directory-locator) {
+	padding: 7px 10px 7px 18px;
+}
+
+:global(.directory--narrow .directory-building) {
+	font-size: 13px;
+}
+
+:global(.directory--narrow .directory-floor) {
+	margin-top: 4px;
+	font-size: 9px;
+}
+
+:global(.directory--narrow .directory-department-name) {
+	font-size: 14px;
+}
+
+:global(.directory--narrow .directory-room > span),
+:global(.directory--narrow .directory-direction-text) {
+	font-size: 10px;
+}
+
+:global(.directory--narrow .directory-direction > b) {
+	margin-right: 6px;
+	font-size: 18px;
+}
+
+:global(.directory--narrow .directory-accessibility > b) {
+	display: none;
+}
+
+:global(.directory--narrow .directory-accessibility-note),
+:global(.directory--narrow .directory-accessibility-empty) {
+	font-size: 9px;
+}
+
+:global(.directory--narrow .directory-footer) {
+	flex-basis: 46px;
+	padding: 0 18px;
+	font-size: 9px;
+}
+
+:global(.directory--narrow .directory-range) {
+	margin-left: 12px;
+}
+
+:global(.directory--narrow .directory-page-label) {
+	display: none;
+}
+
+/* </editor-fold desc="Campus directory"> -------------------------- */

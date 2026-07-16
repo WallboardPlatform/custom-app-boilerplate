@@ -1,0 +1,273 @@
+{
+	"briefVersion": 3,
+	"request": {
+		"summary": "Build a fixed 1920x1080 welcome screen for the fictional Calder Museum using the supplied geometric poster as the primary visual reference.",
+		"audience": "Museum visitors viewing a full-HD entrance or lobby display from several metres away.",
+		"primaryGoal": "Welcome visitors and communicate the current exhibition, venue, date, and supporting image with immediate poster-like hierarchy."
+	},
+	"assumptions": [
+		"The app is designed only for a fixed 1920x1080 placement because the requested composition depends on the supplied poster's exact landscape geometry.",
+		"Calder Museum and the WELCOME label are fixed brand copy; exhibition-specific content remains editable.",
+		"The packaged fictional sculpture image is the default; disabling image visibility or receiving broken media replaces it with an intentional concentric geometric motif.",
+		"The default Light theme follows the supplied poster; Dark and Custom themes preserve the same semantic color relationships."
+	],
+	"app": {
+		"mode": "new",
+		"name": "CalderMuseumWelcome",
+		"version": "1"
+	},
+	"surfaceStrategy": {
+		"mode": "fixed",
+		"rationale": "The user explicitly requested a fixed 1920x1080 screen and the reference-led asymmetric poster composition relies on that canvas."
+	},
+	"surfaces": [
+		{
+			"id": "full-hd",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-HD museum welcome display at the entrance or exhibition threshold.",
+			"minimumContentCoverage": {
+				"width": 87,
+				"height": 82
+			}
+		}
+	],
+	"data": {
+		"mode": "static",
+		"bindings": []
+	},
+	"settings": [
+		{
+			"property": "exhibitionTitle",
+			"purpose": "Sets the dominant exhibition title in the left poster field."
+		},
+		{
+			"property": "subtitle",
+			"purpose": "Sets the supporting exhibition description in the right information field."
+		},
+		{
+			"property": "dateRange",
+			"purpose": "Sets the exhibition date range anchored at the lower left."
+		},
+		{
+			"property": "venue",
+			"purpose": "Sets the gallery or venue label above the subtitle."
+		},
+		{
+			"property": "heroImage",
+			"purpose": "Selects an optional museum logo or exhibition image for the circular image field.",
+			"effect": "image-source"
+		},
+		{
+			"property": "showSubtitle",
+			"purpose": "Shows or hides the subtitle while preserving the poster structure.",
+			"effect": "subtitle-visibility"
+		},
+		{
+			"property": "showDate",
+			"purpose": "Shows or hides the exhibition date.",
+			"effect": "date-visibility"
+		},
+		{
+			"property": "showVenue",
+			"purpose": "Shows or hides the venue label.",
+			"effect": "venue-visibility"
+		},
+		{
+			"property": "showImage",
+			"purpose": "Switches between the selected image and the geometric fallback motif.",
+			"effect": "image-visibility"
+		},
+		{
+			"property": "transparentBackground",
+			"purpose": "Makes the cream ground transparent while retaining the colored poster fields.",
+			"effect": "background-transparency"
+		},
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Light, Dark, or Custom semantic palette.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Sets the Custom theme ground color."
+		},
+		{
+			"property": "primaryColor",
+			"purpose": "Sets the Custom theme left title field color."
+		},
+		{
+			"property": "secondaryColor",
+			"purpose": "Sets the Custom theme welcome band color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Sets the Custom theme information field color."
+		},
+		{
+			"property": "textColor",
+			"purpose": "Sets the Custom theme primary ink color."
+		},
+		{
+			"property": "inverseTextColor",
+			"purpose": "Sets the Custom theme light ink used on strong color fields."
+		}
+	],
+	"dynamicText": [
+		{
+			"id": "exhibition-title",
+			"source": {
+				"type": "setting",
+				"properties": [
+					"exhibitionTitle"
+				]
+			},
+			"selectors": [
+				".museum-title"
+			],
+			"strategy": "wrap",
+			"limits": {
+				"minimumFontSize": 64,
+				"maximumLines": 8
+			},
+			"fallback": "Measured fitting reduces the title only to 64px and uses up to eight complete lines; deliberate word wrapping preserves the full title.",
+			"rationale": "The exhibition name is the poster's main message and must remain complete, bold, and readable rather than ellipsized.",
+			"evidenceScenario": "long-title"
+		},
+		{
+			"id": "exhibition-subtitle",
+			"source": {
+				"type": "setting",
+				"properties": [
+					"subtitle"
+				]
+			},
+			"selectors": [
+				".museum-subtitle"
+			],
+			"strategy": "wrap",
+			"limits": {
+				"maximumLines": 4
+			},
+			"fallback": "Measured fitting uses the complete subtitle across at most four lines, with a 34px readability floor.",
+			"rationale": "The subtitle provides meaningful exhibition context and should remain complete within the right field.",
+			"evidenceScenario": "long-title"
+		},
+		{
+			"id": "date-and-venue",
+			"source": {
+				"type": "setting",
+				"properties": [
+					"dateRange",
+					"venue"
+				]
+			},
+			"selectors": [
+				".museum-date",
+				".museum-venue"
+			],
+			"strategy": "auto-fit",
+			"limits": {
+				"minimumFontSize": 24
+			},
+			"fallback": "Single-line fitting preserves the complete label with a 24px floor; representative stress copy is sized to remain within that limit.",
+			"rationale": "Date and venue are operational details that must not be truncated on signage.",
+			"evidenceScenario": "long-title"
+		}
+	],
+	"states": [
+		{
+			"scenario": "minimal",
+			"expectation": "Only the museum name, welcome band, title, and geometric motif remain; hidden metadata does not leave accidental rules or gaps."
+		},
+		{
+			"scenario": "long-title",
+			"expectation": "A pathological but plausible exhibition title and long metadata remain complete, bold, and readable without clipping or tiny type."
+		},
+		{
+			"scenario": "no-image",
+			"expectation": "The circular field shows the intentional concentric fallback motif with no broken image indicator."
+		},
+		{
+			"scenario": "broken-image",
+			"expectation": "An invalid selected image fails closed to the concentric motif with no broken image icon or layout shift."
+		},
+		{
+			"scenario": "alternate-colors",
+			"expectation": "The full Custom palette changes coherently while preserving contrast and poster hierarchy."
+		},
+		{
+			"scenario": "transparent-background",
+			"expectation": "The neutral ground becomes transparent over the checker preview while colored fields, text, and motif remain legible."
+		}
+	],
+	"behaviors": [
+		{
+			"id": "runtime-content-and-visibility-updates",
+			"expectation": "Editor configuration updates change title and visibility in the mounted widget without remounting.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "runtime-theme-updates",
+			"expectation": "Theme preset and transparency updates immediately resolve the complete semantic palette.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		}
+	],
+	"assets": [
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "default-exhibition-artwork",
+			"source": "packaged",
+			"path": "src/assets/calder-kinetic-study.jpg",
+			"required": true
+		},
+		{
+			"id": "museum-logo-or-image",
+			"source": "setting",
+			"properties": [
+				"heroImage"
+			],
+			"required": false
+		}
+	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "A sharp modernist museum poster with bold asymmetric typography, large primary color fields, a geometric circular image aperture, and deliberate negative space.",
+		"references": [
+			"task-inputs/museum-welcome-reference.svg"
+		],
+		"signatureChoices": [
+			"A dominant vermilion title field with oversized tightly stacked uppercase type.",
+			"A cobalt welcome band and yellow information field joined by an off-centre concentric circular image aperture.",
+			"A restrained serif subtitle contrasts with the otherwise bold grotesque typography."
+		],
+		"avoid": [
+			"Dashboard chrome, cards, pills, navigation headers, pagination counters, soft gradients, rounded panels, and generic centered hero composition."
+		]
+	},
+	"visualReview": {
+		"intent": "The finished screen should read as one confident exhibition poster at a distance, not as assembled interface panels.",
+		"focus": [
+			"Verify the title remains the dominant complete message in every scenario, especially long-title, without clipped glyphs or unreadably small type.",
+			"Verify the circular image/motif bridges the neutral and information fields without exposing broken media or accidental empty space.",
+			"Verify every palette, including transparent background, preserves sharp color contrast and readable text.",
+			"Verify hidden elements collapse intentionally and do not leave orphan rules, labels, or unbalanced spacing."
+		]
+	}
+}

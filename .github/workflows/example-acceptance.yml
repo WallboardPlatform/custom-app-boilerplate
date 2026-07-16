@@ -44,12 +44,15 @@ jobs:
         example:
           - airport-departures
           - call-center-agent-status
-          - call-center-skill-operations
-          - call-center-unit-pulse
+          - campus-directory
           - kpi-operations
           - live-agenda
+          - manufacturing-andon
           - market-rotation-ticker
+          - museum-welcome
           - newsroom-spotlight
+          - pharmacy-pickup-queue
+          - recognition-mosaic
           - restaurant-menu
           - single-hero-clock
 

@@ -8,5 +8,6 @@
 	],
 	"artifacts": [
 		"generation-brief.json"
-	]
+	],
+	"referenceScreenshots": ["app-default-1280x720.png", "ultra-wide-3000x300.png"]
 }

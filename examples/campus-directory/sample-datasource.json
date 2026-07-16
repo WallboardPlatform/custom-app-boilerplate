@@ -1,0 +1,33 @@
+{
+	"Directory": {
+		"header": {
+			"building": "string",
+			"floor": "string",
+			"department": "string",
+			"room": "string",
+			"direction": "string",
+			"accessibilityNote": "string"
+		},
+		"rows": [
+			{ "building": "Alder Hall", "floor": "Ground", "department": "Admissions", "room": "A-104", "direction": "East corridor, first office on the left", "accessibilityNote": "Step-free entrance from College Walk" },
+			{ "building": "Alder Hall", "floor": "Ground", "department": "Financial Aid", "room": "A-108", "direction": "Continue past Admissions", "accessibilityNote": "Low service counter available" },
+			{ "building": "Alder Hall", "floor": "Level 1", "department": "Registrar", "room": "A-214", "direction": "Main stairs, then turn right", "accessibilityNote": "Elevator beside the south stair" },
+			{ "building": "Alder Hall", "floor": "Level 1", "department": "Student Success", "room": "A-220", "direction": "North end of the corridor", "accessibilityNote": "Automatic door" },
+			{ "building": "Beacon Library", "floor": "Ground", "department": "Welcome and Borrowing Desk", "room": "B-012", "direction": "Straight ahead from the main entrance", "accessibilityNote": "Height-adjustable desk" },
+			{ "building": "Beacon Library", "floor": "Level 1", "department": "Learning Commons", "room": "B-118", "direction": "West wing beyond the open stair", "accessibilityNote": "Elevator serves every floor" },
+			{ "building": "Beacon Library", "floor": "Level 1", "department": "Research Help", "room": "B-124", "direction": "Follow the blue floor line", "accessibilityNote": "Assistive listening devices available" },
+			{ "building": "Beacon Library", "floor": "Level 2", "department": "Archives and Special Collections", "room": "B-208", "direction": "East wing, controlled access desk", "accessibilityNote": "Call button at archive entrance" },
+			{ "building": "Cedar Science Center", "floor": "Ground", "department": "Science Advising", "room": "C-016", "direction": "South lobby beside the atrium", "accessibilityNote": "Step-free route via south entrance" },
+			{ "building": "Cedar Science Center", "floor": "Ground", "department": "Environmental Studies", "room": "C-024", "direction": "Follow the green wall markers", "accessibilityNote": "Wide doorway" },
+			{ "building": "Cedar Science Center", "floor": "Level 1", "department": "Biology Teaching Labs", "room": "C-132", "direction": "North laboratory corridor", "accessibilityNote": "Accessible lab station in each room" },
+			{ "building": "Cedar Science Center", "floor": "Level 2", "department": "Chemistry Department", "room": "C-226", "direction": "Turn left from the central elevator", "accessibilityNote": "Fume hood with seated controls" },
+			{ "building": "Harbor Arts Center", "floor": "Ground", "department": "Box Office", "room": "H-006", "direction": "Right side of the performance lobby", "accessibilityNote": "Induction loop at the counter" },
+			{ "building": "Harbor Arts Center", "floor": "Ground", "department": "Riverside Theatre", "room": "H-020", "direction": "Continue through the performance lobby", "accessibilityNote": "Wheelchair seating via aisle one" },
+			{ "building": "Harbor Arts Center", "floor": "Level 1", "department": "Music Department", "room": "H-114", "direction": "West stair, second corridor", "accessibilityNote": "Use lobby elevator for step-free access" },
+			{ "building": "Meridian Center", "floor": "Ground", "department": "Campus Safety", "room": "M-010", "direction": "Opposite the north entrance", "accessibilityNote": "Open counter and text telephone" },
+			{ "building": "Meridian Center", "floor": "Level 1", "department": "Information Technology Help Desk", "room": "M-112", "direction": "Follow the orange signs from the elevator", "accessibilityNote": "Queue display includes audible announcements" },
+			{ "building": "Meridian Center", "floor": "Level 2", "department": "Career Development", "room": "M-206", "direction": "South corridor overlooking the quad", "accessibilityNote": "Automatic door" }
+		],
+		"connectors": {}
+	}
+}

@@ -1,0 +1,153 @@
+{
+    "reviewVersion":  1,
+    "sourceHash":  "82d0806b19a0e6ecd8e917dd15580abc57145f977d54c19e153fe48f5f3a90d6",
+    "reviewedAt":  "2026-07-16T12:32:15.9316952Z",
+    "reviewer":  "Codex promotion review",
+    "criteria":  [
+                     {
+                         "id":  "promptFidelity",
+                         "status":  "pass",
+                         "notes":  "All target surfaces preserve the campus directory hierarchy and primary wayfinding fields."
+                     },
+                     {
+                         "id":  "referenceFidelity",
+                         "status":  "pass",
+                         "notes":  "No external visual reference was supplied; the instruction-led civic campus direction is consistent."
+                     },
+                     {
+                         "id":  "visualSpecificity",
+                         "status":  "pass",
+                         "notes":  "Locator rail, route bands, serif identity, and semantic accessibility treatment remain distinctive and coherent."
+                     },
+                     {
+                         "id":  "distanceReadability",
+                         "status":  "pass",
+                         "notes":  "Headings, destinations, rooms, directions, and portrait accessibility notes remain readable without tiny type."
+                     },
+                     {
+                         "id":  "themeContrast",
+                         "status":  "pass",
+                         "notes":  "Light, dark, and custom themes retain clear text and band contrast."
+                     },
+                     {
+                         "id":  "dynamicTextSafety",
+                         "status":  "pass",
+                         "notes":  "Portrait stress values wrap fully at 16px or larger with no overflow or ellipsis; compact surfaces remain bounded."
+                     },
+                     {
+                         "id":  "surfaceComposition",
+                         "status":  "pass",
+                         "notes":  "Landscape, strip, square, and stacked portrait compositions use their native frames without overlap or dead zones."
+                     },
+                     {
+                         "id":  "assetAndThemeQuality",
+                         "status":  "pass",
+                         "notes":  "Packaged identity assets render crisply and semantic colors remain coordinated across themes."
+                     },
+                     {
+                         "id":  "exampleSameness",
+                         "status":  "pass",
+                         "notes":  "The directory is domain-specific and does not read as an unmodified scaffold example."
+                     }
+                 ],
+    "screenshots":  [
+                        {
+                            "file":  "app-default-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Primary landscape directory is aligned, balanced, and readable."
+                        },
+                        {
+                            "file":  "landscape-960x540.png",
+                            "status":  "pass",
+                            "notes":  "Responsive landscape remains bounded with stable row alignment."
+                        },
+                        {
+                            "file":  "portrait-1080x1920.png",
+                            "status":  "pass",
+                            "notes":  "Six-row stacked scan path shows complete default direction and accessibility values."
+                        },
+                        {
+                            "file":  "scenario-custom-theme-960x540.png",
+                            "status":  "pass",
+                            "notes":  "Custom semantic palette is coordinated and readable."
+                        },
+                        {
+                            "file":  "scenario-dark-theme-1366x768.png",
+                            "status":  "pass",
+                            "notes":  "Dark preset retains hierarchy, contrast, and route semantics."
+                        },
+                        {
+                            "file":  "scenario-empty-960x540.png",
+                            "status":  "pass",
+                            "notes":  "Empty state is centered, explicit, and visually calm."
+                        },
+                        {
+                            "file":  "scenario-final-partial-page-1366x768.png",
+                            "status":  "pass",
+                            "notes":  "Final page fills the row area evenly without clipping."
+                        },
+                        {
+                            "file":  "scenario-invalid-rows-960x540.png",
+                            "status":  "pass",
+                            "notes":  "Valid rows remain well composed after malformed rows are removed."
+                        },
+                        {
+                            "file":  "scenario-live-datasource-update-1366x768.png",
+                            "status":  "pass",
+                            "notes":  "Updated destination and room appear in the stable directory layout."
+                        },
+                        {
+                            "file":  "scenario-long-departments-1536x432.png",
+                            "status":  "pass",
+                            "notes":  "Wide-low stress content remains bounded within the established compact policy."
+                        },
+                        {
+                            "file":  "scenario-many-buildings-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Sorted building and floor groups retain a continuous scan path."
+                        },
+                        {
+                            "file":  "scenario-missing-rooms-600x600.png",
+                            "status":  "pass",
+                            "notes":  "Room fallback labels fit cleanly in the square composition."
+                        },
+                        {
+                            "file":  "scenario-portrait-long-essential-fields-1080x1920.png",
+                            "status":  "pass",
+                            "notes":  "All six long destinations, directions, and accessibility notes are fully readable with multi-line wrapping."
+                        },
+                        {
+                            "file":  "scenario-row-array-960x540.png",
+                            "status":  "pass",
+                            "notes":  "Row-array normalization produces the expected stable layout."
+                        },
+                        {
+                            "file":  "scenario-single-building-1080x1920.png",
+                            "status":  "pass",
+                            "notes":  "Four portrait rows use the full height while retaining complete essential values."
+                        },
+                        {
+                            "file":  "scenario-static-unbound-1366x768.png",
+                            "status":  "pass",
+                            "notes":  "Representative fallback content renders as a complete directory."
+                        },
+                        {
+                            "file":  "scenario-unequal-floors-1366x768.png",
+                            "status":  "pass",
+                            "notes":  "Unequal groups preserve clear building and floor continuity."
+                        },
+                        {
+                            "file":  "square-600x600.png",
+                            "status":  "pass",
+                            "notes":  "Square layout remains compact, aligned, and legible."
+                        },
+                        {
+                            "file":  "wide-low-1536x432.png",
+                            "status":  "pass",
+                            "notes":  "Strip composition uses the full width with stable compact rows."
+                        }
+                    ],
+    "unresolvedFindings":  [
+
+                           ]
+}

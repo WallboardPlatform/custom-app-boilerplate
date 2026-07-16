@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { materializeExample } from './example-materialization.mjs';
+import { selectReferenceScreenshots } from './example-screenshots.mjs';
 import { findAvailablePort } from './playwright/free-port.mjs';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -60,16 +61,21 @@ if (mode === '--prepare') {
 	const targetScreenshotDirectory = path.join(exampleDirectory, 'screenshots');
 	const sourceReviewPath = path.join(reviewDirectory, 'preview', 'visual-review.json');
 	const targetReviewPath = path.join(exampleDirectory, 'overlay', 'preview', 'visual-review.json');
-	const screenshots = fs.readdirSync(sourceScreenshotDirectory, { withFileTypes: true })
+	const availableScreenshots = fs.readdirSync(sourceScreenshotDirectory, { withFileTypes: true })
 		.filter((entry) => entry.isFile() && entry.name.endsWith('.png'));
+	const manifest = JSON.parse(fs.readFileSync(path.join(exampleDirectory, 'example.json'), 'utf8'));
+	const screenshots = selectReferenceScreenshots(
+		manifest,
+		availableScreenshots.map((entry) => entry.name)
+	);
 
 	fs.rmSync(targetScreenshotDirectory, { recursive: true, force: true });
 	fs.mkdirSync(targetScreenshotDirectory, { recursive: true });
 
 	for (const screenshot of screenshots) {
 		fs.copyFileSync(
-			path.join(sourceScreenshotDirectory, screenshot.name),
-			path.join(targetScreenshotDirectory, screenshot.name)
+			path.join(sourceScreenshotDirectory, screenshot),
+			path.join(targetScreenshotDirectory, screenshot)
 		);
 	}
 

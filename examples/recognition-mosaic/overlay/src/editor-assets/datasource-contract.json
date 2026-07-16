@@ -1,0 +1,37 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "recognitionData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "Recognitions",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Paper Kite Recognitions",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "name", "type": "string", "required": true },
+		{ "name": "role", "type": "string", "required": true },
+		{ "name": "achievement", "type": "text", "required": true },
+		{ "name": "team", "type": "string", "required": true },
+		{ "name": "imageUrl", "type": "string", "required": false },
+		{ "name": "quote", "type": "text", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing Recognitions",
+		"selected Recognitions table object",
+		"processed Recognitions row array"
+	],
+	"behavior": {
+		"unbound": "render bundled synthetic recognition rows and portraits",
+		"boundEmpty": "render the configured empty-state message",
+		"invalidRows": "skip rows missing name or achievement",
+		"brokenMedia": "replace missing or failed portrait URLs with a branded initials treatment",
+		"pagination": "choose a surface-aware capacity and balance people across pages"
+	}
+}

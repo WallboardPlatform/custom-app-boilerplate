@@ -1,0 +1,77 @@
+{
+	"version": "1",
+	"name": "Rivermark Campus Directory",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Directory datasource",
+			"type": "dataPicker",
+			"property": "directoryData",
+			"dataPickerType": "any",
+			"tooltip": "Select the editable Directory table. Leave unbound to show representative Rivermark College entries."
+		},
+		{
+			"label": "Directory content",
+			"type": "group",
+			"properties": [
+				{ "label": "Campus name", "type": "text", "property": "campusName", "default": "Rivermark College" },
+				{ "label": "Directory title", "type": "text", "property": "directoryTitle", "default": "Campus Directory" },
+				{ "label": "Current location", "type": "text", "property": "locationLabel", "default": "Welcome Center Lobby" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No directory entries are available." },
+				{
+					"label": "Page duration",
+					"type": "slider",
+					"property": "pageDurationSeconds",
+					"default": 12,
+					"min": 3,
+					"max": 60,
+					"step": 1,
+					"tooltip": "Seconds each page remains visible when the directory contains multiple pages."
+				}
+			]
+		},
+		{
+			"label": "Directory theme",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#f5f7f4" },
+						{ "label": "Text color", "type": "color", "property": "textColor", "default": "#17312c" },
+						{ "label": "Wayfinding color", "type": "color", "property": "accentColor", "default": "#007f6d" },
+						{ "label": "Accessibility color", "type": "color", "property": "accessibilityColor", "default": "#4f7f21" }
+					],
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

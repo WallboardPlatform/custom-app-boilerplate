@@ -59,7 +59,7 @@ npm run example:review:promote -- restaurant-menu
 npm run example:accept -- restaurant-menu
 ```
 
-The explicit target must be new or empty. See `examples/README.md`. Use examples for normalization, layout, chart, timing, test, and packaging techniques; do not copy their visual language by default.
+The explicit target must be new or empty. See `examples/README.md`. Use examples for normalization, layout, chart, timing, test, and packaging techniques; do not copy their visual language by default. Git stores only one or two representative screenshots per example; CI retains full acceptance matrices.
 
 ## Commands
 
@@ -70,6 +70,7 @@ The explicit target must be new or empty. See `examples/README.md`. Use examples
 | Production ZIP | `npm run build:production:zip` |
 | Identity/brief/datasource/legacy/package gates | `npm run validate:package` |
 | Repository example/tool tests | `npm run validate:examples` |
+| Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |

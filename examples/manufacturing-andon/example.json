@@ -1,0 +1,13 @@
+{
+	"title": "Manufacturing Andon",
+	"description": "Portrait production status instrument with grouped lines, shape-and-text state markers, and dense pagination.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"],
+	"referenceScreenshots": ["app-default-1080x1920.png", "narrow-column-480x1920.png"]
+}

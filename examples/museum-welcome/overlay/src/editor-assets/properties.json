@@ -1,0 +1,166 @@
+{
+	"version": "1",
+	"name": "CalderMuseumWelcome",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Exhibition",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Exhibition title",
+					"type": "textArea",
+					"property": "exhibitionTitle",
+					"default": "FORM IN MOTION"
+				},
+				{
+					"label": "Subtitle",
+					"type": "textArea",
+					"property": "subtitle",
+					"default": "Kinetic sculpture and modern light"
+				},
+				{
+					"label": "Date",
+					"type": "text",
+					"property": "dateRange",
+					"default": "14 SEP - 22 JAN"
+				},
+				{
+					"label": "Venue",
+					"type": "text",
+					"property": "venue",
+					"default": "GALLERY 2"
+				},
+				{
+					"label": "Logo or image",
+					"type": "file",
+					"property": "heroImage"
+				}
+			]
+		},
+		{
+			"label": "Visibility",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Show subtitle",
+					"type": "checkbox",
+					"property": "showSubtitle",
+					"default": true
+				},
+				{
+					"label": "Show date",
+					"type": "checkbox",
+					"property": "showDate",
+					"default": true
+				},
+				{
+					"label": "Show venue",
+					"type": "checkbox",
+					"property": "showVenue",
+					"default": true
+				},
+				{
+					"label": "Show image",
+					"type": "checkbox",
+					"property": "showImage",
+					"default": true
+				},
+				{
+					"label": "Transparent background",
+					"type": "checkbox",
+					"property": "transparentBackground",
+					"default": false
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"options": [
+						{
+							"label": "Light",
+							"value": "light"
+						},
+						{
+							"label": "Dark",
+							"value": "dark"
+						},
+						{
+							"label": "Custom",
+							"value": "custom"
+						}
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#theme-custom",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#theme-custom"
+					},
+					"properties": [
+						{
+							"label": "Ground",
+							"type": "color",
+							"property": "backgroundColor",
+							"default": "#eeeae2"
+						},
+						{
+							"label": "Title field",
+							"type": "color",
+							"property": "primaryColor",
+							"default": "#ed3f2f"
+						},
+						{
+							"label": "Welcome field",
+							"type": "color",
+							"property": "secondaryColor",
+							"default": "#185bd8"
+						},
+						{
+							"label": "Information field",
+							"type": "color",
+							"property": "accentColor",
+							"default": "#f3c625"
+						},
+						{
+							"label": "Dark ink",
+							"type": "color",
+							"property": "textColor",
+							"default": "#111111"
+						},
+						{
+							"label": "Light ink",
+							"type": "color",
+							"property": "inverseTextColor",
+							"default": "#eeeae2"
+						}
+					]
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js",
+		"assets/index.jpg"
+	]
+}

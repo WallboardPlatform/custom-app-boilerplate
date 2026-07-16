@@ -1,0 +1,327 @@
+.line-section {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex-basis: 0;
+	flex-direction: column;
+	border-bottom: 2px solid var(--andon-rule);
+}
+
+.line-section:last-child {
+	border-bottom: 0;
+}
+
+:global(.line-section__header) {
+	display: flex;
+	min-width: 0;
+	min-height: 62px;
+	padding: 10px 18px 10px 24px;
+	align-items: center;
+	flex: 0 0 auto;
+	border-left: 8px solid var(--andon-unknown);
+	background: var(--andon-line-header);
+}
+
+:global(.line-section[data-line-tone='normal'] .line-section__header) {
+	border-left-color: var(--andon-normal);
+}
+
+:global(.line-section[data-line-tone='attention'] .line-section__header) {
+	border-left-color: var(--andon-attention);
+}
+
+:global(.line-section[data-line-tone='stopped'] .line-section__header) {
+	border-left-color: var(--andon-stopped);
+}
+
+:global(.line-section__identity) {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+:global(.line-section__name) {
+	display: block;
+	padding-bottom: 2px;
+	overflow: hidden;
+	font-size: 22px;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.line-section__identity > span) {
+	display: block;
+	margin-top: 4px;
+	overflow: hidden;
+	color: var(--andon-muted);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.line-section__status) {
+	min-width: 150px;
+	margin-left: 18px;
+	flex: 0 0 auto;
+	text-align: right;
+}
+
+:global(.line-section__status strong),
+:global(.line-section__status span) {
+	display: block;
+	line-height: 1.18;
+}
+
+:global(.line-section__status strong) {
+	color: var(--andon-unknown);
+	font-size: 16px;
+}
+
+:global(.line-section__status[data-tone='normal'] strong) {
+	color: var(--andon-normal);
+}
+
+:global(.line-section__status[data-tone='attention'] strong) {
+	color: var(--andon-attention);
+}
+
+:global(.line-section__status[data-tone='stopped'] strong) {
+	color: var(--andon-stopped);
+}
+
+:global(.line-section__status span) {
+	margin-top: 4px;
+	color: var(--andon-muted);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+:global(.line-section__stations) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+}
+
+:global(.station-row) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	align-items: stretch;
+	flex: 1 1 0;
+	border-bottom: 1px solid var(--andon-rule);
+	border-left: 8px solid var(--andon-unknown);
+	background: var(--andon-unknown-soft);
+}
+
+:global(.station-row:last-child) {
+	border-bottom: 0;
+}
+
+:global(.station-row[data-state-tone='normal']) {
+	border-left-color: var(--andon-normal);
+	background: var(--andon-normal-soft);
+}
+
+:global(.station-row[data-state-tone='attention']) {
+	border-left-color: var(--andon-attention);
+	background: var(--andon-attention-soft);
+}
+
+:global(.station-row[data-state-tone='stopped']) {
+	border-left-color: var(--andon-stopped);
+	background: var(--andon-stopped-soft);
+}
+
+:global(.station-row__signal) {
+	position: relative;
+	display: flex;
+	width: 108px;
+	min-height: 0;
+	padding: 8px 4px;
+	align-items: center;
+	flex: 0 0 auto;
+	flex-direction: column;
+	justify-content: center;
+}
+
+:global(.station-row__signal)::before {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: 2px;
+	content: '';
+	background: var(--andon-rule-strong);
+	transform: translateX(-50%);
+}
+
+:global(.station-row__signal .state-marker),
+:global(.station-row__state) {
+	position: relative;
+	z-index: 1;
+}
+
+:global(.station-row__state) {
+	display: block;
+	max-width: 100%;
+	margin-top: 3px;
+	padding: 2px 4px;
+	overflow: hidden;
+	color: var(--andon-muted);
+	background: var(--andon-surface);
+	font-size: 10px;
+	line-height: 1.2;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.station-row__copy) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	padding: 9px 20px 8px 10px;
+	flex: 1 1 auto;
+	flex-direction: column;
+	justify-content: center;
+}
+
+:global(.station-row__identity) {
+	display: flex;
+	min-width: 0;
+	align-items: baseline;
+	flex: 0 0 auto;
+}
+
+:global(.station-row__name) {
+	display: block;
+	min-width: 0;
+	padding-bottom: 2px;
+	overflow: hidden;
+	flex: 1 1 auto;
+	font-size: 26px;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.station-row__elapsed) {
+	display: block;
+	max-width: 180px;
+	margin-left: 18px;
+	padding-bottom: 2px;
+	overflow: hidden;
+	flex: 0 1 auto;
+	color: var(--andon-primary);
+	font-size: 25px;
+	font-variant-numeric: tabular-nums;
+	font-weight: 800;
+	line-height: 1.18;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.station-row__reason) {
+	display: -webkit-box;
+	max-height: 2.5em;
+	margin: 2px 0 0;
+	padding: 0 0 2px;
+	overflow: hidden;
+	color: var(--andon-primary);
+	font-size: 17px;
+	line-height: 1.22;
+	flex: 0 0 auto;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+:global(.station-row[data-state-tone='normal'] .station-row__reason) {
+	color: var(--andon-muted);
+}
+
+:global(.station-row__owner) {
+	display: block;
+	margin-top: 3px;
+	padding-bottom: 2px;
+	overflow: hidden;
+	color: var(--andon-muted);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.18;
+	flex: 0 0 auto;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+	:global(.line-section__header) {
+		min-height: 54px;
+		padding: 7px 10px 7px 12px;
+		border-left-width: 6px;
+	}
+
+	:global(.line-section__name) {
+		font-size: 15px;
+	}
+
+	:global(.line-section__identity > span) {
+		margin-top: 2px;
+		font-size: 9px;
+	}
+
+	:global(.line-section__status) {
+		min-width: 92px;
+		margin-left: 8px;
+	}
+
+	:global(.line-section__status strong) {
+		font-size: 11px;
+	}
+
+	:global(.line-section__status span) {
+		margin-top: 2px;
+		font-size: 8px;
+	}
+
+	:global(.station-row) {
+		border-left-width: 6px;
+	}
+
+	:global(.station-row__signal) {
+		width: 64px;
+		padding: 6px 2px;
+	}
+
+	:global(.station-row__state) {
+		margin-top: 2px;
+		font-size: 8px;
+	}
+
+	:global(.station-row__copy) {
+		padding: 9px 10px 8px 5px;
+	}
+
+	:global(.station-row__name) {
+		font-size: 18px;
+	}
+
+	:global(.station-row__elapsed) {
+		max-width: 90px;
+		margin-left: 8px;
+		font-size: 17px;
+	}
+
+	:global(.station-row__reason) {
+		margin-top: 3px;
+		font-size: 14px;
+	}
+
+	:global(.station-row__owner) {
+		margin-top: 3px;
+		font-size: 9px;
+	}
+}

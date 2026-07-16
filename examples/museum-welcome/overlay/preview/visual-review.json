@@ -1,0 +1,93 @@
+{
+    "reviewVersion":  1,
+    "sourceHash":  "212322fe8fd5c13a47a76f7ce4cb0a0b9807e80d59d7d0f29cf27db570828cc5",
+    "reviewedAt":  "2026-07-16T12:32:15.9110332Z",
+    "reviewer":  "Codex promotion review",
+    "criteria":  [
+                     {
+                         "id":  "promptFidelity",
+                         "status":  "pass",
+                         "notes":  "The fixed 1920x1080 screen includes the requested editable exhibition content, optional media, coordinated colors, transparency, and visibility controls without dashboard chrome or pagination."
+                     },
+                     {
+                         "id":  "referenceFidelity",
+                         "status":  "pass",
+                         "notes":  "The supplied poster remains recognizable through the vermilion title field, cobalt welcome band, yellow information field, concentric aperture, serif contrast, and asymmetric negative space."
+                     },
+                     {
+                         "id":  "visualSpecificity",
+                         "status":  "pass",
+                         "notes":  "Oversized stacked type, sharp primary-color geometry, and the fictional kinetic-sculpture aperture create a museum-specific poster rather than a generic interface layout."
+                     },
+                     {
+                         "id":  "distanceReadability",
+                         "status":  "pass",
+                         "notes":  "Welcome, exhibition title, venue, subtitle, and date retain a clear viewing-distance hierarchy across default and stress states."
+                     },
+                     {
+                         "id":  "themeContrast",
+                         "status":  "pass",
+                         "notes":  "Light, custom, and transparent-background renders preserve readable ink on every color field; custom primary metadata resolves to a contrasting color."
+                     },
+                     {
+                         "id":  "dynamicTextSafety",
+                         "status":  "pass",
+                         "notes":  "The long title remains complete in whole-word lines at signage scale; the four-line subtitle and stressed venue/date labels remain intact and above their declared floors."
+                     },
+                     {
+                         "id":  "surfaceComposition",
+                         "status":  "pass",
+                         "notes":  "Every state retains the fixed poster geometry with contained overflow; hidden metadata collapses without orphan rules, and negative space remains deliberate."
+                     },
+                     {
+                         "id":  "assetAndThemeQuality",
+                         "status":  "pass",
+                         "notes":  "The fictional sculpture image is cleanly cropped inside the ring, hidden or broken media resolves to the geometric fallback, and editor artwork is app-specific."
+                     },
+                     {
+                         "id":  "exampleSameness",
+                         "status":  "pass",
+                         "notes":  "The reference-led poster fields, circular aperture, and typography avoid repository examples\u0027 dashboard, card, header, and standard pagination patterns."
+                     }
+                 ],
+    "screenshots":  [
+                        {
+                            "file":  "full-hd-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 1920x1080; title, media, metadata, rule, and edge spacing are balanced and fully legible."
+                        },
+                        {
+                            "file":  "scenario-alternate-colors-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Custom charcoal, coral, ivory, and mint fields remain coordinated with strong text contrast."
+                        },
+                        {
+                            "file":  "scenario-broken-image-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Unusable media resolves to the complete concentric motif with no broken icon, empty aperture, or layout shift."
+                        },
+                        {
+                            "file":  "scenario-long-title-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "The complete long title forms six intentional whole-word lines while subtitle, venue, and date remain readable and unclipped."
+                        },
+                        {
+                            "file":  "scenario-minimal-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Venue, subtitle, date, image, and dependent rule collapse cleanly; the retained geometric mark balances the open yellow field."
+                        },
+                        {
+                            "file":  "scenario-no-image-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "The circular aperture becomes the reference-matched black and cream motif while all exhibition copy and panel geometry remain unchanged."
+                        },
+                        {
+                            "file":  "scenario-transparent-background-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "The checkerboard is visible only through the transparent neutral field; colored panels, ring, media, and text remain coherent and readable."
+                        }
+                    ],
+    "unresolvedFindings":  [
+
+                           ]
+}

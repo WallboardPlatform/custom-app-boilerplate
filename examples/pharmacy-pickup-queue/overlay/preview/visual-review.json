@@ -1,0 +1,118 @@
+{
+    "reviewVersion":  1,
+    "sourceHash":  "ad0ac980a43dcaf9da16c2f1a8952100bec48972bc89bfe4b017b0869e81a3a8",
+    "reviewedAt":  "2026-07-16T12:32:15.8998638Z",
+    "reviewer":  "Codex promotion review",
+    "criteria":  [
+                     {
+                         "id":  "promptFidelity",
+                         "status":  "pass",
+                         "notes":  "The fixed 480x270 board uses ticket, counter, state, and optional note data, with one called hero and a bounded next queue."
+                     },
+                     {
+                         "id":  "referenceFidelity",
+                         "status":  "not-applicable",
+                         "notes":  "No visual reference was supplied; the review used the explicit task and accepted instruction-led visual direction."
+                     },
+                     {
+                         "id":  "visualSpecificity",
+                         "status":  "pass",
+                         "notes":  "The Greenline cross, deep-green announcement field, amber direction cue, and continuous queue register are pharmacy-specific."
+                     },
+                     {
+                         "id":  "distanceReadability",
+                         "status":  "pass",
+                         "notes":  "The active ticket dominates at 66px, preserves a 30px stress floor, and keeps its counter larger than every secondary row."
+                     },
+                     {
+                         "id":  "themeContrast",
+                         "status":  "pass",
+                         "notes":  "Light and dark presets remain legible; WAIT, ON HOLD, and CHECK STATE use written and symbol cues in addition to color."
+                     },
+                     {
+                         "id":  "dynamicTextSafety",
+                         "status":  "pass",
+                         "notes":  "Long active labels expand the hero and remove subordinate content; long queued labels use deliberate one-line ellipsis without clipped ink."
+                     },
+                     {
+                         "id":  "surfaceComposition",
+                         "status":  "pass",
+                         "notes":  "Dense queues fill the split board while empty, idle, one-ticket, and oversized-hero states use the same fixed canvas intentionally."
+                     },
+                     {
+                         "id":  "assetAndThemeQuality",
+                         "status":  "pass",
+                         "notes":  "The app-specific cross icon and true primary-surface placeholder match the coordinated light, dark, and custom palette system."
+                     },
+                     {
+                         "id":  "exampleSameness",
+                         "status":  "pass",
+                         "notes":  "The single continuous announcement-and-queue composition avoids repeated dashboard cards and does not inherit example branding or chrome."
+                     }
+                 ],
+    "screenshots":  [
+                        {
+                            "file":  "app-default-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; active ticket, counter destination, and three-row queue establish the intended reading order."
+                        },
+                        {
+                            "file":  "scenario-dark-theme-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; dark surfaces retain separation, text contrast, and readable amber and coral state cues."
+                        },
+                        {
+                            "file":  "scenario-empty-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; the centered cross and two-line queue-clear message are calm, complete, and intentionally sparse."
+                        },
+                        {
+                            "file":  "scenario-invalid-rows-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; invalid rows disappear and the remaining called ticket expands into a balanced centered hero."
+                        },
+                        {
+                            "file":  "scenario-live-datasource-update-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; the updated B214 hero, Counter 4 destination, and next rows render in the stable composition."
+                        },
+                        {
+                            "file":  "scenario-long-labels-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; the oversized active ticket and counter remain complete at readable sizes after subordinate content is removed."
+                        },
+                        {
+                            "file":  "scenario-long-next-labels-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; long queued ticket and counter tails ellipsize without hiding queue position or state text."
+                        },
+                        {
+                            "file":  "scenario-many-waiting-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; exactly three next tickets render and the +4 MORE WAITING footer reports bounded overflow."
+                        },
+                        {
+                            "file":  "scenario-one-ticket-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; the lone ticket, arrow, and counter form one centered announcement with no empty secondary panel."
+                        },
+                        {
+                            "file":  "scenario-row-array-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; processed row-array input is visually identical to the native table output."
+                        },
+                        {
+                            "file":  "scenario-static-unbound-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; the synthetic unbound fallback matches the accepted primary queue without debug presentation."
+                        },
+                        {
+                            "file":  "scenario-unknown-state-480x270.png",
+                            "status":  "pass",
+                            "notes":  "Inspected at 480x270; no-active-call guidance is clear and the unknown Q204 row shows both question mark and CHECK STATE."
+                        }
+                    ],
+    "unresolvedFindings":  [
+
+                           ]
+}
