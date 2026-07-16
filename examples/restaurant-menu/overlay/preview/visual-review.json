@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "d14732689f63af12eac33aeccc5099a75aa5d193271d5e7fd5d0247ee45f88f7",
-	"reviewedAt": "2026-07-15T16:16:50.962Z",
+	"sourceHash": "c1af5fbeaf063e7845190339b55d465c5f9f3c9bee5ce8e960550ece48ce7bc0",
+	"reviewedAt": "2026-07-16T13:53:39.500Z",
 	"reviewer": "Codex independent visual review",
 	"criteria": [
 		{
@@ -69,17 +69,17 @@
 		{
 			"file": "scenario-bound-null-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected at original 960 by 540 output; the bound-null fallback is legible, contained, and intentionally sparse."
 		},
 		{
 			"file": "scenario-empty-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected at rendered size; the empty state is legible, contained, and intentionally sparse."
 		},
 		{
 			"file": "scenario-last-page-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; uneven final-page content remains balanced with complete text ink."
 		},
 		{
 			"file": "scenario-light-theme-1920x1080.png",
@@ -94,27 +94,27 @@
 		{
 			"file": "scenario-quick-edit-update-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; quick-edit data is reflected without layout shift, clipping, or stale content."
 		},
 		{
 			"file": "scenario-row-array-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at original 960 by 540 output; row-array normalization preserves the intended menu composition."
 		},
 		{
 			"file": "scenario-static-unbound-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected at rendered size; the unbound static fallback remains complete and production-presentable."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; the compact square layout retains hierarchy, spacing, and complete glyph ink."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected at rendered size; the wide-low layout stays dense and readable without overflow or clipped descenders."
 		}
 	],
 	"unresolvedFindings": []
