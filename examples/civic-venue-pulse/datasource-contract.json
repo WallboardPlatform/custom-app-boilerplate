@@ -36,7 +36,7 @@
 		"Feed: legacy RSS parser output under feed.entries, RSS channel.item, or a processed item array"
 	],
 	"behavior": {
-		"unbound": "render synthetic preview data only in the preview fixture; real bound empty sources render the configured empty state",
+		"unbound": "render synthetic preview data only in the preview fixture; real bound empty sources render the configured empty state; packaged synthetic samples explicitly use relative-to-now offsets so they remain demonstrable after download",
 		"boundEmpty": "calendar-only, feed-only, and both-empty states each render intentionally without replacing missing customer data",
 		"invalidRows": "skip cancelled or malformed calendar events, strip rich feed text to plain text, and ignore unsafe or broken media",
 		"ordering": "feature the active or next calendar program first; use a fresh announcement sorted newest-first as support; rotate extra programs without resetting on independent feed updates"
