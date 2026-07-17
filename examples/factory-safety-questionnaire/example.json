@@ -1,0 +1,18 @@
+{
+	"title": "Factory Safety Questionnaire",
+	"description": "Interactive multi-view safety check that reads editable questions and appends completed results to a separate internal datasource.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-questions-datasource.json",
+		"sample-results-datasource.json"
+	],
+	"referenceScreenshots": ["full-hd-1920x1080.png", "compact-1366x768.png"]
+}

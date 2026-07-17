@@ -1,0 +1,15 @@
+{
+	"Results": {
+		"header": {
+			"submissionId": "string",
+			"participantName": "string",
+			"corporateId": "string",
+			"score": "number",
+			"totalQuestions": "number",
+			"completedAt": "string",
+			"answersJson": "string"
+		},
+		"rows": [],
+		"connectors": {}
+	}
+}

@@ -1,0 +1,222 @@
+{
+	"briefVersion": 5,
+	"request": {
+		"summary": "Create an interactive English-language factory safety questionnaire with identity capture, three consecutive multiple-choice questions, a scored summary, internal datasource result collection, and automatic reset.",
+		"audience": "Employees and visitors completing a short safety check on a shared touch display before entering a fictional vehicle assembly area.",
+		"primaryGoal": "Make the complete safety-check journey obvious, fast, readable at signage distance, and maintainable through separate editable question and result datasources."
+	},
+	"assumptions": [
+		"The example uses the fictional Northline Mobility brand and synthetic identities; no real employee or customer data is packaged.",
+		"The experience is used on two landscape touch surfaces, 1920x1080 and 1366x768.",
+		"Completed results append to Results.rows only while running in the displayer; the editor and unbound previews never write customer data.",
+		"A production owner must define retention and access controls for participant names and corporate IDs before deployment."
+	],
+	"app": { "mode": "new", "name": "Factory Safety Questionnaire", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The requested experience is a landscape factory touch station, so it is optimized for Full HD and a smaller 16:9 panel rather than unsupported portrait placements."
+	},
+	"surfaces": [
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary factory entrance touch display.", "minimumContentCoverage": { "width": 82, "height": 72 } },
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape safety station.", "minimumContentCoverage": { "width": 82, "height": 72 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "questionData", "source": "generated", "contract": "TABLE", "access": "read" },
+			{ "property": "resultsData", "source": "generated", "contract": "TABLE", "access": "write" }
+		]
+	},
+	"ownership": [
+		{
+			"id": "question-content",
+			"area": "content",
+			"owner": "datasource",
+			"targets": ["questionData"],
+			"rationale": "Safety owners edit question order, wording, answers, and explanations without rebuilding the app."
+		},
+		{
+			"id": "result-records",
+			"area": "state",
+			"owner": "datasource",
+			"targets": ["resultsData"],
+			"rationale": "Completed sessions are customer-owned operational records kept outside the app package."
+		},
+		{
+			"id": "content-settings",
+			"area": "content",
+			"owner": "setting",
+			"targets": ["plantName", "welcomeTitle", "introText", "identityPrompt", "completionResetSeconds", "inactivityResetSeconds"],
+			"rationale": "Operators can change public labels and timing without editing datasource structure or rebuilding."
+		},
+		{
+			"id": "presentation-settings",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": ["motionPreset", "themePreset", "backgroundColor", "surfaceColor", "primaryTextColor", "secondaryTextColor", "accentColor"],
+			"rationale": "Coordinated presets are safe defaults while Custom exposes a complete semantic palette."
+		},
+		{
+			"id": "participant-session",
+			"area": "state",
+			"owner": "interaction",
+			"targets": ["participant-identity", "selected-answers", "current-view"],
+			"rationale": "Identity and answers exist only for the active session until the user submits."
+		},
+		{
+			"id": "remote-reset",
+			"area": "behavior",
+			"owner": "external-command",
+			"targets": ["resetSession"],
+			"rationale": "A playlist, control content, or operator can reset an abandoned station remotely."
+		},
+		{
+			"id": "application-rules",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["scoring-rule", "view-sequence", "result-shape", "composition"],
+			"rationale": "Scoring, required sequence, result schema, and visual composition are code-owned safety behavior."
+		}
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "start", "purpose": "Invite the participant to begin." },
+			{ "id": "identity", "purpose": "Collect participant name and corporate ID." },
+			{ "id": "question", "purpose": "Present one multiple-choice safety question at a time." },
+			{ "id": "summary", "purpose": "Show the achieved score and answer review before submission." },
+			{ "id": "complete", "purpose": "Confirm storage or explain a retryable write failure." }
+		],
+		"inputs": [
+			{ "id": "touch-controls", "type": "touch", "action": "Start, enter identity, select answers, navigate, and submit." },
+			{ "id": "keyboard-entry", "type": "keyboard", "action": "Enter participant identity and activate focused controls." },
+			{ "id": "remote-reset-command", "type": "external-command", "action": "Reset the active session to the start view." }
+		],
+		"session": {
+			"reset": "timeout",
+			"timeoutSeconds": 120,
+			"expectation": "Any activity restarts the inactivity timer; completion resets after the configured shorter delay."
+		}
+	},
+	"outputs": [
+		{
+			"id": "append-result",
+			"channel": "internal-datasource",
+			"target": "resultsData",
+			"operation": "insert-to-array",
+			"editorPolicy": "disabled",
+			"expectation": "Append exactly one completed session to Results.rows using the SDK atomic array operation.",
+			"failure": "Keep the summary visible, show a retryable error, and do not claim that the result was saved."
+		},
+		{
+			"id": "completion-event",
+			"channel": "sensor-event",
+			"target": "safety-check-completed",
+			"operation": "emit",
+			"editorPolicy": "preview-mock",
+			"expectation": "Emit score and submission ID after a successful or editor-blocked preview completion.",
+			"failure": "The stored result remains authoritative if event emission is unavailable."
+		}
+	],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "transparent",
+		"rationale": "Both accepted touch surfaces share a landscape family, but controls reallocate space instead of scaling hit targets as a bitmap."
+	},
+	"motion": {
+		"default": "subtle",
+		"disableProperty": "motionPreset",
+		"techniques": ["fade", "slide", "progress"],
+		"rationale": "Short view transitions and progress movement establish continuity; Off removes non-essential motion."
+	},
+	"media": [],
+	"branding": {
+		"source": "settings",
+		"editable": true,
+		"provenance": "The example ships only the fictional Northline Mobility name and generated semantic colors.",
+		"fallback": "Use the coordinated Dark preset when no customer branding kit or reference is supplied."
+	},
+	"presentation": { "themes": ["dark", "light", "custom"], "density": "balanced" },
+	"settings": [
+		{ "property": "plantName", "purpose": "Public site or company label." },
+		{ "property": "welcomeTitle", "purpose": "Primary invitation on the start view." },
+		{ "property": "introText", "purpose": "Short expectation-setting copy." },
+		{ "property": "identityPrompt", "purpose": "Instruction above the identity form." },
+		{ "property": "completionResetSeconds", "purpose": "Delay before a completed station returns to start." },
+		{ "property": "inactivityResetSeconds", "purpose": "Privacy timeout for an abandoned active session." },
+		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive transitions." },
+		{ "property": "themePreset", "purpose": "Selects the complete Dark, Light, or Custom semantic palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom page background." },
+		{ "property": "surfaceColor", "purpose": "Custom interactive surface." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
+		{ "property": "secondaryTextColor", "purpose": "Custom secondary text." },
+		{ "property": "accentColor", "purpose": "Custom action and progress accent.", "effect": "accent-color" }
+	],
+	"dynamicText": [
+		{
+			"id": "welcome-title",
+			"source": { "type": "setting", "properties": ["welcomeTitle"] },
+			"selectors": [".wb-factory-safety-welcome-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 34, "maximumLines": 2 },
+			"fallback": "Wrap to two lines at the readable minimum.",
+			"rationale": "The invitation is the primary start-view message and must remain complete.",
+			"evidenceScenario": "long-welcome"
+		},
+		{
+			"id": "question-prompt",
+			"source": { "type": "datasource", "properties": ["questionData"] },
+			"selectors": [".wb-factory-safety-question-prompt"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 28, "maximumLines": 3 },
+			"fallback": "Fit within three lines at 28px, then preserve the full prompt by reducing supporting spacing first.",
+			"rationale": "Safety questions are essential instructions and cannot be ellipsized.",
+			"evidenceScenario": "long-question"
+		},
+		{
+			"id": "answer-options",
+			"source": { "type": "datasource", "properties": ["questionData"] },
+			"selectors": [".wb-factory-safety-option-label"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Wrap to two lines and expand the option row before reducing the touch target.",
+			"rationale": "Every answer must remain complete enough for an informed safety decision.",
+			"evidenceScenario": "long-question"
+		}
+	],
+	"states": [
+		{ "scenario": "full-hd", "expectation": "The complete start state fills the primary landscape station without behaving like a small centered web form." },
+		{ "scenario": "compact", "expectation": "The light preset remains readable and all primary touch controls fit the smaller supported landscape station." },
+		{ "scenario": "long-welcome", "expectation": "A long operator-authored welcome title remains complete at a readable size." },
+		{ "scenario": "long-question", "expectation": "Pathological but realistic questions and option labels remain complete and touch targets remain usable." },
+		{ "scenario": "empty", "expectation": "A bound but empty question datasource shows a clear unavailable state and no start action." }
+	],
+	"behaviors": [
+		{ "id": "complete-question-flow", "expectation": "The participant cannot skip identity or questions and reaches an accurate scored summary.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "atomic-result-write", "expectation": "Submission appends one result row to the separate preview internal datasource.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "completion-reset", "expectation": "The completion view returns to start after the configured delay and clears identity and answers.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "external-reset", "expectation": "The resetSession command returns an active flow to start without writing a partial result.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A focused industrial safety checkpoint with one action per view, strong route-like progress, and calm high-contrast typography rather than a generic form card.",
+		"references": ["User-provided one-shot factory questionnaire concept"],
+		"signatureChoices": [
+			"A vertical safety stripe and oversized numeric progress make the sequence legible at distance.",
+			"Answer controls resemble durable labeled station controls while retaining generous touch targets."
+		],
+		"avoid": ["Generic centered web form card", "Automotive trademarks or real employee data", "Decorative animation that delays interaction"]
+	},
+	"visualReview": {
+		"intent": "A trustworthy factory touch station where the next action and current progress are obvious from several meters away.",
+		"focus": [
+			"Verify every question and answer remains complete with safe descender clearance at both declared surfaces.",
+			"Verify touch targets remain large and the layout never resembles a cramped desktop form.",
+			"Verify Dark, Light, and Custom palettes remain coherent and motion never obscures controls."
+		]
+	}
+}

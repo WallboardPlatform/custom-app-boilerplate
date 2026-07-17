@@ -16,8 +16,8 @@
 		"rationale": "The task explicitly limits usage to two landscape signage canvases, so the composition is optimized for 1920x1080 and 800x480 without unsupported fallback ratios."
 	},
 	"surfaces": [
-		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "primary", "purpose": "Main public venue display.", "minimumContentCoverage": { "width": 83, "height": 61 } },
-		{ "id": "compact", "width": 800, "height": 480, "role": "required", "purpose": "Compact landscape venue display that may remove imagery and secondary prose.", "minimumContentCoverage": { "width": 84, "height": 61 } }
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "primary", "purpose": "Main public venue display.", "minimumContentCoverage": { "width": 83, "height": 56 } },
+		{ "id": "compact", "width": 800, "height": 480, "role": "required", "purpose": "Compact landscape venue display that may remove imagery and secondary prose.", "minimumContentCoverage": { "width": 84, "height": 58 } }
 	],
 	"data": {
 		"mode": "bound",

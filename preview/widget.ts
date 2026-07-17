@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import previewFixture, { previewScenarios } from './fixture';
 import type { PreviewFixture, PreviewScenario } from './fixture.types';
 import { installPlatformMock } from './platform-mock';
+import type { PlatformMockController } from './platform-mock';
 
 import configJson from '../src/editor-assets/properties.json';
 
@@ -19,6 +20,8 @@ interface PreviewWindow extends Window {
 		destroy: () => Promise<void>;
 		pushConfiguration: (configValues: Record<string, unknown>) => void;
 		pushDatasource: (property: string, value: unknown) => void;
+		pushExternalCommand: (command: string, parameters?: Array<{ parameter: string; value: string | number | boolean }>) => void;
+		platform: PlatformMockController;
 	};
 }
 
@@ -57,13 +60,13 @@ const showFailure = (error: unknown): void => {
 
 const mountWidget = async (): Promise<void> => {
 	applyBackground();
-	installPlatformMock();
 	const params: URLSearchParams = new URLSearchParams(window.location.search);
 	const scenarioId: string | null = params.get('scenario');
 	const scenario: PreviewScenario | undefined = previewScenarios.find(
 		(candidate: PreviewScenario): boolean => candidate.id === scenarioId
 	);
 	const fixture: PreviewFixture = scenario?.fixture ?? previewFixture;
+	const platform: PlatformMockController = installPlatformMock(fixture.platform);
 
 	await import('../src/index');
 
@@ -78,6 +81,7 @@ const mountWidget = async (): Promise<void> => {
 	const eventSubject: Subject<unknown> = new Subject<unknown>();
 	let currentConfigValues: Record<string, unknown> = { ...fixture.configValues };
 	previewWindow.__wallboardPreview = {
+		platform,
 		destroy: async (): Promise<void> => {
 			eventSubject.complete();
 			await registration.destroy(PREVIEW_ROOT_ID);
@@ -94,6 +98,15 @@ const mountWidget = async (): Promise<void> => {
 				messageType: 'boundDataChanged',
 				changedProperty: property,
 				newValue: value
+			});
+		},
+		pushExternalCommand: (
+			command: string,
+			parameters?: Array<{ parameter: string; value: string | number | boolean }>
+		): void => {
+			eventSubject.next({
+				messageType: 'triggerCustomCommand',
+				customAppCommandParameters: { command, parameters }
 			});
 		}
 	};

@@ -6,10 +6,18 @@ export interface MinimumContentCoverage {
 export interface PreviewFixture {
 	id: string;
 	readySelector?: string;
+	settleMs?: number;
 	configValues: Record<string, unknown>;
 	dataPickerValues: Record<string, unknown>;
 	datasourceIds: Record<string, string | number | undefined>;
 	additionalConfig?: Record<string, unknown>;
+	platform?: PreviewPlatformFixture;
+}
+
+export interface PreviewPlatformFixture {
+	isDisplayer?: boolean;
+	internalDatasources?: Record<string, unknown>;
+	filesByFolder?: Record<string, unknown[]>;
 }
 
 export interface PreviewScenario {
@@ -20,6 +28,7 @@ export interface PreviewScenario {
 		height: number;
 		background?: 'checker' | 'light' | 'dark';
 	};
+	interactionSteps?: PreviewInteractionStep[];
 	advanceTimeMs?: number;
 	minimumContentCoverage: MinimumContentCoverage;
 	liveDatasourceUpdate?: {
@@ -28,6 +37,10 @@ export interface PreviewScenario {
 		expectedText: string;
 	};
 }
+
+export type PreviewInteractionStep =
+	| { type: 'click'; role: 'button' | 'link'; name: string }
+	| { type: 'fill'; label: string; value: string };
 
 export type PreviewSettingEffectMeasurement =
 	| { type: 'bounding-box'; dimension: 'width' | 'height' }

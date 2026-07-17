@@ -32,6 +32,19 @@ void describe('text ink safety', () => {
 		assert.deepEqual(findTextInkRisks([clippedHeading({ boxHeight: 45, paddingBottom: 4 })]), []);
 	});
 
+	void it('tolerates sub-pixel precision at the exact descender threshold', () => {
+		assert.deepEqual(findTextInkRisks([
+			clippedHeading({
+				text: 'Campus Directory',
+				fontSize: 20,
+				lineHeight: 23.199999999,
+				boxHeight: 70,
+				actualAscent: 15,
+				actualDescent: 4
+			})
+		]), []);
+	});
+
 	void it('rejects descender text when total space exists above the baseline but not below it', () => {
 		const risks = findTextInkRisks([clippedHeading({ boxHeight: 42, actualAscent: 27, actualDescent: 7 })]);
 

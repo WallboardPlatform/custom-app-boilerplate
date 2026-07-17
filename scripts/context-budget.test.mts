@@ -20,7 +20,7 @@ void describe('Markdown context budget', (): void => {
 			files: 2,
 			characters: 9,
 			estimatedTokens: 3,
-			maximumTokens: 10
+			targetTokens: 10
 		});
 	});
 });

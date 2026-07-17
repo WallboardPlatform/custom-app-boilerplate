@@ -203,19 +203,16 @@ const validateContract = (exampleId, exampleDirectory, contractPath, propertiesP
 		return requireString(exampleId, binding.source?.sampleData, `${binding.property ?? 'binding'}.source.sampleData`);
 	}));
 
-	if (sampleDataPaths.size !== 1) {
-		fail(exampleId, 'all datasource bindings must use one shared sampleData bundle.');
+	for (const sampleDataPath of sampleDataPaths) {
+		const absoluteSampleDataPath = path.resolve(exampleDirectory, sampleDataPath);
+
+		if (!absoluteSampleDataPath.startsWith(`${exampleDirectory}${path.sep}`) || !fs.existsSync(absoluteSampleDataPath)) {
+			fail(exampleId, `sample datasource '${sampleDataPath}' was not found inside the example.`);
+		}
+
+		const syntheticSample = JSON.parse(fs.readFileSync(absoluteSampleDataPath, 'utf8'));
+		validateSyntheticSample(exampleId, contract, syntheticSample);
 	}
-
-	const [sampleDataPath] = sampleDataPaths;
-	const absoluteSampleDataPath = path.resolve(exampleDirectory, sampleDataPath);
-
-	if (!absoluteSampleDataPath.startsWith(`${exampleDirectory}${path.sep}`) || !fs.existsSync(absoluteSampleDataPath)) {
-		fail(exampleId, `sample datasource '${sampleDataPath}' was not found inside the example.`);
-	}
-
-	const syntheticSample = JSON.parse(fs.readFileSync(absoluteSampleDataPath, 'utf8'));
-	validateSyntheticSample(exampleId, contract, syntheticSample);
 
 	for (const binding of bindings) {
 		const bindingProperty = requireString(exampleId, binding.property, 'binding.property');

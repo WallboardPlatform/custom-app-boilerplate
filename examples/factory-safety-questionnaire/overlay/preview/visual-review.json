@@ -1,0 +1,91 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "4789975146c7647acb46d05177612877e95c2bd79c2e9e46fe3d84469355b4ef",
+	"reviewedAt": "2026-07-17T13:35:39.7291341+02:00",
+	"reviewer": "Codex",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The rendered journey matches the requested one-shot identity, three-question, scored, resettable safety check."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "No supplied visual reference; the accepted industrial checkpoint direction leads the composition."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Safety rail, route-like progress, station numbering, and durable controls create a domain-specific identity."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary instructions, questions, and touch actions remain legible on both declared landscape surfaces."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark and light presets maintain semantic contrast; Custom uses the complete coordinated palette."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long welcome, question, and answer evidence is complete with no overflow or clipped text ink."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Full HD and compact layouts fill the station while preserving clear action hierarchy and edge space."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "The fictional brand mark, editor assets, and semantic palette are internally consistent."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The interaction-led industrial sequence does not reuse the dashboard cards, pagination, or palette of existing examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "compact-1366x768.png",
+			"status": "pass",
+			"notes": "Compact light station is balanced and fully contained."
+		},
+		{
+			"file": "full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Primary dark station has clear distance hierarchy and one obvious action."
+		},
+		{
+			"file": "scenario-compact-1366x768.png",
+			"status": "pass",
+			"notes": "Named compact scenario matches the declared surface evidence."
+		},
+		{
+			"file": "scenario-empty-1366x768.png",
+			"status": "pass",
+			"notes": "Empty bound data is explicit and removes the unavailable start action."
+		},
+		{
+			"file": "scenario-full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Named Full HD scenario matches the declared surface evidence."
+		},
+		{
+			"file": "scenario-long-question-1920x1080.png",
+			"status": "pass",
+			"notes": "Long prompt and four long options remain complete, readable, and touchable."
+		},
+		{
+			"file": "scenario-long-welcome-1920x1080.png",
+			"status": "pass",
+			"notes": "Long operator title remains complete at a readable fitted size."
+		}
+	],
+	"unresolvedFindings": []
+}

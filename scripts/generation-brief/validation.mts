@@ -9,6 +9,7 @@ export interface GenerationBriefBinding {
 	property: string;
 	source: 'generated' | 'existing' | 'built-in';
 	contract: 'TABLE' | 'CUSTOM' | 'EXISTING' | 'FEED' | 'CALENDAR';
+	access?: 'read' | 'write' | 'read-write';
 }
 
 export interface GenerationBriefSetting {
@@ -50,8 +51,26 @@ export type GenerationBriefAsset =
 	| { id: string; source: 'datasource'; binding: string; required: boolean }
 	| { id: string; source: 'setting'; properties: string[]; required: boolean };
 
+export interface GenerationBriefOwnershipDecision {
+	id: string;
+	area: 'content' | 'presentation' | 'behavior' | 'state';
+	owner: 'locked' | 'setting' | 'datasource' | 'interaction' | 'external-command';
+	targets: string[];
+	rationale: string;
+}
+
+export interface GenerationBriefRuntimeOutput {
+	id: string;
+	channel: 'internal-datasource' | 'sensor-event' | 'own-state';
+	target: string;
+	operation: 'insert-to-array' | 'set' | 'merge' | 'increase' | 'decrease' | 'remove' | 'rotate' | 'upsert' | 'emit';
+	editorPolicy: 'disabled' | 'preview-mock';
+	expectation: string;
+	failure: string;
+}
+
 export interface GenerationBrief {
-	briefVersion: 3 | 4;
+	briefVersion: 3 | 4 | 5;
 	request: {
 		summary: string;
 		audience: string;
@@ -81,6 +100,49 @@ export interface GenerationBrief {
 	data: {
 		mode: 'static' | 'bound';
 		bindings: GenerationBriefBinding[];
+	};
+	ownership?: GenerationBriefOwnershipDecision[];
+	experience?: {
+		mode: 'passive' | 'interactive';
+		views: Array<{ id: string; purpose: string }>;
+		inputs: Array<{
+			id: string;
+			type: 'touch' | 'pointer' | 'keyboard' | 'external-command';
+			action: string;
+		}>;
+		session: {
+			reset: 'none' | 'timeout' | 'completion' | 'external-command' | 'manual';
+			timeoutSeconds?: number;
+			expectation: string;
+		};
+	};
+	outputs?: GenerationBriefRuntimeOutput[];
+	rendering?: {
+		mode: 'reflow' | 'fixed-canvas';
+		designWidth?: number;
+		designHeight?: number;
+		letterbox: 'transparent' | 'background';
+		rationale: string;
+	};
+	motion?: {
+		default: 'off' | 'subtle' | 'expressive';
+		disableProperty?: string;
+		techniques: Array<'fade' | 'slide' | 'scale' | 'progress' | 'chart' | 'custom'>;
+		rationale: string;
+	};
+	media?: Array<{
+		id: string;
+		type: 'image' | 'video';
+		source: 'packaged' | 'datasource' | 'setting' | 'folder';
+		fit: 'cover' | 'contain' | 'blur-fill' | 'fill';
+		fallback: string;
+		rationale: string;
+	}>;
+	branding?: {
+		source: 'none' | 'settings' | 'reference' | 'mcp-branding-kit';
+		editable: boolean;
+		provenance: string;
+		fallback: string;
 	};
 	presentation?: {
 		themes: Array<'dark' | 'light' | 'custom'>;
@@ -194,6 +256,10 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 		fail(id, 'v4 visual direction uses \'creative-led\' instead of legacy \'agent-authored\'.');
 	}
 
+	if (brief.briefVersion === 5 && brief.visualDirection.source === 'agent-authored') {
+		fail(id, 'v5 visual direction uses \'creative-led\' instead of legacy \'agent-authored\'.');
+	}
+
 	if (brief.presentation) {
 		requireUnique(id, brief.presentation.themes, 'presentation.themes');
 	}
@@ -219,6 +285,112 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 	for (const binding of brief.data.bindings) {
 		if (!isDatasourceSourceCompatible(binding.source, binding.contract)) {
 			fail(id, `data binding '${binding.property}' source and contract are inconsistent.`);
+		}
+	}
+
+	if (brief.briefVersion === 5) {
+		const ownership = brief.ownership ?? [];
+		const experience = brief.experience!;
+		const outputs = brief.outputs ?? [];
+		const rendering = brief.rendering!;
+		const motion = brief.motion!;
+		const ownershipTargets = new Set<string>();
+
+		requireUnique(id, ownership.map((decision) => decision.id), 'ownership[].id');
+		requireUnique(id, experience.views.map((view) => view.id), 'experience.views[].id');
+		requireUnique(id, experience.inputs.map((input) => input.id), 'experience.inputs[].id');
+		requireUnique(id, outputs.map((output) => output.id), 'outputs[].id');
+		requireUnique(id, (brief.media ?? []).map((policy) => policy.id), 'media[].id');
+
+		for (const binding of brief.data.bindings) {
+			if (!binding.access) {
+				fail(id, `v5 data binding '${binding.property}' must declare read, write, or read-write access.`);
+			}
+		}
+
+		for (const decision of ownership) {
+			for (const target of decision.targets) {
+				if (ownershipTargets.has(target)) {
+					fail(id, `ownership target '${target}' must have exactly one owner.`);
+				}
+
+				ownershipTargets.add(target);
+			}
+		}
+
+		for (const setting of brief.settings) {
+			const decision = ownership.find((candidate) => candidate.targets.includes(setting.property));
+
+			if (decision?.owner !== 'setting') {
+				fail(id, `setting '${setting.property}' must have setting ownership.`);
+			}
+		}
+
+		for (const binding of brief.data.bindings) {
+			const decision = ownership.find((candidate) => candidate.targets.includes(binding.property));
+
+			if (decision?.owner !== 'datasource') {
+				fail(id, `data binding '${binding.property}' must have datasource ownership.`);
+			}
+		}
+
+		if (experience.mode === 'passive' && experience.inputs.length > 0) {
+			fail(id, 'passive experiences must not declare interactive inputs.');
+		}
+
+		if (experience.mode === 'interactive' && experience.inputs.length === 0) {
+			fail(id, 'interactive experiences must declare at least one input.');
+		}
+
+		if (experience.session.reset === 'timeout' && experience.session.timeoutSeconds === undefined) {
+			fail(id, 'timeout session reset must declare timeoutSeconds.');
+		}
+
+		if (rendering.mode === 'fixed-canvas' && (!rendering.designWidth || !rendering.designHeight)) {
+			fail(id, 'fixed-canvas rendering must declare designWidth and designHeight.');
+		}
+
+		if (rendering.mode === 'reflow' && (rendering.designWidth || rendering.designHeight)) {
+			fail(id, 'reflow rendering must not declare a fixed design size.');
+		}
+
+		if (motion.default === 'off' && motion.techniques.length > 0) {
+			fail(id, 'motion default off must not declare active techniques.');
+		}
+
+		if (motion.default !== 'off' && motion.techniques.length === 0) {
+			fail(id, 'enabled motion must declare at least one technique.');
+		}
+
+		if (motion.disableProperty && !brief.settings.some((setting) => setting.property === motion.disableProperty)) {
+			fail(id, `motion disableProperty '${motion.disableProperty}' must reference an editor setting.`);
+		}
+
+		for (const output of outputs) {
+			if (output.channel === 'internal-datasource') {
+				const binding = brief.data.bindings.find((candidate) => candidate.property === output.target);
+
+				if (!binding || binding.access === 'read') {
+					fail(id, `internal datasource output '${output.id}' must target a write-enabled binding.`);
+				}
+
+				if (output.editorPolicy !== 'disabled') {
+					fail(id, `internal datasource output '${output.id}' must be disabled in the Wallboard editor.`);
+				}
+			} else if (output.channel === 'sensor-event' && output.operation !== 'emit') {
+				fail(id, `sensor event output '${output.id}' must use the emit operation.`);
+			} else if (output.channel === 'own-state' && output.operation !== 'set') {
+				fail(id, `own-state output '${output.id}' must use the set operation.`);
+			}
+		}
+
+		for (const binding of brief.data.bindings) {
+			if (
+				(binding.access === 'write' || binding.access === 'read-write')
+				&& !outputs.some((output) => output.channel === 'internal-datasource' && output.target === binding.property)
+			) {
+				fail(id, `write-enabled binding '${binding.property}' must have an internal datasource output contract.`);
+			}
 		}
 	}
 

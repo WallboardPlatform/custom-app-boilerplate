@@ -14,6 +14,8 @@ Reuse these mechanics without inheriting an example's visual language.
 | Packaged assets | Static import plus `resourceList` | Broken-media scenario and package validation |
 | Built-in data | FEED/CALENDAR normalization and independent multi-source composition | `newsroom-spotlight`, `live-agenda`, `civic-venue-pulse` |
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
+| Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
+| Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 
 ## Selection Rules
 
@@ -24,3 +26,4 @@ Reuse these mechanics without inheriting an example's visual language.
 - Derive every semantic surface from the active theme tokens. Use `mixHexColors` for legacy-safe tones and `readableTextColor` for text on configurable accents; never combine preset text with fixed dark surfaces.
 - Missing, empty, invalid, maximum, odd, long-text, broken-media, last-page, and live-update states are capabilities to design and test, not one shared layout.
 - Examples prove techniques. The prompt/reference/domain still determines hierarchy, palette, density, geometry, media treatment, and pagination style.
+- Preview exposes datasources, actions, sensor events, and commands. Guard writes; editor mode returns `editor-blocked`.

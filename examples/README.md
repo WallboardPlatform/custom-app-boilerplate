@@ -11,7 +11,7 @@ examples/<id>/
 |- example.json      # description and base files to remove
 |- generation-brief.json  # validated request, design, data, and evidence contract
 |- datasource-contract.json  # optional generator metadata for data-bound examples
-|- sample-datasource.json     # optional native Wallboard datasource data
+|- sample-<source>-datasource.json  # optional native Wallboard datasource data; one clearly named file per independent source
 |- screenshots/          # one or two representative reviewed renders
 `- overlay/          # files copied over a clean boilerplate materialization
 ```
@@ -22,6 +22,7 @@ examples/<id>/
 | `call-center-agent-status` | Existing flat agent feed, semantic state aliases, density-aware roster, segmented pagination | Mixed states, wide/low, portrait, square, empty, invalid rows, long labels, unknown state, uneven final page, live update |
 | `campus-directory` | Editable `TABLE` wayfinding board, grouped routes, complete direction and accessibility text | Landscape, wide/low, portrait, square, empty, invalid rows, long essential fields, unequal groups, partial page, live update |
 | `civic-venue-pulse` | Independent built-in `CALENDAR` + `FEED` bindings, provider normalization, overlap selection, coherent source fallbacks | Full HD, compact, Microsoft/Google/iCalendar, current/legacy feed, calendar-only, feed-only, empty, overlap, all-day, stale/broken media, long text, live updates |
+| `factory-safety-questionnaire` | Interactive multi-view touch flow, separate editable question/result tables, guarded result append, sensor output, external reset | Full HD, compact, empty, long welcome/question/answers, complete submission, remote reset |
 | `kpi-operations` | Hierarchical `CUSTOM` contract, KPI cards, responsive Chart.js trend, target progress | Default, wide/low, portrait, square, empty, long labels, live update |
 | `live-agenda` | Built-in `CALENDAR` integration, provider normalization, current-event progress, chronological timeline | Default, wide/low, portrait, square, Microsoft/Google, iCalendar, empty, all-day, long labels, live update |
 | `manufacturing-andon` | Portrait production instrument, grouped lines, shape-and-text status markers, dense rotation | 1080 and 480 portrait, normal/stopped/unknown states, empty, invalid rows, long reasons, dense and partial pages, live update |
@@ -55,4 +56,4 @@ Run `npm run example:accept -- <id>` for clean materialization, the complete val
 
 Every example includes a standalone-valid generation brief whose settings and evidence also pass project synchronization against the materialized app. An example may add `overlay/preview/*.spec.ts` for requirements that cannot be proven by the generic visual suite, such as continuous coverage, animation progress, or interaction timing.
 
-Repository contracts cap tracked images at 10 MiB and estimated Markdown context at 25,000 tokens. Promote examples only when they add a distinct capability; replace overlapping examples instead of growing the catalog indefinitely.
+Repository checks cap tracked images at 10 MiB and report a 25,000-token advisory Markdown target. Promote only distinct capabilities; replace overlapping examples.

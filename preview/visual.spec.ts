@@ -8,6 +8,7 @@ import { appViewport } from './app-viewport';
 import previewFixture, { previewScenarios, previewSettingEffects } from './fixture';
 import type {
 	MinimumContentCoverage,
+	PreviewInteractionStep,
 	PreviewScenario,
 	PreviewSettingEffect,
 	PreviewSettingEffectMeasurement
@@ -19,6 +20,8 @@ import {
 	type TextInkRisk
 } from './text-ink-safety';
 
+const DEFAULT_VISUAL_SETTLE_MS = 650;
+
 interface VisualPreset {
 	name: string;
 	width: number;
@@ -26,6 +29,8 @@ interface VisualPreset {
 	background: 'checker' | 'light' | 'dark';
 	scenario?: string;
 	readySelector?: string;
+	settleMs?: number;
+	interactionSteps?: PreviewInteractionStep[];
 	advanceTimeMs?: number;
 	minimumContentCoverage?: MinimumContentCoverage;
 	liveDatasourceUpdate?: {
@@ -68,7 +73,7 @@ interface DynamicTextPolicy {
 }
 
 interface GenerationBriefSummary {
-	briefVersion: 3 | 4;
+	briefVersion: 3 | 4 | 5;
 	surfaceStrategy: {
 		mode: 'fixed' | 'bounded' | 'adaptive';
 	};
@@ -95,16 +100,17 @@ const plannedSurfacePresets: VisualPreset[] = generationBrief.surfaces.map((surf
 	height: surface.height,
 	background: backgroundForSurface(surface),
 	readySelector: previewFixture.readySelector,
+	settleMs: previewFixture.settleMs,
 	minimumContentCoverage: surface.minimumContentCoverage
 }));
 
 const adaptiveStandardPresets: VisualPreset[] = generationBrief.surfaceStrategy.mode === 'adaptive' ? (
 	[
-		{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector },
-		{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector },
-		{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector },
-		{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector },
-		{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector }
+		{ name: 'full-hd', width: 1920, height: 1080, background: 'checker', readySelector: previewFixture.readySelector, settleMs: previewFixture.settleMs },
+		{ name: 'wide-low', width: 1536, height: 432, background: 'light', readySelector: previewFixture.readySelector, settleMs: previewFixture.settleMs },
+		{ name: 'landscape', width: 960, height: 540, background: 'checker', readySelector: previewFixture.readySelector, settleMs: previewFixture.settleMs },
+		{ name: 'portrait', width: 1080, height: 1920, background: 'dark', readySelector: previewFixture.readySelector, settleMs: previewFixture.settleMs },
+		{ name: 'square', width: 600, height: 600, background: 'light', readySelector: previewFixture.readySelector, settleMs: previewFixture.settleMs }
 	] as VisualPreset[]
 ).filter((standard: VisualPreset): boolean => {
 	return !plannedSurfacePresets.some((planned: VisualPreset): boolean => {
@@ -120,6 +126,8 @@ const scenarioPresets: VisualPreset[] = previewScenarios.map((scenario: PreviewS
 	background: scenario.viewport.background ?? 'checker',
 	scenario: scenario.id,
 	readySelector: scenario.fixture.readySelector ?? previewFixture.readySelector,
+	settleMs: scenario.fixture.settleMs ?? previewFixture.settleMs,
+	interactionSteps: scenario.interactionSteps,
 	advanceTimeMs: scenario.advanceTimeMs,
 	minimumContentCoverage: scenario.minimumContentCoverage,
 	liveDatasourceUpdate: scenario.liveDatasourceUpdate
@@ -248,8 +256,18 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			);
 		});
 
+		for (const step of preset.interactionSteps ?? []) {
+			if (step.type === 'click') {
+				await page.getByRole(step.role, { name: step.name }).click();
+			} else {
+				await page.getByLabel(step.label).fill(step.value);
+			}
+		}
+
 		if (preset.advanceTimeMs) {
 			await page.waitForTimeout(preset.advanceTimeMs);
+		} else if (preset.settleMs || preset.interactionSteps?.length) {
+			await page.waitForTimeout(preset.settleMs ?? DEFAULT_VISUAL_SETTLE_MS);
 		}
 
 		if (preset.liveDatasourceUpdate) {

@@ -82,6 +82,45 @@ const createValidBrief = (): GenerationBrief => ({
 	}
 });
 
+const createValidV5Brief = (): GenerationBrief => {
+	const brief = createValidBrief();
+
+	brief.briefVersion = 5;
+	brief.ownership = [{
+		id: 'composition',
+		area: 'presentation',
+		owner: 'locked',
+		targets: ['composition'],
+		rationale: 'The generated composition is code-owned until a deliberate rebuild.'
+	}];
+	brief.experience = {
+		mode: 'passive',
+		views: [{ id: 'main', purpose: 'Present the primary signage surface.' }],
+		inputs: [],
+		session: { reset: 'none', expectation: 'The passive surface remains on its current view.' }
+	};
+	brief.outputs = [];
+	brief.rendering = {
+		mode: 'reflow',
+		letterbox: 'transparent',
+		rationale: 'The adaptive surface rearranges content across declared aspect ratios.'
+	};
+	brief.motion = {
+		default: 'off',
+		techniques: [],
+		rationale: 'The validation fixture does not require movement.'
+	};
+	brief.media = [];
+	brief.branding = {
+		source: 'none',
+		editable: false,
+		provenance: 'No customer branding was supplied.',
+		fallback: 'Use the generated neutral visual system.'
+	};
+
+	return brief;
+};
+
 const cloneBrief = (brief: GenerationBrief): GenerationBrief => {
 	return JSON.parse(JSON.stringify(brief)) as GenerationBrief;
 };
@@ -142,6 +181,92 @@ void describe('standalone generation brief validation', () => {
 		delete brief.presentation;
 
 		assert.throws(() => validateStandaloneBrief(brief), /presentation/);
+	});
+
+	void it('accepts a complete v5 ownership and runtime contract', () => {
+		const brief = createValidV5Brief();
+
+		assert.deepEqual(validateStandaloneBrief(brief), brief);
+	});
+
+	void it('requires all v5 contract sections', () => {
+		const brief = createValidV5Brief();
+		delete brief.ownership;
+
+		assert.throws(() => validateStandaloneBrief(brief), /ownership/);
+	});
+
+	void it('requires interactive experiences to declare an input and timeout duration', () => {
+		const brief = createValidV5Brief();
+		brief.experience = {
+			mode: 'interactive',
+			views: [{ id: 'main', purpose: 'Interactive view.' }],
+			inputs: [],
+			session: { reset: 'timeout', expectation: 'Return to the start after inactivity.' }
+		};
+
+		assert.throws(() => validateStandaloneBrief(brief), /at least one input/);
+
+		brief.experience.inputs.push({ id: 'touch', type: 'touch', action: 'Advance the flow.' });
+		assert.throws(() => validateStandaloneBrief(brief), /timeoutSeconds/);
+	});
+
+	void it('requires fixed-canvas rendering to declare its design size', () => {
+		const brief = createValidV5Brief();
+		brief.rendering = {
+			mode: 'fixed-canvas',
+			letterbox: 'transparent',
+			rationale: 'Preserve an exact reference composition.'
+		};
+
+		assert.throws(() => validateStandaloneBrief(brief), /designWidth and designHeight/);
+	});
+
+	void it('requires settings and bindings to have matching ownership', () => {
+		const brief = createValidV5Brief();
+		brief.settings.push({ property: 'title', purpose: 'Editable title.' });
+
+		assert.throws(() => validateStandaloneBrief(brief), /setting ownership/);
+
+		brief.ownership?.push({
+			id: 'title-setting',
+			area: 'content',
+			owner: 'setting',
+			targets: ['title'],
+			rationale: 'Operators may edit the title without rebuilding the app.'
+		});
+		assert.doesNotThrow(() => validateStandaloneBrief(brief));
+	});
+
+	void it('requires write-enabled bindings to declare safe internal datasource output', () => {
+		const brief = createValidV5Brief();
+		brief.data = {
+			mode: 'bound',
+			bindings: [{ property: 'resultsData', source: 'generated', contract: 'TABLE', access: 'write' }]
+		};
+		brief.ownership?.push({
+			id: 'results-data',
+			area: 'state',
+			owner: 'datasource',
+			targets: ['resultsData'],
+			rationale: 'Completed sessions are customer-owned operational data.'
+		});
+
+		assert.throws(() => validateStandaloneBrief(brief), /must have an internal datasource output/);
+
+		brief.outputs = [{
+			id: 'append-result',
+			channel: 'internal-datasource',
+			target: 'resultsData',
+			operation: 'insert-to-array',
+			editorPolicy: 'preview-mock',
+			expectation: 'Append one completed session.',
+			failure: 'Keep the summary visible and allow retry.'
+		}];
+		assert.throws(() => validateStandaloneBrief(brief), /disabled in the Wallboard editor/);
+
+		brief.outputs[0].editorPolicy = 'disabled';
+		assert.doesNotThrow(() => validateStandaloneBrief(brief));
 	});
 
 	void it('uses creative-led instead of agent-authored in v4 briefs', () => {

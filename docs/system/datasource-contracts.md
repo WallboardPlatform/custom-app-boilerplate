@@ -52,7 +52,7 @@ Use `bindings[]` when one app intentionally consumes independently configured so
 Rules:
 
 - Declare every `dataPicker` exactly once. A missing or duplicate binding fails validation.
-- Keep one shared, sanitized `sample-datasource.json`; `samplePath` selects each source's representative value. Multi-binding deliveries retain this combined file and also generate one exact payload per binding, named `sample-datasource-<property>.json` beside the delivery and `editor-assets/datasource-template-<property>.json` inside the upload ZIP.
+- Give independent sources separate, clearly named sample files. A shared sanitized bundle remains supported when bindings intentionally use one payload; `samplePath` selects each representative value. Multi-binding deliveries generate one exact payload per binding, named `sample-datasource-<property>.json` beside the delivery and `editor-assets/datasource-template-<property>.json` inside the upload ZIP.
 - Declare top-level `"sampleDataClassification": "synthetic"`. Validation rejects missing classification, Wallboard environment URLs, production-shaped IDs, non-reserved email/URL hosts, and non-sentinel credentials.
 - Use `EXISTING` only for a supplied and inspected runtime shape. Normalize provider differences at one typed application boundary.
 - Preserve independent bindings when sources have different ownership, refresh cadence, credentials, or structure.
@@ -99,7 +99,7 @@ A custom-schema example or deliverable includes:
 |------|---------|
 | `generation-brief.json` | Accepted request and evidence contract; its datasource bindings must match this contract and `properties.json`. |
 | `datasource-contract.json` | Generator metadata: one binding or `bindings[]`, source contracts, columns, accepted runtime shapes, and empty-state behavior. Not uploaded to Wallboard. |
-| `sample-datasource.json` | Importable native data for generated sources, or a sanitized representative bundle for existing bindings. |
+| `sample-<source>-datasource.json` | Importable native data for each generated source, or a sanitized representative payload. A single binding may keep the shorter `sample-datasource.json` name. |
 | `preview/fixture.ts` | Uses the same sample contract and adds boundary scenarios. |
 | App zip | Contains the contract and template under `editor-assets/`, but no datasource ID. |
 | `delivery-manifest.json` | Connects app identity, zip, binding property, sidecars, and quick-edit eligibility. |
@@ -111,7 +111,7 @@ For `TABLE`, accept only documented wrappers at the application boundary: native
 Uploading the app zip does not yet create or select a datasource. A data-bound delivery includes:
 
 1. App zip for a Wallboard super administrator to upload, enable, and assign as described in `widget-best-practices.md`.
-2. `sample-datasource.json` for creating or importing the internal datasource through the available Wallboard UI or API.
+2. One clearly named sample file per datasource for creation or import through the available Wallboard UI or API.
 3. The binding property name or names from `datasource-contract.json` so the installed app can be connected to every datasource.
 4. A live-edit check: change one datasource row and confirm that the placed app updates without rebuilding or changing its app version.
 

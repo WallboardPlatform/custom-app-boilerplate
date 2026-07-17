@@ -1,0 +1,75 @@
+{
+	"version": "1",
+	"name": "Factory Safety Questionnaire",
+	"interactive": true,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Safety questions datasource",
+			"type": "dataPicker",
+			"property": "questionData",
+			"dataPickerType": "any",
+			"tooltip": "Bind the Questions table. Leave unbound to preview the fictional sample questions."
+		},
+		{
+			"label": "Results datasource",
+			"type": "dataPicker",
+			"property": "resultsData",
+			"dataPickerType": "any",
+			"tooltip": "Bind the separate Results table. Completed sessions append to Results.rows only in the displayer."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Plant name", "type": "text", "property": "plantName", "default": "Northline Mobility" },
+				{ "label": "Welcome title", "type": "text", "property": "welcomeTitle", "default": "Ready for your safety check?" },
+				{ "label": "Introduction", "type": "text", "property": "introText", "default": "Three quick questions help keep every production zone safe." },
+				{ "label": "Identity prompt", "type": "text", "property": "identityPrompt", "default": "Enter your name and corporate ID to begin." },
+				{ "label": "Completion reset seconds", "type": "number", "property": "completionResetSeconds", "default": 10, "min": 3, "max": 120, "step": 1 },
+				{ "label": "Inactivity reset seconds", "type": "number", "property": "inactivityResetSeconds", "default": 120, "min": 30, "max": 900, "step": 5 }
+			]
+		},
+		{
+			"label": "Experience",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Motion", "type": "select", "property": "motionPreset", "default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" },
+						{ "label": "Expressive", "value": "expressive" }
+					]
+				},
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#071313" },
+						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#102322" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f7f2e8" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#a9bfba" },
+						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#e64b38" }
+					],
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": [
+		{ "label": "Reset questionnaire", "command": "resetSession" }
+	]
+}

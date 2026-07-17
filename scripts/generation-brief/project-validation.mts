@@ -237,7 +237,7 @@ export const validateBriefAgainstProject = async (
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
 	const propertySummary = collectProperties(context, properties.properties);
 
-	if (brief.briefVersion === 4) {
+	if (brief.briefVersion >= 4) {
 		validateStyleIsolation(context.applicationDirectory);
 	}
 
@@ -304,7 +304,7 @@ export const validateBriefAgainstProject = async (
 		fail(context, `settings must exactly match editor properties. Brief: ${formatSet(plannedSettings)}; properties: ${formatSet(propertySummary.settings)}.`);
 	}
 
-	if (brief.briefVersion === 4 && (brief.presentation?.themes.length ?? 0) > 1 && !plannedSettings.has('themePreset')) {
+	if (brief.briefVersion >= 4 && (brief.presentation?.themes.length ?? 0) > 1 && !plannedSettings.has('themePreset')) {
 		fail(context, 'multiple presentation themes require a \'themePreset\' editor property.');
 	}
 
