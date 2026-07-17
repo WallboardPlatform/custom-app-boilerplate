@@ -102,59 +102,12 @@
 						}
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"visibilityConditions": {
-						"conditions": [
-							{
-								"id": "#theme-custom",
-								"type": "EQUALS",
-								"value": "custom",
-								"dependsOn": "themePreset"
-							}
-						],
-						"rule": "#theme-custom"
-					},
-					"properties": [
-						{
-							"label": "Ground",
-							"type": "color",
-							"property": "backgroundColor",
-							"default": "#eeeae2"
-						},
-						{
-							"label": "Title field",
-							"type": "color",
-							"property": "primaryColor",
-							"default": "#ed3f2f"
-						},
-						{
-							"label": "Welcome field",
-							"type": "color",
-							"property": "secondaryColor",
-							"default": "#185bd8"
-						},
-						{
-							"label": "Information field",
-							"type": "color",
-							"property": "accentColor",
-							"default": "#f3c625"
-						},
-						{
-							"label": "Dark ink",
-							"type": "color",
-							"property": "textColor",
-							"default": "#111111"
-						},
-						{
-							"label": "Light ink",
-							"type": "color",
-							"property": "inverseTextColor",
-							"default": "#eeeae2"
-						}
-					]
-				}
+				{ "label": "Ground", "type": "color", "property": "backgroundColor", "default": "#eeeae2", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Title field", "type": "color", "property": "primaryColor", "default": "#ed3f2f", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Welcome field", "type": "color", "property": "secondaryColor", "default": "#185bd8", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Information field", "type": "color", "property": "accentColor", "default": "#f3c625", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Dark ink", "type": "color", "property": "textColor", "default": "#111111", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Light ink", "type": "color", "property": "inverseTextColor", "default": "#eeeae2", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} }
 			]
 		}
 	],

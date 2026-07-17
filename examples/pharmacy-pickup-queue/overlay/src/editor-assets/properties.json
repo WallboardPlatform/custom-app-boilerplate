@@ -48,25 +48,13 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e9f1ed" },
-						{ "label": "Called ticket background", "type": "color", "property": "heroBackgroundColor", "default": "#07594b" },
-						{ "label": "Next queue surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
-						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#17372f" },
-						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#52675f" },
-						{ "label": "Waiting accent", "type": "color", "property": "accentColor", "default": "#8a5a00" },
-						{ "label": "Hold and unknown accent", "type": "color", "property": "alertColor", "default": "#b34332" }
-					],
-					"visibilityConditions": {
-						"conditions": [
-							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
-						],
-						"rule": "#1"
-					}
-				}
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e9f1ed", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Called ticket background", "type": "color", "property": "heroBackgroundColor", "default": "#07594b", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Next queue surface", "type": "color", "property": "surfaceColor", "default": "#ffffff", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#17372f", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#52675f", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Waiting accent", "type": "color", "property": "accentColor", "default": "#8a5a00", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Hold and unknown accent", "type": "color", "property": "alertColor", "default": "#b34332", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} }
 			]
 		}
 	],

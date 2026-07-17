@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
@@ -7,6 +7,8 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { AgentStatusRow, AgentTone, StatusSummary } from '@interfaces/agent-status.interface';
+
+import { createRotationController } from '@utils/rotation';
 
 import style from '@components/wb-app/wb-app.module.scss';
 
@@ -156,6 +158,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setPageIndex(index);
+	});
 	const hasBoundDatasource: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'agentData');
 	});
@@ -165,6 +170,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		return normalizeRows(extractRows(value));
 	});
 	const pages: Accessor<AgentStatusRow[][]> = createMemo((): AgentStatusRow[][] => chunkRows(agents()));
+	const pageKeys: Accessor<string[]> = createMemo((): string[] => pages().map((page: AgentStatusRow[], index: number): string => {
+		return page[0]?.name ?? `page-${index}`;
+	}));
 	const pageCount: Accessor<number> = createMemo((): number => Math.max(pages().length, 1));
 	const currentAgents: Accessor<AgentStatusRow[]> = createMemo((): AgentStatusRow[] => {
 		return pages()[pageIndex() % pageCount()] ?? [];
@@ -213,27 +221,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	}));
 
 	createEffect((): void => {
-		const count: number = pageCount();
+		const keys: string[] = pageKeys();
 
-		if (pageIndex() >= count) {
-			setPageIndex(0);
-		}
+		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
 
-	createEffect((): void => {
-		const count: number = pageCount();
-		const duration: number = settings().pageDurationSeconds;
-
-		if (count <= 1) {
-			return;
-		}
-
-		const intervalId: number = window.setInterval((): void => {
-			setPageIndex((current: number): number => (current + 1) % count);
-		}, duration * 1000);
-
-		onCleanup((): void => window.clearInterval(intervalId));
-	});
+	onCleanup((): void => rotation.destroy());
 
 	return (
 		<div

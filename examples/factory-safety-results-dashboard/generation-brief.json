@@ -1,5 +1,5 @@
 {
-	"briefVersion": 5,
+	"briefVersion": 6,
 	"request": {
 		"summary": "Create a read-only factory safety results dashboard paired with the Factory Safety Questionnaire and driven by its Results table.",
 		"audience": "Safety leads and shift supervisors monitoring completion and pass performance on a shared landscape display.",
@@ -79,7 +79,17 @@
 		"provenance": "The example uses only the fictional Northline Mobility label and generated semantic colors.",
 		"fallback": "Use the coordinated Dark preset when no customer branding direction is supplied."
 	},
-	"presentation": { "themes": ["dark", "light", "custom"], "density": "dense" },
+	"presentation": {
+		"themes": ["dark", "light", "custom"],
+		"density": "dense",
+		"viewingDistance": "room",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-safety-dashboard-title", ".metrics article > strong", ".score-summary > strong", ".empty-state h2"] },
+			{ "role": "secondary", "selectors": [".wb-safety-dashboard-participant-name", ".section-heading h2", ".empty-state span"] },
+			{ "role": "metadata", "selectors": [".heading p", ".live-status span", ".metrics article > span", ".metrics article > small", ".table-header", ".participant small", ".table-row time", ".status", ".score-summary > span", ".band > div:first-child span", ".band > small", ".insights > footer", ".empty-state p"] }
+		]
+	},
+	"cadence": { "mode": "static" },
 	"settings": [
 		{ "property": "plantName", "purpose": "Public plant or company label." },
 		{ "property": "title", "purpose": "Primary dashboard heading." },
@@ -101,20 +111,22 @@
 	"dynamicText": [
 		{
 			"id": "dashboard-title",
+			"role": "primary",
 			"source": { "type": "setting", "properties": ["title"] },
 			"selectors": [".wb-safety-dashboard-title"],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 27, "maximumLines": 1 },
+			"limits": { "minimumFontSize": 28, "maximumLines": 1 },
 			"fallback": "Reduce to the declared readable minimum and preserve the complete title.",
 			"rationale": "The primary operator-authored title must remain intact in both supported landscapes.",
 			"evidenceScenario": "long-title"
 		},
 		{
 			"id": "participant-names",
+			"role": "secondary",
 			"source": { "type": "datasource", "properties": ["resultsData"] },
 			"selectors": [".wb-safety-dashboard-participant-name"],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
 			"fallback": "Ellipsize only the participant-name tail while preserving score, status, and timestamp columns.",
 			"rationale": "Recent submissions remain aligned and scannable when identity labels vary.",
 			"evidenceScenario": "corporate-ids"

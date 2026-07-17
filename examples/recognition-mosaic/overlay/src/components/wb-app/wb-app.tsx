@@ -5,7 +5,8 @@ import {
 	For,
 	onCleanup,
 	onMount,
-	Show
+	Show,
+	untrack
 } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
@@ -15,6 +16,8 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Recognition } from '@interfaces/recognition.interface';
+
+import { createRotationController } from '@utils/rotation';
 
 import { pageAt, paginate } from '@utils/pagination';
 import {
@@ -66,6 +69,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const [layoutMode, setLayoutMode] = createSignal<LayoutMode>('landscape');
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setPageIndex(index);
+	});
 	const fitStudioName = useAutoFitText({
 		minFontSize: 14,
 		maxFontSize: 28,
@@ -94,6 +100,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const pages: Accessor<Recognition[][]> = createMemo((): Recognition[][] => {
 		return paginate(recognitions(), pageCapacity(), { balancePages: true });
 	});
+	const pageKeys: Accessor<string[]> = createMemo((): string[] => pages().map((page: Recognition[], index: number): string => {
+		return page[0]?.id ?? `page-${index}`;
+	}));
 	const pageCount: Accessor<number> = createMemo((): number => Math.max(1, pages().length));
 	const currentRecognitions: Accessor<Recognition[]> = createMemo((): Recognition[] => {
 		return pageAt(pages(), pageIndex());
@@ -144,28 +153,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const count: number = pageCount();
+		const keys: string[] = pageKeys();
 
-		if (pageIndex() >= count) {
-			setPageIndex(Math.max(0, count - 1));
-		}
+		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
 
-	createEffect((): void => {
-		const count: number = pageCount();
-		const durationMilliseconds: number = settings().pageDurationSeconds * 1000;
-
-		if (count <= 1) {
-			return;
-		}
-
-		const intervalId: number = window.setInterval((): void => {
-			setPageIndex((currentIndex: number): number => (currentIndex + 1) % count);
-		}, durationMilliseconds);
-
-		onCleanup((): void => window.clearInterval(intervalId));
-	});
-
+	onCleanup((): void => rotation.destroy());
 	onCleanup((): void => resizeObserver?.disconnect());
 
 	return (

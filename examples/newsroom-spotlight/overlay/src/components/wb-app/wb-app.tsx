@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
@@ -6,6 +6,8 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { FeedSource, FeedStory } from '@interfaces/feed.interface';
+
+import { createRotationController } from '@utils/rotation';
 
 import style from '@components/wb-app/wb-app.module.scss';
 
@@ -227,8 +229,14 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const [activeIndex, setActiveIndex] = createSignal(0);
 	const [imageFailed, setImageFailed] = createSignal(false);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setActiveIndex(index);
+	});
 	const feed: Accessor<FeedModel> = createMemo((): FeedModel => {
 		return normalizeFeed(dataSources().feedData?.value, settings().maxStories);
+	});
+	const storyKeys: Accessor<string[]> = createMemo((): string[] => {
+		return feed().stories.map((story: FeedStory): string => story.id);
 	});
 	const featured: Accessor<FeedStory | undefined> = createMemo((): FeedStory | undefined => {
 		const stories: FeedStory[] = feed().stories;
@@ -258,22 +266,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const count: number = feed().stories.length;
-		const intervalSeconds: number = settings().rotationSeconds;
+		const keys: string[] = storyKeys();
 
-		if (count <= 1) {
-			setActiveIndex(0);
-
-			return;
-		}
-
-		setActiveIndex((current: number): number => current % count);
-		const timer: number = window.setInterval((): void => {
-			setActiveIndex((current: number): number => (current + 1) % count);
-		}, intervalSeconds * 1000);
-
-		onCleanup((): void => window.clearInterval(timer));
+		rotation.sync(keys, untrack((): string | undefined => keys[activeIndex()]), settings().rotationSeconds * 1000);
 	});
+
+	onCleanup((): void => rotation.destroy());
 
 	return (
 		<section

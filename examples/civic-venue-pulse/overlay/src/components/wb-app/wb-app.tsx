@@ -8,6 +8,7 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { CalendarModel, FeedModel, VenueAnnouncement, VenueProgram } from '@interfaces/venue-pulse.interface';
 
+import { createRotationController } from '@utils/rotation';
 import { normalizeCalendar, normalizeFeed } from '@utils/venue-pulse';
 
 import style from '@components/wb-app/wb-app.module.scss';
@@ -100,6 +101,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [now, setNow] = createSignal<Date>(new Date());
 	const [programIndex, setProgramIndex] = createSignal(0);
 	const [imageFailed, setImageFailed] = createSignal(false);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setProgramIndex(index);
+	});
 	const fitProgramTitle = useAutoFitText({
 		minFontSize: 26,
 		maxFontSize: 82,
@@ -113,6 +117,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 	const candidates: Accessor<FeaturedProgram[]> = createMemo((): FeaturedProgram[] => {
 		return programCandidates(calendar().programs, now().getTime());
+	});
+	const programKeys: Accessor<string[]> = createMemo((): string[] => {
+		return candidates().map((item: FeaturedProgram): string => item.program.id);
 	});
 	const featuredProgram: Accessor<FeaturedProgram | undefined> = createMemo((): FeaturedProgram | undefined => {
 		const items: FeaturedProgram[] = candidates();
@@ -132,35 +139,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	}));
 
 	createEffect((): void => {
-		const items: FeaturedProgram[] = candidates();
-		const currentId: string | undefined = untrack((): string | undefined => featuredProgram()?.program.id);
+		const keys: string[] = programKeys();
 
-		if (items.length === 0) {
-			setProgramIndex(0);
-
-			return;
-		}
-
-		const retainedIndex: number = currentId
-			? items.findIndex((item: FeaturedProgram): boolean => item.program.id === currentId)
-			: -1;
-
-		setProgramIndex(retainedIndex >= 0 ? retainedIndex : 0);
+		rotation.sync(keys, untrack((): string | undefined => keys[programIndex()]), settings().programRotationSeconds * 1000);
 	});
 
-	createEffect((): void => {
-		const count: number = candidates().length;
-
-		if (count <= 1) {
-			return;
-		}
-
-		const timer: number = window.setInterval((): void => {
-			setProgramIndex((current: number): number => (current + 1) % count);
-		}, settings().programRotationSeconds * 1000);
-
-		onCleanup((): void => window.clearInterval(timer));
-	});
+	onCleanup((): void => rotation.destroy());
 
 	createEffect((): void => {
 		setImageFailed(Boolean(announcement()?.id) && false);

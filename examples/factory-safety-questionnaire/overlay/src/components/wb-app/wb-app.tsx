@@ -309,7 +309,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			</aside>
 
 			<section class={style['experience']}>
-				<header class={style['topbar']}>
+				<header class={`${style['topbar']} wb-factory-safety-metadata`}>
 					<span>WORKPLACE SAFETY</span>
 					<Show when={view() !== 'start'}>
 						<button class={style['reset-button']} type="button" onClick={reset}>Reset</button>
@@ -324,9 +324,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<Show when={view() === 'start'}>
 						<div class={`${style['view']} ${style['start-view']}`}>
 							<div class={style['step-number']} data-step-number="true">01</div>
-							<p class={style['eyebrow']}>ONE-SHOT SAFETY CHECK</p>
+							<p class={`${style['eyebrow']} wb-factory-safety-metadata`}>ONE-SHOT SAFETY CHECK</p>
 							<h1 ref={fitWelcomeTitle} class="wb-factory-safety-welcome-title">{settings().welcomeTitle}</h1>
-							<p class={style['lead']}>{settings().introText}</p>
+							<p class={`${style['lead']} wb-factory-safety-secondary`}>{settings().introText}</p>
 							<Show
 								when={questions().length > 0}
 								fallback={<div class={style['empty-state']}>No active safety questions are available.</div>}
@@ -350,9 +350,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							}}
 						>
 							<div class={style['step-number']} data-step-number="true">02</div>
-							<p class={style['eyebrow']}>IDENTITY</p>
-							<h1>Before we begin</h1>
-							<p class={style['lead']}>{settings().identityPrompt}</p>
+							<p class={`${style['eyebrow']} wb-factory-safety-metadata`}>IDENTITY</p>
+							<h1 class="wb-factory-safety-identity-title">Before we begin</h1>
+							<p class={`${style['lead']} wb-factory-safety-secondary`}>{settings().identityPrompt}</p>
 							<div class={style['field-row']}>
 								<label>
 									<span>Full name</span>
@@ -370,7 +370,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<Show when={view() === 'question' && currentQuestion()} keyed>
 						{(question: SafetyQuestion): JSX.Element => (
 							<div class={`${style['view']} ${style['question-view']}`}>
-								<div class={style['question-meta']}>
+								<div class={`${style['question-meta']} wb-factory-safety-metadata`}>
 									<span>QUESTION {questionIndex() + 1} / {questions().length}</span>
 									<strong>{Math.round(((questionIndex() + 1) / questions().length) * 100)}%</strong>
 								</div>
@@ -408,12 +408,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<div class={`${style['view']} ${style['summary-view']}`}>
 							<div class={style['score-block']}>
 								<span>YOUR SCORE</span>
-								<strong>{score()}<small>/{questions().length}</small></strong>
+								<strong class="wb-factory-safety-score">{score()}<small>/{questions().length}</small></strong>
 							</div>
 							<div class={style['summary-copy']}>
-								<p class={style['eyebrow']}>CHECK COMPLETE</p>
-								<h1>{score() === questions().length ? 'All clear.' : 'Review before entry.'}</h1>
-								<p class={style['lead']}>{participantName()}, your answers are ready to submit to the safety record.</p>
+								<p class={`${style['eyebrow']} wb-factory-safety-metadata`}>CHECK COMPLETE</p>
+								<h1 class="wb-factory-safety-summary-title">{score() === questions().length ? 'All clear.' : 'Review before entry.'}</h1>
+								<p class={`${style['lead']} wb-factory-safety-secondary`}>{participantName()}, your answers are ready to submit to the safety record.</p>
 								<div class={style['answer-strip']}>
 									<For each={answers()}>{(answer, index): JSX.Element => <span data-correct={answer.correct}>Q{index() + 1}</span>}</For>
 								</div>
@@ -425,9 +425,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<Show when={view() === 'complete'}>
 						<div class={`${style['view']} ${style['complete-view']}`} data-submit-status={submissionStatus()}>
 							<div class={style['completion-mark']} aria-hidden="true">{submissionStatus() === 'failed' ? '!' : submissionStatus() === 'preview' ? 'i' : 'OK'}</div>
-							<p class={style['eyebrow']}>{submissionStatus() === 'failed' ? 'RESULT NOT SAVED' : submissionStatus() === 'preview' ? 'PREVIEW COMPLETE' : 'SAFETY CHECK RECORDED'}</p>
-							<h1>{submissionStatus() === 'failed' ? 'Please try again.' : submissionStatus() === 'preview' ? 'Ready for the displayer.' : 'Thank you. Stay alert.'}</h1>
-							<p class={style['lead']}>
+							<p class={`${style['eyebrow']} wb-factory-safety-metadata`}>{submissionStatus() === 'failed' ? 'RESULT NOT SAVED' : submissionStatus() === 'preview' ? 'PREVIEW COMPLETE' : 'SAFETY CHECK RECORDED'}</p>
+							<h1 class="wb-factory-safety-complete-title">{submissionStatus() === 'failed' ? 'Please try again.' : submissionStatus() === 'preview' ? 'Ready for the displayer.' : 'Thank you. Stay alert.'}</h1>
+							<p class={`${style['lead']} wb-factory-safety-secondary`}>
 								{submissionError() || (submissionStatus() === 'preview'
 									? 'Results are saved only when this app runs in the displayer.'
 									: `This station will reset in ${settings().completionResetSeconds} seconds.`)}

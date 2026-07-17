@@ -1,0 +1,38 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "destinationData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "Destinations",
+		"sampleData": "sample-destinations-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Veszprem Downtown Wayfinding Destinations",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "id", "type": "string", "required": true },
+		{ "name": "name", "type": "string", "required": true },
+		{ "name": "englishName", "type": "string", "required": false },
+		{ "name": "category", "type": "string", "required": true },
+		{ "name": "description", "type": "string", "required": false },
+		{ "name": "accessible", "type": "boolean", "required": false },
+		{ "name": "routeable", "type": "boolean", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing Destinations",
+		"selected Destinations table object",
+		"processed Destinations row array"
+	],
+	"behavior": {
+		"unbound": "render bundled representative destination metadata keyed to the supplied SVG",
+		"boundEmpty": "render the configured empty state without restoring bundled rows",
+		"invalidRows": "skip rows whose id or name is missing",
+		"ordering": "sort by category and destination name while preserving the SVG id as the routing key",
+		"routeable": "false marks destinations shown on the reference map but outside its walking-route graph"
+	}
+}

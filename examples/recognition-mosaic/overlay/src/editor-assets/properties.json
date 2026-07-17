@@ -74,25 +74,13 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"visibilityConditions": {
-						"conditions": [
-							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
-						],
-						"rule": "#1"
-					},
-					"properties": [
-						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f4f0e8" },
-						{ "label": "Paper surface", "type": "color", "property": "surfaceColor", "default": "#fffaf2" },
-						{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#18362f" },
-						{ "label": "Supporting text", "type": "color", "property": "mutedTextColor", "default": "#5e6c66" },
-						{ "label": "Coral accent", "type": "color", "property": "accentColor", "default": "#e95545" },
-						{ "label": "Warm highlight", "type": "color", "property": "highlightColor", "default": "#f5c84c" },
-						{ "label": "Cool accent", "type": "color", "property": "coolColor", "default": "#2775bd" }
-					]
-				}
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f4f0e8", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Paper surface", "type": "color", "property": "surfaceColor", "default": "#fffaf2", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#18362f", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Supporting text", "type": "color", "property": "mutedTextColor", "default": "#5e6c66", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Coral accent", "type": "color", "property": "accentColor", "default": "#e95545", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Warm highlight", "type": "color", "property": "highlightColor", "default": "#f5c84c", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Cool accent", "type": "color", "property": "coolColor", "default": "#2775bd", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} }
 			]
 		}
 	],

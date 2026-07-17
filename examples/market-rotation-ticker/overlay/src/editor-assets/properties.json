@@ -105,19 +105,9 @@
 			"properties": [
 				{ "label": "Up arrow image", "type": "file", "property": "upIconFile", "tooltip": "Optional replacement for the built-in up triangle." },
 				{ "label": "Down arrow image", "type": "file", "property": "downIconFile", "tooltip": "Optional replacement for the built-in down triangle." },
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Up color", "type": "color", "property": "upColor", "default": "#4fe34f" },
-						{ "label": "Down color", "type": "color", "property": "downColor", "default": "#ff2435" },
-						{ "label": "Fallback logo background", "type": "color", "property": "fallbackIconBackground", "default": "#20252b" }
-					],
-					"visibilityConditions": {
-						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
-						"rule": "#1"
-					}
-				}
+				{ "label": "Up color", "type": "color", "property": "upColor", "default": "#4fe34f", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Down color", "type": "color", "property": "downColor", "default": "#ff2435", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Fallback logo background", "type": "color", "property": "fallbackIconBackground", "default": "#20252b", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} }
 			]
 		},
 		{
@@ -132,18 +122,8 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000" },
-						{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d" }
-					],
-					"visibilityConditions": {
-						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
-						"rule": "#1"
-					}
-				},
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#000000", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Exchange title color", "type": "color", "property": "exchangeTitleColor", "default": "#ff1f2d", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No valid market data is available." }
 			]
 		}

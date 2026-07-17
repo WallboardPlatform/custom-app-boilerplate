@@ -8,7 +8,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `5` for new briefs; v3/v4 remain accepted for existing examples and packages |
+| `briefVersion` | `6` for new briefs; v3-v5 remain accepted for maintained apps |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
@@ -22,9 +22,10 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `motion` | `off`/`subtle`/`expressive`, techniques, and optional disable setting |
 | `media` | `none`, or image/video source plus fit policy |
 | `branding` | `none`, `settings`, `reference`, or `mcp-branding-kit` plus inputs |
-| `presentation` | Required themes plus `sparse`, `balanced`, or `dense` information density |
+| `presentation` | Themes, density, viewing distance, and semantic text selectors |
+| `cadence` | `static`, or timed `rotation` using an editor interval setting |
 | `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
-| `dynamicText` | Every important variable-length text surface declares its source, selectors, fit/wrap/ellipsis/marquee strategy, readable limits, fallback, rationale, and a stress scenario |
+| `dynamicText` | Variable text declares its semantic role, source, selectors, strategy, limits, fallback, rationale, and stress scenario |
 | `states` | Exactly one expectation for every named `previewScenario` |
 | `behaviors` | Observable timing, motion, pagination, live-update, or interaction rules with scenario or test-file evidence |
 | `assets` | Packaged, datasource-backed, or setting-provided assets; include icon and placeholder |
@@ -53,6 +54,18 @@ Every important setting-, datasource-, or computed-text surface with unpredictab
 | `marquee` | Continuous ticker content whose movement is part of the requested experience | At least one explicit limit |
 
 `fallback` describes what happens after the primary strategy reaches its readable limit. Auto-fit must not shrink indefinitely; wrapping, pagination, a shorter alternate label, or explicitly accepted ellipsis must take over. `evidenceScenario` must use pathological but realistic content, and every declared selector must render in that scenario. The shared visual suite also verifies auto-fit containment and its minimum font size.
+
+## Legibility And Cadence
+
+V6 `presentation.viewingDistance` selects computed font floors for every visible selector in `textRoles`:
+
+| Distance | Primary | Secondary | Metadata |
+|----------|---------|-----------|----------|
+| `near` | 18px | 14px | 11px |
+| `room` | 28px | 20px | 14px |
+| `distance` | 40px | 28px | 18px |
+
+Map every dynamic-text selector to the same semantic role. If content cannot fit at its floor, reduce density, remove secondary detail, wrap, or paginate; do not shrink further. `cadence.mode=rotation` references one editor duration setting and requires behavior-test evidence. Shared rotation semantics are fixed: no timer for one page, cleanup on destroy, preserve the active key on live updates when it still exists, and continue page progression when visual motion is disabled. Continuous marquees and domain-specific animation engines use `static` cadence and remain app-owned.
 
 ## Visual Direction
 

@@ -17,6 +17,8 @@ Reuse these mechanics without inheriting an example's visual language.
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 
+Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
+
 ## Selection Rules
 
 - Normalize only documented wrappers/paths; do not recursively choose the first array in an unknown object.

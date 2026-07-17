@@ -1,0 +1,216 @@
+{
+	"briefVersion": 6,
+	"request": {
+		"summary": "Create an interactive Veszprem downtown wayfinding kiosk from the supplied structured SVG map and a separate editable destination table.",
+		"audience": "Visitors choosing a downtown landmark on a landscape touch display in Veszprem.",
+		"primaryGoal": "Let a visitor find a named destination, draw a real route through the SVG point graph, and understand approximate distance without rebuilding the app when labels change."
+	},
+	"assumptions": [
+		"The supplied 1341x947 SVG is the authoritative map geometry and contains 35 location shapes, 35 location points, and 625 route points.",
+		"The destination table owns public labels and descriptions; SVG ids remain the stable routing keys.",
+		"Heroes' Gate is the representative kiosk start and can be changed to another valid SVG location id.",
+		"Veszprem Arena and the sports swimming pool appear in the map legend but sit outside the supplied downtown route graph, so they are explicitly marked off-map.",
+		"The package contains public landmark names and synthetic descriptive metadata only; it contains no customer or personal data."
+	],
+	"app": { "mode": "new", "name": "Veszprem Downtown Wayfinding", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The interaction is designed for 16:9 landscape kiosks at 1920x1080 and 1366x768; unsupported narrow and portrait zones should use a dedicated composition."
+	},
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary visitor-centre touch kiosk.", "minimumContentCoverage": { "width": 96, "height": 94 } },
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape lobby touch display.", "minimumContentCoverage": { "width": 96, "height": 94 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "destinationData", "source": "generated", "contract": "TABLE", "access": "read" }
+		]
+	},
+	"ownership": [
+		{
+			"id": "destination-content",
+			"area": "content",
+			"owner": "datasource",
+			"targets": ["destinationData"],
+			"rationale": "Operators quick-edit destination names, categories, descriptions, accessibility, and route availability without changing code."
+		},
+		{
+			"id": "kiosk-settings",
+			"area": "content",
+			"owner": "setting",
+			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "routeResetSeconds", "wayfindingSensitivity", "mapRatio"],
+			"rationale": "The kiosk label, origin, reset timing, and map calibration belong to the installed instance."
+		},
+		{
+			"id": "presentation-settings",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": ["themePreset", "backgroundColor", "panelColor", "primaryTextColor", "secondaryTextColor", "accentColor", "routeColor"],
+			"rationale": "Coordinated presets are safe defaults while Custom exposes one flat semantic palette compatible with the editor."
+		},
+		{
+			"id": "visitor-session",
+			"area": "state",
+			"owner": "interaction",
+			"targets": ["search-query", "category-filter", "selected-destination", "active-route"],
+			"rationale": "Search and route selection exist only for the current visitor session."
+		},
+		{
+			"id": "routing-rules",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["svg-point-extraction", "dijkstra-shortest-path", "route-rendering", "off-map-state"],
+			"rationale": "Graph construction and route semantics follow the proven Wallboard map implementation and are not operator-authored content."
+		}
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "directory", "purpose": "Search or browse landmarks while the complete reference map remains visible." },
+			{ "id": "route", "purpose": "Show the selected landmark, route line, approximate distance, walking time, and off-map state." }
+		],
+		"inputs": [
+			{ "id": "touch-destination", "type": "touch", "action": "Select a destination from the directory or directly from its map shape." },
+			{ "id": "keyboard-search", "type": "keyboard", "action": "Filter destination names and categories." }
+		],
+		"session": {
+			"reset": "timeout",
+			"timeoutSeconds": 45,
+			"expectation": "An active route clears after the configured timeout; Clear route returns immediately to the complete destination list."
+		}
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "background",
+		"rationale": "The map and directory preserve their landscape split while header, panel, and list density reallocate between the two bounded surfaces."
+	},
+	"motion": {
+		"default": "subtle",
+		"techniques": ["progress"],
+		"rationale": "Only the route stroke reveals progressively; directory and map remain stable for orientation."
+	},
+	"media": [
+		{
+			"id": "veszprem-map",
+			"type": "image",
+			"source": "packaged",
+			"fit": "contain",
+			"fallback": "Keep the destination directory available and show no route if the packaged SVG cannot mount.",
+			"rationale": "The supplied SVG contains both the reference artwork and the location and route geometry required by the experience."
+		}
+	],
+	"branding": {
+		"source": "reference",
+		"editable": false,
+		"provenance": "The Veszprem identity and map artwork come from the user-supplied veszprem-belvaros-wayfinding.svg reference.",
+		"fallback": "Preserve the reference artwork; operators may edit only the shell title and semantic palette."
+	},
+	"presentation": {
+		"themes": ["light", "dark", "custom"],
+		"density": "balanced",
+		"viewingDistance": "near",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-veszprem-wayfinding-title", ".wb-veszprem-wayfinding-selected-name"] },
+			{ "role": "secondary", "selectors": [".wb-veszprem-wayfinding-secondary", ".wb-veszprem-wayfinding-destination-name"] },
+			{ "role": "metadata", "selectors": [".wb-veszprem-wayfinding-metadata"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "title", "purpose": "Primary kiosk title." },
+		{ "property": "subtitle", "purpose": "Short instruction above the destination directory." },
+		{ "property": "startLocationId", "purpose": "SVG and table id used as the kiosk's route origin." },
+		{ "property": "emptyStateText", "purpose": "Message shown for a bound but empty destination table." },
+		{ "property": "routeResetSeconds", "purpose": "Seconds before the selected route clears.", "effect": "route-reset" },
+		{ "property": "wayfindingSensitivity", "purpose": "Maximum SVG distance used to connect neighboring route points.", "effect": "route-sensitivity" },
+		{ "property": "mapRatio", "purpose": "SVG pixels per displayed metre for approximate route detail.", "effect": "map-ratio" },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom shell palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom shell background." },
+		{ "property": "panelColor", "purpose": "Custom header and directory surface." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
+		{ "property": "secondaryTextColor", "purpose": "Custom supporting text." },
+		{ "property": "accentColor", "purpose": "Custom interaction accent." },
+		{ "property": "routeColor", "purpose": "Custom route and destination highlight." }
+	],
+	"dynamicText": [
+		{
+			"id": "kiosk-title",
+			"role": "primary",
+			"source": { "type": "setting", "properties": ["title"] },
+			"selectors": [".wb-veszprem-wayfinding-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"fallback": "Reduce to the near-viewing floor, then preserve one line and ellipsize only the tail.",
+			"rationale": "A custom kiosk title must coexist with identity and current-location context in the bounded header.",
+			"evidenceScenario": "long-title"
+		},
+		{
+			"id": "directory-destination-names",
+			"role": "secondary",
+			"source": { "type": "datasource", "properties": ["destinationData"] },
+			"selectors": [".wb-veszprem-wayfinding-destination-name"],
+			"strategy": "ellipsis",
+			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
+			"fallback": "Keep the leading destination name and English label on separate stable rows; ellipsize only their tails.",
+			"rationale": "A scrollable touch directory needs stable row height while preserving recognizable prefixes.",
+			"evidenceScenario": "long-destination-list"
+		},
+		{
+			"id": "selected-destination-name",
+			"role": "primary",
+			"source": { "type": "datasource", "properties": ["destinationData"] },
+			"selectors": [".wb-veszprem-wayfinding-selected-name"],
+			"strategy": "wrap",
+			"limits": { "minimumFontSize": 18, "maximumLines": 3 },
+			"fallback": "Wrap the selected destination to three lines before reducing description or route-detail density.",
+			"rationale": "The selected landmark is the route view's primary instruction and must remain complete.",
+			"evidenceScenario": "long-destination-selected"
+		}
+	],
+	"states": [
+		{ "scenario": "app-default", "expectation": "The complete supplied map and unbound representative destination table fill the primary kiosk." },
+		{ "scenario": "compact", "expectation": "The dark shell preserves near-viewing text and touch targets around the unchanged reference map." },
+		{ "scenario": "active-route", "expectation": "A connected landmark draws an animated route and displays approximate distance and walking time." },
+		{ "scenario": "external-destination", "expectation": "An off-map venue remains discoverable but never receives an invented route." },
+		{ "scenario": "custom-theme", "expectation": "Every flat custom color control applies to the shell and route semantics." },
+		{ "scenario": "long-title", "expectation": "A long operator title remains bounded beside the reference identity and current location." },
+		{ "scenario": "long-destination-list", "expectation": "Long bilingual destination labels preserve stable touch rows." },
+		{ "scenario": "long-destination-selected", "expectation": "The full selected destination wraps without colliding with route details or actions." },
+		{ "scenario": "empty", "expectation": "A bound empty destination table stays empty and shows the configured state." },
+		{ "scenario": "row-array", "expectation": "Processed TABLE row arrays normalize to the same destination model." },
+		{ "scenario": "live-datasource-update", "expectation": "Quick-edited destination labels update without rebuilding the app." }
+	],
+	"behaviors": [
+		{ "id": "shortest-path", "expectation": "Route and location points build the same proximity graph rule as the production map app and Dijkstra selects the shortest connected path.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "shared-selection", "expectation": "Map-shape taps and directory buttons drive the same selected destination and route rendering.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "off-map-state", "expectation": "Destinations outside the supplied downtown route graph remain labeled as off-map without fabricated geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "route-reset", "expectation": "The configured timeout removes route geometry and restores the complete destination list.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-update", "expectation": "Destination table updates replace visible labels in place.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "veszprem-map-svg", "source": "packaged", "path": "src/assets/veszprem-belvaros-wayfinding.svg", "required": true },
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "Keep the supplied illustrated Veszprem map dominant and add a restrained visitor-centre interaction shell rather than restyling it as a generic dashboard.",
+		"references": ["User-supplied veszprem-belvaros-wayfinding.svg"],
+		"signatureChoices": [
+			"The full bilingual illustrated map remains visible while the right rail acts as a focused touchscreen directory.",
+			"A red route line animates directly through the map's own route points and preserves its warm civic palette."
+		],
+		"avoid": ["Generic KPI cards", "Replacing the supplied map artwork", "Inventing routes to disconnected external venues", "Tiny desktop controls"]
+	},
+	"visualReview": {
+		"intent": "A credible visitor-centre kiosk where the reference map remains the hero and route selection is obvious, readable, and reversible.",
+		"focus": [
+			"Verify the complete SVG remains sharp and uncropped at both bounded surfaces.",
+			"Verify destination rows, selected names, route summaries, and descenders remain readable without overlap.",
+			"Verify map and list taps select the same landmark and route animation never obscures the underlying map.",
+			"Verify Light, Dark, and Custom shells remain coordinated with the fixed reference artwork."
+		]
+	}
+}

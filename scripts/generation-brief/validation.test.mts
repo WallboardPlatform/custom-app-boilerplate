@@ -121,6 +121,25 @@ const createValidV5Brief = (): GenerationBrief => {
 	return brief;
 };
 
+const createValidV6Brief = (): GenerationBrief => {
+	const brief = createValidV5Brief();
+
+	brief.briefVersion = 6;
+	brief.presentation = {
+		themes: ['dark'],
+		density: 'balanced',
+		viewingDistance: 'room',
+		textRoles: [
+			{ role: 'primary', selectors: ['.dynamic-title'] },
+			{ role: 'secondary', selectors: ['.supporting-copy'] }
+		]
+	};
+	brief.dynamicText[0].role = 'primary';
+	brief.cadence = { mode: 'static' };
+
+	return brief;
+};
+
 const cloneBrief = (brief: GenerationBrief): GenerationBrief => {
 	return JSON.parse(JSON.stringify(brief)) as GenerationBrief;
 };
@@ -194,6 +213,49 @@ void describe('standalone generation brief validation', () => {
 		delete brief.ownership;
 
 		assert.throws(() => validateStandaloneBrief(brief), /ownership/);
+	});
+
+	void it('accepts a complete v6 legibility and cadence contract', () => {
+		const brief = createValidV6Brief();
+
+		assert.deepEqual(validateStandaloneBrief(brief), brief);
+	});
+
+	void it('requires v6 dynamic text to use declared semantic roles', () => {
+		const brief = createValidV6Brief();
+		delete brief.dynamicText[0].role;
+
+		assert.throws(() => validateStandaloneBrief(brief), /semantic role/);
+
+		brief.dynamicText[0].role = 'metadata';
+		assert.throws(() => validateStandaloneBrief(brief), /presentation.textRoles 'metadata'/);
+	});
+
+	void it('requires rotation cadence to use an editor interval and behavior evidence', () => {
+		const brief = createValidV6Brief();
+		brief.cadence = { mode: 'rotation' };
+
+		assert.throws(() => validateStandaloneBrief(brief), /intervalProperty/);
+
+		brief.cadence.intervalProperty = 'rotationSeconds';
+		assert.throws(() => validateStandaloneBrief(brief), /editor setting/);
+
+		brief.settings.push({ property: 'rotationSeconds', purpose: 'Page duration.' });
+		brief.ownership?.push({
+			id: 'rotation-setting',
+			area: 'behavior',
+			owner: 'setting',
+			targets: ['rotationSeconds'],
+			rationale: 'Operators control the page duration.'
+		});
+		assert.throws(() => validateStandaloneBrief(brief), /behavior-test evidence/);
+
+		brief.behaviors.push({
+			id: 'rotation',
+			expectation: 'Pages advance and clean up their timer.',
+			evidence: { testFile: 'preview/behavior.spec.ts' }
+		});
+		assert.doesNotThrow(() => validateStandaloneBrief(brief));
 	});
 
 	void it('requires interactive experiences to declare an input and timeout duration', () => {
@@ -418,8 +480,8 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /themePreset/);
 	});
 
-	void it('rejects nested editor property groups for v5 apps', async (testContext) => {
-		const brief = createValidV5Brief();
+	void it('rejects nested editor property groups for every brief version', async (testContext) => {
+		const brief = createValidBrief();
 		const context = createProject(brief);
 		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
 		fs.writeFileSync(
