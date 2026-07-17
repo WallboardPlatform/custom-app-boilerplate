@@ -13,7 +13,11 @@ let validatedReviews = 0;
 fs.rmSync(validationDirectory, { recursive: true, force: true });
 
 try {
-	for (const entry of fs.readdirSync(examplesDirectory, { withFileTypes: true })) {
+	const entries: fs.Dirent[] = fs.existsSync(examplesDirectory)
+		? fs.readdirSync(examplesDirectory, { withFileTypes: true })
+		: [];
+
+	for (const entry of entries) {
 		if (!entry.isDirectory()) continue;
 
 		const projectDirectory: string = path.join(validationDirectory, entry.name);
