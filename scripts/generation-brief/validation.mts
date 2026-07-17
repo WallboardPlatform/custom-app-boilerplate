@@ -71,7 +71,7 @@ export interface GenerationBriefRuntimeOutput {
 }
 
 export interface GenerationBrief {
-	briefVersion: 3 | 4 | 5 | 6;
+	briefVersion: 3 | 4 | 5 | 6 | 7;
 	request: {
 		summary: string;
 		audience: string;
@@ -128,14 +128,28 @@ export interface GenerationBrief {
 	motion?: {
 		default: 'off' | 'subtle' | 'expressive';
 		disableProperty?: string;
+		presetProperty?: string;
+		transition?: 'none' | 'fade' | 'slide' | 'scale' | 'custom';
 		techniques: Array<'fade' | 'slide' | 'scale' | 'progress' | 'chart' | 'custom'>;
 		rationale: string;
 	};
 	media?: Array<{
 		id: string;
 		type: 'image' | 'video';
-		source: 'packaged' | 'datasource' | 'setting' | 'folder';
+		source: 'packaged' | 'datasource' | 'setting' | 'folder' | 'file-system' | 'feed' | 'weather';
 		fit: 'cover' | 'contain' | 'blur-fill' | 'fill';
+		binding?: string;
+		properties?: string[];
+		fields?: string[];
+		lookup?: {
+			recordBinding: string;
+			recordField: string;
+			assetField: string;
+			urlFields: string[];
+			match: 'filename' | 'filename-stem';
+		};
+		cache?: 'bundle' | 'platform' | 'none';
+		preview?: 'packaged' | 'data-uri' | 'platform-mock';
 		fallback: string;
 		rationale: string;
 	}>;
@@ -404,7 +418,7 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 		}
 	}
 
-	if (brief.briefVersion === 6) {
+	if (brief.briefVersion >= 6) {
 		const textRoles = brief.presentation?.textRoles ?? [];
 		const roleNames = requireUnique(id, textRoles.map((policy) => policy.role), 'presentation.textRoles[].role');
 		const selectorsByRole = new Map(textRoles.map((policy) => [policy.role, requireUnique(
@@ -450,6 +464,101 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 			}
 		} else if (cadence.intervalProperty) {
 			fail(id, 'v6 static cadence must not declare intervalProperty.');
+		}
+	}
+
+	if (brief.briefVersion === 7) {
+		const motion = brief.motion!;
+		const media = brief.media ?? [];
+
+		if (motion.disableProperty) {
+			fail(id, 'v7 motion uses presetProperty instead of legacy disableProperty.');
+		}
+
+		if (motion.default === 'off') {
+			if (motion.transition !== 'none') {
+				fail(id, 'v7 motion default off must declare transition none.');
+			}
+		} else {
+			if (!motion.presetProperty) {
+				fail(id, 'v7 enabled motion must declare presetProperty.');
+			}
+
+			if (!brief.settings.some((setting) => setting.property === motion.presetProperty)) {
+				fail(id, `motion presetProperty '${motion.presetProperty}' must reference an editor setting.`);
+			}
+
+			if (!motion.transition || motion.transition === 'none') {
+				fail(id, 'v7 enabled motion must declare an active transition.');
+			}
+
+			if (!brief.behaviors.some((behavior) => 'testFile' in behavior.evidence)) {
+				fail(id, 'v7 enabled motion must have behavior-test evidence.');
+			}
+		}
+
+		for (const policy of media) {
+			if (!policy.cache || !policy.preview) {
+				fail(id, `v7 media '${policy.id}' must declare cache and preview policies.`);
+			}
+
+			if (policy.source === 'folder') {
+				fail(id, `v7 media '${policy.id}' uses file-system instead of legacy folder.`);
+			}
+
+			if (policy.source === 'packaged') {
+				if (policy.cache !== 'bundle' || policy.preview !== 'packaged') {
+					fail(id, `packaged media '${policy.id}' must use bundle cache and packaged preview.`);
+				}
+			} else if (policy.source === 'setting') {
+				if (!(policy.properties?.length) || policy.properties.some((property) => !brief.settings.some((setting) => setting.property === property))) {
+					fail(id, `setting media '${policy.id}' must reference editor properties.`);
+				}
+
+				if (policy.cache !== 'platform' || (policy.preview !== 'data-uri' && policy.preview !== 'platform-mock')) {
+					fail(id, `setting media '${policy.id}' must use platform cache and an offline preview.`);
+				}
+			} else if (policy.source === 'weather') {
+				if (policy.binding) {
+					fail(id, `weather media '${policy.id}' must use the platform weather service, not a datasource binding.`);
+				}
+
+				if (policy.cache !== 'platform' || policy.preview !== 'platform-mock') {
+					fail(id, `weather media '${policy.id}' must use platform cache and platform-mock preview.`);
+				}
+			} else {
+				const binding = brief.data.bindings.find((candidate) => candidate.property === policy.binding);
+
+				if (!binding) {
+					fail(id, `media '${policy.id}' binding '${policy.binding ?? ''}' must reference a datasource.`);
+				}
+
+				if (policy.cache !== 'platform' || (policy.preview !== 'data-uri' && policy.preview !== 'platform-mock')) {
+					fail(id, `bound media '${policy.id}' must use platform cache and an offline preview.`);
+				}
+
+				if (policy.source === 'feed' && binding?.contract !== 'FEED') {
+					fail(id, `feed media '${policy.id}' must reference a FEED binding.`);
+				}
+
+				if ((policy.source === 'datasource' || policy.source === 'feed') && !(policy.fields?.length)) {
+					fail(id, `${policy.source} media '${policy.id}' must declare candidate fields.`);
+				}
+
+				if (policy.source === 'file-system') {
+					const lookup = policy.lookup;
+
+					if (!lookup) {
+						fail(id, `file-system media '${policy.id}' must declare lookup between record and asset bindings.`);
+					}
+
+
+					if (binding?.contract !== 'EXISTING'
+						|| !brief.data.bindings.some((candidate) => candidate.property === lookup?.recordBinding)) {
+						fail(id, `file-system media '${policy.id}' lookup bindings must exist.`);
+					}
+				}
+			}
 		}
 	}
 

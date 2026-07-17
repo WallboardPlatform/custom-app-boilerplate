@@ -1,0 +1,72 @@
+{
+	"Products": {
+		"header": {
+			"sku": "string",
+			"name": "string",
+			"category": "string",
+			"description": "text",
+			"price": "string",
+			"badge": "string",
+			"availability": "string",
+			"detailOne": "string",
+			"detailTwo": "string",
+			"imageKey": "string",
+			"sortOrder": "number"
+		},
+		"rows": [
+			{
+				"sku": "FN-101",
+				"name": "Arc Portable Lamp",
+				"category": "LIGHTING / NEW EDITION",
+				"description": "A rechargeable pool of warm light with a carry-anywhere cobalt frame.",
+				"price": "$129",
+				"badge": "NEW",
+				"availability": "IN STOCK",
+				"detailOne": "12 HOUR GLOW",
+				"detailTwo": "USB-C RECHARGEABLE",
+				"imageKey": "arc-lamp",
+				"sortOrder": 1
+			},
+			{
+				"sku": "FN-204",
+				"name": "Pulse Pocket Speaker",
+				"category": "AUDIO / TRAVEL",
+				"description": "Room-filling sound in a tactile coral shell built for desks, picnics, and weekends away.",
+				"price": "$88",
+				"badge": "BESTSELLER",
+				"availability": "IN STOCK",
+				"detailOne": "WATER RESISTANT",
+				"detailTwo": "18 HOUR PLAYBACK",
+				"imageKey": "pulse-speaker",
+				"sortOrder": 2
+			},
+			{
+				"sku": "FN-308",
+				"name": "Ritual Pour-Over Set",
+				"category": "KITCHEN / DAILY RITUAL",
+				"description": "A precise stainless filter and glass carafe for an unhurried, paper-free morning brew.",
+				"price": "$74",
+				"badge": "STAFF PICK",
+				"availability": "LOW STOCK",
+				"detailOne": "4 CUP CARAFE",
+				"detailTwo": "REUSABLE FILTER",
+				"imageKey": "pour-over-set",
+				"sortOrder": 3
+			},
+			{
+				"sku": "FN-412",
+				"name": "Moss Weekender",
+				"category": "CARRY / WEEKEND",
+				"description": "Soft structured canvas, honest hardware, and enough room for the things that earn the trip.",
+				"price": "$164",
+				"badge": "LIMITED",
+				"availability": "ONLINE ONLY",
+				"detailOne": "RECYCLED CANVAS",
+				"detailTwo": "CABIN FRIENDLY",
+				"imageKey": "weekender-bag",
+				"sortOrder": 4
+			}
+		],
+		"connectors": {}
+	}
+}

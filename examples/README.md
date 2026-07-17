@@ -31,8 +31,9 @@ examples/<id>/
 | `museum-welcome` | Reference-led fixed Full HD poster, packaged artwork, deliberate negative space, non-dashboard composition | Default, alternate colors, missing/broken media, long title, minimal, transparent background |
 | `newsroom-spotlight` | Built-in `FEED` integration, current/legacy RSS normalization, media fallback, timed editorial rotation | Default, wide/low, portrait, square, current feed, RSS parser/channel, empty, broken media, long labels, live update |
 | `pharmacy-pickup-queue` | Fixed 480x270 queue surface, semantic service states, bounded overflow | Light/dark, empty, invalid rows, long labels, single/many tickets, row array, live update |
+| `product-catalog` | Editable `TABLE` products plus independent File System image lookup, platform caching, editorial rotation, and designed media fallback | Full HD, wide/low, portrait, square, compact, long copy, missing/broken image, empty, final page, live update, motion off |
 | `recognition-mosaic` | Photo-led editorial wall, packaged media, asymmetric layouts, designed fallbacks | Landscape, portrait, square, wide/low, light/dark, missing media, long copy, odd counts, partial page, live update |
-| `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page |
+| `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page, motion off |
 | `single-hero-clock` | Static single-hero pattern, timezone formatting, live timer, ResizeObserver ratio compositions | Default, ultra-wide, compact, portrait, square, minimal, invalid timezone, long label, timer teardown, live config update |
 | `veszprem-wayfinding` | Supplied SVG map, production-compatible proximity graph and Dijkstra routing, touch directory, editable `TABLE` destinations | Full HD, compact, selected route, map click, off-map destination, light/dark/custom, empty, long labels/list, row array, live update, reset |
 

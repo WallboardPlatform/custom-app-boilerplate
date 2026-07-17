@@ -52,7 +52,8 @@
 		{ "property": "closingText", "purpose": "Service-hours note." },
 		{ "property": "allergenText", "purpose": "Allergen notice." },
 		{ "property": "emptyStateText", "purpose": "Message when no menu rows are available." },
-		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." }
+		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." },
+		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive page transitions.", "effect": "motion-preset" }
 	],
 	"dynamicText": [
 		{
@@ -84,10 +85,11 @@
 		{ "scenario": "long-labels", "expectation": "Long section, dish, description, and badge text remains contained." },
 		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same menu model." },
 		{ "scenario": "last-page", "expectation": "Uneven section counts and the final partial page remain balanced." },
-		{ "scenario": "quick-edit-update", "expectation": "Edited dish names and prices update without rebuilding the app." }
+		{ "scenario": "quick-edit-update", "expectation": "Edited dish names and prices update without rebuilding the app." },
+		{ "scenario": "motion-off", "expectation": "Menu pagination remains functional with page transition animation disabled." }
 	],
 	"behaviors": [
-		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section rotate on schedule into balanced, non-overlapping menu pages.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section rotate on schedule into balanced, non-overlapping menu pages with an optional bounded transition.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "quick-edit-update", "expectation": "Datasource edits update placed menu content immediately.", "evidence": { "scenario": "quick-edit-update" } }
 	],
 	"assets": [

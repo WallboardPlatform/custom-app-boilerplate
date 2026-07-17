@@ -31,7 +31,15 @@
 				{ "label": "Closing text", "type": "text", "property": "closingText", "default": "Kitchen closes 22:30" },
 				{ "label": "Allergen text", "type": "text", "property": "allergenText", "default": "Ask us about allergens" },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No menu items are available." },
-				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 12, "min": 3, "max": 120, "step": 1 }
+				{ "label": "Page duration", "type": "number", "property": "pageDurationSeconds", "default": 12, "min": 3, "max": 120, "step": 1 },
+				{
+					"label": "Motion", "type": "select", "property": "motionPreset", "default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" },
+						{ "label": "Expressive", "value": "expressive" }
+					]
+				}
 			]
 		},
 		{

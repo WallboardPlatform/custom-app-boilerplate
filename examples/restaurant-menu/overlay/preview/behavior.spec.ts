@@ -2,12 +2,18 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 interface ControlledInterval {
+	active: boolean;
 	delay: number;
+	id: number;
 	invoke: () => void;
 }
 
 interface ControlledIntervalWindow extends Window {
 	__restaurantMenuIntervals?: ControlledInterval[];
+	__wallboardPreview?: {
+		destroy: () => Promise<void>;
+		pushConfiguration: (configValues: Record<string, unknown>) => void;
+	};
 }
 
 interface Rectangle {
@@ -23,6 +29,7 @@ const installControlledPageTransition = async (page: Page): Promise<void> => {
 	await page.addInitScript((): void => {
 		const controlledWindow: ControlledIntervalWindow = window as ControlledIntervalWindow;
 		const nativeSetInterval: typeof window.setInterval = window.setInterval.bind(window);
+		const nativeClearInterval: typeof window.clearInterval = window.clearInterval.bind(window);
 
 		const controlledIntervals: ControlledInterval[] = [];
 
@@ -31,16 +38,31 @@ const installControlledPageTransition = async (page: Page): Promise<void> => {
 			const delay: number = timeout ?? 0;
 
 			if (delay === 3000 && typeof handler === 'function') {
-				controlledIntervals.push({
+				const interval: ControlledInterval = {
+					active: true,
 					delay,
+					id: 7300 + controlledIntervals.length,
 					invoke: (): void => handler(...arguments_)
-				});
+				};
 
-				return -controlledIntervals.length;
+				controlledIntervals.push(interval);
+
+				return interval.id;
 			}
 
 			return nativeSetInterval(handler, delay, ...arguments_);
 		}) as typeof window.setInterval;
+		window.clearInterval = ((id: number | undefined): void => {
+			const interval = controlledIntervals.find((candidate): boolean => candidate.id === id);
+
+			if (interval) {
+				interval.active = false;
+
+				return;
+			}
+
+			nativeClearInterval(id);
+		}) as typeof window.clearInterval;
 	});
 };
 
@@ -63,7 +85,9 @@ const advanceToFinalPage = async (page: Page): Promise<void> => {
 	const controlledIntervals: number[] = await page.evaluate((): number[] => {
 		const controlledWindow: ControlledIntervalWindow = window as ControlledIntervalWindow;
 
-		return (controlledWindow.__restaurantMenuIntervals ?? []).map(
+		return (controlledWindow.__restaurantMenuIntervals ?? []).filter(
+			(interval: ControlledInterval): boolean => interval.active
+		).map(
 			(interval: ControlledInterval): number => interval.delay
 		);
 	});
@@ -71,7 +95,9 @@ const advanceToFinalPage = async (page: Page): Promise<void> => {
 	expect(controlledIntervals).toEqual([3000]);
 	await page.evaluate((): void => {
 		const controlledWindow: ControlledIntervalWindow = window as ControlledIntervalWindow;
-		const pageTransition: ControlledInterval | undefined = controlledWindow.__restaurantMenuIntervals?.[0];
+		const pageTransition: ControlledInterval | undefined = controlledWindow.__restaurantMenuIntervals?.find(
+			(interval: ControlledInterval): boolean => interval.active
+		);
 
 		if (!pageTransition) {
 			throw new Error('Restaurant menu did not register its page transition interval.');
@@ -108,6 +134,36 @@ test('transitions after the configured duration and renders the uneven final pag
 	expect(await page.locator('.wb-restaurant-menu-board__row').count()).toBe(2);
 	expect(await page.locator('.wb-restaurant-menu-category').count()).toBe(3);
 	expect(await page.locator('.wb-restaurant-menu-item').count()).toBe(8);
+	await expect(page.locator('.wb-restaurant-menu-root')).toHaveAttribute('data-transitioning', 'true');
+	await page.waitForTimeout(350);
+	await expect(page.locator('.wb-restaurant-menu-root')).toHaveAttribute('data-transitioning', 'false');
+});
+
+test('keeps pagination functional when motion is off', async ({ page }): Promise<void> => {
+	await page.evaluate((): void => {
+		(window as ControlledIntervalWindow).__wallboardPreview?.pushConfiguration({ motionPreset: 'off' });
+	});
+	await expect(page.locator('.wb-restaurant-menu-root')).toHaveAttribute('data-motion-preset', 'off');
+
+	await advanceToFinalPage(page);
+
+	await expect(page.locator('.wb-restaurant-menu-edition em')).toHaveText('2 / 2');
+	await expect(page.locator('.wb-restaurant-menu-root')).toHaveAttribute('data-transitioning', 'false');
+});
+
+test('cleans the instance-local rotation on destroy', async ({ page }): Promise<void> => {
+	await page.evaluate(async (): Promise<void> => {
+		await (window as ControlledIntervalWindow).__wallboardPreview?.destroy();
+	});
+
+	const active = await page.evaluate((): boolean[] => {
+		return ((window as ControlledIntervalWindow).__restaurantMenuIntervals ?? []).map(
+			(interval: ControlledInterval): boolean => interval.active
+		);
+	});
+
+	expect(active.length).toBeGreaterThan(0);
+	expect(active.every((value): boolean => !value)).toBe(true);
 });
 
 test('keeps uneven final-page categories balanced, contained, and non-overlapping', async ({ page }): Promise<void> => {

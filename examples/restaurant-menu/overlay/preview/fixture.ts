@@ -39,7 +39,8 @@ const baseConfig: Record<string, unknown> = {
 	closingText: 'Kitchen closes 22:30',
 	allergenText: 'Ask us about allergens',
 	emptyStateText: 'No menu items are available.',
-	pageDurationSeconds: 3
+	pageDurationSeconds: 3,
+	motionPreset: 'subtle'
 };
 
 const withRows = (rows: MenuRow[]): MenuDatasource => ({
@@ -157,6 +158,16 @@ export const previewScenarios: PreviewScenario[] = [
 			value: withRows(quickEditRows),
 			expectedText: 'Fire-roasted pepper soup'
 		}
+	},
+	{
+		id: 'motion-off',
+		fixture: createFixture('cordo-menu-motion-off', withRows(paginatedRows), {
+			...baseConfig,
+			motionPreset: 'off'
+		}),
+		viewport: { width: 1366, height: 768, background: 'dark' },
+		advanceTimeMs: 3500,
+		minimumContentCoverage: { width: 80, height: 75 }
 	}
 ];
 
@@ -167,6 +178,14 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		changedValue: 'light',
 		selector: '.wb-restaurant-menu-root',
 		measurement: { type: 'computed-style', property: 'background-color' },
+		expectation: { type: 'change' }
+	},
+	{
+		id: 'motion-preset',
+		property: 'motionPreset',
+		changedValue: 'off',
+		selector: '.wb-restaurant-menu-root',
+		measurement: { type: 'attribute', name: 'data-motion-preset' },
 		expectation: { type: 'change' }
 	}
 ];

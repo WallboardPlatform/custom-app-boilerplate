@@ -41,7 +41,7 @@ Before implementation, create `generation-brief.json` and pass `npm run validate
 - Use coordinated Dark, Light, and Custom themes for color-driven apps unless the accepted direction calls for a different scheme. Presets resolve the entire semantic palette; show manual swatches only in Custom mode.
 - Prefer built-in `FEED` or `CALENDAR` when requested data matches them. Otherwise use an explicit user contract, then editable `TABLE`; use `CUSTOM` only when a table would lose necessary structure.
 - Keep independent existing datasources as independent bindings and refresh lifecycles.
-- New apps use the v5 contract in `docs/system/generation-brief.md`; catalogs cover use cases, not art direction.
+- New apps use the v7 contract in `docs/system/generation-brief.md`; examples cover mechanics, not art direction.
 
 ## Implementation Contract
 
@@ -53,6 +53,8 @@ Before implementation, create `generation-brief.json` and pass `npm run validate
 - Attach `useAutoFitText` refs to the actual element; the hook handles late conditional mounts and preserves ink margin.
 - Never ellipsize essential identity, direction, safety, accessibility, or action text on a declared target surface. Reallocate columns, stack fields, wrap, paginate, or change the ratio composition before losing it.
 - Import packaged media statically and list every emitted runtime asset in `resourceList`; never build component media URLs with `new URL(..., import.meta.url)`.
+- Declare media ownership and use platform caching for setting, datasource, File System, feed, and weather media. Keep previews offline and every failure state designed.
+- Motion is optional. Use the shared transition controller for bounded page changes; continuous marquees remain app-owned. Progression must continue with motion Off, and every timer must clean up.
 - Use Chart.js by default for normal charts; import only required modules, size the parent explicitly, disable unnecessary signage animation, and destroy instances.
 - Reuse capabilities from `docs/system/capabilities.md`.
 

@@ -14,7 +14,7 @@
 
 ## 3. Freeze The Brief
 
-Create a v6 `generation-brief.json` using `docs/system/generation-brief.md`; v3-v5 remain valid for maintained apps. Run:
+Create a v7 `generation-brief.json` using `docs/system/generation-brief.md`; v3-v6 remain valid for maintained apps. Run:
 
 ```bash
 npm run validate:brief
@@ -27,7 +27,8 @@ Do this before editing implementation artifacts.
 - Keep platform infrastructure unchanged and follow existing SolidJS/SCSS patterns.
 - Build the visual hierarchy from the accepted reference/domain before adding controls or edge states.
 - Normalize data at the boundary, keep settings synchronized across all representations, and use reusable project capabilities for themes, sanitization, text fitting, charts, assets, and cleanup.
-- Meet the v6 semantic font floors. Reduce density, remove secondary detail, or paginate before shrinking below them.
+- Meet the v6+ semantic font floors. Reduce density, remove secondary detail, or paginate before shrinking below them.
+- Declare media ownership, platform caching, offline preview, and fallback. Use the shared bounded transition helper only when motion communicates a change.
 - Enforce ownership. Interactive apps declare views, inputs, resets, and outputs; writes are displayer-only.
 - Use the shared rotation lifecycle for timed pages; specialized continuous motion stays app-owned. Add behavior tests for timing, rotation, interaction, and teardown.
 

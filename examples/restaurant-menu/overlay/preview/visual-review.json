@@ -1,121 +1,34 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "9b5841f0b0e0e439f6e36e5940ea640289df581e9050941fce8f0980d227101c",
-	"reviewedAt": "2026-07-16T13:53:39.500Z",
-	"reviewer": "Codex independent visual review",
+	"sourceHash": "15cf6b8960126b520386d326dd98588f3408ee2e4222f7f5b6526e53cf5ea461",
+	"reviewedAt": "2026-07-17T22:47:23.5929106+02:00",
+	"reviewer": "Codex visual review",
 	"criteria": [
-		{
-			"id": "promptFidelity",
-			"status": "pass",
-			"notes": "The menu handles editable structured courses, uneven categories, paging, static fallback, long labels, and realistic service states."
-		},
-		{
-			"id": "referenceFidelity",
-			"status": "pass",
-			"notes": "Typography, restaurant masthead, editorial rhythm, and restrained palette preserve the supplied Cordo menu photograph."
-		},
-		{
-			"id": "visualSpecificity",
-			"status": "pass",
-			"notes": "Cordo branding, course typography, dotted leaders, and editorial menu columns make the design venue-specific."
-		},
-		{
-			"id": "distanceReadability",
-			"status": "pass",
-			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
-		},
-		{
-			"id": "themeContrast",
-			"status": "pass",
-			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
-		},
-		{
-			"id": "dynamicTextSafety",
-			"status": "pass",
-			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
-		},
-		{
-			"id": "surfaceComposition",
-			"status": "pass",
-			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
-		},
-		{
-			"id": "assetAndThemeQuality",
-			"status": "pass",
-			"notes": "Generated identity assets and light and dark menu surfaces are complete, coordinated, and package-safe."
-		},
-		{
-			"id": "exampleSameness",
-			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
-		}
+		{ "id": "promptFidelity", "status": "pass", "notes": "Editable restaurant menu remains the primary experience." },
+		{ "id": "referenceFidelity", "status": "pass", "notes": "Cordo editorial identity is preserved across all surfaces." },
+		{ "id": "visualSpecificity", "status": "pass", "notes": "Typography, story rail, menu leaders, and palette remain purpose-specific." },
+		{ "id": "distanceReadability", "status": "pass", "notes": "Primary dish names, section labels, and prices remain readable." },
+		{ "id": "themeContrast", "status": "pass", "notes": "Dark and light presets retain clear hierarchy and contrast." },
+		{ "id": "dynamicTextSafety", "status": "pass", "notes": "Long labels remain bounded without descender clipping or price collision." },
+		{ "id": "surfaceComposition", "status": "pass", "notes": "Full HD, wide-low, portrait, square, and final partial page remain composed." },
+		{ "id": "assetAndThemeQuality", "status": "pass", "notes": "No missing assets or incoherent theme treatment." },
+		{ "id": "exampleSameness", "status": "pass", "notes": "The retrofit adds bounded motion without changing the example's visual language." }
 	],
 	"screenshots": [
-		{
-			"file": "app-default-1920x1080.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
-		},
-		{
-			"file": "landscape-960x540.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
-		},
-		{
-			"file": "portrait-1080x1920.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
-		},
-		{
-			"file": "scenario-bound-null-960x540.png",
-			"status": "pass",
-			"notes": "Inspected at original 960 by 540 output; the bound-null fallback is legible, contained, and intentionally sparse."
-		},
-		{
-			"file": "scenario-empty-960x540.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; the empty state is legible, contained, and intentionally sparse."
-		},
-		{
-			"file": "scenario-last-page-1366x768.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; uneven final-page content remains balanced with complete text ink."
-		},
-		{
-			"file": "scenario-light-theme-1920x1080.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
-		},
-		{
-			"file": "scenario-long-labels-1536x432.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
-		},
-		{
-			"file": "scenario-quick-edit-update-1366x768.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; quick-edit data is reflected without layout shift, clipping, or stale content."
-		},
-		{
-			"file": "scenario-row-array-960x540.png",
-			"status": "pass",
-			"notes": "Inspected at original 960 by 540 output; row-array normalization preserves the intended menu composition."
-		},
-		{
-			"file": "scenario-static-unbound-1366x768.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; the unbound static fallback remains complete and production-presentable."
-		},
-		{
-			"file": "square-600x600.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; the compact square layout retains hierarchy, spacing, and complete glyph ink."
-		},
-		{
-			"file": "wide-low-1536x432.png",
-			"status": "pass",
-			"notes": "Inspected at rendered size; the wide-low layout stays dense and readable without overflow or clipped descenders."
-		}
+		{ "file": "app-default-1920x1080.png", "status": "pass", "notes": "Complete Full HD menu composition." },
+		{ "file": "landscape-960x540.png", "status": "pass", "notes": "Compact landscape remains readable and contained." },
+		{ "file": "portrait-1080x1920.png", "status": "pass", "notes": "Portrait composition fills the zone without collisions." },
+		{ "file": "scenario-bound-null-960x540.png", "status": "pass", "notes": "Bound-null state is stable." },
+		{ "file": "scenario-empty-960x540.png", "status": "pass", "notes": "Empty state is intentional and contained." },
+		{ "file": "scenario-last-page-1366x768.png", "status": "pass", "notes": "Uneven final page remains balanced." },
+		{ "file": "scenario-light-theme-1920x1080.png", "status": "pass", "notes": "Light preset remains coherent." },
+		{ "file": "scenario-long-labels-1536x432.png", "status": "pass", "notes": "Long text remains bounded in the constrained surface." },
+		{ "file": "scenario-motion-off-1366x768.png", "status": "pass", "notes": "Motion-off pagination renders a complete final page." },
+		{ "file": "scenario-quick-edit-update-1366x768.png", "status": "pass", "notes": "Live content update remains stable." },
+		{ "file": "scenario-row-array-960x540.png", "status": "pass", "notes": "Row-array normalization retains layout." },
+		{ "file": "scenario-static-unbound-1366x768.png", "status": "pass", "notes": "Synthetic unbound content renders correctly." },
+		{ "file": "square-600x600.png", "status": "pass", "notes": "Square fallback remains composed." },
+		{ "file": "wide-low-1536x432.png", "status": "pass", "notes": "Wide-low strip preserves menu hierarchy." }
 	],
 	"unresolvedFindings": []
 }

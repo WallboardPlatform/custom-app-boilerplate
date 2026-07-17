@@ -1,0 +1,19 @@
+{
+	"title": "Product Catalog",
+	"description": "Retail editorial catalog with an editable TABLE, an independent File System image binding, deterministic lookup, fallback, caching, and lifecycle-safe transitions.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-products-table-datasource.json",
+		"sample-product-images-filesystem-datasource.json",
+		"sample-product-images"
+	],
+	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+}
