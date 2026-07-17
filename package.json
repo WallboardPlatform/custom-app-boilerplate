@@ -36,7 +36,7 @@
 		"validate:identity": "node scripts/validate-app-identity.mjs",
 		"validate:brief": "tsx scripts/validate-generation-brief.mts --brief",
 		"validate:project": "tsx scripts/validate-generation-brief.mts --project",
-		"test:generation-brief": "tsx --test scripts/generation-brief/validation.test.mts",
+		"test:generation-brief": "tsx --test scripts/generation-brief/*.test.mts",
 		"test:legacy-css": "node --test scripts/legacy-css/validation.test.mjs",
 		"test:package-assets": "node --test scripts/package-assets/validation.test.mjs",
 		"typecheck:scripts": "tsc --noEmit --project ./tsconfig.scripts.json",

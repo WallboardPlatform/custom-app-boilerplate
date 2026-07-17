@@ -6,14 +6,14 @@
 	"additionalProperties": false,
 	"allOf": [
 		{
-			"if": { "properties": { "briefVersion": { "enum": [4, 5] } } },
+			"if": { "properties": { "briefVersion": { "enum": [4, 5, 6] } } },
 			"then": {
 				"properties": { "presentation": {} },
 				"required": ["presentation"]
 			}
 		},
 		{
-			"if": { "properties": { "briefVersion": { "const": 5 } } },
+			"if": { "properties": { "briefVersion": { "enum": [5, 6] } } },
 			"then": {
 				"properties": {
 					"ownership": {},
@@ -25,6 +25,20 @@
 					"branding": {}
 				},
 				"required": ["ownership", "experience", "outputs", "rendering", "motion", "media", "branding"]
+			}
+		},
+		{
+			"if": { "properties": { "briefVersion": { "const": 6 } } },
+			"then": {
+				"properties": {
+					"presentation": {
+						"type": "object",
+						"properties": { "viewingDistance": {}, "textRoles": {} },
+						"required": ["viewingDistance", "textRoles"]
+					},
+					"cadence": {}
+				},
+				"required": ["cadence"]
 			}
 		}
 	],
@@ -45,7 +59,7 @@
 		"visualReview"
 	],
 	"properties": {
-		"briefVersion": { "enum": [3, 4, 5] },
+		"briefVersion": { "enum": [3, 4, 5, 6] },
 		"request": {
 			"type": "object",
 			"additionalProperties": false,
@@ -168,9 +182,16 @@
 					"uniqueItems": true,
 					"items": { "enum": ["dark", "light", "custom"] }
 				},
-				"density": { "enum": ["sparse", "balanced", "dense"] }
+				"density": { "enum": ["sparse", "balanced", "dense"] },
+				"viewingDistance": { "enum": ["near", "room", "distance"] },
+				"textRoles": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "$ref": "#/$defs/textRole" }
+				}
 			}
 		},
+		"cadence": { "$ref": "#/$defs/cadencePolicy" },
 		"settings": {
 			"type": "array",
 			"items": {
@@ -193,6 +214,7 @@
 				"required": ["id", "source", "selectors", "strategy", "limits", "fallback", "rationale", "evidenceScenario"],
 				"properties": {
 					"id": { "$ref": "#/$defs/safeId" },
+					"role": { "enum": ["primary", "secondary", "metadata"] },
 					"source": { "$ref": "#/$defs/dynamicTextSource" },
 					"selectors": {
 						"type": "array",
@@ -338,6 +360,29 @@
 			"properties": {
 				"minimumFontSize": { "type": "integer", "minimum": 8 },
 				"maximumLines": { "type": "integer", "minimum": 1 }
+			}
+		},
+		"textRole": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["role", "selectors"],
+			"properties": {
+				"role": { "enum": ["primary", "secondary", "metadata"] },
+				"selectors": {
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"cadencePolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode"],
+			"properties": {
+				"mode": { "enum": ["static", "rotation"] },
+				"intervalProperty": { "$ref": "#/$defs/nonEmptyString" }
 			}
 		},
 		"packagedAsset": {

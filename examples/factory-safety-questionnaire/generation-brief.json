@@ -1,5 +1,5 @@
 {
-	"briefVersion": 5,
+	"briefVersion": 6,
 	"request": {
 		"summary": "Create an interactive English-language factory safety questionnaire with identity capture, three consecutive multiple-choice questions, a scored summary, internal datasource result collection, and automatic reset.",
 		"audience": "Employees and visitors completing a short safety check on a shared touch display before entering a fictional vehicle assembly area.",
@@ -137,7 +137,17 @@
 		"provenance": "The example ships only the fictional Northline Mobility name and generated semantic colors.",
 		"fallback": "Use the coordinated Dark preset when no customer branding kit or reference is supplied."
 	},
-	"presentation": { "themes": ["dark", "light", "custom"], "density": "balanced" },
+	"presentation": {
+		"themes": ["dark", "light", "custom"],
+		"density": "balanced",
+		"viewingDistance": "near",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-factory-safety-welcome-title", ".wb-factory-safety-identity-title", ".wb-factory-safety-question-prompt", ".wb-factory-safety-score", ".wb-factory-safety-summary-title", ".wb-factory-safety-complete-title"] },
+			{ "role": "secondary", "selectors": [".wb-factory-safety-option-label", ".wb-factory-safety-secondary"] },
+			{ "role": "metadata", "selectors": [".wb-factory-safety-metadata"] }
+		]
+	},
+	"cadence": { "mode": "static" },
 	"settings": [
 		{ "property": "plantName", "purpose": "Public site or company label." },
 		{ "property": "welcomeTitle", "purpose": "Primary invitation on the start view." },
@@ -157,6 +167,7 @@
 	"dynamicText": [
 		{
 			"id": "welcome-title",
+			"role": "primary",
 			"source": { "type": "setting", "properties": ["welcomeTitle"] },
 			"selectors": [".wb-factory-safety-welcome-title"],
 			"strategy": "auto-fit",
@@ -167,6 +178,7 @@
 		},
 		{
 			"id": "question-prompt",
+			"role": "primary",
 			"source": { "type": "datasource", "properties": ["questionData"] },
 			"selectors": [".wb-factory-safety-question-prompt"],
 			"strategy": "auto-fit",
@@ -177,6 +189,7 @@
 		},
 		{
 			"id": "answer-options",
+			"role": "secondary",
 			"source": { "type": "datasource", "properties": ["questionData"] },
 			"selectors": [".wb-factory-safety-option-label"],
 			"strategy": "wrap",

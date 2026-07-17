@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, untrack } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
@@ -8,6 +8,7 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { DepartureDatasource, DepartureRow, DepartureStatusTone } from '@interfaces/departure.interface';
 
+import { createRotationController } from '@utils/rotation';
 import { mixHexColors, readableTextColor } from '@utils/theme';
 
 import style from '@components/wb-app/wb-app.module.scss';
@@ -226,6 +227,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [clock, setClock] = createSignal<ClockValue>(getClockValue());
 	const [dimensions, setDimensions] = createSignal<Dimensions>({ width: 1920, height: 1080 });
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setPageIndex(index);
+	});
 	const rawData: Accessor<unknown> = createMemo((): unknown => dataSources().departuresData?.value);
 	const hasBoundDatasource: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'departuresData');
@@ -239,6 +243,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 	const rowsPerPage: Accessor<number> = createMemo((): number => getRowsPerPage(dimensions()));
 	const pages: Accessor<DepartureRow[][]> = createMemo((): DepartureRow[][] => chunkRows(rows(), rowsPerPage()));
+	const pageKeys: Accessor<string[]> = createMemo((): string[] => pages().map((page: DepartureRow[], index: number): string => {
+		const first: DepartureRow | undefined = page[0];
+
+		return first ? `${first.flight}|${first.scheduledTime}|${first.destination}` : `page-${index}`;
+	}));
 	const pageCount: Accessor<number> = createMemo((): number => Math.max(pages().length, 1));
 	const currentRows: Accessor<DepartureRow[]> = createMemo((): DepartureRow[] => {
 		return pages()[pageIndex() % pageCount()] ?? [];
@@ -287,27 +296,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const count: number = pageCount();
+		const keys: string[] = pageKeys();
 
-		if (pageIndex() >= count) {
-			setPageIndex(0);
-		}
+		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
 
-	createEffect((): void => {
-		const count: number = pageCount();
-		const duration: number = settings().pageDurationSeconds;
-
-		if (count <= 1) {
-			return;
-		}
-
-		const intervalId: number = window.setInterval((): void => {
-			setPageIndex((current: number): number => (current + 1) % count);
-		}, duration * 1000);
-
-		onCleanup((): void => window.clearInterval(intervalId));
-	});
+	onCleanup((): void => rotation.destroy());
 
 	return (
 		<div

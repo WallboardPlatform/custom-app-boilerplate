@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, untrack } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import { useDataSources } from '@hooks/system/useDataSources';
@@ -6,6 +6,8 @@ import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
+
+import { createRotationController } from '@utils/rotation';
 
 import style from '@components/wb-app/wb-app.module.scss';
 
@@ -237,6 +239,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 	const [clock, setClock] = createSignal<{ day: string; time: string }>(getClock());
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setPageIndex(index);
+	});
 	const rawData: Accessor<unknown> = createMemo((): unknown => dataSources().menuData?.value);
 	const hasBoundDatasource: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'menuData');
@@ -249,6 +254,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const pages: Accessor<MenuSection[][]> = createMemo((): MenuSection[][] => {
 		return chunk(createSections(rows()), SECTIONS_PER_PAGE);
 	});
+	const pageKeys: Accessor<string[]> = createMemo((): string[] => pages().map((page: MenuSection[], index: number): string => {
+		const first: MenuSection | undefined = page[0];
+
+		return first ? `${first.number}|${first.title}` : `page-${index}`;
+	}));
 	const pageCount: Accessor<number> = createMemo((): number => Math.max(pages().length, 1));
 	const currentSections: Accessor<MenuSection[]> = createMemo((): MenuSection[] => {
 		return pages()[pageIndex() % pageCount()] ?? [];
@@ -279,22 +289,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const count: number = pageCount();
+		const keys: string[] = pageKeys();
 
-		if (pageIndex() >= count) {
-			setPageIndex(0);
-		}
-
-		if (count <= 1) {
-			return;
-		}
-
-		const intervalId: number = window.setInterval((): void => {
-			setPageIndex((current: number): number => (current + 1) % count);
-		}, settings().pageDurationSeconds * 1000);
-
-		onCleanup((): void => window.clearInterval(intervalId));
+		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
+
+	onCleanup((): void => rotation.destroy());
 
 	return (
 		<div

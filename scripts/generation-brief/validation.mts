@@ -31,6 +31,7 @@ export interface GenerationBriefBehavior {
 
 export interface GenerationBriefDynamicTextPolicy {
 	id: string;
+	role?: 'primary' | 'secondary' | 'metadata';
 	source: {
 		type: 'setting' | 'datasource' | 'computed';
 		properties: string[];
@@ -70,7 +71,7 @@ export interface GenerationBriefRuntimeOutput {
 }
 
 export interface GenerationBrief {
-	briefVersion: 3 | 4 | 5;
+	briefVersion: 3 | 4 | 5 | 6;
 	request: {
 		summary: string;
 		audience: string;
@@ -147,6 +148,15 @@ export interface GenerationBrief {
 	presentation?: {
 		themes: Array<'dark' | 'light' | 'custom'>;
 		density: 'sparse' | 'balanced' | 'dense';
+		viewingDistance?: 'near' | 'room' | 'distance';
+		textRoles?: Array<{
+			role: 'primary' | 'secondary' | 'metadata';
+			selectors: string[];
+		}>;
+	};
+	cadence?: {
+		mode: 'static' | 'rotation';
+		intervalProperty?: string;
 	};
 	settings: GenerationBriefSetting[];
 	dynamicText: GenerationBriefDynamicTextPolicy[];
@@ -256,8 +266,8 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 		fail(id, 'v4 visual direction uses \'creative-led\' instead of legacy \'agent-authored\'.');
 	}
 
-	if (brief.briefVersion === 5 && brief.visualDirection.source === 'agent-authored') {
-		fail(id, 'v5 visual direction uses \'creative-led\' instead of legacy \'agent-authored\'.');
+	if (brief.briefVersion >= 5 && brief.visualDirection.source === 'agent-authored') {
+		fail(id, `v${brief.briefVersion} visual direction uses 'creative-led' instead of legacy 'agent-authored'.`);
 	}
 
 	if (brief.presentation) {
@@ -288,7 +298,7 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 		}
 	}
 
-	if (brief.briefVersion === 5) {
+	if (brief.briefVersion >= 5) {
 		const ownership = brief.ownership ?? [];
 		const experience = brief.experience!;
 		const outputs = brief.outputs ?? [];
@@ -391,6 +401,55 @@ export const validateStandaloneBrief = (value: unknown, id = 'generation-brief')
 			) {
 				fail(id, `write-enabled binding '${binding.property}' must have an internal datasource output contract.`);
 			}
+		}
+	}
+
+	if (brief.briefVersion === 6) {
+		const textRoles = brief.presentation?.textRoles ?? [];
+		const roleNames = requireUnique(id, textRoles.map((policy) => policy.role), 'presentation.textRoles[].role');
+		const selectorsByRole = new Map(textRoles.map((policy) => [policy.role, requireUnique(
+			id,
+			policy.selectors,
+			`presentation.textRoles '${policy.role}' selectors`
+		)]));
+		const allSelectors = textRoles.flatMap((policy) => policy.selectors);
+
+		requireUnique(id, allSelectors, 'presentation.textRoles[].selectors');
+
+		if (!roleNames.has('primary') || !roleNames.has('secondary')) {
+			fail(id, 'v6 presentation.textRoles must declare primary and secondary text.');
+		}
+
+		for (const policy of brief.dynamicText) {
+			if (!policy.role) {
+				fail(id, `v6 dynamicText '${policy.id}' must declare a semantic role.`);
+			}
+
+			const roleSelectors = selectorsByRole.get(policy.role!);
+
+			for (const selector of policy.selectors) {
+				if (!roleSelectors?.has(selector)) {
+					fail(id, `v6 dynamicText '${policy.id}' selector '${selector}' must be declared under presentation.textRoles '${policy.role}'.`);
+				}
+			}
+		}
+
+		const cadence = brief.cadence!;
+
+		if (cadence.mode === 'rotation') {
+			if (!cadence.intervalProperty) {
+				fail(id, 'v6 rotation cadence must declare intervalProperty.');
+			}
+
+			if (!brief.settings.some((setting) => setting.property === cadence.intervalProperty)) {
+				fail(id, `cadence intervalProperty '${cadence.intervalProperty}' must reference an editor setting.`);
+			}
+
+			if (!brief.behaviors.some((behavior) => 'testFile' in behavior.evidence)) {
+				fail(id, 'v6 rotation cadence must have behavior-test evidence.');
+			}
+		} else if (cadence.intervalProperty) {
+			fail(id, 'v6 static cadence must not declare intervalProperty.');
 		}
 	}
 

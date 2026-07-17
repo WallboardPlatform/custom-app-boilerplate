@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, untrack } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import WbLineSection from '@components/wb-line-section/wb-line-section';
@@ -24,6 +24,7 @@ import {
 	paginateAndonLines,
 	summarizeAndonStations
 } from '@utils/andon';
+import { createRotationController } from '@utils/rotation';
 import { mixHexColors, readableTextColor } from '@utils/theme';
 
 import style from '@components/wb-app/wb-app.module.scss';
@@ -97,6 +98,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 	const [dimensions, setDimensions] = createSignal<Dimensions>({ width: 1080, height: 1920 });
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const rotation = createRotationController((_key: string, index: number): void => {
+		setPageIndex(index);
+	});
 	const hasBoundDatasource: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'andonData');
 	});
@@ -111,6 +115,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const pages: Accessor<AndonPage[]> = createMemo((): AndonPage[] => {
 		return paginateAndonLines(groupAndonLines(stations()), stationCapacity());
 	});
+	const pageKeys: Accessor<string[]> = createMemo((): string[] => pages().map((page: AndonPage, index: number): string => {
+		return page.sections[0]?.key ?? `page-${index}`;
+	}));
 	const pageCount: Accessor<number> = createMemo((): number => Math.max(1, pages().length));
 	const currentPage: Accessor<AndonPage | undefined> = createMemo((): AndonPage | undefined => {
 		return pages()[pageIndex() % pageCount()];
@@ -169,27 +176,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const count: number = pageCount();
+		const keys: string[] = pageKeys();
 
-		if (pageIndex() >= count) {
-			setPageIndex(Math.max(0, count - 1));
-		}
+		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
 
-	createEffect((): void => {
-		const count: number = pageCount();
-		const duration: number = settings().pageDurationSeconds;
-
-		if (count <= 1) {
-			return;
-		}
-
-		const intervalId: number = window.setInterval((): void => {
-			setPageIndex((current: number): number => (current + 1) % count);
-		}, duration * 1000);
-
-		onCleanup((): void => window.clearInterval(intervalId));
-	});
+	onCleanup((): void => rotation.destroy());
 
 	return (
 		<section

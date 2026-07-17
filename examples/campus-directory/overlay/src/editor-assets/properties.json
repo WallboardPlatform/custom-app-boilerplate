@@ -50,22 +50,10 @@
 						{ "label": "Custom", "value": "custom" }
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#f5f7f4" },
-						{ "label": "Text color", "type": "color", "property": "textColor", "default": "#17312c" },
-						{ "label": "Wayfinding color", "type": "color", "property": "accentColor", "default": "#007f6d" },
-						{ "label": "Accessibility color", "type": "color", "property": "accessibilityColor", "default": "#4f7f21" }
-					],
-					"visibilityConditions": {
-						"conditions": [
-							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
-						],
-						"rule": "#1"
-					}
-				}
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#f5f7f4", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Text color", "type": "color", "property": "textColor", "default": "#17312c", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Wayfinding color", "type": "color", "property": "accentColor", "default": "#007f6d", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Accessibility color", "type": "color", "property": "accessibilityColor", "default": "#4f7f21", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} }
 			]
 		}
 	],

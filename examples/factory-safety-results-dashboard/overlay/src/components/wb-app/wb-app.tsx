@@ -160,7 +160,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		}
 	}));
 	const fitTitle = useAutoFitText({
-		minFontSize: 27,
+		minFontSize: 28,
 		maxFontSize: 62,
 		widthOnly: true,
 		watch: (): string => settings().title

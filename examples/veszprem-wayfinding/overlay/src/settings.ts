@@ -1,0 +1,65 @@
+import type { ConfigValues, Settings } from '@interfaces/application.interface';
+
+import { resolveTheme, themePresetSetting } from '@utils/theme';
+import type { ThemePreset } from '@utils/theme';
+
+interface WayfindingPalette {
+	accentColor: string;
+	backgroundColor: string;
+	panelColor: string;
+	primaryTextColor: string;
+	routeColor: string;
+	secondaryTextColor: string;
+}
+
+const textSetting = (value: string | undefined, fallback: string): string => {
+	return typeof value === 'string' && value.trim() !== '' ? value.trim() : fallback;
+};
+
+const numberSetting = (value: number | undefined, fallback: number, minimum: number, maximum: number): number => {
+	const numericValue: number = typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+	return Math.min(maximum, Math.max(minimum, numericValue));
+};
+
+export default function mapSettings(config: ConfigValues): Settings {
+	const themePreset: ThemePreset = themePresetSetting(config.themePreset);
+	const palette: WayfindingPalette = resolveTheme(themePreset, {
+		dark: {
+			accentColor: '#f0b941',
+			backgroundColor: '#122726',
+			panelColor: '#173331',
+			primaryTextColor: '#fff8e9',
+			routeColor: '#e33f33',
+			secondaryTextColor: '#b9cbc5'
+		},
+		light: {
+			accentColor: '#d08b2e',
+			backgroundColor: '#ead9c8',
+			panelColor: '#fff9ef',
+			primaryTextColor: '#17312f',
+			routeColor: '#cf332b',
+			secondaryTextColor: '#5d716d'
+		},
+		custom: {
+			accentColor: textSetting(config.accentColor, '#d08b2e'),
+			backgroundColor: textSetting(config.backgroundColor, '#ead9c8'),
+			panelColor: textSetting(config.panelColor, '#fff9ef'),
+			primaryTextColor: textSetting(config.primaryTextColor, '#17312f'),
+			routeColor: textSetting(config.routeColor, '#cf332b'),
+			secondaryTextColor: textSetting(config.secondaryTextColor, '#5d716d')
+		}
+	});
+
+	return {
+		...palette,
+		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
+		mapRatio: numberSetting(config.mapRatio, 1, 0.5, 20),
+		routeResetSeconds: numberSetting(config.routeResetSeconds, 45, 10, 180),
+		startLocationId: textSetting(config.startLocationId, 'hosok-kapuja'),
+		subtitle: textSetting(config.subtitle, 'Choose a destination to draw a walking route from Heroes\' Gate.'),
+		themePreset,
+		title: textSetting(config.title, 'Veszprem Downtown Wayfinding'),
+		wayfindingSensitivity: numberSetting(config.wayfindingSensitivity, 50, 10, 100)
+	};
+}

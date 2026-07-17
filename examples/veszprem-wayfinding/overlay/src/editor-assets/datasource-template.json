@@ -1,0 +1,51 @@
+{
+	"Destinations": {
+		"header": {
+			"id": "string",
+			"name": "string",
+			"englishName": "string",
+			"category": "string",
+			"description": "string",
+			"accessible": "boolean",
+			"routeable": "boolean"
+		},
+		"rows": [
+			{ "id": "hosok-kapuja", "name": "Hősök Kapuja", "englishName": "Heroes' Gate", "category": "Historic quarter", "description": "Castle district gateway and the kiosk's default starting point.", "accessible": true, "routeable": true },
+			{ "id": "modern-keptar-vass-gyujtemeny", "name": "Modern Képtár - Vass László Gyűjtemény", "englishName": "Modern Art Gallery", "category": "Museums & culture", "description": "Modern and contemporary art collection in the castle district.", "accessible": true, "routeable": true },
+			{ "id": "tuztorony", "name": "Tűztorony", "englishName": "Fire Lookout Tower", "category": "Historic quarter", "description": "Landmark lookout tower above the old town.", "accessible": false, "routeable": true },
+			{ "id": "foton-audiovizualis-kozpont", "name": "FOTON Audiovizuális Központ", "englishName": "FOTON Audiovisual Centre", "category": "Museums & culture", "description": "Film, media, and audiovisual exhibition venue.", "accessible": true, "routeable": true },
+			{ "id": "csikasz-galeria", "name": "Csikász Galéria", "englishName": "Csikász Gallery", "category": "Museums & culture", "description": "Gallery space for rotating visual-art exhibitions.", "accessible": true, "routeable": true },
+			{ "id": "dubniczay-palota", "name": "Dubniczay-palota", "englishName": "Dubniczay Palace", "category": "Museums & culture", "description": "Baroque palace with art and cultural collections.", "accessible": true, "routeable": true },
+			{ "id": "biro-giczey-haz", "name": "Bíró-Giczey Ház", "englishName": "Bíró-Giczey House", "category": "Historic quarter", "description": "Restored historic residence in the castle district.", "accessible": true, "routeable": true },
+			{ "id": "szent-istvan-templom", "name": "Szent István Templom", "englishName": "St. Stephen's Church", "category": "Historic quarter", "description": "Historic church near the northern castle approach.", "accessible": false, "routeable": true },
+			{ "id": "kormendy-haz", "name": "Körmendy Ház", "englishName": "Körmendy House", "category": "Historic quarter", "description": "Historic house on the castle ridge.", "accessible": false, "routeable": true },
+			{ "id": "szent-istvan-es-gizella-szobor", "name": "Szent István és Boldog Gizella szobra", "englishName": "Statue of King St. Stephen and Queen Gizella", "category": "Historic quarter", "description": "Panoramic monument at the northern end of the castle.", "accessible": false, "routeable": true },
+			{ "id": "benedek-hegy", "name": "Benedek-hegy", "englishName": "Benedict Hill", "category": "Parks & viewpoints", "description": "Open hillside viewpoint overlooking the city.", "accessible": false, "routeable": true },
+			{ "id": "szent-gyorgy-kapolna", "name": "Szent György Kápolna", "englishName": "St. George Chapel", "category": "Historic quarter", "description": "Medieval chapel remains in the castle district.", "accessible": false, "routeable": true },
+			{ "id": "szent-mihaly-foszekesegyhaz", "name": "Szent Mihály Főszékesegyház", "englishName": "St. Michael's Basilica", "category": "Historic quarter", "description": "Cathedral and central landmark of Veszprém Castle.", "accessible": true, "routeable": true },
+			{ "id": "szentharomsag-szobor", "name": "Szentháromság-szobor", "englishName": "Holy Trinity Statue", "category": "Historic quarter", "description": "Baroque monument in the heart of the castle square.", "accessible": true, "routeable": true },
+			{ "id": "varkut", "name": "Várkút", "englishName": "Castle Well", "category": "Historic quarter", "description": "Historic well beside the cathedral precinct.", "accessible": true, "routeable": true },
+			{ "id": "gizella-kapolna", "name": "Gizella Kápolna", "englishName": "Gisela Chapel", "category": "Historic quarter", "description": "Small medieval chapel with important wall paintings.", "accessible": false, "routeable": true },
+			{ "id": "erseki-palota", "name": "Érseki Palota", "englishName": "Archbishop's Palace", "category": "Historic quarter", "description": "Baroque archiepiscopal residence on the castle square.", "accessible": true, "routeable": true },
+			{ "id": "szent-imre-templom", "name": "Szent Imre Templom", "englishName": "Saint Emeric Church", "category": "Historic quarter", "description": "Historic church near the southern castle approach.", "accessible": true, "routeable": true },
+			{ "id": "deak-ferenc-rendezvenykozpont", "name": "Deák Ferenc utcai Rendezvényközpont", "englishName": "Deák Ferenc Street Events Centre", "category": "Museums & culture", "description": "Community and event venue near the castle district.", "accessible": true, "routeable": true },
+			{ "id": "auer-haz", "name": "Auer-ház", "englishName": "Auer House", "category": "Historic quarter", "description": "Historic house connected to violinist Leopold Auer.", "accessible": true, "routeable": true },
+			{ "id": "posa-haz", "name": "Pósa-ház", "englishName": "Pósa House", "category": "Historic quarter", "description": "Historic civic building in the downtown area.", "accessible": true, "routeable": true },
+			{ "id": "ruttner-haz-varborton", "name": "Ruttner-ház - Várbörtön kiállítás", "englishName": "Ruttner House - Castle Prison Exhibition", "category": "Museums & culture", "description": "Castle prison exhibition and visitor attraction.", "accessible": true, "routeable": true },
+			{ "id": "code-digitalis-elmenykozpont", "name": "CODE - Digitális Élményközpont", "englishName": "CODE Digital Experience Centre", "category": "Museums & culture", "description": "Interactive digital experience and learning centre.", "accessible": true, "routeable": true },
+			{ "id": "petofi-szinhaz", "name": "Veszprémi Petőfi Színház", "englishName": "Petőfi Theatre of Veszprém", "category": "Museums & culture", "description": "Main theatre for drama and live performance.", "accessible": true, "routeable": true },
+			{ "id": "hangvilla", "name": "Hangvilla Multifunkcionális Közösségi Tér", "englishName": "Hangvilla Cultural Centre", "category": "Museums & culture", "description": "Concert hall and multifunctional community venue.", "accessible": true, "routeable": true },
+			{ "id": "eotvos-karoly-megyei-konyvtar", "name": "Eötvös Károly Megyei Könyvtár", "englishName": "Eötvös Károly County Library", "category": "Museums & culture", "description": "County library and public learning space.", "accessible": true, "routeable": true },
+			{ "id": "szent-miklos-szeg", "name": "Szent Miklós-szeg", "englishName": "Ruins of Saint Nicholas Church", "category": "Historic quarter", "description": "Archaeological remains and open historic site.", "accessible": false, "routeable": true },
+			{ "id": "laczko-dezso-muzeum", "name": "Laczkó Dezső Múzeum", "englishName": "Laczkó Dezső Museum", "category": "Museums & culture", "description": "Regional museum for archaeology, history, and culture.", "accessible": true, "routeable": true },
+			{ "id": "bakonyi-haz", "name": "Bakonyi Ház", "englishName": "Bakony House", "category": "Historic quarter", "description": "Traditional folk architecture and ethnographic exhibition.", "accessible": false, "routeable": true },
+			{ "id": "egyetemi-rekortan-sportpalyak", "name": "Egyetemi Rekortán Sportpályák", "englishName": "University Sports Courts", "category": "Sports & recreation", "description": "Outdoor university running track and sports courts.", "accessible": true, "routeable": true },
+			{ "id": "acticity", "name": "ActiCity Tánc- és Mozgásművészeti Központ", "englishName": "ActiCity Dance and Movement Centre", "category": "Sports & recreation", "description": "Dance, movement, and community activity centre.", "accessible": true, "routeable": true },
+			{ "id": "digitalis-tudaskozpont", "name": "Digitális Tudásközpont", "englishName": "Digital Knowledge Centre", "category": "Museums & culture", "description": "Digital learning and technology education centre.", "accessible": true, "routeable": true },
+			{ "id": "gyarkert-kulturpark", "name": "Gyárkert KultúrPark", "englishName": "Gyárkert Culture Park", "category": "Parks & viewpoints", "description": "Outdoor cultural park and seasonal event venue.", "accessible": true, "routeable": true },
+			{ "id": "veszprem-arena", "name": "Veszprém Aréna Sport- és Rendezvénycsarnok", "englishName": "Veszprém Arena", "category": "Sports & recreation", "description": "Major sports and event arena outside the downtown route graph.", "accessible": true, "routeable": false },
+			{ "id": "veszpremi-sportuszoda", "name": "Veszprémi Sportuszoda", "englishName": "Veszprém Sports Swimming Pool", "category": "Sports & recreation", "description": "Public competition and training pool outside the downtown route graph.", "accessible": true, "routeable": false }
+		],
+		"connectors": {}
+	}
+}

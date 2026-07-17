@@ -1,0 +1,121 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "bafeaa356c37775549aad20ff099f015d18cf0fa81676cd6980809eb71f73d1f",
+	"reviewedAt": "2026-07-17T17:18:00.0000000+02:00",
+	"reviewer": "Codex visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Provides a production-shaped destination directory and touch wayfinding flow for the supplied Veszprem map."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Keeps the supplied illustrated map dominant and draws routes against its real location and route-point IDs."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Bilingual visitor-centre hierarchy, map treatment, directory controls, and route details are domain-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary instructions, destination names, route state, distance, and walking time meet room-readable floors."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light, Dark, and Custom shell palettes preserve contrast without recoloring or obscuring the supplied map."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long kiosk and destination names fit without clipped glyphs, overlap, or unreadable type reduction."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Both declared landscape sizes keep the map dominant and the directory usable without dead or overflowing regions."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "The packaged SVG remains sharp, clickable IDs survive bundling, and route overlays align with source geometry."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "This reference-led interactive map teaches graph routing and touch selection rather than reusing dashboard composition."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Full-HD directory composition, map detail, hierarchy, and scroll containment inspected."
+		},
+		{
+			"file": "compact-1366x768.png",
+			"status": "pass",
+			"notes": "Compact kiosk retains usable controls, readable rows, and a dominant uncropped map."
+		},
+		{
+			"file": "scenario-active-route-1920x1080.png",
+			"status": "pass",
+			"notes": "Connected route, endpoints, destination detail, distance, and reset action inspected."
+		},
+		{
+			"file": "scenario-app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Primary fixture matches the reviewed Full-HD default state."
+		},
+		{
+			"file": "scenario-compact-1366x768.png",
+			"status": "pass",
+			"notes": "Primary fixture matches the reviewed compact default state."
+		},
+		{
+			"file": "scenario-custom-theme-1366x768.png",
+			"status": "pass",
+			"notes": "Custom palette changes every shell token while preserving map and text contrast."
+		},
+		{
+			"file": "scenario-empty-1366x768.png",
+			"status": "pass",
+			"notes": "Empty bound data produces a stable, actionable state without stale destinations."
+		},
+		{
+			"file": "scenario-external-destination-1366x768.png",
+			"status": "pass",
+			"notes": "Legend-only destinations are clearly marked off-map without inventing a route."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Live table replacement updates the visible destination directory cleanly."
+		},
+		{
+			"file": "scenario-long-destination-list-1366x768.png",
+			"status": "pass",
+			"notes": "Long bilingual rows remain contained and navigable inside the intentional scroll region."
+		},
+		{
+			"file": "scenario-long-destination-selected-1366x768.png",
+			"status": "pass",
+			"notes": "Extended selected-place copy remains readable with clear route state and action placement."
+		},
+		{
+			"file": "scenario-long-title-1366x768.png",
+			"status": "pass",
+			"notes": "Long kiosk labels fit the header without colliding with the current-location block."
+		},
+		{
+			"file": "scenario-row-array-1366x768.png",
+			"status": "pass",
+			"notes": "Plain TABLE row-array input renders the same stable directory contract."
+		}
+	],
+	"unresolvedFindings": []
+}

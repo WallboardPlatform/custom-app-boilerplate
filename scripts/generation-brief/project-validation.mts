@@ -186,7 +186,6 @@ const collectProperties = (
 const validatePropertyNesting = (
 	context: ProjectValidationContext,
 	properties: unknown,
-	briefVersion: number,
 	depth = 0
 ): void => {
 	if (!Array.isArray(properties)) {
@@ -200,7 +199,7 @@ const validatePropertyNesting = (
 			continue;
 		}
 
-		if (briefVersion >= 5 && depth > 0) {
+		if (depth > 0) {
 			const label: string = typeof property.label === 'string' ? property.label : '(unlabelled)';
 
 			fail(
@@ -209,7 +208,7 @@ const validatePropertyNesting = (
 			);
 		}
 
-		validatePropertyNesting(context, property.properties, briefVersion, depth + 1);
+		validatePropertyNesting(context, property.properties, depth + 1);
 	}
 };
 
@@ -265,7 +264,7 @@ export const validateBriefAgainstProject = async (
 	brief: GenerationBrief
 ): Promise<void> => {
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
-	validatePropertyNesting(context, properties.properties, brief.briefVersion);
+	validatePropertyNesting(context, properties.properties);
 	const propertySummary = collectProperties(context, properties.properties);
 
 	if (brief.briefVersion >= 4) {

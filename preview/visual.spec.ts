@@ -19,6 +19,11 @@ import {
 	type TextInkMeasurement,
 	type TextInkRisk
 } from './text-ink-safety';
+import {
+	fontFloor,
+	type TextRole,
+	type ViewingDistance
+} from './legibility';
 
 const DEFAULT_VISUAL_SETTLE_MS = 650;
 
@@ -72,13 +77,22 @@ interface DynamicTextPolicy {
 	evidenceScenario: string;
 }
 
+interface TextRolePolicy {
+	role: TextRole;
+	selectors: string[];
+}
+
 interface GenerationBriefSummary {
-	briefVersion: 3 | 4 | 5;
+	briefVersion: 3 | 4 | 5 | 6;
 	surfaceStrategy: {
 		mode: 'fixed' | 'bounded' | 'adaptive';
 	};
 	surfaces: BriefSurface[];
 	dynamicText: DynamicTextPolicy[];
+	presentation?: {
+		viewingDistance?: ViewingDistance;
+		textRoles?: TextRolePolicy[];
+	};
 }
 
 const generationBriefPath: string = path.resolve(process.cwd(), 'generation-brief.json');
@@ -387,6 +401,53 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			}
 		}
 
+		if (generationBrief.briefVersion === 6) {
+			const distance = generationBrief.presentation!.viewingDistance!;
+			let visibleRoleTextCount = 0;
+
+			for (const policy of generationBrief.presentation!.textRoles!) {
+				const selector = policy.selectors.join(', ');
+				const floor = fontFloor(distance, policy.role);
+				const result = await page.locator(selector).evaluateAll((matches: Element[], input: {
+					floor: number;
+					role: TextRole;
+				}): { visibleCount: number; violations: string[] } => {
+					const visible = matches.filter((element: Element): boolean => {
+						const bounds = element.getBoundingClientRect();
+						const style = window.getComputedStyle(element);
+
+						return bounds.width > 0
+							&& bounds.height > 0
+							&& style.display !== 'none'
+							&& style.visibility !== 'hidden';
+					});
+
+					return {
+						visibleCount: visible.length,
+						violations: visible.flatMap((element: Element, index: number): string[] => {
+							const fontSize = Number.parseFloat(window.getComputedStyle(element).fontSize) || 0;
+							const text = element.textContent?.trim().replace(/\s+/g, ' ') ?? '';
+
+							return fontSize + 0.1 < input.floor
+								? [`${input.role} match ${index + 1} '${text.slice(0, 80)}' renders at ${fontSize}px below ${input.floor}px`]
+								: [];
+						})
+					};
+				}, { floor, role: policy.role });
+
+				visibleRoleTextCount += result.visibleCount;
+				expect(
+					result.violations,
+					`v6 ${distance} ${policy.role} text must stay at or above ${floor}px:\n${result.violations.join('\n')}`
+				).toEqual([]);
+			}
+
+			expect(
+				visibleRoleTextCount,
+				`v6 declared text roles must match visible content at '${preset.name}'.`
+			).toBeGreaterThan(0);
+		}
+
 		const previewError: string | undefined = await page.evaluate((): string | undefined => {
 			return document.documentElement.dataset.previewError;
 		});
@@ -528,6 +589,14 @@ for (const preset of [...presets, ...scenarioPresets]) {
 						}
 
 						clippingAncestor = clippingAncestor.parentElement;
+					}
+
+					const intentionallyClippedByOverflowRegion: boolean =
+						allowsOffCanvasContent &&
+						(visibleTop > rect.top + 0.5 || visibleBottom < rect.bottom - 0.5);
+
+					if (intentionallyClippedByOverflowRegion) {
+						continue;
 					}
 
 					const range: Range = document.createRange();

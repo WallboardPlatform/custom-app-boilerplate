@@ -61,7 +61,7 @@
   margin: 0;
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-accent);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -104,7 +104,7 @@
 
 .live-status span {
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -159,7 +159,7 @@
 .metrics article > span {
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -194,7 +194,7 @@
 .metrics article > small {
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 12px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -227,7 +227,7 @@
   margin: 5px 0 0;
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-primary);
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -236,7 +236,7 @@
 .section-heading > span {
   margin-left: 18px;
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 11px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
@@ -256,11 +256,11 @@
 }
 
 .table-header {
-  height: 30px;
+  height: 34px;
   flex: 0 0 auto;
   color: var(--wb-factory-safety-dashboard-secondary);
   border-bottom: 1px solid var(--wb-factory-safety-dashboard-border);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -307,7 +307,7 @@
 .table-row > strong {
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-primary);
-  font-size: 14px;
+  font-size: 20px;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -316,19 +316,19 @@
 .participant small,
 .table-row > strong small {
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 400;
 }
 
 .table-row time {
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .status {
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-danger);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -377,7 +377,7 @@
   display: block;
   min-height: 2.6em;
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.3;
 }
 
@@ -422,7 +422,7 @@
 .band > div:first-child span {
   overflow: hidden;
   color: var(--wb-factory-safety-dashboard-primary);
-  font-size: 12px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -454,7 +454,7 @@
   top: 25px;
   right: 0;
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .insights > footer {
@@ -466,7 +466,7 @@
   justify-content: space-between;
   color: var(--wb-factory-safety-dashboard-secondary);
   border-top: 1px solid var(--wb-factory-safety-dashboard-border);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .insights > footer strong {
@@ -493,7 +493,7 @@
 .empty-state p {
   margin: 0;
   color: var(--wb-factory-safety-dashboard-accent);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -506,7 +506,7 @@
 
 .empty-state span {
   color: var(--wb-factory-safety-dashboard-secondary);
-  font-size: 16px;
+  font-size: 20px;
 }
 
 @media (max-width: 1450px), (max-height: 850px) {
@@ -534,7 +534,7 @@
 
   .live-status {
     min-width: 178px;
-    margin-left: 24px;
+    margin-left: 8px;
   }
 
   .live-status strong {

@@ -8,13 +8,13 @@
 
 ## 2. Resolve Decisions
 
-- Resolve audience, message, surface, ownership, interaction, data/access, outputs, art direction, themes, density, and delivery.
+- Resolve audience, message, surface, viewing distance, ownership, interaction, data/access, outputs, cadence, art direction, themes, density, and delivery.
 - Ask only when surface or data ambiguity would materially change the result. Record safe assumptions.
 - Choose `fixed`, `bounded`, or `adaptive`; examples are engineering references, never automatic style templates.
 
 ## 3. Freeze The Brief
 
-Create a v5 `generation-brief.json` using `docs/system/generation-brief.md`; v3/v4 remain valid for maintained apps. Run:
+Create a v6 `generation-brief.json` using `docs/system/generation-brief.md`; v3-v5 remain valid for maintained apps. Run:
 
 ```bash
 npm run validate:brief
@@ -27,8 +27,9 @@ Do this before editing implementation artifacts.
 - Keep platform infrastructure unchanged and follow existing SolidJS/SCSS patterns.
 - Build the visual hierarchy from the accepted reference/domain before adding controls or edge states.
 - Normalize data at the boundary, keep settings synchronized across all representations, and use reusable project capabilities for themes, sanitization, text fitting, charts, assets, and cleanup.
+- Meet the v6 semantic font floors. Reduce density, remove secondary detail, or paginate before shrinking below them.
 - Enforce ownership. Interactive apps declare views, inputs, resets, and outputs; writes are displayer-only.
-- Add named preview scenarios as each materially different state is implemented; add behavior tests for timing, rotation, interaction, and teardown.
+- Use the shared rotation lifecycle for timed pages; specialized continuous motion stays app-owned. Add behavior tests for timing, rotation, interaction, and teardown.
 
 ## 5. Visual Review Loop
 

@@ -43,7 +43,7 @@ if (scriptPath === fileURLToPath(import.meta.url)) {
 	const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 	const summary = validateImageBudget(rootDirectory);
 
-	console.log(
-		`Tracked image budget: ${summary.count} files, ${(summary.bytes / 1024 / 1024).toFixed(2)} / ${(DEFAULT_IMAGE_BUDGET_BYTES / 1024 / 1024).toFixed(2)} MiB.`
+	process.stdout.write(
+		`Tracked image budget: ${summary.count} files, ${(summary.bytes / 1024 / 1024).toFixed(2)} / ${(DEFAULT_IMAGE_BUDGET_BYTES / 1024 / 1024).toFixed(2)} MiB.\n`
 	);
 }

@@ -109,6 +109,10 @@ The standard editor property schema does not rewrite sibling color values when a
 
 Choose pagination for the content and viewing distance. Valid treatments include a numeric counter, progress rail, section labels, dots for a small fixed set, an animated transition with no persistent indicator, or no pagination when all content fits. A top-right `1 / N` counter is not the default.
 
+V6 briefs classify key text as primary, secondary, or metadata and declare `near`, `room`, or `distance` viewing. The visual suite checks actual computed sizes against the centralized floors in `generation-brief.md`. When a floor fails, reduce row/card count, remove non-essential metadata, or add pages before reducing type. Auto-fit handles variable length inside the allowed range; it never overrides distance readability.
+
+Timed pages use the shared rotation lifecycle: stop at one page, destroy timers, preserve the current item across live updates when possible, and keep advancing when motion is Off. Use custom timing only for continuous marquees or behavior whose domain rules cannot be expressed as page rotation.
+
 ### Typography ink safety
 
 DOM box containment does not prove that glyphs are intact. Fonts can paint descenders such as `g`, `j`, `p`, `q`, and `y` outside a tight line box while `scrollHeight` still reports no overflow. This is common when `line-height: 1` is combined with `overflow: hidden` or `clip`.

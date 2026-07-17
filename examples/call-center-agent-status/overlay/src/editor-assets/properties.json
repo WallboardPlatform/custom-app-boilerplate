@@ -64,26 +64,16 @@
 						{ "label": "Trebuchet MS", "value": "'Trebuchet MS', Arial, sans-serif" }
 					]
 				},
-				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e8f0f6" },
-						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff" },
-						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#18344b" },
-						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#667d90" },
-						{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#2fa876" },
-						{ "label": "Busy", "type": "color", "property": "busyColor", "default": "#dc5260" },
-						{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#d99a27" },
-						{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#d9753f" },
-						{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#8293a0" },
-						{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#3d86bd" }
-					],
-					"visibilityConditions": {
-						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
-						"rule": "#1"
-					}
-				}
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e8f0f6", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#ffffff", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#18344b", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#667d90", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Ready", "type": "color", "property": "readyColor", "default": "#2fa876", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Busy", "type": "color", "property": "busyColor", "default": "#dc5260", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "After-call work", "type": "color", "property": "acwColor", "default": "#d99a27", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Not ready", "type": "color", "property": "awayColor", "default": "#d9753f", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Logged out", "type": "color", "property": "offlineColor", "default": "#8293a0", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} },
+				{ "label": "Unknown", "type": "color", "property": "unknownColor", "default": "#3d86bd", "visibilityConditions": {"conditions": [{"id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#1"} }
 			]
 		}
 	],
