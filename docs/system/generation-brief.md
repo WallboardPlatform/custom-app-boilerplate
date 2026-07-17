@@ -8,13 +8,20 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `4` for new or edited briefs; v3 remains accepted for existing examples and packages |
+| `briefVersion` | `5` for new briefs; v3/v4 remain accepted for existing examples and packages |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
 | `surfaceStrategy` | `fixed` for exact canvases, `bounded` for a known family of sizes, or `adaptive` for unknown placements; include the user or product rationale |
 | `surfaces` | Lowercase kebab-case IDs; exactly one `primary` matching `properties.json`; every supported surface has minimum width/height content coverage |
-| `data` | `static` with no bindings, or `bound` with every data picker mapped to its contract |
+| `data` | `static`, or mapped bindings with `read`/`write`/`read-write` access |
+| `ownership` | One owner per concern: `locked` invariant, `setting` config, `datasource` durable data, `interaction` session, or `external-command` transition |
+| `experience` | `passive` or `interactive`; the latter declares views, inputs, and reset |
+| `outputs` | Datasource, sensor, or own-state outputs; writes match write-enabled bindings |
+| `rendering` | `reflow`, or sized `fixed-canvas` with transparent/background letterbox |
+| `motion` | `off`/`subtle`/`expressive`, techniques, and optional disable setting |
+| `media` | `none`, or image/video source plus fit policy |
+| `branding` | `none`, `settings`, `reference`, or `mcp-branding-kit` plus inputs |
 | `presentation` | Required themes plus `sparse`, `balanced`, or `dense` information density |
 | `settings` | Exactly one purpose for every non-datasource editor property; slider controls also reference executable `effect` evidence |
 | `dynamicText` | Every important variable-length text surface declares its source, selectors, fit/wrap/ellipsis/marquee strategy, readable limits, fallback, rationale, and a stress scenario |
@@ -102,3 +109,5 @@ The brief, `datasource-contract.json`, and `properties.json` data pickers must d
 Measurement mode skips only minimum-coverage assertions so the first baseline can be observed. Runtime errors, failed requests, overflow, broken media, behavior tests, and setting-effect assertions remain blocking. The generated report never edits the brief automatically; threshold choice remains an explicit design decision.
 
 Gold-standard briefs live in `examples/*/generation-brief.json`.
+
+Internal datasource outputs name a write-enabled binding and atomic operation. Editor writes are blocked.

@@ -226,6 +226,36 @@ export const collectVisualReviewSourceFiles = (projectDirectory: string): string
 		}
 	}
 
+	const datasourceContractPath: string = path.join(projectDirectory, 'datasource-contract.json');
+
+	if (fs.existsSync(datasourceContractPath)) {
+		const contract: Record<string, unknown> = JSON.parse(fs.readFileSync(datasourceContractPath, 'utf8')) as Record<string, unknown>;
+		const bindings: unknown[] = Array.isArray(contract.bindings)
+			? contract.bindings
+			: [{ source: contract.source }];
+
+		for (const binding of bindings) {
+			if (!binding || typeof binding !== 'object' || Array.isArray(binding)) {
+				continue;
+			}
+
+			const source: unknown = (binding as Record<string, unknown>).source;
+			const sampleData: unknown = source && typeof source === 'object' && !Array.isArray(source)
+				? (source as Record<string, unknown>).sampleData
+				: undefined;
+
+			if (typeof sampleData !== 'string' || sampleData.trim() === '') {
+				continue;
+			}
+
+			const samplePath: string = path.resolve(projectDirectory, sampleData);
+
+			if (samplePath.startsWith(`${projectDirectory}${path.sep}`) && fs.existsSync(samplePath)) {
+				files.push(samplePath);
+			}
+		}
+	}
+
 	return [...new Set(files)].sort((left: string, right: string): number => left.localeCompare(right));
 };
 

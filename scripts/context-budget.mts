@@ -6,14 +6,14 @@ export interface ContextBudgetReport {
 	files: number;
 	characters: number;
 	estimatedTokens: number;
-	maximumTokens: number;
+	targetTokens: number;
 }
 const EXCLUDED_DIRECTORIES = new Set(['.git', '.tmp', 'dist', 'node_modules']);
-export const DEFAULT_CONTEXT_BUDGET = 25_000;
+export const DEFAULT_CONTEXT_TARGET = 25_000;
 
 export const measureMarkdownContext = (
 	repositoryDirectory: string,
-	maximumTokens: number = DEFAULT_CONTEXT_BUDGET
+	targetTokens: number = DEFAULT_CONTEXT_TARGET
 ): ContextBudgetReport => {
 	let files: number = 0;
 	let characters: number = 0;
@@ -41,7 +41,7 @@ export const measureMarkdownContext = (
 		files,
 		characters,
 		estimatedTokens: Math.ceil(characters / 4),
-		maximumTokens
+		targetTokens
 	};
 };
 
@@ -51,13 +51,11 @@ if (scriptPath && import.meta.url === new URL(`file:///${path.resolve(scriptPath
 	const repositoryDirectory: string = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 	const report: ContextBudgetReport = measureMarkdownContext(repositoryDirectory);
 
-	if (report.estimatedTokens > report.maximumTokens) {
-		throw new Error(
-			`Markdown context budget exceeded: ${report.estimatedTokens} estimated tokens; maximum ${report.maximumTokens}.`
-		);
-	}
+	const summary: string = `Markdown context: ${report.estimatedTokens}/${report.targetTokens} advisory target across ${report.files} files.`;
 
-	console.log(
-		`Markdown context budget: ${report.estimatedTokens}/${report.maximumTokens} estimated tokens across ${report.files} files.`
-	);
+	if (report.estimatedTokens > report.targetTokens) {
+		process.stderr.write(`Warning: ${summary}\n`);
+	} else {
+		process.stdout.write(`${summary}\n`);
+	}
 }

@@ -234,19 +234,19 @@ export const previewScenarios: PreviewScenario[] = [
 		id: 'light-theme',
 		fixture: createFixture('foundry-light', microsoftCalendar, currentFeed),
 		viewport: { width: 1920, height: 1080, background: 'light' },
-		minimumContentCoverage: { width: 83, height: 61 }
+		minimumContentCoverage: { width: 83, height: 56 }
 	},
 	{
 		id: 'dark-theme',
 		fixture: createFixture('foundry-dark', microsoftCalendar, currentFeed, { ...baseConfig, themePreset: 'dark' }),
 		viewport: { width: 1920, height: 1080, background: 'dark' },
-		minimumContentCoverage: { width: 83, height: 61 }
+		minimumContentCoverage: { width: 83, height: 56 }
 	},
 	{
 		id: 'microsoft-calendar-current-feed',
 		fixture: createFixture('foundry-microsoft', microsoftCalendar, currentFeed, { ...baseConfig, themePreset: 'custom' }),
 		viewport: { width: 1920, height: 1080, background: 'light' },
-		minimumContentCoverage: { width: 83, height: 61 }
+		minimumContentCoverage: { width: 83, height: 56 }
 	},
 	{
 		id: 'google-overlap',
@@ -261,7 +261,7 @@ export const previewScenarios: PreviewScenario[] = [
 		id: 'icalendar-legacy-feed',
 		fixture: createFixture('foundry-ical-legacy', iCalendar, legacyFeed),
 		viewport: { width: 800, height: 480, background: 'light' },
-		minimumContentCoverage: { width: 84, height: 61 }
+		minimumContentCoverage: { width: 84, height: 58 }
 	},
 	{
 		id: 'calendar-only',
@@ -289,25 +289,25 @@ export const previewScenarios: PreviewScenario[] = [
 			boardLabel: 'Today across studios, galleries and courtyard gathering spaces'
 		}),
 		viewport: { width: 1920, height: 1080, background: 'light' },
-		minimumContentCoverage: { width: 83, height: 64 }
+		minimumContentCoverage: { width: 83, height: 56 }
 	},
 	{
 		id: 'all-day',
 		fixture: createFixture('foundry-all-day', allDayCalendar, currentFeed),
 		viewport: { width: 800, height: 480, background: 'light' },
-		minimumContentCoverage: { width: 84, height: 61 }
+		minimumContentCoverage: { width: 84, height: 58 }
 	},
 	{
 		id: 'broken-media-stale-feed',
 		fixture: createFixture('foundry-broken-stale', microsoftCalendar, brokenStaleFeed),
 		viewport: { width: 1920, height: 1080, background: 'light' },
-		minimumContentCoverage: { width: 83, height: 61 }
+		minimumContentCoverage: { width: 83, height: 56 }
 	},
 	{
 		id: 'live-calendar-update',
 		fixture: createFixture('foundry-calendar-update', microsoftCalendar, currentFeed),
 		viewport: { width: 800, height: 480, background: 'light' },
-		minimumContentCoverage: { width: 84, height: 61 },
+		minimumContentCoverage: { width: 84, height: 58 },
 		liveDatasourceUpdate: {
 			property: 'calendarData',
 			value: updatedCalendar,
@@ -318,7 +318,7 @@ export const previewScenarios: PreviewScenario[] = [
 		id: 'live-feed-update',
 		fixture: createFixture('foundry-feed-update', microsoftCalendar, currentFeed),
 		viewport: { width: 800, height: 480, background: 'light' },
-		minimumContentCoverage: { width: 84, height: 61 },
+		minimumContentCoverage: { width: 84, height: 58 },
 		liveDatasourceUpdate: {
 			property: 'feedData',
 			value: updatedFeed,

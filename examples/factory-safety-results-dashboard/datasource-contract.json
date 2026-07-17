@@ -1,0 +1,38 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "resultsData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"sampleData": "sample-results-datasource.json",
+				"table": "Results"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Factory Safety Results",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "submissionId", "type": "string", "required": true },
+				{ "name": "participantName", "type": "string", "required": true },
+				{ "name": "corporateId", "type": "string", "required": true },
+				{ "name": "score", "type": "number", "required": true },
+				{ "name": "totalQuestions", "type": "number", "required": true },
+				{ "name": "completedAt", "type": "string", "required": true },
+				{ "name": "answersJson", "type": "string", "required": true }
+			]
+		}
+	],
+	"acceptedValueShapes": [
+		"Native datasource containing Results, selected Results table, processed row array, or object with rows"
+	],
+	"behavior": {
+		"unbound": "render the bundled synthetic result history",
+		"boundEmpty": "show a clear no-results state instead of restoring sample records",
+		"invalidRows": "skip rows without a participant, timestamp, finite score, or positive question total",
+		"ordering": "sort by completedAt descending; invalid dates remain after valid dated rows",
+		"aggregation": "derive dashboard KPIs from the retained raw result rows; never maintain independent counters in the widget"
+	}
+}

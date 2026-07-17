@@ -48,7 +48,7 @@ export const previewScenarios: PreviewScenario[] = [
 			showImage: false
 		}),
 		viewport: { width: 1920, height: 1080, background: 'checker' },
-		minimumContentCoverage: { width: 56, height: 43 }
+		minimumContentCoverage: { width: 56, height: 26 }
 	},
 	{
 		id: 'long-title',

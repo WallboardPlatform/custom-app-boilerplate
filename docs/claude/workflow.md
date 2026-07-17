@@ -8,13 +8,13 @@
 
 ## 2. Resolve Decisions
 
-- Confirm or infer audience, primary message, placement family, data contract, visual direction, required themes, density, and delivery mode.
+- Resolve audience, message, surface, ownership, interaction, data/access, outputs, art direction, themes, density, and delivery.
 - Ask only when surface or data ambiguity would materially change the result. Record safe assumptions.
 - Choose `fixed`, `bounded`, or `adaptive`; examples are engineering references, never automatic style templates.
 
 ## 3. Freeze The Brief
 
-Create a v4 `generation-brief.json` with identity, surfaces, data bindings, presentation, settings, dynamic-text policies, states, behaviors, assets, visual direction, and review risks. Run:
+Create a v5 `generation-brief.json` using `docs/system/generation-brief.md`; v3/v4 remain valid for maintained apps. Run:
 
 ```bash
 npm run validate:brief
@@ -27,6 +27,7 @@ Do this before editing implementation artifacts.
 - Keep platform infrastructure unchanged and follow existing SolidJS/SCSS patterns.
 - Build the visual hierarchy from the accepted reference/domain before adding controls or edge states.
 - Normalize data at the boundary, keep settings synchronized across all representations, and use reusable project capabilities for themes, sanitization, text fitting, charts, assets, and cleanup.
+- Enforce ownership. Interactive apps declare views, inputs, resets, and outputs; writes are displayer-only.
 - Add named preview scenarios as each materially different state is implemented; add behavior tests for timing, rotation, interaction, and teardown.
 
 ## 5. Visual Review Loop

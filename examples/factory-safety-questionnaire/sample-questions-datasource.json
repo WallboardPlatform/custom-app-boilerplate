@@ -1,0 +1,55 @@
+{
+	"Questions": {
+		"header": {
+			"sortOrder": "number",
+			"questionId": "string",
+			"prompt": "string",
+			"optionA": "string",
+			"optionB": "string",
+			"optionC": "string",
+			"optionD": "string",
+			"correctOption": "string",
+			"explanation": "string",
+			"enabled": "boolean"
+		},
+		"rows": [
+			{
+				"sortOrder": 1,
+				"questionId": "ppe-entry",
+				"prompt": "What must you confirm before entering an active assembly area?",
+				"optionA": "Required PPE is fitted and undamaged",
+				"optionB": "The nearest break room is open",
+				"optionC": "Your phone has a full battery",
+				"optionD": "The shift has already started",
+				"correctOption": "A",
+				"explanation": "Inspect and wear every item of PPE required for the marked production zone.",
+				"enabled": true
+			},
+			{
+				"sortOrder": 2,
+				"questionId": "blocked-route",
+				"prompt": "You find material blocking a marked emergency route. What should you do first?",
+				"optionA": "Step over it and continue working",
+				"optionB": "Move it only when the shift ends",
+				"optionC": "Stop, keep the route clear, and report the obstruction",
+				"optionD": "Cover the route marking temporarily",
+				"correctOption": "C",
+				"explanation": "Emergency routes must remain clear and visible at all times.",
+				"enabled": true
+			},
+			{
+				"sortOrder": 3,
+				"questionId": "unexpected-motion",
+				"prompt": "A machine begins moving unexpectedly during a routine check. What is the safest response?",
+				"optionA": "Complete the check quickly",
+				"optionB": "Use the approved stop procedure and alert the area lead",
+				"optionC": "Hold the moving part in place",
+				"optionD": "Ask a nearby colleague to watch it",
+				"correctOption": "B",
+				"explanation": "Do not approach unexpected movement. Stop safely and escalate according to site procedure.",
+				"enabled": true
+			}
+		],
+		"connectors": {}
+	}
+}

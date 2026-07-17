@@ -1,0 +1,28 @@
+{
+	"Results": {
+		"header": {
+			"submissionId": "string",
+			"participantName": "string",
+			"corporateId": "string",
+			"score": "number",
+			"totalQuestions": "number",
+			"completedAt": "string",
+			"answersJson": "string"
+		},
+		"rows": [
+			{ "submissionId": "demo-012", "participantName": "Avery Morgan", "corporateId": "NM-1042", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T12:44:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-011", "participantName": "Blake Turner", "corporateId": "NM-1178", "score": 2, "totalQuestions": 3, "completedAt": "2026-07-17T12:31:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-010", "participantName": "Casey Reed", "corporateId": "NM-1205", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T12:16:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-009", "participantName": "Devon Hayes", "corporateId": "NM-0984", "score": 1, "totalQuestions": 3, "completedAt": "2026-07-17T11:58:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-008", "participantName": "Emerson Cole", "corporateId": "NM-1311", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T11:43:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-007", "participantName": "Finley Brooks", "corporateId": "NM-1097", "score": 2, "totalQuestions": 3, "completedAt": "2026-07-17T11:20:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-006", "participantName": "Gray Parker", "corporateId": "NM-1250", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T10:54:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-005", "participantName": "Harper Lane", "corporateId": "NM-1014", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T10:31:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-004", "participantName": "Jordan Rivera", "corporateId": "NM-1148", "score": 2, "totalQuestions": 3, "completedAt": "2026-07-17T10:08:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-003", "participantName": "Kai Bennett", "corporateId": "NM-1272", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T09:42:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-002", "participantName": "Logan Foster", "corporateId": "NM-1059", "score": 2, "totalQuestions": 3, "completedAt": "2026-07-17T09:19:00Z", "answersJson": "[]" },
+			{ "submissionId": "demo-001", "participantName": "Morgan Lee", "corporateId": "NM-1224", "score": 3, "totalQuestions": 3, "completedAt": "2026-07-17T08:55:00Z", "answersJson": "[]" }
+		],
+		"connectors": {}
+	}
+}

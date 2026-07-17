@@ -1,0 +1,64 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "questionData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"sampleData": "sample-questions-datasource.json",
+				"table": "Questions"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Factory Safety Questions",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "sortOrder", "type": "number", "required": true },
+				{ "name": "questionId", "type": "string", "required": true },
+				{ "name": "prompt", "type": "string", "required": true },
+				{ "name": "optionA", "type": "string", "required": true },
+				{ "name": "optionB", "type": "string", "required": true },
+				{ "name": "optionC", "type": "string", "required": true },
+				{ "name": "optionD", "type": "string", "required": true },
+				{ "name": "correctOption", "type": "string", "required": true },
+				{ "name": "explanation", "type": "string", "required": false },
+				{ "name": "enabled", "type": "boolean", "required": true }
+			]
+		},
+		{
+			"property": "resultsData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"sampleData": "sample-results-datasource.json",
+				"table": "Results"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Factory Safety Results",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "submissionId", "type": "string", "required": true },
+				{ "name": "participantName", "type": "string", "required": true },
+				{ "name": "corporateId", "type": "string", "required": true },
+				{ "name": "score", "type": "number", "required": true },
+				{ "name": "totalQuestions", "type": "number", "required": true },
+				{ "name": "completedAt", "type": "string", "required": true },
+				{ "name": "answersJson", "type": "string", "required": true }
+			]
+		}
+	],
+	"acceptedValueShapes": [
+		"Questions: native datasource containing Questions, selected Questions table, or processed row array",
+		"Results: internal datasource containing a Results table with a rows array"
+	],
+	"behavior": {
+		"unbound": "render bundled synthetic questions; result submission remains preview-only until a results datasource is bound",
+		"boundEmpty": "show a clear unavailable state instead of silently restoring sample questions",
+		"invalidRows": "skip disabled rows and rows missing an ID, prompt, four options, or a valid correct option",
+		"ordering": "sort questions ascending by sortOrder and preserve source order for ties",
+		"writeback": "append one completed session atomically to Results.rows; never write while rendered in the Wallboard editor"
+	}
+}

@@ -7,6 +7,7 @@ export interface FontSizeSearchOptions {
 export interface TextFitOptions {
 	minFontSize: number;
 	maxFontSize: number;
+	safetyMarginPx?: number;
 	widthOnly?: boolean;
 }
 
@@ -36,6 +37,8 @@ export const findLargestFittingFontSize = (options: FontSizeSearchOptions): numb
 export const fitTextElement = (element: HTMLElement, options: TextFitOptions): number => {
 	const minimum: number = normalizeFontSize(options.minFontSize, 1);
 	const maximum: number = Math.max(minimum, normalizeFontSize(options.maxFontSize, minimum));
+	const configuredSafetyMargin: number = options.safetyMarginPx ?? 2;
+	const safetyMargin: number = Number.isFinite(configuredSafetyMargin) ? Math.max(0, configuredSafetyMargin) : 2;
 	const availableWidth: number = element.clientWidth;
 	const availableHeight: number = element.clientHeight;
 
@@ -49,8 +52,8 @@ export const fitTextElement = (element: HTMLElement, options: TextFitOptions): n
 		fits: (fontSize: number): boolean => {
 			element.style.fontSize = `${fontSize}px`;
 
-			const fitsWidth: boolean = element.scrollWidth <= availableWidth + 1;
-			const fitsHeight: boolean = options.widthOnly || element.scrollHeight <= availableHeight + 1;
+			const fitsWidth: boolean = element.scrollWidth <= availableWidth - safetyMargin;
+			const fitsHeight: boolean = options.widthOnly || element.scrollHeight <= availableHeight - safetyMargin;
 
 			return fitsWidth && fitsHeight;
 		}

@@ -121,6 +121,18 @@ const prepareOutputDirectory = () => {
 		) {
 			allowedFiles.add(previousSourceArchiveFile);
 		}
+
+		const previousDatasourceSampleFile = previousManifest?.datasource?.sampleFile;
+
+		if (typeof previousDatasourceSampleFile === 'string' && path.basename(previousDatasourceSampleFile) === previousDatasourceSampleFile) {
+			allowedFiles.add(previousDatasourceSampleFile);
+		}
+
+		for (const sample of previousManifest?.datasource?.sampleFiles ?? []) {
+			if (typeof sample?.file === 'string' && path.basename(sample.file) === sample.file) {
+				allowedFiles.add(sample.file);
+			}
+		}
 	}
 
 	const entries = fs.readdirSync(outputDirectory, { withFileTypes: true });
@@ -186,26 +198,31 @@ if (fs.existsSync(contractPath)) {
 	const contract = readJson(contractPath);
 	const bindings = normalizeDatasourceBindings(contract);
 	const sampleDataPaths = new Set(bindings.map((binding) => binding.source.sampleData));
-
-	if (sampleDataPaths.size !== 1) {
-		throw new Error('All datasource bindings must use one shared sampleData bundle.');
-	}
-
-	const [sampleDataPath] = sampleDataPaths;
-
-	if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
-		throw new Error('datasource-contract.json source.sampleData must identify the shared template data file.');
-	}
-
-	const samplePath = path.resolve(projectDirectory, sampleDataPath);
 	const contractOutputPath = path.join(outputDirectory, 'datasource-contract.json');
-	const sampleOutputPath = path.join(outputDirectory, 'sample-datasource.json');
 	const bindingSampleFiles = writeBindingSampleFiles({
 		bindings,
 		projectDirectory,
 		outputDirectory,
 		prefix: 'sample-datasource'
 	});
+	let sharedSampleFile = null;
+
+	if (sampleDataPaths.size === 1) {
+		const [sampleDataPath] = sampleDataPaths;
+
+		if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
+			throw new Error('datasource-contract.json source.sampleData must identify a template data file.');
+		}
+
+		const samplePath = path.resolve(projectDirectory, sampleDataPath);
+
+		if (!samplePath.startsWith(`${projectDirectory}${path.sep}`) || !fs.existsSync(samplePath)) {
+			throw new Error(`Datasource template '${sampleDataPath}' must exist inside the project.`);
+		}
+
+		sharedSampleFile = 'sample-datasource.json';
+		fs.copyFileSync(samplePath, path.join(outputDirectory, sharedSampleFile));
+	}
 	const bindingSampleFileByProperty = new Map(
 		bindingSampleFiles.map(({ bindingProperty, fileName }) => [bindingProperty, fileName])
 	);
@@ -232,19 +249,18 @@ if (fs.existsSync(contractPath)) {
 	const singleBinding = manifestBindings.length === 1 ? manifestBindings[0] : null;
 
 	fs.copyFileSync(contractPath, contractOutputPath);
-	fs.copyFileSync(samplePath, sampleOutputPath);
 	datasource = {
 		mode: singleBinding ? 'single' : 'multiple',
 		...(singleBinding ?? {}),
 		bindings: manifestBindings,
 		contractFile: 'datasource-contract.json',
-		sampleFile: 'sample-datasource.json',
+		sampleFile: sharedSampleFile,
 		sampleFiles: bindingSampleFiles.map(({ bindingProperty, fileName }) => ({
 			bindingProperty,
 			file: fileName
 		})),
 		packagedContractFile: 'editor-assets/datasource-contract.json',
-		packagedTemplateFile: 'editor-assets/datasource-template.json',
+		packagedTemplateFile: sharedSampleFile ? 'editor-assets/datasource-template.json' : null,
 		currentProvisioning: singleBinding?.currentProvisioning ?? 'resolve-each-binding',
 		futureProvisioning: singleBinding?.futureProvisioning ?? 'resolve-each-binding'
 	};

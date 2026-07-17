@@ -1,0 +1,158 @@
+{
+	"briefVersion": 5,
+	"request": {
+		"summary": "Create a read-only factory safety results dashboard paired with the Factory Safety Questionnaire and driven by its Results table.",
+		"audience": "Safety leads and shift supervisors monitoring completion and pass performance on a shared landscape display.",
+		"primaryGoal": "Turn bounded raw questionnaire result rows into an immediate operational overview without introducing a second write path or duplicated statistics datasource."
+	},
+	"assumptions": [
+		"The packaged data is fictional and representative; no real employee identity or customer data is included.",
+		"The dashboard reads the questionnaire Results table and computes all aggregate metrics locally.",
+		"The Results table remains the source of truth; higher-volume aggregation belongs in a future backend or automation workflow."
+	],
+	"app": { "mode": "new", "name": "Factory Safety Results Dashboard", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The dashboard is designed for Full HD control-room displays and smaller 16:9 landscape status screens."
+	},
+	"surfaces": [
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary safety operations display.", "minimumContentCoverage": { "width": 90, "height": 86 } },
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape supervisor display.", "minimumContentCoverage": { "width": 90, "height": 86 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "resultsData", "source": "generated", "contract": "TABLE", "access": "read" }
+		]
+	},
+	"ownership": [
+		{
+			"id": "result-records",
+			"area": "content",
+			"owner": "datasource",
+			"targets": ["resultsData"],
+			"rationale": "The paired questionnaire owns result collection while this dashboard reads the same customer-managed table."
+		},
+		{
+			"id": "dashboard-settings",
+			"area": "content",
+			"owner": "setting",
+			"targets": ["plantName", "title", "passThreshold", "maximumRows", "showCorporateId"],
+			"rationale": "Operators control public labels, pass policy, recent-row density, and identity visibility without rebuilding."
+		},
+		{
+			"id": "presentation-settings",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": ["themePreset", "fontFamily", "backgroundColor", "surfaceColor", "surfaceStrongColor", "borderColor", "primaryTextColor", "secondaryTextColor", "accentColor", "passColor", "dangerColor"],
+			"rationale": "Coordinated themes are safe defaults and the flattened Custom controls expose the complete semantic palette."
+		},
+		{
+			"id": "analytics-rules",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["normalization", "aggregation", "distribution", "composition"],
+			"rationale": "Normalization and aggregate calculations remain deterministic code-owned behavior."
+		}
+	],
+	"experience": {
+		"mode": "passive",
+		"views": [{ "id": "dashboard", "purpose": "Present completion, score, pass, distribution, and recent-result information in one glance." }],
+		"inputs": [],
+		"session": { "reset": "none", "expectation": "Live datasource updates recompute the current dashboard without resetting or navigating." }
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "transparent",
+		"rationale": "The two landscape surfaces retain the same information hierarchy while flex tracks and type sizes reallocate available space."
+	},
+	"motion": {
+		"default": "off",
+		"techniques": [],
+		"rationale": "Operational results must remain stable for scanning; live values update without decorative transitions."
+	},
+	"media": [],
+	"branding": {
+		"source": "settings",
+		"editable": true,
+		"provenance": "The example uses only the fictional Northline Mobility label and generated semantic colors.",
+		"fallback": "Use the coordinated Dark preset when no customer branding direction is supplied."
+	},
+	"presentation": { "themes": ["dark", "light", "custom"], "density": "dense" },
+	"settings": [
+		{ "property": "plantName", "purpose": "Public plant or company label." },
+		{ "property": "title", "purpose": "Primary dashboard heading." },
+		{ "property": "passThreshold", "purpose": "Minimum percentage counted as a pass.", "effect": "pass-threshold" },
+		{ "property": "maximumRows", "purpose": "Maximum recent submissions shown." },
+		{ "property": "showCorporateId", "purpose": "Controls whether corporate IDs are visible on the shared display." },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom palette.", "effect": "theme-preset" },
+		{ "property": "fontFamily", "purpose": "Dashboard font family." },
+		{ "property": "backgroundColor", "purpose": "Custom page background." },
+		{ "property": "surfaceColor", "purpose": "Custom panel surface." },
+		{ "property": "surfaceStrongColor", "purpose": "Custom emphasized panel surface." },
+		{ "property": "borderColor", "purpose": "Custom dividers and borders." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
+		{ "property": "secondaryTextColor", "purpose": "Custom secondary text." },
+		{ "property": "accentColor", "purpose": "Custom accent and average-score color." },
+		{ "property": "passColor", "purpose": "Custom passing-state color." },
+		{ "property": "dangerColor", "purpose": "Custom review-state color." }
+	],
+	"dynamicText": [
+		{
+			"id": "dashboard-title",
+			"source": { "type": "setting", "properties": ["title"] },
+			"selectors": [".wb-safety-dashboard-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 27, "maximumLines": 1 },
+			"fallback": "Reduce to the declared readable minimum and preserve the complete title.",
+			"rationale": "The primary operator-authored title must remain intact in both supported landscapes.",
+			"evidenceScenario": "long-title"
+		},
+		{
+			"id": "participant-names",
+			"source": { "type": "datasource", "properties": ["resultsData"] },
+			"selectors": [".wb-safety-dashboard-participant-name"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize only the participant-name tail while preserving score, status, and timestamp columns.",
+			"rationale": "Recent submissions remain aligned and scannable when identity labels vary.",
+			"evidenceScenario": "corporate-ids"
+		}
+	],
+	"states": [
+		{ "scenario": "full-hd", "expectation": "The primary dashboard shows all KPIs, distribution bands, and six recent synthetic results without dead space." },
+		{ "scenario": "compact", "expectation": "The Light preset preserves hierarchy and complete metrics on the smaller supported landscape." },
+		{ "scenario": "corporate-ids", "expectation": "Optional identity detail remains contained and does not displace score or status columns." },
+		{ "scenario": "long-title", "expectation": "A long operator-authored heading auto-fits without clipping or hiding adjacent live status." },
+		{ "scenario": "empty", "expectation": "A bound empty Results table shows a deliberate empty state rather than fictional sample data." },
+		{ "scenario": "row-array", "expectation": "A direct row-array datasource shape normalizes to the same metrics and recent-result table." }
+	],
+	"behaviors": [
+		{ "id": "derived-kpis", "expectation": "Synthetic rows produce the expected completion and pass-rate metrics.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "bound-empty-state", "expectation": "A bound empty datasource remains empty and never falls back to packaged sample rows.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-recompute", "expectation": "A live datasource update recomputes aggregate metrics without reloading the app.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A paired industrial safety command board with strong numeric hierarchy and a restrained tabular audit trail rather than a generic chart-card dashboard.",
+		"references": ["Factory Safety Questionnaire paired-app concept"],
+		"signatureChoices": [
+			"A compact four-metric strip gives the shift lead an immediate top-line reading.",
+			"A narrow score-profile rail balances the recent-result table and explains the aggregate without a chart dependency."
+		],
+		"avoid": ["A second statistics datasource", "Real participant identities", "Decorative charts that obscure exact counts"]
+	},
+	"visualReview": {
+		"intent": "A credible safety operations surface that can be understood in seconds and audited at closer range.",
+		"focus": [
+			"Verify title, participant names, status labels, and descenders remain intact at both supported sizes.",
+			"Verify Dark, Light, and Custom palettes retain complete semantic contrast.",
+			"Verify all derived values agree with the packaged synthetic Results rows."
+		]
+	}
+}

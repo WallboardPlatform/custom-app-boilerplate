@@ -35,25 +35,26 @@ const contract = readJson(contractPath);
 const bindings = Array.isArray(contract.bindings) ? contract.bindings : [{ source: contract.source }];
 const sampleDataPaths = new Set(bindings.map((binding) => binding.source?.sampleData));
 
-if (sampleDataPaths.size !== 1) {
-	throw new Error('All datasource bindings must use one shared sampleData bundle.');
-}
-
-const [sampleDataPath] = sampleDataPaths;
-
-if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
-	throw new Error('datasource-contract.json source.sampleData must identify the shared template data file.');
-}
-
-const absoluteSamplePath = path.resolve(projectDirectory, sampleDataPath);
-
-if (!absoluteSamplePath.startsWith(`${projectDirectory}${path.sep}`) || !fs.existsSync(absoluteSamplePath)) {
-	throw new Error(`Datasource template '${sampleDataPath}' must exist inside the project.`);
-}
-
 fs.mkdirSync(editorAssetsDirectory, { recursive: true });
 fs.copyFileSync(contractPath, packagedContractPath);
-fs.copyFileSync(absoluteSamplePath, packagedTemplatePath);
+
+if (sampleDataPaths.size === 1) {
+	const [sampleDataPath] = sampleDataPaths;
+
+	if (typeof sampleDataPath !== 'string' || sampleDataPath.trim() === '') {
+		throw new Error('datasource-contract.json source.sampleData must identify a template data file.');
+	}
+
+	const absoluteSamplePath = path.resolve(projectDirectory, sampleDataPath);
+
+	if (!absoluteSamplePath.startsWith(`${projectDirectory}${path.sep}`) || !fs.existsSync(absoluteSamplePath)) {
+		throw new Error(`Datasource template '${sampleDataPath}' must exist inside the project.`);
+	}
+
+	fs.copyFileSync(absoluteSamplePath, packagedTemplatePath);
+} else {
+	fs.rmSync(packagedTemplatePath, { force: true });
+}
 
 const bindingTemplates = writeBindingSampleFiles({
 	bindings,
@@ -63,5 +64,5 @@ const bindingTemplates = writeBindingSampleFiles({
 });
 
 console.log(
-	`Packaged datasource contract, combined template, and ${bindingTemplates.length} binding template(s) under src/editor-assets/.`
+	`Packaged datasource contract, ${sampleDataPaths.size === 1 ? 'shared template, and ' : ''}${bindingTemplates.length} binding template(s) under src/editor-assets/.`
 );

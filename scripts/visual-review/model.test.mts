@@ -80,11 +80,20 @@ void describe('visual review model', (): void => {
 		assert.equal(createVisualReviewSourceHash(projectDirectory), lfHash);
 	});
 
-	void it('ignores generated datasource sidecars but tracks their root sources', (context): void => {
+	void it('ignores generated datasource sidecars but tracks every declared root source', (context): void => {
 		const projectDirectory: string = createProject();
 		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
-		fs.writeFileSync(path.join(projectDirectory, 'datasource-contract.json'), '{"version":1}');
-		fs.writeFileSync(path.join(projectDirectory, 'sample-datasource.json'), '{"rows":[]}');
+		fs.writeFileSync(
+			path.join(projectDirectory, 'datasource-contract.json'),
+			JSON.stringify({
+				bindings: [
+					{ source: { sampleData: 'sample-questions.json' } },
+					{ source: { sampleData: 'sample-results.json' } }
+				]
+			})
+		);
+		fs.writeFileSync(path.join(projectDirectory, 'sample-questions.json'), '{"rows":[]}');
+		fs.writeFileSync(path.join(projectDirectory, 'sample-results.json'), '{"rows":[]}');
 		const before: string = createVisualReviewSourceHash(projectDirectory);
 
 		fs.writeFileSync(
@@ -97,7 +106,7 @@ void describe('visual review model', (): void => {
 		);
 
 		assert.equal(createVisualReviewSourceHash(projectDirectory), before);
-		fs.writeFileSync(path.join(projectDirectory, 'sample-datasource.json'), '{"rows":[{"id":1}]}');
+		fs.writeFileSync(path.join(projectDirectory, 'sample-results.json'), '{"rows":[{"id":1}]}');
 		assert.notEqual(createVisualReviewSourceHash(projectDirectory), before);
 	});
 

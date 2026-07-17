@@ -12,6 +12,7 @@ export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElem
 	let element: HTMLElement | undefined;
 	let resizeObserver: ResizeObserver | undefined;
 	let animationFrame: number | undefined;
+	let mounted = false;
 
 	const fit = (): void => {
 		if (element) {
@@ -36,6 +37,17 @@ export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElem
 			fit();
 		});
 	};
+	const observeElement = (): void => {
+		resizeObserver?.disconnect();
+
+		if (!mounted || !element) {
+			return;
+		}
+
+		resizeObserver = new ResizeObserver(scheduleFit);
+		resizeObserver.observe(element);
+		scheduleFit();
+	};
 
 	createEffect((): void => {
 		options.watch?.();
@@ -43,16 +55,12 @@ export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElem
 	});
 
 	onMount((): void => {
-		if (!element) {
-			return;
-		}
-
-		resizeObserver = new ResizeObserver(scheduleFit);
-		resizeObserver.observe(element);
-		scheduleFit();
+		mounted = true;
+		observeElement();
 	});
 
 	onCleanup((): void => {
+		mounted = false;
 		resizeObserver?.disconnect();
 
 		if (animationFrame !== undefined) {
@@ -62,5 +70,6 @@ export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElem
 
 	return (target: HTMLElement): void => {
 		element = target;
+		observeElement();
 	};
 };

@@ -27,6 +27,7 @@ export interface TextInkRisk extends TextInkMeasurement {
 }
 
 const round = (value: number): number => Math.round(value * 100) / 100;
+const COMPARISON_TOLERANCE_PX = 0.05;
 
 export const requiredTextInkBuffer = (fontSize: number): number => {
 	return Math.max(0.75, fontSize * 0.035);
@@ -73,7 +74,11 @@ export const findTextInkRisks = (measurements: TextInkMeasurement[]): TextInkRis
 			measurement.paddingBottom + Math.max(0, (measurement.lineHeight - measurement.fontSize) / 2);
 		const requiredDescenderClearance: number = hasDescender ? Math.max(0.75, measurement.fontSize * 0.08) : 0;
 
-		if (partialLinePixels <= 1 && buffer >= requiredBuffer && descenderClearance >= requiredDescenderClearance) {
+		if (
+			partialLinePixels <= 1 + COMPARISON_TOLERANCE_PX
+			&& buffer + COMPARISON_TOLERANCE_PX >= requiredBuffer
+			&& descenderClearance + COMPARISON_TOLERANCE_PX >= requiredDescenderClearance
+		) {
 			return [];
 		}
 

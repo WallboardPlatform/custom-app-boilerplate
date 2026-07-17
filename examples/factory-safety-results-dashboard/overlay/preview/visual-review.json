@@ -1,0 +1,96 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "65246c4cd46a43829ed18c638f1bd725bf1cd99fdac2ef423bc7dd57bc0d7af2",
+	"reviewedAt": "2026-07-17T14:53:13.2190672+02:00",
+	"reviewer": "Codex visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Shows the requested derived safety KPIs and recent raw submissions from one Results binding."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "No external visual reference was supplied; the paired questionnaire language is preserved."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Industrial command-board hierarchy, audit table, and score profile are domain-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary metrics and statuses remain legible at both declared landscape sizes."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark, Light, and Custom token paths preserve semantic text and status contrast."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long title and participant identity scenarios pass fit, ellipsis, and ink checks."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Full HD and compact layouts fill their zones without overflow, overlap, or dead regions."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Packaged assets are intact and the coordinated palettes cover every visible surface."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The paired analytics board teaches aggregation mechanics without copying the questionnaire layout."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "compact-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-compact-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-corporate-ids-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-empty-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-long-title-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		},
+		{
+			"file": "scenario-row-array-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+		}
+	],
+	"unresolvedFindings": []
+}

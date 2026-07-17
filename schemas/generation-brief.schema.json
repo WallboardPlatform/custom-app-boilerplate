@@ -6,10 +6,25 @@
 	"additionalProperties": false,
 	"allOf": [
 		{
-			"if": { "properties": { "briefVersion": { "const": 4 } } },
+			"if": { "properties": { "briefVersion": { "enum": [4, 5] } } },
 			"then": {
 				"properties": { "presentation": {} },
 				"required": ["presentation"]
+			}
+		},
+		{
+			"if": { "properties": { "briefVersion": { "const": 5 } } },
+			"then": {
+				"properties": {
+					"ownership": {},
+					"experience": {},
+					"outputs": {},
+					"rendering": {},
+					"motion": {},
+					"media": {},
+					"branding": {}
+				},
+				"required": ["ownership", "experience", "outputs", "rendering", "motion", "media", "branding"]
 			}
 		}
 	],
@@ -30,7 +45,7 @@
 		"visualReview"
 	],
 	"properties": {
-		"briefVersion": { "enum": [3, 4] },
+		"briefVersion": { "enum": [3, 4, 5] },
 		"request": {
 			"type": "object",
 			"additionalProperties": false,
@@ -101,12 +116,47 @@
 						"properties": {
 							"property": { "$ref": "#/$defs/nonEmptyString" },
 							"source": { "enum": ["generated", "existing", "built-in"] },
-							"contract": { "enum": ["TABLE", "CUSTOM", "EXISTING", "FEED", "CALENDAR"] }
+							"contract": { "enum": ["TABLE", "CUSTOM", "EXISTING", "FEED", "CALENDAR"] },
+							"access": { "enum": ["read", "write", "read-write"] }
 						}
 					}
 				}
 			}
 		},
+		"ownership": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "$ref": "#/$defs/ownershipDecision" }
+		},
+		"experience": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode", "views", "inputs", "session"],
+			"properties": {
+				"mode": { "enum": ["passive", "interactive"] },
+				"views": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "$ref": "#/$defs/experienceView" }
+				},
+				"inputs": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/experienceInput" }
+				},
+				"session": { "$ref": "#/$defs/sessionPolicy" }
+			}
+		},
+		"outputs": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/runtimeOutput" }
+		},
+		"rendering": { "$ref": "#/$defs/renderingPolicy" },
+		"motion": { "$ref": "#/$defs/motionPolicy" },
+		"media": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/mediaPolicy" }
+		},
+		"branding": { "$ref": "#/$defs/brandingPolicy" },
 		"presentation": {
 			"type": "object",
 			"additionalProperties": false,
@@ -325,6 +375,117 @@
 					"items": { "$ref": "#/$defs/nonEmptyString" }
 				},
 				"required": { "type": "boolean" }
+			}
+		},
+		"ownershipDecision": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "area", "owner", "targets", "rationale"],
+			"properties": {
+				"id": { "$ref": "#/$defs/safeId" },
+				"area": { "enum": ["content", "presentation", "behavior", "state"] },
+				"owner": { "enum": ["locked", "setting", "datasource", "interaction", "external-command"] },
+				"targets": {
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": { "$ref": "#/$defs/nonEmptyString" }
+				},
+				"rationale": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"experienceView": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "purpose"],
+			"properties": {
+				"id": { "$ref": "#/$defs/safeId" },
+				"purpose": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"experienceInput": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "type", "action"],
+			"properties": {
+				"id": { "$ref": "#/$defs/safeId" },
+				"type": { "enum": ["touch", "pointer", "keyboard", "external-command"] },
+				"action": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"sessionPolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["reset", "expectation"],
+			"properties": {
+				"reset": { "enum": ["none", "timeout", "completion", "external-command", "manual"] },
+				"timeoutSeconds": { "type": "integer", "minimum": 1 },
+				"expectation": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"runtimeOutput": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "channel", "target", "operation", "editorPolicy", "expectation", "failure"],
+			"properties": {
+				"id": { "$ref": "#/$defs/safeId" },
+				"channel": { "enum": ["internal-datasource", "sensor-event", "own-state"] },
+				"target": { "$ref": "#/$defs/nonEmptyString" },
+				"operation": { "enum": ["insert-to-array", "set", "merge", "increase", "decrease", "remove", "rotate", "upsert", "emit"] },
+				"editorPolicy": { "enum": ["disabled", "preview-mock"] },
+				"expectation": { "$ref": "#/$defs/nonEmptyString" },
+				"failure": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"renderingPolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["mode", "letterbox", "rationale"],
+			"properties": {
+				"mode": { "enum": ["reflow", "fixed-canvas"] },
+				"designWidth": { "type": "integer", "minimum": 1 },
+				"designHeight": { "type": "integer", "minimum": 1 },
+				"letterbox": { "enum": ["transparent", "background"] },
+				"rationale": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"motionPolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["default", "techniques", "rationale"],
+			"properties": {
+				"default": { "enum": ["off", "subtle", "expressive"] },
+				"disableProperty": { "$ref": "#/$defs/nonEmptyString" },
+				"techniques": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "enum": ["fade", "slide", "scale", "progress", "chart", "custom"] }
+				},
+				"rationale": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"mediaPolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "type", "source", "fit", "fallback", "rationale"],
+			"properties": {
+				"id": { "$ref": "#/$defs/safeId" },
+				"type": { "enum": ["image", "video"] },
+				"source": { "enum": ["packaged", "datasource", "setting", "folder"] },
+				"fit": { "enum": ["cover", "contain", "blur-fill", "fill"] },
+				"fallback": { "$ref": "#/$defs/nonEmptyString" },
+				"rationale": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"brandingPolicy": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["source", "editable", "provenance", "fallback"],
+			"properties": {
+				"source": { "enum": ["none", "settings", "reference", "mcp-branding-kit"] },
+				"editable": { "type": "boolean" },
+				"provenance": { "$ref": "#/$defs/nonEmptyString" },
+				"fallback": { "$ref": "#/$defs/nonEmptyString" }
 			}
 		}
 	}

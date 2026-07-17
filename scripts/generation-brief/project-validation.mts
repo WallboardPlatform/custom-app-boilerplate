@@ -183,6 +183,36 @@ const collectProperties = (
 	return output;
 };
 
+const validatePropertyNesting = (
+	context: ProjectValidationContext,
+	properties: unknown,
+	briefVersion: number,
+	depth = 0
+): void => {
+	if (!Array.isArray(properties)) {
+		return fail(context, 'properties.json properties must be an array.');
+	}
+
+	for (const propertyValue of properties) {
+		const property = requireObject(context, propertyValue, 'properties[]');
+
+		if (!Array.isArray(property.properties)) {
+			continue;
+		}
+
+		if (briefVersion >= 5 && depth > 0) {
+			const label: string = typeof property.label === 'string' ? property.label : '(unlabelled)';
+
+			fail(
+				context,
+				`nested property group '${label}' is not supported by the legacy editor; keep its controls in the parent group and apply visibilityConditions to each control.`
+			);
+		}
+
+		validatePropertyNesting(context, property.properties, briefVersion, depth + 1);
+	}
+};
+
 const setsMatch = (left: Set<string>, right: Set<string>): boolean => {
 	return left.size === right.size && [...left].every((value) => right.has(value));
 };
@@ -235,9 +265,10 @@ export const validateBriefAgainstProject = async (
 	brief: GenerationBrief
 ): Promise<void> => {
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
+	validatePropertyNesting(context, properties.properties, brief.briefVersion);
 	const propertySummary = collectProperties(context, properties.properties);
 
-	if (brief.briefVersion === 4) {
+	if (brief.briefVersion >= 4) {
 		validateStyleIsolation(context.applicationDirectory);
 	}
 
@@ -304,7 +335,7 @@ export const validateBriefAgainstProject = async (
 		fail(context, `settings must exactly match editor properties. Brief: ${formatSet(plannedSettings)}; properties: ${formatSet(propertySummary.settings)}.`);
 	}
 
-	if (brief.briefVersion === 4 && (brief.presentation?.themes.length ?? 0) > 1 && !plannedSettings.has('themePreset')) {
+	if (brief.briefVersion >= 4 && (brief.presentation?.themes.length ?? 0) > 1 && !plannedSettings.has('themePreset')) {
 		fail(context, 'multiple presentation themes require a \'themePreset\' editor property.');
 	}
 
