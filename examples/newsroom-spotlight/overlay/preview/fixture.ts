@@ -117,7 +117,11 @@ const updatedFeed: Record<string, unknown> = {
 			media: undefined,
 			attachments: []
 		},
-		...wallboardItems.slice(0, 3)
+		...wallboardItems.slice(0, 3).map((item): Record<string, unknown> => ({
+			...item,
+			media: undefined,
+			attachments: []
+		}))
 	]
 };
 
