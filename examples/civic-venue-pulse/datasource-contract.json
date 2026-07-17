@@ -1,0 +1,44 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "calendarData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "CALENDAR",
+				"sampleData": "sample-datasource.json",
+				"samplePath": "calendar"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Foundry Arts Center Programs",
+				"quickEditEligible": false
+			}
+		},
+		{
+			"property": "feedData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "FEED",
+				"sampleData": "sample-datasource.json",
+				"samplePath": "feed"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Foundry Arts Center Announcements",
+				"quickEditEligible": false
+			}
+		}
+	],
+	"acceptedValueShapes": [
+		"Calendar: Google or Microsoft calendar object containing events with nested start and end timeStamp/dateTime values",
+		"Calendar: iCalendar object containing events with summary, startTimestamp, and endTimestamp, either directly or under calendar.events",
+		"Feed: current Wallboard feed channel containing items with media, attachments, publishDate, or categories",
+		"Feed: legacy RSS parser output under feed.entries, RSS channel.item, or a processed item array"
+	],
+	"behavior": {
+		"unbound": "render synthetic preview data only in the preview fixture; real bound empty sources render the configured empty state",
+		"boundEmpty": "calendar-only, feed-only, and both-empty states each render intentionally without replacing missing customer data",
+		"invalidRows": "skip cancelled or malformed calendar events, strip rich feed text to plain text, and ignore unsafe or broken media",
+		"ordering": "feature the active or next calendar program first; use a fresh announcement sorted newest-first as support; rotate extra programs without resetting on independent feed updates"
+	}
+}

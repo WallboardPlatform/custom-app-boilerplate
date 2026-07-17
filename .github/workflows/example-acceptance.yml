@@ -45,6 +45,7 @@ jobs:
           - airport-departures
           - call-center-agent-status
           - campus-directory
+          - civic-venue-pulse
           - kpi-operations
           - live-agenda
           - manufacturing-andon

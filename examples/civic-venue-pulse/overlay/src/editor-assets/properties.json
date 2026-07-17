@@ -1,0 +1,88 @@
+{
+	"version": "1",
+	"name": "Foundry Civic Venue Pulse",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Program calendar",
+			"type": "dataPicker",
+			"property": "calendarData",
+			"dataPickerType": "any",
+			"tooltip": "Select the integrated Google, Microsoft, or iCalendar program datasource."
+		},
+		{
+			"label": "Announcement feed",
+			"type": "dataPicker",
+			"property": "feedData",
+			"dataPickerType": "any",
+			"tooltip": "Select an independent Wallboard feed or RSS venue-announcement datasource."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Venue name", "type": "text", "property": "venueName", "default": "Foundry Arts Center" },
+				{ "label": "Board label", "type": "text", "property": "boardLabel", "default": "Today at the Foundry" },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No programs or announcements are scheduled right now." },
+				{ "label": "Program rotation seconds", "type": "number", "property": "programRotationSeconds", "default": 10, "min": 4, "max": 120, "step": 1 },
+				{ "label": "Announcement freshness hours", "type": "number", "property": "announcementFreshHours", "default": 72, "min": 1, "max": 336, "step": 1 },
+				{
+					"label": "Time format",
+					"type": "select",
+					"property": "timeFormat",
+					"default": "12h",
+					"options": [
+						{ "label": "12 hour", "value": "12h" },
+						{ "label": "24 hour", "value": "24h" }
+					]
+				},
+				{ "label": "Show media", "type": "checkbox", "property": "showMedia", "default": true }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Custom colors",
+					"type": "group",
+					"properties": [
+						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f3efe6" },
+						{ "label": "Program surface", "type": "color", "property": "surfaceColor", "default": "#fffaf0" },
+						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#1f2421" },
+						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#606a62" },
+						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#9a4e2f" },
+						{ "label": "Soft accent", "type": "color", "property": "softAccentColor", "default": "#d9b86f" }
+					],
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	],
+	"externalCommands": []
+}

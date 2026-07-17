@@ -1,0 +1,126 @@
+{
+	"briefVersion": 4,
+	"request": {
+		"summary": "Create a calm public-facing venue pulse for the fictional Foundry Arts Center using one built-in calendar program source and one independent built-in feed announcement source.",
+		"audience": "Visitors in the Foundry Arts Center lobby or compact venue display zones who need to understand what is happening now or next.",
+		"primaryGoal": "Make the current or next program unmistakable while one timely announcement supports it as part of the same composed venue surface."
+	},
+	"assumptions": [
+		"The two requested production placements are the only supported canvases: 1920x1080 and 800x480.",
+		"The venue is fictional, and all bundled sample records, IDs, links, and timestamps are synthetic.",
+		"The app should keep independent calendar and feed refresh lifecycles; a feed update must not reset program rotation, and a calendar update must not reset announcement rotation unless the active item disappears."
+	],
+	"app": { "mode": "new", "name": "Foundry Civic Venue Pulse", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The task explicitly limits usage to two landscape signage canvases, so the composition is optimized for 1920x1080 and 800x480 without unsupported fallback ratios."
+	},
+	"surfaces": [
+		{ "id": "full-hd", "width": 1920, "height": 1080, "role": "primary", "purpose": "Main public venue display.", "minimumContentCoverage": { "width": 83, "height": 61 } },
+		{ "id": "compact", "width": 800, "height": 480, "role": "required", "purpose": "Compact landscape venue display that may remove imagery and secondary prose.", "minimumContentCoverage": { "width": 84, "height": 61 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "calendarData", "source": "built-in", "contract": "CALENDAR" },
+			{ "property": "feedData", "source": "built-in", "contract": "FEED" }
+		]
+	},
+	"presentation": {
+		"themes": ["light", "dark", "custom"],
+		"density": "balanced"
+	},
+	"settings": [
+		{ "property": "venueName", "purpose": "Fictional venue identity shown in the header." },
+		{ "property": "boardLabel", "purpose": "Short program-board label above the featured program." },
+		{ "property": "emptyStateText", "purpose": "Message shown when both sources have no usable current content." },
+		{ "property": "programRotationSeconds", "purpose": "Duration before rotating to another valid overlapping or upcoming program.", "effect": "program-rotation-speed" },
+		{ "property": "announcementFreshHours", "purpose": "Maximum age of announcements considered timely." },
+		{ "property": "timeFormat", "purpose": "12-hour or 24-hour program time labels." },
+		{ "property": "showMedia", "purpose": "Allows full-size surfaces to include feed media when available.", "effect": "media-visibility" },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom outer background color." },
+		{ "property": "surfaceColor", "purpose": "Custom program surface color." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text color." },
+		{ "property": "secondaryTextColor", "purpose": "Custom secondary text color." },
+		{ "property": "accentColor", "purpose": "Custom accent color for time, status, and program markers.", "effect": "accent-color" },
+		{ "property": "softAccentColor", "purpose": "Custom supporting accent for announcement and divider details." }
+	],
+	"dynamicText": [
+		{
+			"id": "wb-civic-venue-pulse-program-title",
+			"source": { "type": "datasource", "properties": ["calendarData"] },
+			"selectors": [".wb-civic-venue-pulse-program-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 26, "maximumLines": 3 },
+			"fallback": "At the readable minimum, wrap to three lines and clamp after preserving time and state.",
+			"rationale": "The current or next program title is the essential message and must remain dominant on both target surfaces.",
+			"evidenceScenario": "long-content"
+		},
+		{
+			"id": "wb-civic-venue-pulse-announcement-title",
+			"source": { "type": "datasource", "properties": ["feedData"] },
+			"selectors": [".wb-civic-venue-pulse-announcement-title"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Clamp after two lines while preserving the program title and time.",
+			"rationale": "The announcement supports the program but cannot compete with or displace it.",
+			"evidenceScenario": "long-content"
+		},
+		{
+			"id": "venue-labels",
+			"source": { "type": "setting", "properties": ["venueName", "boardLabel"] },
+			"selectors": [".wb-civic-venue-pulse-venue-name", ".wb-civic-venue-pulse-board-label"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Ellipsize the tail before reducing essential program time or title size.",
+			"rationale": "Configured labels identify the board but are secondary to the live program.",
+			"evidenceScenario": "long-content"
+		}
+	],
+	"states": [
+		{ "scenario": "light-theme", "expectation": "The light preset presents a calm gallery-lobby surface with one dominant program and a supporting announcement." },
+		{ "scenario": "dark-theme", "expectation": "The dark preset keeps the same hierarchy with coordinated contrast." },
+		{ "scenario": "microsoft-calendar-current-feed", "expectation": "Microsoft-style calendar events and current feed items normalize into the full HD composition." },
+		{ "scenario": "google-overlap", "expectation": "Overlapping Google/Microsoft-style programs keep the active program unmistakable and rotate only among valid program candidates." },
+		{ "scenario": "icalendar-legacy-feed", "expectation": "iCalendar and legacy RSS feed wrappers normalize into the same model." },
+		{ "scenario": "calendar-only", "expectation": "A valid calendar with no announcements still renders a complete program-first venue pulse." },
+		{ "scenario": "feed-only", "expectation": "A valid announcement feed without calendar programs renders a clear announcement-led fallback." },
+		{ "scenario": "both-empty", "expectation": "Both empty sources render the configured quiet empty state." },
+		{ "scenario": "long-content", "expectation": "Long program titles, missing locations, rich text summaries, and long announcement copy remain contained." },
+		{ "scenario": "all-day", "expectation": "All-day programs use an all-day label instead of misleading clock ranges." },
+		{ "scenario": "broken-media-stale-feed", "expectation": "Broken media is hidden and stale announcements are not selected when fresher items exist." },
+		{ "scenario": "live-calendar-update", "expectation": "Calendar refreshes update current/next state without resetting announcement rotation." },
+		{ "scenario": "live-feed-update", "expectation": "Feed refreshes update the announcement without resetting active program rotation." }
+	],
+	"behaviors": [
+		{ "id": "calendar-and-feed-normalization", "expectation": "Microsoft, Google, iCalendar, current feed, and legacy RSS shapes produce one typed program-plus-announcement model.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "independent-live-updates", "expectation": "Calendar and feed updates apply independently without unnecessary rotation resets.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "program-rotation", "expectation": "Overlapping and upcoming programs rotate on the configured cadence while preserving the active/next state label.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-calendar-scenario", "expectation": "A calendar datasource refresh replaces the visible program content in place.", "evidence": { "scenario": "live-calendar-update" } },
+		{ "id": "live-feed-scenario", "expectation": "A feed datasource refresh replaces the visible announcement content in place.", "evidence": { "scenario": "live-feed-update" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{ "id": "feed-media", "source": "datasource", "binding": "feedData", "required": false }
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A calm civic arts venue pulse that merges program and announcement into one editorial signage composition rather than adjacent dashboards.",
+		"references": [],
+		"signatureChoices": [
+			"One oversized program field occupies the visual center, with announcement text tucked into the same diagonal rhythm.",
+			"Warm gallery-neutral palettes use restrained ink, copper, and soft gold accents rather than operational dashboard colors."
+		],
+		"avoid": ["Two equal side-by-side dashboards", "Dense KPI cards", "Generic news layout with unrelated article rail"]
+	},
+	"visualReview": {
+		"intent": "A public arts-center board where visitors immediately know the active or next program, with one timely support announcement integrated into the same surface.",
+		"focus": [
+			"Verify the featured program is unmistakably stronger than the announcement at 1920x1080 and 800x480.",
+			"Verify the compact surface removes imagery and secondary prose before shrinking essential time and title text.",
+			"Verify light and dark themes feel coordinated and all long text remains contained with visible descenders."
+		]
+	}
+}

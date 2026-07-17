@@ -12,7 +12,7 @@ Reuse these mechanics without inheriting an example's visual language.
 | Rotation/timers | Instance-local signal + timer + `onCleanup` | Behavior test for movement, completion, update, teardown |
 | Charts | Chart.js selective imports; ECharts only for advanced needs | `charting.md`; no/one/dense data and cleanup |
 | Packaged assets | Static import plus `resourceList` | Broken-media scenario and package validation |
-| Built-in data | FEED/CALENDAR normalization | `newsroom-spotlight`, `live-agenda` |
+| Built-in data | FEED/CALENDAR normalization and independent multi-source composition | `newsroom-spotlight`, `live-agenda`, `civic-venue-pulse` |
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
 
 ## Selection Rules

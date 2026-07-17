@@ -1,0 +1,133 @@
+{
+    "reviewVersion":  1,
+    "sourceHash":  "0363041b5ddcc653bdb2ac3d0ea3378461d5baa9d03bcb85d2ac08250b434bec",
+    "reviewedAt":  "2026-07-16T22:34:00+02:00",
+    "reviewer":  "Codex",
+    "criteria":  [
+                     {
+                         "id":  "promptFidelity",
+                         "status":  "pass",
+                         "notes":  "Current or next program dominates the surface while one timely announcement remains integrated as support; both requested target sizes are represented."
+                     },
+                     {
+                         "id":  "referenceFidelity",
+                         "status":  "pass",
+                         "notes":  "No external visual reference was supplied; review followed the instruction-led civic arts venue direction in the brief."
+                     },
+                     {
+                         "id":  "visualSpecificity",
+                         "status":  "pass",
+                         "notes":  "Warm gallery-neutral palette, framed civic venue composition, and program-first hierarchy avoid generic dashboard/card layouts."
+                     },
+                     {
+                         "id":  "distanceReadability",
+                         "status":  "pass",
+                         "notes":  "Program time, state, title, and location remain readable at 1920x1080 and 800x480; compact removes secondary prose first."
+                     },
+                     {
+                         "id":  "themeContrast",
+                         "status":  "pass",
+                         "notes":  "Light and dark screenshots preserve readable contrast and coordinated accent usage."
+                     },
+                     {
+                         "id":  "dynamicTextSafety",
+                         "status":  "pass",
+                         "notes":  "Long program and announcement titles, rich text summaries, and missing location fallback stay contained with visible descenders."
+                     },
+                     {
+                         "id":  "surfaceComposition",
+                         "status":  "pass",
+                         "notes":  "Full HD and compact layouts fill the canvas without looking like two separate dashboards; feed-only mode promotes one announcement without duplicating the support rail."
+                     },
+                     {
+                         "id":  "assetAndThemeQuality",
+                         "status":  "pass",
+                         "notes":  "Icon and placeholder are app-specific; broken or absent feed media hides cleanly without a broken image."
+                     },
+                     {
+                         "id":  "exampleSameness",
+                         "status":  "pass",
+                         "notes":  "Uses provider normalization mechanics from examples but distinct venue-pulse composition, palette, and hierarchy."
+                     }
+                 ],
+    "screenshots":  [
+                        {
+                            "file":  "compact-800x480.png",
+                            "status":  "pass",
+                            "notes":  "The bounded compact composition preserves essential time, title, location, and one supporting announcement."
+                        },
+                        {
+                            "file":  "full-hd-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-all-day-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-both-empty-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-broken-media-stale-feed-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-calendar-only-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-dark-theme-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-feed-only-800x480.png",
+                            "status":  "pass",
+                            "notes":  "The single announcement is promoted into the primary field and the supporting rail is absent, so no content is duplicated."
+                        },
+                        {
+                            "file":  "scenario-google-overlap-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-icalendar-legacy-feed-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-light-theme-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-live-calendar-update-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-live-feed-update-800x480.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-long-content-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        },
+                        {
+                            "file":  "scenario-microsoft-calendar-current-feed-1920x1080.png",
+                            "status":  "pass",
+                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
+                        }
+                    ],
+    "unresolvedFindings":  [
+
+                           ]
+}
