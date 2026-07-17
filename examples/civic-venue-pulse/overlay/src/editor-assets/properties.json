@@ -27,9 +27,30 @@
 			"properties": [
 				{ "label": "Venue name", "type": "text", "property": "venueName", "default": "Foundry Arts Center" },
 				{ "label": "Board label", "type": "text", "property": "boardLabel", "default": "Today at the Foundry" },
-				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No programs or announcements are scheduled right now." },
-				{ "label": "Program rotation seconds", "type": "number", "property": "programRotationSeconds", "default": 10, "min": 4, "max": 120, "step": 1 },
-				{ "label": "Announcement freshness hours", "type": "number", "property": "announcementFreshHours", "default": 72, "min": 1, "max": 336, "step": 1 },
+				{
+					"label": "Empty state",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No programs or announcements are scheduled right now."
+				},
+				{
+					"label": "Program rotation seconds",
+					"type": "number",
+					"property": "programRotationSeconds",
+					"default": 10,
+					"min": 4,
+					"max": 120,
+					"step": 1
+				},
+				{
+					"label": "Announcement freshness hours",
+					"type": "number",
+					"property": "announcementFreshHours",
+					"default": 72,
+					"min": 1,
+					"max": 336,
+					"step": 1
+				},
 				{
 					"label": "Time format",
 					"type": "select",
@@ -60,29 +81,68 @@
 					]
 				},
 				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f3efe6" },
-						{ "label": "Program surface", "type": "color", "property": "surfaceColor", "default": "#fffaf0" },
-						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#1f2421" },
-						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#606a62" },
-						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#9a4e2f" },
-						{ "label": "Soft accent", "type": "color", "property": "softAccentColor", "default": "#d9b86f" }
-					],
+					"label": "Background",
+					"type": "color",
+					"property": "backgroundColor",
+					"default": "#f3efe6",
 					"visibilityConditions": {
-						"conditions": [
-							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
-						],
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Program surface",
+					"type": "color",
+					"property": "surfaceColor",
+					"default": "#fffaf0",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Primary text",
+					"type": "color",
+					"property": "primaryTextColor",
+					"default": "#1f2421",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Secondary text",
+					"type": "color",
+					"property": "secondaryTextColor",
+					"default": "#606a62",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent",
+					"type": "color",
+					"property": "accentColor",
+					"default": "#9a4e2f",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Soft accent",
+					"type": "color",
+					"property": "softAccentColor",
+					"default": "#d9b86f",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
 						"rule": "#1"
 					}
 				}
 			]
 		}
 	],
-	"resourceList": [
-		"assets/app.js",
-		"assets/app-chrome-49.js"
-	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
 	"externalCommands": []
 }

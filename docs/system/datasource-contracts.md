@@ -52,7 +52,7 @@ Use `bindings[]` when one app intentionally consumes independently configured so
 Rules:
 
 - Declare every `dataPicker` exactly once. A missing or duplicate binding fails validation.
-- Keep one shared, sanitized `sample-datasource.json`; `samplePath` selects each source's representative value.
+- Keep one shared, sanitized `sample-datasource.json`; `samplePath` selects each source's representative value. Multi-binding deliveries retain this combined file and also generate one exact payload per binding, named `sample-datasource-<property>.json` beside the delivery and `editor-assets/datasource-template-<property>.json` inside the upload ZIP.
 - Declare top-level `"sampleDataClassification": "synthetic"`. Validation rejects missing classification, Wallboard environment URLs, production-shaped IDs, non-reserved email/URL hosts, and non-sentinel credentials.
 - Use `EXISTING` only for a supplied and inspected runtime shape. Normalize provider differences at one typed application boundary.
 - Preserve independent bindings when sources have different ownership, refresh cadence, credentials, or structure.

@@ -1,5 +1,6 @@
 {
 	"calendar": {
+		"_wallboardSample": { "mode": "relative-to-now" },
 		"calendarDetails": {
 			"id": "foundry-programs@example.invalid",
 			"name": "Foundry Arts Center Programs",
@@ -12,6 +13,8 @@
 				"title": "Open Studio: Clay and Light",
 				"description": "Drop-in workshop with teaching artists in the ceramics studio.",
 				"location": "Kiln Workshop",
+				"_sampleStartOffsetMinutes": -15,
+				"_sampleEndOffsetMinutes": 45,
 				"start": { "dateTime": "2026-07-16T18:00:00-04:00", "timeStamp": "1784248800000" },
 				"end": { "dateTime": "2026-07-16T19:15:00-04:00", "timeStamp": "1784253300000" }
 			},
@@ -21,12 +24,15 @@
 				"title": "Foundry Courtyard Jazz",
 				"description": "A quiet outdoor set before evening gallery hours.",
 				"location": "Courtyard",
+				"_sampleStartOffsetMinutes": 60,
+				"_sampleEndOffsetMinutes": 110,
 				"start": { "dateTime": "2026-07-16T19:30:00-04:00", "timeStamp": "1784254200000" },
 				"end": { "dateTime": "2026-07-16T20:20:00-04:00", "timeStamp": "1784257200000" }
 			}
 		]
 	},
 	"feed": {
+		"_wallboardSample": { "mode": "relative-to-now" },
 		"channel": {
 			"title": "Foundry Venue Notes",
 			"description": "Synthetic visitor announcements for the Foundry Arts Center.",
@@ -35,6 +41,7 @@
 					"guid": "foundry-note-1",
 					"title": "Courtyard doors open from Maple Street",
 					"description": "<p>Use the Maple Street entry for tonight's outdoor program.</p>",
+					"_samplePublishedOffsetMinutes": -30,
 					"publishDate": 1784245200,
 					"categories": ["Visitor note"],
 					"media": { "url": "https://example.invalid/foundry/courtyard.jpg" }
@@ -43,6 +50,7 @@
 					"guid": "foundry-note-2",
 					"title": "Print lab demonstrations continue upstairs",
 					"description": "Teaching artists will reset the press between sessions.",
+					"_samplePublishedOffsetMinutes": -120,
 					"publishDate": 1784239800,
 					"categories": ["Program note"]
 				}

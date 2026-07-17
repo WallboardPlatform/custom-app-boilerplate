@@ -1,133 +1,131 @@
 {
-    "reviewVersion":  1,
-    "sourceHash":  "0363041b5ddcc653bdb2ac3d0ea3378461d5baa9d03bcb85d2ac08250b434bec",
-    "reviewedAt":  "2026-07-16T22:34:00+02:00",
-    "reviewer":  "Codex",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "Current or next program dominates the surface while one timely announcement remains integrated as support; both requested target sizes are represented."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "pass",
-                         "notes":  "No external visual reference was supplied; review followed the instruction-led civic arts venue direction in the brief."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "Warm gallery-neutral palette, framed civic venue composition, and program-first hierarchy avoid generic dashboard/card layouts."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "Program time, state, title, and location remain readable at 1920x1080 and 800x480; compact removes secondary prose first."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Light and dark screenshots preserve readable contrast and coordinated accent usage."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "Long program and announcement titles, rich text summaries, and missing location fallback stay contained with visible descenders."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "Full HD and compact layouts fill the canvas without looking like two separate dashboards; feed-only mode promotes one announcement without duplicating the support rail."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "Icon and placeholder are app-specific; broken or absent feed media hides cleanly without a broken image."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "Uses provider normalization mechanics from examples but distinct venue-pulse composition, palette, and hierarchy."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "compact-800x480.png",
-                            "status":  "pass",
-                            "notes":  "The bounded compact composition preserves essential time, title, location, and one supporting announcement."
-                        },
-                        {
-                            "file":  "full-hd-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-all-day-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-both-empty-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-broken-media-stale-feed-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-calendar-only-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-dark-theme-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-feed-only-800x480.png",
-                            "status":  "pass",
-                            "notes":  "The single announcement is promoted into the primary field and the supporting rail is absent, so no content is duplicated."
-                        },
-                        {
-                            "file":  "scenario-google-overlap-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-icalendar-legacy-feed-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-light-theme-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-live-calendar-update-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-live-feed-update-800x480.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-long-content-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        },
-                        {
-                            "file":  "scenario-microsoft-calendar-current-feed-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected in generated preview output and representative full-size screenshots; composition is readable and contained."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "eaace9904a21bb260950a8d9190dbaf7d2eed88027cafd013b6054aac66b8057",
+	"reviewedAt": "2026-07-17T07:20:17.5130308Z",
+	"reviewer": "Codex visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Calendar and Feed remain clearly separated and composed around the current program."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "No external visual reference was required; the maintained Foundry direction remains consistent."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Venue-specific editorial composition remains distinct from generic cards or dashboards."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary program titles, times, states, and support notes remain readable at both target sizes."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light and dark scenarios preserve readable contrast and hierarchy."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long program and announcement text stays bounded without clipping or overlap."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Full HD and compact layouts fill their assigned surfaces intentionally."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Media fallbacks, empty states, and both coordinated themes render cleanly."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The result retains a civic venue identity rather than copying another maintained example."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "compact-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-all-day-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-both-empty-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-broken-media-stale-feed-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-calendar-only-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-dark-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-feed-only-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-google-overlap-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-icalendar-legacy-feed-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-live-calendar-update-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-live-feed-update-800x480.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-long-content-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		},
+		{
+			"file": "scenario-microsoft-calendar-current-feed-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+		}
+	],
+	"unresolvedFindings": []
 }

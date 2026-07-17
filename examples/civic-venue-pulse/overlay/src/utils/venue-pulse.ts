@@ -31,7 +31,10 @@ export const plainText = (value: unknown): string => {
 	const raw: string = String(value);
 
 	if (typeof document === 'undefined') {
-		return raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+		return raw
+			.replace(/<[^>]*>/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
 	}
 
 	const container: HTMLDivElement = document.createElement('div');
@@ -68,6 +71,16 @@ const nestedTime = (value: unknown): number | undefined => {
 	}
 
 	return timestampValue(value.timeStamp) ?? timestampValue(value.dateTime) ?? timestampValue(value.date);
+};
+
+const numericValue = (value: unknown): number | undefined => {
+	const numeric: number = Number(value);
+
+	return Number.isFinite(numeric) ? numeric : undefined;
+};
+
+const isRelativeSample = (value: Record<string, unknown>): boolean => {
+	return isRecord(value._wallboardSample) && value._wallboardSample.mode === 'relative-to-now';
 };
 
 const safeImageUrl = (value: unknown): string => {
@@ -125,35 +138,39 @@ const readMediaUrl = (row: Record<string, unknown>): string => {
 	return safeImageUrl(row.image) || safeImageUrl(row.thumbnail);
 };
 
-const extractCalendarRows = (rawValue: unknown): { rows: unknown[]; source: CalendarSource } => {
+const extractCalendarRows = (
+	rawValue: unknown
+): { rows: unknown[]; source: CalendarSource; relativeSample: boolean } => {
 	const value: unknown = parseValue(rawValue);
 
 	if (Array.isArray(value)) {
-		return { rows: value, source: 'array' };
+		return { rows: value, source: 'array', relativeSample: false };
 	}
 
 	if (!isRecord(value)) {
-		return { rows: [], source: 'unknown' };
+		return { rows: [], source: 'unknown', relativeSample: false };
 	}
 
 	if (Array.isArray(value.events)) {
 		const firstRow: unknown = value.events[0];
-		const source: CalendarSource = isRecord(firstRow) && ('startTimestamp' in firstRow || 'summary' in firstRow)
-			? 'icalendar'
-			: 'google-or-microsoft';
+		const source: CalendarSource =
+			isRecord(firstRow) && ('startTimestamp' in firstRow || 'summary' in firstRow)
+				? 'icalendar'
+				: 'google-or-microsoft';
 
-		return { rows: value.events, source };
+		return { rows: value.events, source, relativeSample: isRelativeSample(value) };
 	}
 
 	if (isRecord(value.calendar) && Array.isArray(value.calendar.events)) {
-		return { rows: value.calendar.events, source: 'icalendar' };
+		return { rows: value.calendar.events, source: 'icalendar', relativeSample: isRelativeSample(value) };
 	}
 
-	return { rows: [], source: 'unknown' };
+	return { rows: [], source: 'unknown', relativeSample: false };
 };
 
 export const normalizeCalendar = (rawValue: unknown): CalendarModel => {
 	const extracted = extractCalendarRows(rawValue);
+	const sampleAnchor: number = Date.now();
 	const programs: VenueProgram[] = extracted.rows
 		.map((rawRow: unknown, index: number): VenueProgram | undefined => {
 			if (!isRecord(rawRow)) {
@@ -161,8 +178,20 @@ export const normalizeCalendar = (rawValue: unknown): CalendarModel => {
 			}
 
 			const title: string = plainText(rawRow.title) || plainText(rawRow.summary) || plainText(rawRow.subject);
-			const start: number | undefined = nestedTime(rawRow.start) ?? timestampValue(rawRow.startTimestamp);
-			const end: number | undefined = nestedTime(rawRow.end) ?? timestampValue(rawRow.endTimestamp);
+			const sampleStartOffset: number | undefined = extracted.relativeSample
+				? numericValue(rawRow._sampleStartOffsetMinutes)
+				: undefined;
+			const sampleEndOffset: number | undefined = extracted.relativeSample
+				? numericValue(rawRow._sampleEndOffsetMinutes)
+				: undefined;
+			const start: number | undefined =
+				sampleStartOffset === undefined
+					? (nestedTime(rawRow.start) ?? timestampValue(rawRow.startTimestamp))
+					: sampleAnchor + sampleStartOffset * 60000;
+			const end: number | undefined =
+				sampleEndOffset === undefined
+					? (nestedTime(rawRow.end) ?? timestampValue(rawRow.endTimestamp))
+					: sampleAnchor + sampleEndOffset * 60000;
 			const status: string = plainText(rawRow.status).toLowerCase();
 
 			if (!title || start === undefined || end === undefined || end <= start || status === 'cancelled') {
@@ -185,32 +214,32 @@ export const normalizeCalendar = (rawValue: unknown): CalendarModel => {
 	return { programs, source: extracted.source };
 };
 
-const extractFeedRows = (rawValue: unknown): { rows: unknown[]; source: FeedSource } => {
+const extractFeedRows = (rawValue: unknown): { rows: unknown[]; source: FeedSource; relativeSample: boolean } => {
 	const value: unknown = parseValue(rawValue);
 
 	if (Array.isArray(value)) {
-		return { rows: value, source: 'array' };
+		return { rows: value, source: 'array', relativeSample: false };
 	}
 
 	if (!isRecord(value)) {
-		return { rows: [], source: 'unknown' };
+		return { rows: [], source: 'unknown', relativeSample: false };
 	}
 
 	if (Array.isArray(value.items)) {
-		return { rows: value.items, source: 'wallboard-feed' };
+		return { rows: value.items, source: 'wallboard-feed', relativeSample: isRelativeSample(value) };
 	}
 
 	if (isRecord(value.feed) && Array.isArray(value.feed.entries)) {
-		return { rows: value.feed.entries, source: 'rss-parser' };
+		return { rows: value.feed.entries, source: 'rss-parser', relativeSample: isRelativeSample(value) };
 	}
 
 	if (isRecord(value.channel)) {
 		if (Array.isArray(value.channel.items)) {
-			return { rows: value.channel.items, source: 'wallboard-feed' };
+			return { rows: value.channel.items, source: 'wallboard-feed', relativeSample: isRelativeSample(value) };
 		}
 
 		if (Array.isArray(value.channel.item)) {
-			return { rows: value.channel.item, source: 'rss-channel' };
+			return { rows: value.channel.item, source: 'rss-channel', relativeSample: isRelativeSample(value) };
 		}
 	}
 
@@ -218,11 +247,11 @@ const extractFeedRows = (rawValue: unknown): { rows: unknown[]; source: FeedSour
 		const channel: unknown = Array.isArray(value.rss.channel) ? value.rss.channel[0] : value.rss.channel;
 
 		if (isRecord(channel) && Array.isArray(channel.item)) {
-			return { rows: channel.item, source: 'rss-channel' };
+			return { rows: channel.item, source: 'rss-channel', relativeSample: isRelativeSample(value) };
 		}
 	}
 
-	return { rows: [], source: 'unknown' };
+	return { rows: [], source: 'unknown', relativeSample: false };
 };
 
 export const normalizeFeed = (rawValue: unknown, now: number, freshHours: number): FeedModel => {
@@ -242,8 +271,13 @@ export const normalizeFeed = (rawValue: unknown, now: number, freshHours: number
 
 			const categories: unknown[] = Array.isArray(rawRow.categories) ? rawRow.categories : [];
 			const category: string = plainText(categories[0]) || plainText(rawRow.category) || 'Venue note';
+			const samplePublishedOffset: number | undefined = extracted.relativeSample
+				? numericValue(rawRow._samplePublishedOffsetMinutes)
+				: undefined;
 			const publishedAt: number | undefined =
-				timestampValue(rawRow.publishDate) ?? timestampValue(rawRow.pubDate) ?? timestampValue(rawRow.date);
+				samplePublishedOffset === undefined
+					? (timestampValue(rawRow.publishDate) ?? timestampValue(rawRow.pubDate) ?? timestampValue(rawRow.date))
+					: now + samplePublishedOffset * 60000;
 			const isFresh: boolean = publishedAt === undefined || now - publishedAt <= freshnessMs;
 
 			if (!isFresh) {

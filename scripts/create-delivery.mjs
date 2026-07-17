@@ -6,10 +6,8 @@ import { fileURLToPath } from 'node:url';
 import archiver from 'archiver';
 
 import { readAppMetadata, readJson } from './app-metadata.mjs';
-import {
-	getDatasourceProvisioning,
-	normalizeDatasourceBindings
-} from './datasource-provisioning.mjs';
+import { writeBindingSampleFiles } from './datasource-sample-files.mjs';
+import { getDatasourceProvisioning, normalizeDatasourceBindings } from './datasource-provisioning.mjs';
 import { createSourceArchive, readGitProvenance } from './source-archive.mts';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +28,7 @@ const outputDirectory = path.resolve(
 );
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const projectPathHash = [...projectDirectory.toLowerCase()].reduce(
-	(hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0,
+	(hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
 	0
 );
 const commandEnvironment = {
@@ -42,11 +40,9 @@ const commandEnvironment = {
 };
 const packageBaseName = path.basename(metadata.zipFileName, '.zip');
 const appZipFileName = unverified ? `${packageBaseName}_UNVERIFIED.zip` : metadata.zipFileName;
-const sourceArchiveFileName = unverified
-	? `${packageBaseName}_UNVERIFIED_source.zip`
-	: `${packageBaseName}_source.zip`;
-const unverifiedReason = process.env.WALLBOARD_UNVERIFIED_REASON?.trim()
-	|| 'Browser visual validation was not run in this environment.';
+const sourceArchiveFileName = unverified ? `${packageBaseName}_UNVERIFIED_source.zip` : `${packageBaseName}_source.zip`;
+const unverifiedReason =
+	process.env.WALLBOARD_UNVERIFIED_REASON?.trim() || 'Browser visual validation was not run in this environment.';
 
 const runNpmScript = (script) => {
 	const result = spawnSync(npmCommand, ['run', script], {
@@ -63,22 +59,23 @@ const runNpmScript = (script) => {
 	}
 };
 
-const createZip = (sourceDirectory, outputPath) => new Promise((resolve, reject) => {
-	const output = fs.createWriteStream(outputPath);
-	const archive = archiver('zip', { zlib: { level: 9 } });
+const createZip = (sourceDirectory, outputPath) =>
+	new Promise((resolve, reject) => {
+		const output = fs.createWriteStream(outputPath);
+		const archive = archiver('zip', { zlib: { level: 9 } });
 
-	output.on('close', resolve);
-	output.on('error', reject);
-	archive.on('warning', (error) => {
-		if (error.code !== 'ENOENT') {
-			reject(error);
-		}
+		output.on('close', resolve);
+		output.on('error', reject);
+		archive.on('warning', (error) => {
+			if (error.code !== 'ENOENT') {
+				reject(error);
+			}
+		});
+		archive.on('error', reject);
+		archive.pipe(output);
+		archive.directory(sourceDirectory, false);
+		void archive.finalize();
 	});
-	archive.on('error', reject);
-	archive.pipe(output);
-	archive.directory(sourceDirectory, false);
-	void archive.finalize();
-});
 
 const prepareOutputDirectory = () => {
 	if (!fs.existsSync(outputDirectory)) {
@@ -110,17 +107,17 @@ const prepareOutputDirectory = () => {
 		const previousSourceArchiveFile = previousManifest?.source?.archiveFile;
 
 		if (
-			typeof previousZipFile === 'string'
-			&& path.basename(previousZipFile) === previousZipFile
-			&& previousZipFile.toLowerCase().endsWith('.zip')
+			typeof previousZipFile === 'string' &&
+			path.basename(previousZipFile) === previousZipFile &&
+			previousZipFile.toLowerCase().endsWith('.zip')
 		) {
 			allowedFiles.add(previousZipFile);
 		}
 
 		if (
-			typeof previousSourceArchiveFile === 'string'
-			&& path.basename(previousSourceArchiveFile) === previousSourceArchiveFile
-			&& previousSourceArchiveFile.toLowerCase().endsWith('.zip')
+			typeof previousSourceArchiveFile === 'string' &&
+			path.basename(previousSourceArchiveFile) === previousSourceArchiveFile &&
+			previousSourceArchiveFile.toLowerCase().endsWith('.zip')
 		) {
 			allowedFiles.add(previousSourceArchiveFile);
 		}
@@ -157,11 +154,7 @@ runNpmScript('build:production');
 runNpmScript('validate:package-assets');
 
 const distDirectory = path.join(projectDirectory, 'dist');
-const requiredFiles = [
-	'assets/app.js',
-	'assets/app-chrome-49.js',
-	'editor-assets/config.json'
-];
+const requiredFiles = ['assets/app.js', 'assets/app-chrome-49.js', 'editor-assets/config.json'];
 
 for (const relativePath of requiredFiles) {
 	if (!fs.existsSync(path.join(distDirectory, relativePath))) {
@@ -207,8 +200,18 @@ if (fs.existsSync(contractPath)) {
 	const samplePath = path.resolve(projectDirectory, sampleDataPath);
 	const contractOutputPath = path.join(outputDirectory, 'datasource-contract.json');
 	const sampleOutputPath = path.join(outputDirectory, 'sample-datasource.json');
+	const bindingSampleFiles = writeBindingSampleFiles({
+		bindings,
+		projectDirectory,
+		outputDirectory,
+		prefix: 'sample-datasource'
+	});
+	const bindingSampleFileByProperty = new Map(
+		bindingSampleFiles.map(({ bindingProperty, fileName }) => [bindingProperty, fileName])
+	);
 	const manifestBindings = bindings.map((binding) => {
 		const provisioning = getDatasourceProvisioning(binding.source.contract);
+		const bindingSampleFile = bindingSampleFileByProperty.get(binding.property) ?? 'sample-datasource.json';
 
 		return {
 			contract: binding.source.contract,
@@ -217,6 +220,11 @@ if (fs.existsSync(contractPath)) {
 			suggestedName: binding.delivery.suggestedDatasourceName,
 			quickEditEligible: binding.delivery.quickEditEligible,
 			samplePath: binding.source.samplePath ?? null,
+			sampleFile: bindingSampleFile,
+			packagedTemplateFile:
+				bindingSampleFiles.length > 0
+					? `editor-assets/${bindingSampleFile.replace(/^sample-datasource/u, 'datasource-template')}`
+					: 'editor-assets/datasource-template.json',
 			currentProvisioning: provisioning.current,
 			futureProvisioning: provisioning.future
 		};
@@ -231,6 +239,10 @@ if (fs.existsSync(contractPath)) {
 		bindings: manifestBindings,
 		contractFile: 'datasource-contract.json',
 		sampleFile: 'sample-datasource.json',
+		sampleFiles: bindingSampleFiles.map(({ bindingProperty, fileName }) => ({
+			bindingProperty,
+			file: fileName
+		})),
 		packagedContractFile: 'editor-assets/datasource-contract.json',
 		packagedTemplateFile: 'editor-assets/datasource-template.json',
 		currentProvisioning: singleBinding?.currentProvisioning ?? 'resolve-each-binding',
@@ -257,13 +269,15 @@ const manifest = {
 		briefVersion: brief.briefVersion,
 		file: 'generation-brief.json'
 	},
-	visualReview: visualReview ? {
-		file: 'visual-review.json',
-		reviewVersion: visualReview.reviewVersion,
-		sourceHash: visualReview.sourceHash,
-		reviewedAt: visualReview.reviewedAt,
-		reviewer: visualReview.reviewer
-	} : null,
+	visualReview: visualReview
+		? {
+				file: 'visual-review.json',
+				reviewVersion: visualReview.reviewVersion,
+				sourceHash: visualReview.sourceHash,
+				reviewedAt: visualReview.reviewedAt,
+				reviewer: visualReview.reviewer
+			}
+		: null,
 	datasource,
 	acceptance: {
 		status: unverified ? 'unverified' : 'accepted',
