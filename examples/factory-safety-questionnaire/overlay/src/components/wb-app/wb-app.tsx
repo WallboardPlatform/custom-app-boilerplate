@@ -258,7 +258,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			submissionId: createSubmissionId(),
 			totalQuestions: questions().length
 		};
-		const result = writer.append('resultsData', 'Results.rows', submission);
+		const result = writer.append('resultsData', 'Results.rows', submission, {
+			maxElementCount: settings().resultRetentionLimit,
+			rotateEnabled: true
+		});
 
 		if (result.status === 'failed') {
 			setSubmissionError(result.message);
@@ -320,7 +323,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				<main class={style['view-stage']}>
 					<Show when={view() === 'start'}>
 						<div class={`${style['view']} ${style['start-view']}`}>
-							<div class={style['step-number']}>01</div>
+							<div class={style['step-number']} data-step-number="true">01</div>
 							<p class={style['eyebrow']}>ONE-SHOT SAFETY CHECK</p>
 							<h1 ref={fitWelcomeTitle} class="wb-factory-safety-welcome-title">{settings().welcomeTitle}</h1>
 							<p class={style['lead']}>{settings().introText}</p>
@@ -346,7 +349,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								}
 							}}
 						>
-							<div class={style['step-number']}>02</div>
+							<div class={style['step-number']} data-step-number="true">02</div>
 							<p class={style['eyebrow']}>IDENTITY</p>
 							<h1>Before we begin</h1>
 							<p class={style['lead']}>{settings().identityPrompt}</p>

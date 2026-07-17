@@ -1,0 +1,107 @@
+{
+	"version": "1",
+	"name": "Factory Safety Results Dashboard",
+	"interactive": false,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Results datasource",
+			"type": "dataPicker",
+			"property": "resultsData",
+			"dataPickerType": "any",
+			"tooltip": "Bind the same Results table used by the Factory Safety Questionnaire."
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Plant name", "type": "text", "property": "plantName", "default": "Northline Mobility" },
+				{ "label": "Dashboard title", "type": "text", "property": "title", "default": "Safety readiness dashboard" },
+				{ "label": "Pass threshold", "type": "number", "property": "passThreshold", "default": 80, "min": 1, "max": 100, "step": 1 },
+				{ "label": "Recent rows", "type": "number", "property": "maximumRows", "default": 6, "min": 3, "max": 12, "step": 1 },
+				{ "label": "Show corporate ID", "type": "checkbox", "property": "showCorporateId", "default": false }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Font family", "type": "font", "property": "fontFamily", "default": "Arial"
+				},
+				{
+					"label": "Background", "type": "color", "property": "backgroundColor", "default": "#071313",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Surface", "type": "color", "property": "surfaceColor", "default": "#102321",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Strong surface", "type": "color", "property": "surfaceStrongColor", "default": "#17302d",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Border", "type": "color", "property": "borderColor", "default": "#29413e",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f7f2e8",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#9eb4ae",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent", "type": "color", "property": "accentColor", "default": "#ef5b45",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Pass", "type": "color", "property": "passColor", "default": "#59ddaf",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Review", "type": "color", "property": "dangerColor", "default": "#ff6c5c",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"]
+}

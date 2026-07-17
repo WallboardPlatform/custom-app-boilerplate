@@ -418,6 +418,27 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /themePreset/);
 	});
 
+	void it('rejects nested editor property groups for v5 apps', async (testContext) => {
+		const brief = createValidV5Brief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{
+					label: 'Appearance',
+					type: 'group',
+					properties: [{ label: 'Custom colors', type: 'group', properties: [] }]
+				}]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /nested property group 'Custom colors'/);
+	});
+
 	void it('rejects unscoped global classes in v4 app components', async (testContext) => {
 		const brief = createValidBrief();
 		const context = createProject(brief);

@@ -15,6 +15,7 @@ export default (config: ConfigValues): Settings => ({
 	identityPrompt: textSetting(config.identityPrompt, 'Enter your name and corporate ID to begin.'),
 	completionResetSeconds: numberSetting(config.completionResetSeconds, 10, 3, 120),
 	inactivityResetSeconds: numberSetting(config.inactivityResetSeconds, 120, 30, 900),
+	resultRetentionLimit: numberSetting(config.resultRetentionLimit, 1000, 100, 10000),
 	motionPreset: config.motionPreset === 'off' || config.motionPreset === 'expressive' ? config.motionPreset : 'subtle',
 	themePreset: config.themePreset === 'light' || config.themePreset === 'custom' ? config.themePreset : 'dark',
 	backgroundColor: textSetting(config.backgroundColor, '#071313'),

@@ -16,7 +16,7 @@
 			"type": "dataPicker",
 			"property": "resultsData",
 			"dataPickerType": "any",
-			"tooltip": "Bind the separate Results table. Completed sessions append to Results.rows only in the displayer."
+			"tooltip": "Bind the separate Results table. Completed sessions append to Results.rows only in the displayer, with bounded retention."
 		},
 		{
 			"label": "Content",
@@ -27,7 +27,12 @@
 				{ "label": "Introduction", "type": "text", "property": "introText", "default": "Three quick questions help keep every production zone safe." },
 				{ "label": "Identity prompt", "type": "text", "property": "identityPrompt", "default": "Enter your name and corporate ID to begin." },
 				{ "label": "Completion reset seconds", "type": "number", "property": "completionResetSeconds", "default": 10, "min": 3, "max": 120, "step": 1 },
-				{ "label": "Inactivity reset seconds", "type": "number", "property": "inactivityResetSeconds", "default": 120, "min": 30, "max": 900, "step": 5 }
+				{ "label": "Inactivity reset seconds", "type": "number", "property": "inactivityResetSeconds", "default": 120, "min": 30, "max": 900, "step": 5 },
+				{
+					"label": "Stored result limit", "type": "number", "property": "resultRetentionLimit", "default": 1000,
+					"min": 100, "max": 10000, "step": 100,
+					"tooltip": "Keeps the newest completed rows and removes the oldest after this limit."
+				}
 			]
 		},
 		{
@@ -51,15 +56,35 @@
 					]
 				},
 				{
-					"label": "Custom colors",
-					"type": "group",
-					"properties": [
-						{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#071313" },
-						{ "label": "Surface", "type": "color", "property": "surfaceColor", "default": "#102322" },
-						{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f7f2e8" },
-						{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#a9bfba" },
-						{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#e64b38" }
-					],
+					"label": "Background", "type": "color", "property": "backgroundColor", "default": "#071313",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Surface", "type": "color", "property": "surfaceColor", "default": "#102322",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f7f2e8",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#a9bfba",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent", "type": "color", "property": "accentColor", "default": "#e64b38",
 					"visibilityConditions": {
 						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }],
 						"rule": "#1"

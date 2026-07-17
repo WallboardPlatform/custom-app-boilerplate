@@ -265,9 +265,15 @@
 	max-width: 980px;
 }
 
+.identity-view .step-number {
+	top: 16vh;
+	right: 4vw;
+	font-size: 128px;
+}
+
 .field-row {
 	display: flex;
-	margin: 42px -12px 0;
+	margin: 42px 0 0;
 }
 
 .field-row label {
@@ -275,7 +281,15 @@
 	flex: 1 1 50%;
 	flex-direction: column;
 	min-width: 0;
-	margin: 0 12px;
+	margin: 0;
+}
+
+.field-row label:first-child {
+	padding-right: 12px;
+}
+
+.field-row label:last-child {
+	padding-left: 12px;
 }
 
 .field-row label span {

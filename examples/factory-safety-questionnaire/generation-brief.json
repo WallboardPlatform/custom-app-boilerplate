@@ -9,6 +9,7 @@
 		"The example uses the fictional Northline Mobility brand and synthetic identities; no real employee or customer data is packaged.",
 		"The experience is used on two landscape touch surfaces, 1920x1080 and 1366x768.",
 		"Completed results append to Results.rows only while running in the displayer; the editor and unbound previews never write customer data.",
+		"Result storage keeps the newest configured number of raw rows and rotates the oldest rows out at the retention limit.",
 		"A production owner must define retention and access controls for participant names and corporate IDs before deployment."
 	],
 	"app": { "mode": "new", "name": "Factory Safety Questionnaire", "version": "1" },
@@ -46,7 +47,7 @@
 			"id": "content-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["plantName", "welcomeTitle", "introText", "identityPrompt", "completionResetSeconds", "inactivityResetSeconds"],
+			"targets": ["plantName", "welcomeTitle", "introText", "identityPrompt", "completionResetSeconds", "inactivityResetSeconds", "resultRetentionLimit"],
 			"rationale": "Operators can change public labels and timing without editing datasource structure or rebuilding."
 		},
 		{
@@ -105,7 +106,7 @@
 			"target": "resultsData",
 			"operation": "insert-to-array",
 			"editorPolicy": "disabled",
-			"expectation": "Append exactly one completed session to Results.rows using the SDK atomic array operation.",
+			"expectation": "Append exactly one completed session to Results.rows using the SDK atomic bounded-array operation, retaining the newest configured number of rows.",
 			"failure": "Keep the summary visible, show a retryable error, and do not claim that the result was saved."
 		},
 		{
@@ -144,6 +145,7 @@
 		{ "property": "identityPrompt", "purpose": "Instruction above the identity form." },
 		{ "property": "completionResetSeconds", "purpose": "Delay before a completed station returns to start." },
 		{ "property": "inactivityResetSeconds", "purpose": "Privacy timeout for an abandoned active session." },
+		{ "property": "resultRetentionLimit", "purpose": "Maximum raw result rows retained before the oldest row rotates out." },
 		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive transitions." },
 		{ "property": "themePreset", "purpose": "Selects the complete Dark, Light, or Custom semantic palette.", "effect": "theme-preset" },
 		{ "property": "backgroundColor", "purpose": "Custom page background." },
@@ -187,6 +189,7 @@
 	"states": [
 		{ "scenario": "full-hd", "expectation": "The complete start state fills the primary landscape station without behaving like a small centered web form." },
 		{ "scenario": "compact", "expectation": "The light preset remains readable and all primary touch controls fit the smaller supported landscape station." },
+		{ "scenario": "identity", "expectation": "The oversized step marker remains in the upper-right breathing room and never overlaps either identity input." },
 		{ "scenario": "long-welcome", "expectation": "A long operator-authored welcome title remains complete at a readable size." },
 		{ "scenario": "long-question", "expectation": "Pathological but realistic questions and option labels remain complete and touch targets remain usable." },
 		{ "scenario": "empty", "expectation": "A bound but empty question datasource shows a clear unavailable state and no start action." }

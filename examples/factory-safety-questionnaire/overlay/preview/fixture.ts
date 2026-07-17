@@ -10,6 +10,7 @@ const baseConfig: Record<string, unknown> = {
 	identityPrompt: 'Enter your name and corporate ID to begin.',
 	completionResetSeconds: 10,
 	inactivityResetSeconds: 120,
+	resultRetentionLimit: 1000,
 	motionPreset: 'subtle',
 	themePreset: 'dark',
 	backgroundColor: '#071313',
@@ -81,6 +82,13 @@ export const previewScenarios: PreviewScenario[] = [
 		id: 'compact',
 		fixture: createFixture('factory-safety-compact', sampleQuestionData, { ...baseConfig, themePreset: 'light' }),
 		viewport: { width: 1366, height: 768, background: 'light' },
+		minimumContentCoverage: { width: 82, height: 72 }
+	},
+	{
+		id: 'identity',
+		fixture: previewFixture,
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Start safety check' }],
 		minimumContentCoverage: { width: 82, height: 72 }
 	},
 	{

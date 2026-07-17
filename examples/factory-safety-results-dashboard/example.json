@@ -1,0 +1,17 @@
+{
+	"title": "Factory Safety Results Dashboard",
+	"description": "Read-only safety operations dashboard paired with the Factory Safety Questionnaire; derives KPIs and recent activity from the same bounded Results table.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-results-datasource.json"
+	],
+	"referenceScreenshots": ["full-hd-1920x1080.png", "compact-1366x768.png"]
+}

@@ -65,14 +65,17 @@ Color-driven apps normally expose `themePreset: dark | light | custom` and resol
 - New placements use the editor's intended preset default.
 - Replacement apps map missing/unknown preset values to `custom`, preserving existing explicit colors.
 - Curated presets replace every background, surface, text, divider, track, and status color.
-- Put manual swatches inside a `Custom colors` group visible only when preset is `custom`; the editor does not rewrite sibling swatches when a select changes.
+- Keep manual swatches in the same first-level group as `themePreset`. Apply the `custom` visibility condition to every color control. Do not create a nested `Custom colors` group: the legacy editor may show its label without rendering its children.
 
 ## Visibility Conditions
 
-Controls/groups can depend on other values:
+Controls can depend on other values. Keep groups first-level; nested property groups are not reliably supported by the legacy editor.
 
 ```json
 {
+	"label": "Background",
+	"type": "color",
+	"property": "backgroundColor",
 	"visibilityConditions": {
 		"conditions": [
 			{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }

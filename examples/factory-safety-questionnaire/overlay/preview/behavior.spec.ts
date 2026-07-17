@@ -63,6 +63,11 @@ test('completes the touch journey and records one result plus one sensor event',
 
 	expect(evidence.actions).toHaveLength(1);
 	expect(evidence.actions?.[0]?.action).toBe('insertToInternalDatasourceArray');
+	expect(evidence.actions?.[0]?.payload).toMatchObject({
+		maxElementCount: 1000,
+		rotateEnabled: true,
+		selector: 'Results.rows'
+	});
 	expect(evidence.results).toMatchObject({
 		Results: {
 			rows: [
@@ -116,6 +121,28 @@ test('remote reset clears an abandoned participant session immediately', async (
 	await page.getByRole('button', { name: 'Start safety check' }).click();
 	await expect(page.getByLabel('Full name')).toHaveValue('');
 	await expect(page.getByLabel('Corporate ID')).toHaveValue('');
+});
+
+test('identity step marker stays clear of both input fields', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByRole('button', { name: 'Start safety check' }).click();
+	const marker = await page.locator('[data-step-number="true"]').boundingBox();
+	const inputs = await page.locator('input').evaluateAll((elements): Array<{ bottom: number; left: number; right: number; top: number }> => {
+		return elements.map((element): { bottom: number; left: number; right: number; top: number } => {
+			const box = element.getBoundingClientRect();
+			return { bottom: box.bottom, left: box.left, right: box.right, top: box.top };
+		});
+	});
+
+	expect(marker).not.toBeNull();
+	for (const input of inputs) {
+		const overlaps = Boolean(marker)
+			&& marker!.x < input.right
+			&& marker!.x + marker!.width > input.left
+			&& marker!.y < input.bottom
+			&& marker!.y + marker!.height > input.top;
+		expect(overlaps).toBe(false);
+	}
 });
 
 test('bound empty question data stays empty instead of silently using packaged samples', async ({ page }): Promise<void> => {
