@@ -57,6 +57,7 @@ jobs:
           - recognition-mosaic
           - restaurant-menu
           - single-hero-clock
+          - weather-window
 
     steps:
       - name: Check out repository

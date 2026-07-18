@@ -36,6 +36,7 @@ examples/<id>/
 | `restaurant-menu` | Photo-to-menu pattern, editable table contract, grouping and pagination | Default, wide/low, portrait, square, static, empty, bound-null, long labels, last page, motion off |
 | `single-hero-clock` | Static single-hero pattern, timezone formatting, live timer, ResizeObserver ratio compositions | Default, ultra-wide, compact, portrait, square, minimal, invalid timezone, long label, timer teardown, live config update |
 | `veszprem-wayfinding` | Supplied SVG map, production-compatible proximity graph and Dijkstra routing, touch directory, editable `TABLE` destinations | Full HD, compact, selected route, map click, off-map destination, light/dark/custom, empty, long labels/list, row array, live update, reset |
+| `weather-window` | Platform weather service, defensive normalization, cached condition media, last-good stale fallback, ratio-specific editorial composition | Full HD, landscape, wide/low, portrait, square, long location/condition, missing media, short forecast, unavailable, stale update, motion off |
 
 Each manifest names one or two `referenceScreenshots` committed under `screenshots/`. Full visual matrices are generated during acceptance and uploaded as CI artifacts; they are not stored in Git.
 

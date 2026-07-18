@@ -1,0 +1,50 @@
+{
+	"version": "1",
+	"name": "Atlas Weather Window",
+	"interactive": false,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Location",
+			"type": "group",
+			"properties": [
+				{ "label": "City or postal code", "type": "text", "property": "cityCode", "default": "Budapest", "tooltip": "Location name or postal code understood by the Wallboard weather service." },
+				{ "label": "Country code", "type": "text", "property": "countryCode", "default": "HU", "tooltip": "Two-letter ISO country code." },
+				{ "label": "Display name", "type": "text", "property": "displayName", "default": "", "tooltip": "Optional label override. Lookup still uses the city and country fields." },
+				{ "label": "Language code", "type": "text", "property": "languageCode", "default": "en-US", "tooltip": "Locale used for translated condition and day labels." }
+			]
+		},
+		{
+			"label": "Forecast",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Temperature unit", "type": "select", "property": "temperatureUnit", "default": "C",
+					"options": [
+						{ "label": "Celsius", "value": "C" },
+						{ "label": "Fahrenheit", "value": "F" }
+					]
+				},
+				{ "label": "Forecast days", "type": "number", "property": "forecastDays", "default": 4, "min": 3, "max": 5, "step": 1 },
+				{
+					"label": "Background family", "type": "select", "property": "backgroundType", "default": "Ocean_and_Rocky_Coast",
+					"options": [
+						{ "label": "Ocean and rocky coast", "value": "Ocean_and_Rocky_Coast" },
+						{ "label": "Urban", "value": "Urban" },
+						{ "label": "Village and countryside", "value": "Village_and_Countryside" },
+						{ "label": "Condition color only", "value": "none" }
+					]
+				},
+				{
+					"label": "Motion", "type": "select", "property": "motionPreset", "default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" }
+					]
+				}
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}

@@ -10,6 +10,7 @@ export interface PlatformMockAction {
 export interface PlatformMockController {
 	datasourceActions: PlatformMockAction[];
 	sensorEvents: unknown[];
+	cachedUrls: string[];
 	getDatasource: (id: string) => unknown;
 	getOwnValue: (id: string) => unknown;
 	setDatasource: (id: string, value: unknown) => void;
@@ -92,9 +93,11 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 	const datasources: Record<string, unknown> = clone(fixture.internalDatasources ?? {});
 	const filesByFolder: Record<string, unknown[]> = clone(fixture.filesByFolder ?? {});
 	const weatherByLocation: Record<string, unknown> = clone(fixture.weatherByLocation ?? {});
+	const weatherErrorsByLocation: Record<string, string> = clone(fixture.weatherErrorsByLocation ?? {});
 	const ownValues: Record<string, unknown> = {};
 	const datasourceActions: PlatformMockAction[] = [];
 	const sensorEvents: unknown[] = [];
+	const cachedUrls: string[] = [];
 	const noOperation = (): undefined => undefined;
 
 	const setDatasource = (id: string, value: unknown): void => {
@@ -191,10 +194,20 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 		getClickReactionState: (): boolean => false,
 		setClickReactionState: noOperation,
 		setWidgetSize: noOperation,
-		cacheFile: async (url: string): Promise<string> => url,
+		cacheFile: async (url: string): Promise<string> => {
+			cachedUrls.push(url);
+
+			return url;
+		},
 		getWeatherData: async (locations: Array<{ cityCode: string; countryCode: string }>): Promise<Record<string, unknown>[]> => {
 			return locations.map((location): Record<string, unknown> => {
 				const searchKey = `${location.cityCode},${location.countryCode}`;
+				const errorMessage = weatherErrorsByLocation[searchKey];
+
+				if (errorMessage) {
+					throw new Error(errorMessage);
+				}
+
 				const fixtureValue = weatherByLocation[searchKey];
 
 				return isObject(fixtureValue)
@@ -225,6 +238,7 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 	const controller: PlatformMockController = {
 		datasourceActions,
 		sensorEvents,
+		cachedUrls,
 		getDatasource: (id: string): unknown => clone(datasources[id]),
 		getOwnValue: (id: string): unknown => clone(ownValues[id]),
 		setDatasource

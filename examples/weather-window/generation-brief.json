@@ -1,0 +1,218 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "Create an editorial weather window that uses Wallboard's platform weather service rather than a customer-managed datasource.",
+		"audience": "Visitors and staff reading local conditions and the near forecast from shared signage.",
+		"primaryGoal": "Make the current condition immediately legible while proving cached platform weather media, deterministic preview data, and designed service-failure states."
+	},
+	"assumptions": [
+		"The configured city and ISO country code resolve through the Wallboard weather service.",
+		"Weather image URLs returned by the SDK are already routed through the platform cache.",
+		"This proof is a purpose-built weather composition, not a replacement for the production app's universal theme and icon catalog."
+	],
+	"app": { "mode": "new", "name": "Atlas Weather Window", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "Weather signage commonly appears full-screen, in portrait lobbies, compact panels, and wide information bands."
+	},
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Cinematic landscape weather window with one current-condition hero and a forecast horizon.", "minimumContentCoverage": { "width": 94, "height": 91 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Horizontal information band that preserves current conditions and the full forecast strip.", "minimumContentCoverage": { "width": 96, "height": 88 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "required", "purpose": "Portrait lobby composition with a tall weather hero and stacked forecast horizon.", "minimumContentCoverage": { "width": 91, "height": 94 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact weather tile that removes secondary details before reducing primary text.", "minimumContentCoverage": { "width": 92, "height": 90 } }
+	],
+	"data": { "mode": "static", "bindings": [] },
+	"ownership": [
+		{
+			"id": "weather-service",
+			"area": "content",
+			"owner": "locked",
+			"targets": ["current-condition", "forecast", "condition-media"],
+			"rationale": "Wallboard resolves, localizes, and caches weather data and media through the SDK weather service."
+		},
+		{
+			"id": "weather-composition",
+			"area": "presentation",
+			"owner": "locked",
+			"targets": ["editorial-layout", "ratio-compositions", "service-fallback"],
+			"rationale": "The generated visual identity and resilient composition remain code-owned."
+		},
+		{
+			"id": "weather-location-settings",
+			"area": "content",
+			"owner": "setting",
+			"targets": ["cityCode", "countryCode", "displayName", "languageCode"],
+			"rationale": "Operators select the location and localization without editing code."
+		},
+		{
+			"id": "weather-display-settings",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": ["temperatureUnit", "forecastDays", "backgroundType", "motionPreset"],
+			"rationale": "Operators control the small set of choices that materially change the forecast presentation."
+		}
+	],
+	"experience": {
+		"mode": "passive",
+		"views": [
+			{ "id": "weather", "purpose": "Show the current condition, location details, and near forecast." },
+			{ "id": "loading", "purpose": "Keep the designed composition while the first platform request is pending." },
+			{ "id": "unavailable", "purpose": "Explain that weather is temporarily unavailable without showing fake live values." }
+		],
+		"inputs": [],
+		"session": { "reset": "none", "expectation": "The passive board refreshes weather on a self-correcting schedule and preserves the last good reading during transient failures." }
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "background",
+		"rationale": "Current conditions and forecast items recompose between horizontal, vertical, compact, and wide-low surfaces."
+	},
+	"motion": {
+		"default": "subtle",
+		"presetProperty": "motionPreset",
+		"transition": "fade",
+		"techniques": ["fade", "progress"],
+		"rationale": "A restrained atmospheric reveal supports service updates; Off removes decorative motion without changing refresh behavior."
+	},
+	"media": [
+		{
+			"id": "weather-background",
+			"type": "image",
+			"source": "weather",
+			"fit": "cover",
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Render the condition-driven color field and atmospheric line work without an empty image box.",
+			"rationale": "The weather service owns condition-aware background resolution and the SDK routes returned URLs through platform caching."
+		},
+		{
+			"id": "weather-icon",
+			"type": "image",
+			"source": "weather",
+			"fit": "contain",
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Use the typographic condition name and a CSS weather mark instead of a broken image.",
+			"rationale": "The current and forecast condition icons come from the same platform weather response."
+		}
+	],
+	"branding": {
+		"source": "none",
+		"editable": false,
+		"provenance": "Atlas Weather Window is a synthetic editorial identity created for the platform proof.",
+		"fallback": "Use location and weather content as the first-viewport identity rather than inventing customer branding."
+	},
+	"presentation": {
+		"themes": ["dark"],
+		"density": "balanced",
+		"viewingDistance": "room",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-weather-window-temperature", ".wb-weather-window-location"] },
+			{ "role": "secondary", "selectors": [".wb-weather-window-condition", ".wb-weather-window-forecast-condition"] },
+			{ "role": "metadata", "selectors": [".wb-weather-window-kicker", ".wb-weather-window-details", ".wb-weather-window-forecast-day"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "cityCode", "purpose": "Sets the city name or postal code sent to the platform weather service." },
+		{ "property": "countryCode", "purpose": "Sets the ISO country code paired with the configured city." },
+		{ "property": "displayName", "purpose": "Optionally overrides the returned city label without changing lookup." },
+		{ "property": "temperatureUnit", "purpose": "Selects Celsius or Fahrenheit weather values." },
+		{ "property": "languageCode", "purpose": "Sets the weather response locale." },
+		{ "property": "forecastDays", "purpose": "Selects three to five forecast days." },
+		{ "property": "backgroundType", "purpose": "Selects the weather service background family." },
+		{ "property": "motionPreset", "purpose": "Selects Off or Subtle atmospheric motion.", "effect": "motion-preset" }
+	],
+	"dynamicText": [
+		{
+			"id": "weather-location",
+			"role": "primary",
+			"source": { "type": "computed", "properties": ["cityCode", "countryCode", "displayName"] },
+			"selectors": [".wb-weather-window-location"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 32, "maximumLines": 2 },
+			"fallback": "Use two lines and preserve the room-readable floor before ellipsizing pathological location labels.",
+			"rationale": "The location is a primary room-reading target and may vary by locale.",
+			"evidenceScenario": "long-location"
+		},
+		{
+			"id": "current-condition",
+			"role": "secondary",
+			"source": { "type": "computed", "properties": ["cityCode", "countryCode"] },
+			"selectors": [".wb-weather-window-condition"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 20, "maximumLines": 2 },
+			"fallback": "Keep two lines and omit tertiary weather details before shrinking further.",
+			"rationale": "Localized condition descriptions vary materially in length.",
+			"evidenceScenario": "long-condition"
+		},
+		{
+			"id": "forecast-condition",
+			"role": "secondary",
+			"source": { "type": "computed", "properties": ["cityCode", "countryCode"] },
+			"selectors": [".wb-weather-window-forecast-condition"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 20, "maximumLines": 2 },
+			"fallback": "Use two lines, then ellipsize only after the signage-readable floor is reached.",
+			"rationale": "Forecast condition labels are localized and share bounded horizon cells.",
+			"evidenceScenario": "long-condition"
+		}
+	],
+	"states": [
+		{ "scenario": "wide-low", "expectation": "The horizontal band keeps location, current value, and all configured forecast days visible." },
+		{ "scenario": "portrait", "expectation": "The hero fills the upper field and forecast days become a spacious vertical horizon." },
+		{ "scenario": "square", "expectation": "Secondary atmosphere details disappear before primary text becomes too small." },
+		{ "scenario": "long-location", "expectation": "A long localized place name remains contained and room-readable." },
+		{ "scenario": "long-condition", "expectation": "Long translated current and forecast descriptions fit without clipped descenders." },
+		{ "scenario": "missing-media", "expectation": "Absent weather images use the designed atmospheric fallback without broken-image chrome." },
+		{ "scenario": "short-forecast", "expectation": "One or two valid forecast entries expand deliberately instead of leaving empty reserved cells." },
+		{ "scenario": "unavailable", "expectation": "An initial service failure shows a designed unavailable state and no fabricated readings." },
+		{ "scenario": "stale-update", "expectation": "A refresh failure preserves the last valid reading and marks it as awaiting an update." },
+		{ "scenario": "motion-off", "expectation": "Weather retrieval and layout remain functional with decorative motion disabled." }
+	],
+	"behaviors": [
+		{
+			"id": "weather-normalization",
+			"expectation": "String and numeric SDK temperature fields normalize into stable current and forecast view models.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "platform-cache-path",
+			"expectation": "Weather background and icon URLs pass through the SDK platform cache path before rendering.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "weather-refresh",
+			"expectation": "Settings changes refetch the configured location and scheduled refreshes do not blank the last valid state.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "creative-led",
+		"summary": "A cinematic environmental window: full-surface weather imagery, oversized temperature, typographic location identity, and an unframed forecast horizon.",
+		"references": [],
+		"signatureChoices": [
+			"Weather media is the canvas rather than a thumbnail inside a card.",
+			"The current temperature and location form one asymmetric broadcast-scale hero.",
+			"Forecast days share a continuous horizon line instead of repeating dashboard cards."
+		],
+		"avoid": [
+			"Generic KPI cards, nested panels, or a centered mobile-weather-app layout.",
+			"A universal settings catalog copied from the production Weather app.",
+			"Shrinking localized labels below signage-readable floors to preserve tertiary details."
+		]
+	},
+	"visualReview": {
+		"intent": "The app should feel like a live view into the local atmosphere, not a weather dashboard assembled from interchangeable components.",
+		"focus": [
+			"Inspect image contrast and designed media fallback across every declared ratio.",
+			"Verify long translated labels retain descenders, line-height, and room-readable scale.",
+			"Confirm short forecasts expand coherently and unavailable weather never presents fake live values."
+		]
+	}
+}

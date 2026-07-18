@@ -13,6 +13,7 @@ Files under `src/hooks/system/` are protected SDK bridges. Import them; do not m
 | `useInterceptor()` | Rare direct media-cache coordination in displayer mode |
 | `getApplicationState()` | Internal foundation; normally use a higher-level hook |
 | `useAutoFitText()` | Bounded single-line variable primary text |
+| SDK `useWeather(getMetadata())` | Platform-owned current conditions, forecast, refresh, and cached condition media; see `weather-window` |
 
 ## Auto-Fit Text
 
