@@ -19,6 +19,7 @@ export interface PreviewPlatformFixture {
 	internalDatasources?: Record<string, unknown>;
 	filesByFolder?: Record<string, unknown[]>;
 	weatherByLocation?: Record<string, unknown>;
+	weatherErrorsByLocation?: Record<string, string>;
 }
 
 export interface PreviewScenario {
