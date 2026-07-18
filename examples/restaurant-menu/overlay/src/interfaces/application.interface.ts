@@ -32,6 +32,7 @@ export interface Settings extends Record<string, unknown> {
 	allergenText: string;
 	emptyStateText: string;
 	pageDurationSeconds: number;
+	motionPreset: 'off' | 'subtle' | 'expressive';
 	backgroundColor: string;
 	headerBackgroundColor: string;
 	headerTextColor: string;
@@ -60,6 +61,7 @@ export interface ConfigValues {
 	allergenText?: string;
 	emptyStateText?: string;
 	pageDurationSeconds?: number;
+	motionPreset?: string;
 	themePreset?: string;
 	backgroundColor?: string;
 	headerBackgroundColor?: string;

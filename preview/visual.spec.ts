@@ -83,7 +83,7 @@ interface TextRolePolicy {
 }
 
 interface GenerationBriefSummary {
-	briefVersion: 3 | 4 | 5 | 6;
+	briefVersion: 3 | 4 | 5 | 6 | 7;
 	surfaceStrategy: {
 		mode: 'fixed' | 'bounded' | 'adaptive';
 	};
@@ -401,7 +401,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			}
 		}
 
-		if (generationBrief.briefVersion === 6) {
+		if (generationBrief.briefVersion >= 6) {
 			const distance = generationBrief.presentation!.viewingDistance!;
 			let visibleRoleTextCount = 0;
 
@@ -438,13 +438,13 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				visibleRoleTextCount += result.visibleCount;
 				expect(
 					result.violations,
-					`v6 ${distance} ${policy.role} text must stay at or above ${floor}px:\n${result.violations.join('\n')}`
+					`v6+ ${distance} ${policy.role} text must stay at or above ${floor}px:\n${result.violations.join('\n')}`
 				).toEqual([]);
 			}
 
 			expect(
 				visibleRoleTextCount,
-				`v6 declared text roles must match visible content at '${preset.name}'.`
+				`v6+ declared text roles must match visible content at '${preset.name}'.`
 			).toBeGreaterThan(0);
 		}
 
@@ -684,10 +684,45 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			);
 		}
 
-		await page.screenshot({
-			path: path.join(screenshotDirectory, `${safePresetName}-${preset.width}x${preset.height}.png`),
-			fullPage: false
+		const captureCandidates: Buffer[] = [];
+		for (let captureIndex = 0; captureIndex < 2; captureIndex += 1) {
+			await page.evaluate(async (): Promise<void> => {
+				const root: HTMLElement | null = document.getElementById('wallboard-preview-root');
+
+				if (!root) {
+					throw new Error('Preview root is unavailable before screenshot capture.');
+				}
+
+				const previousDisplay: string = root.style.display;
+				root.style.display = 'none';
+				void root.offsetHeight;
+				root.style.display = previousDisplay;
+				void root.offsetHeight;
+				const repaintStyle: HTMLStyleElement = document.createElement('style');
+				repaintStyle.textContent = '#wallboard-preview-root * { color: transparent !important; }';
+				document.head.append(repaintStyle);
+				void root.offsetHeight;
+				await new Promise<void>((resolve): void => {
+					window.requestAnimationFrame((): void => resolve());
+				});
+				repaintStyle.remove();
+				void root.offsetHeight;
+				await new Promise<void>((resolve): void => {
+					window.requestAnimationFrame((): void => {
+						window.requestAnimationFrame((): void => resolve());
+					});
+				});
+			});
+			await page.waitForTimeout(500);
+			captureCandidates.push(await page.locator('#wallboard-preview-root').screenshot({ animations: 'disabled' }));
+		}
+		const stableCapture: Buffer = captureCandidates.reduce((largest, candidate): Buffer => {
+			return candidate.byteLength > largest.byteLength ? candidate : largest;
 		});
+		fs.writeFileSync(
+			path.join(screenshotDirectory, `${safePresetName}-${preset.width}x${preset.height}.png`),
+			stableCapture
+		);
 
 		console.log(
 			`${preset.name}: content coverage ${metrics.contentWidthCoverage}% x ${metrics.contentHeightCoverage}%`

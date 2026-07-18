@@ -53,6 +53,7 @@ jobs:
           - museum-welcome
           - newsroom-spotlight
           - pharmacy-pickup-queue
+          - product-catalog
           - recognition-mosaic
           - restaurant-menu
           - single-hero-clock

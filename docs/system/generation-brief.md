@@ -8,7 +8,7 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 
 | Field | Rule |
 |------|------|
-| `briefVersion` | `6` for new briefs; v3-v5 remain accepted for maintained apps |
+| `briefVersion` | `7` for new briefs; v3-v6 remain accepted for maintained apps |
 | `request` | Non-empty `summary`, `audience`, and `primaryGoal` |
 | `assumptions` | Explicit inferred or platform-default decisions; use `[]` only when none exist |
 | `app` | `mode` is `new` or `replacement`; `name` and `version` match `properties.json` |
@@ -19,8 +19,8 @@ Create `generation-brief.json` before implementing a custom app. It is the machi
 | `experience` | `passive` or `interactive`; the latter declares views, inputs, and reset |
 | `outputs` | Datasource, sensor, or own-state outputs; writes match write-enabled bindings |
 | `rendering` | `reflow`, or sized `fixed-canvas` with transparent/background letterbox |
-| `motion` | `off`/`subtle`/`expressive`, techniques, and optional disable setting |
-| `media` | `none`, or image/video source plus fit policy |
+| `motion` | Default preset, optional editor `presetProperty`, transition, techniques, and rationale |
+| `media` | `none`, or typed source with fit, cache, preview, fallback, and source-specific ownership |
 | `branding` | `none`, `settings`, `reference`, or `mcp-branding-kit` plus inputs |
 | `presentation` | Themes, density, viewing distance, and semantic text selectors |
 | `cadence` | `static`, or timed `rotation` using an editor interval setting |
@@ -57,7 +57,7 @@ Every important setting-, datasource-, or computed-text surface with unpredictab
 
 ## Legibility And Cadence
 
-V6 `presentation.viewingDistance` selects computed font floors for every visible selector in `textRoles`:
+V6+ `presentation.viewingDistance` selects computed font floors for every visible selector in `textRoles`:
 
 | Distance | Primary | Secondary | Metadata |
 |----------|---------|-----------|----------|
@@ -66,6 +66,21 @@ V6 `presentation.viewingDistance` selects computed font floors for every visible
 | `distance` | 40px | 28px | 18px |
 
 Map every dynamic-text selector to the same semantic role. If content cannot fit at its floor, reduce density, remove secondary detail, wrap, or paginate; do not shrink further. `cadence.mode=rotation` references one editor duration setting and requires behavior-test evidence. Shared rotation semantics are fixed: no timer for one page, cleanup on destroy, preserve the active key on live updates when it still exists, and continue page progression when visual motion is disabled. Continuous marquees and domain-specific animation engines use `static` cadence and remain app-owned.
+
+## Motion And Media
+
+Motion is optional. Use it only when it communicates a state/page change. An enabled v7 transition requires an editor `presetProperty`, non-`none` transition, and behavior-test evidence; `off` still permits timed page progression. Use the shared transition controller for bounded page changes. Specialized marquees remain app-owned. Cancel pending transitions on rapid updates and destroy.
+
+| Media source | Ownership | v7 contract |
+|--------------|-----------|-------------|
+| `packaged` | Build artifact | Static import; `cache=bundle`; `preview=packaged`; list emitted runtime assets |
+| `setting` | Editor property | Declare property; `cache=platform`; offline `data-uri` or `platform-mock` preview |
+| `datasource` | `TABLE`/`CUSTOM` row | Declare binding and URL fields; platform cache; deterministic fallback |
+| `file-system` | Independent `EXISTING` binding | Declare record-to-asset lookup, URL fields, platform cache, and mock/file sample |
+| `feed` | Built-in `FEED` binding | Declare media fields; platform cache; support missing/broken feed media |
+| `weather` | SDK/platform service | No datasource binding; use `useWeather`; platform cache and location-keyed platform mock |
+
+Do not fetch arbitrary external media directly. External URLs are supported only through an explicit setting/datasource contract or a platform service. Preview, screenshots, tests, and placeholders must work without external network access.
 
 ## Visual Direction
 

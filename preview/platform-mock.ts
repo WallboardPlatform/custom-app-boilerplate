@@ -91,6 +91,7 @@ const mergeRoot = (current: unknown, value: unknown): unknown => {
 export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): PlatformMockController => {
 	const datasources: Record<string, unknown> = clone(fixture.internalDatasources ?? {});
 	const filesByFolder: Record<string, unknown[]> = clone(fixture.filesByFolder ?? {});
+	const weatherByLocation: Record<string, unknown> = clone(fixture.weatherByLocation ?? {});
 	const ownValues: Record<string, unknown> = {};
 	const datasourceActions: PlatformMockAction[] = [];
 	const sensorEvents: unknown[] = [];
@@ -192,11 +193,18 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 		setWidgetSize: noOperation,
 		cacheFile: async (url: string): Promise<string> => url,
 		getWeatherData: async (locations: Array<{ cityCode: string; countryCode: string }>): Promise<Record<string, unknown>[]> => {
-			return locations.map((location): Record<string, unknown> => ({
-				searchKey: `${location.cityCode},${location.countryCode}`,
-				location: { city: 'Preview City', country: location.countryCode },
-				item: { forecast: [] }
-			}));
+			return locations.map((location): Record<string, unknown> => {
+				const searchKey = `${location.cityCode},${location.countryCode}`;
+				const fixtureValue = weatherByLocation[searchKey];
+
+				return isObject(fixtureValue)
+					? clone(fixtureValue)
+					: {
+						searchKey,
+						location: { city: 'Preview City', country: location.countryCode },
+						item: { forecast: [] }
+					};
+			});
 		},
 		getMockDatasourceByIdSync: (id: string): unknown => clone(datasources[id] ?? {}),
 		getDatasourceBindingPaths: (): { basePath: unknown[]; path: unknown[] } => ({ basePath: [], path: [] }),

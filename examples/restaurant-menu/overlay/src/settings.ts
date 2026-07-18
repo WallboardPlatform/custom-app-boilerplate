@@ -67,6 +67,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 		allergenText: textSetting(config.allergenText, 'Ask us about allergens'),
 		emptyStateText: textSetting(config.emptyStateText, 'No menu items are available.'),
 		pageDurationSeconds: Math.max(3, Number(config.pageDurationSeconds) || 12),
+		motionPreset: config.motionPreset === 'off' || config.motionPreset === 'expressive' ? config.motionPreset : 'subtle',
 		...palette
 	};
 }

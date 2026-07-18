@@ -7,7 +7,9 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 
+import { resolveMotion } from '@utils/motion';
 import { createRotationController } from '@utils/rotation';
+import { createTransitionController, type TransitionState } from '@utils/transition';
 
 import style from '@components/wb-app/wb-app.module.scss';
 
@@ -229,6 +231,7 @@ const getClock = (): { day: string; time: string } => {
 };
 
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
+	let transitionInitialized = false;
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
 	const fitRestaurantName = useAutoFitText({
@@ -239,9 +242,15 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 	const [clock, setClock] = createSignal<{ day: string; time: string }>(getClock());
 	const [pageIndex, setPageIndex] = createSignal<number>(0);
+	const [transitionState, setTransitionState] = createSignal<TransitionState>({
+		currentKey: 'initial',
+		previousKey: null,
+		transitioning: false
+	});
 	const rotation = createRotationController((_key: string, index: number): void => {
 		setPageIndex(index);
 	});
+	const transition = createTransitionController('initial', setTransitionState);
 	const rawData: Accessor<unknown> = createMemo((): unknown => dataSources().menuData?.value);
 	const hasBoundDatasource: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'menuData');
@@ -277,7 +286,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		'--wb-restaurant-menu-accent': settings().accentColor,
 		'--wb-restaurant-menu-accent-text': settings().accentTextColor,
 		'--wb-restaurant-menu-line': settings().lineColor,
-		'--wb-restaurant-menu-featured': settings().featuredColor
+		'--wb-restaurant-menu-featured': settings().featuredColor,
+		'--wb-restaurant-menu-motion-duration': `${resolveMotion(settings().motionPreset).durationMs}ms`,
+		'--wb-restaurant-menu-motion-distance': `${resolveMotion(settings().motionPreset).distancePx}px`,
+		'--wb-restaurant-menu-motion-easing': resolveMotion(settings().motionPreset).easing
 	}));
 
 	onMount((): void => {
@@ -294,12 +306,27 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		rotation.sync(keys, untrack((): string | undefined => keys[pageIndex()]), settings().pageDurationSeconds * 1000);
 	});
 
+	createEffect((): void => {
+		const keys: string[] = pageKeys();
+		const key: string = keys[pageIndex()] ?? 'empty';
+		const motion = resolveMotion(settings().motionPreset);
+
+		transition.select(key, {
+			enabled: transitionInitialized && motion.enabled,
+			durationMs: motion.durationMs
+		});
+		transitionInitialized = true;
+	});
+
 	onCleanup((): void => rotation.destroy());
+	onCleanup((): void => transition.destroy());
 
 	return (
 		<div
 			class={`wb-restaurant-menu-root ${style['wb-app']}`}
 			data-host-ready={Boolean(props.hostElement)}
+			data-motion-preset={settings().motionPreset}
+			data-transitioning={String(transitionState().transitioning)}
 			style={themeStyle()}
 		>
 			<header class="wb-restaurant-menu-header">

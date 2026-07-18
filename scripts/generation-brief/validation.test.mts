@@ -140,6 +140,76 @@ const createValidV6Brief = (): GenerationBrief => {
 	return brief;
 };
 
+const createValidV7Brief = (): GenerationBrief => {
+	const brief = createValidV6Brief();
+
+	brief.briefVersion = 7;
+	brief.data = {
+		mode: 'bound',
+		bindings: [
+			{ property: 'products', source: 'generated', contract: 'TABLE', access: 'read' },
+			{ property: 'productImages', source: 'existing', contract: 'EXISTING', access: 'read' }
+		]
+	};
+	brief.settings.push({ property: 'motionPreset', purpose: 'Controls page transition intensity.' });
+	brief.ownership?.push(
+		{
+			id: 'products-data',
+			area: 'content',
+			owner: 'datasource',
+			targets: ['products'],
+			rationale: 'Operators edit product records independently.'
+		},
+		{
+			id: 'product-media',
+			area: 'content',
+			owner: 'datasource',
+			targets: ['productImages'],
+			rationale: 'Operators manage product imagery in File System.'
+		},
+		{
+			id: 'motion-setting',
+			area: 'behavior',
+			owner: 'setting',
+			targets: ['motionPreset'],
+			rationale: 'Operators may disable or adjust transitions.'
+		}
+	);
+	brief.motion = {
+		default: 'subtle',
+		presetProperty: 'motionPreset',
+		transition: 'fade',
+		techniques: ['fade'],
+		rationale: 'A short fade preserves context between catalog pages.'
+	};
+	brief.behaviors.push({
+		id: 'page-transition',
+		expectation: 'Page transitions restart and clean up safely.',
+		evidence: { testFile: 'preview/behavior.spec.ts' }
+	});
+	brief.media = [{
+		id: 'product-photo',
+		type: 'image',
+		source: 'file-system',
+		fit: 'cover',
+		binding: 'productImages',
+		lookup: {
+			recordBinding: 'products',
+			recordField: 'imageKey',
+			assetField: 'name',
+			urlFields: ['url', 'thumbnailUrl', 'location'],
+			match: 'filename-stem'
+		},
+		cache: 'platform',
+		preview: 'data-uri',
+		fallback: 'Show the designed no-image surface.',
+		rationale: 'Product rows and independently managed File System imagery match by SKU.'
+	}];
+	brief.assets.push({ id: 'product-images', source: 'datasource', binding: 'productImages', required: false });
+
+	return brief;
+};
+
 const cloneBrief = (brief: GenerationBrief): GenerationBrief => {
 	return JSON.parse(JSON.stringify(brief)) as GenerationBrief;
 };
@@ -219,6 +289,33 @@ void describe('standalone generation brief validation', () => {
 		const brief = createValidV6Brief();
 
 		assert.deepEqual(validateStandaloneBrief(brief), brief);
+	});
+
+	void it('accepts a complete v7 media ownership and transition contract', () => {
+		const brief = createValidV7Brief();
+
+		assert.deepEqual(validateStandaloneBrief(brief), brief);
+	});
+
+	void it('rejects ambiguous v7 File System media ownership', () => {
+		const brief = createValidV7Brief();
+		delete brief.media?.[0].lookup;
+
+		assert.throws(() => validateStandaloneBrief(brief), /lookup between record and asset bindings/);
+	});
+
+	void it('requires v7 media to declare cache and offline preview policies', () => {
+		const brief = createValidV7Brief();
+		delete brief.media?.[0].cache;
+
+		assert.throws(() => validateStandaloneBrief(brief), /cache and preview policies/);
+	});
+
+	void it('requires enabled v7 motion to be editable and behavior-tested', () => {
+		const brief = createValidV7Brief();
+		delete brief.motion?.presetProperty;
+
+		assert.throws(() => validateStandaloneBrief(brief), /presetProperty/);
 	});
 
 	void it('requires v6 dynamic text to use declared semantic roles', () => {

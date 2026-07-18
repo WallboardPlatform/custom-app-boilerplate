@@ -1,6 +1,10 @@
 .wb-app {
   @include reset-styles();
 
+  --wb-restaurant-menu-motion-duration: 280ms;
+  --wb-restaurant-menu-motion-distance: 12px;
+  --wb-restaurant-menu-motion-easing: cubic-bezier(0.2, 0.7, 0.2, 1);
+
   display: flex;
   width: 100%;
   min-width: 0;
@@ -244,6 +248,22 @@
   padding: 38px 42px;
   flex: 1 1 auto;
   flex-direction: column;
+}
+
+.wb-app[data-transitioning='true'] :global(.wb-restaurant-menu-board) {
+  animation: wb-restaurant-menu-page-enter var(--wb-restaurant-menu-motion-duration) var(--wb-restaurant-menu-motion-easing) both;
+}
+
+@keyframes wb-restaurant-menu-page-enter {
+  from {
+    opacity: 0.01;
+    transform: translateY(var(--wb-restaurant-menu-motion-distance));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 :global(.wb-restaurant-menu-board__row) {

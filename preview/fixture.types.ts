@@ -18,6 +18,7 @@ export interface PreviewPlatformFixture {
 	isDisplayer?: boolean;
 	internalDatasources?: Record<string, unknown>;
 	filesByFolder?: Record<string, unknown[]>;
+	weatherByLocation?: Record<string, unknown>;
 }
 
 export interface PreviewScenario {

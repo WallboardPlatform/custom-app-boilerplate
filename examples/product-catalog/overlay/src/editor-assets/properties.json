@@ -1,0 +1,60 @@
+{
+	"version": "1",
+	"name": "Field Note Product Catalog",
+	"interactive": false,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Datasource bindings",
+			"type": "group",
+			"properties": [
+				{ "label": "Products table", "type": "dataPicker", "property": "products", "dataPickerType": "any", "tooltip": "Select the editable Products TABLE datasource." },
+				{ "label": "Product images (File System)", "type": "dataPicker", "property": "productImages", "dataPickerType": "any", "tooltip": "Select a File System datasource. Each product imageKey matches the image filename without its extension." }
+			]
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Brand label", "type": "text", "property": "brandLabel", "default": "FIELD NOTE / OBJECTS FOR EVERYDAY" },
+				{ "label": "Collection title", "type": "text", "property": "collectionTitle", "default": "Useful things, considered." },
+				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "The next collection is being prepared." }
+			]
+		},
+		{
+			"label": "Playback",
+			"type": "group",
+			"properties": [
+				{ "label": "Product duration", "type": "number", "property": "pageDurationSeconds", "default": 8, "min": 3, "max": 60, "step": 1 },
+				{
+					"label": "Motion", "type": "select", "property": "motionPreset", "default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" },
+						{ "label": "Expressive", "value": "expressive" }
+					]
+				},
+				{
+					"label": "Image fit", "type": "select", "property": "mediaFit", "default": "cover",
+					"options": [
+						{ "label": "Cover", "value": "cover" },
+						{ "label": "Contain", "value": "contain" }
+					]
+				}
+			]
+		},
+		{
+			"label": "Palette",
+			"type": "group",
+			"properties": [
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#f3efdf" },
+				{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#112d2a" },
+				{ "label": "Secondary text", "type": "color", "property": "mutedTextColor", "default": "#5a6964" },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#ef4b3e" },
+				{ "label": "Image fallback", "type": "color", "property": "panelColor", "default": "#d6e5dd" }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}
