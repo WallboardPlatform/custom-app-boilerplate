@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "b4d78b23510b6cf6330bf3f7e3b59d8f3747515992c0717a160cd0969282ba5e",
-	"reviewedAt": "2026-07-16T09:50:00.000Z",
-	"reviewer": "Codex independent visual review",
+	"sourceHash": "0d90f29bdecdeafed179fa9afffec1f43c194c7062e773fab496122be754540e",
+	"reviewedAt": "2026-07-19T11:22:27.266Z",
+	"reviewer": "Codex shared auto-fit migration re-review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
