@@ -10,6 +10,9 @@ import { applyCapability } from '../capability-materialization.mjs';
 import { materializeExample } from '../example-materialization.mjs';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const hasPdfCapabilityCatalog = fs.existsSync(
+	path.join(rootDirectory, 'capabilities', 'pdf', 'capability.json')
+);
 const require = createRequire(import.meta.url);
 const temporaryDirectories: string[] = [];
 
@@ -32,7 +35,9 @@ afterEach((): void => {
 });
 
 void describe('PDF capability materialization', (): void => {
-	void it('expands the pinned PDF.js runtime only into an opted-in project', (): void => {
+	void it('expands the pinned PDF.js runtime only into an opted-in project', {
+		skip: !hasPdfCapabilityCatalog
+	}, (): void => {
 		const targetDirectory = temporaryDirectory('wallboard-pdf-capability-');
 		writeJson(path.join(targetDirectory, 'package.json'), { name: 'pdf-target' });
 
@@ -80,7 +85,9 @@ void describe('PDF capability materialization', (): void => {
 		assert.equal(fs.readFileSync(path.join(targetDirectory, 'src', 'index.ts'), 'utf8').includes('PDF_SENTINEL'), false);
 	});
 
-	void it('refuses to overwrite project code with different capability content', (): void => {
+	void it('refuses to overwrite project code with different capability content', {
+		skip: !hasPdfCapabilityCatalog
+	}, (): void => {
 		const targetDirectory = temporaryDirectory('wallboard-pdf-collision-');
 		writeJson(path.join(targetDirectory, 'package.json'), { name: 'collision-target' });
 		const collisionPath = path.join(targetDirectory, 'src', 'capabilities', 'pdf', 'index.ts');
