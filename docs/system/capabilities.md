@@ -17,6 +17,7 @@ Reuse these mechanics without inheriting an example's visual language.
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 | PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
+| Video playback | Opt-in `video` capability; hls.js 0.7.9 is materialized only on request | `lumen-media-program`: direct file/folder/JSON playlist, cache, native MP4/WebM/HLS, poster/captions, autoplay/sound/fit/repeat/seek/retry, commands, telemetry, cleanup |
 
 Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
 
@@ -37,6 +38,9 @@ Capabilities are excluded from ordinary projects and builds. Add one explicitly:
 
 ```bash
 npm run capability:add -- pdf
+npm run capability:add -- video
 ```
 
 The PDF capability expands its checksum-pinned runtime into `src/capabilities/pdf`. Keep `assets/pdf.worker.js` in `resourceList`; the runtime resolves it beside the loaded custom-app script in Wallboard and falls back to Vite's imported URL in local preview.
+
+The video capability expands its checksum-pinned hls.js runtime into `src/capabilities/video`; MP4/WebM still use the native browser path. It cannot expose the platform native/external player, synchronized multi-screen playback, audio ducking, or proof-of-display registration through the current custom-app SDK. Never represent browser telemetry as platform proof-of-display.

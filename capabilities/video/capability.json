@@ -1,0 +1,29 @@
+{
+	"id": "video",
+	"version": 1,
+	"title": "Video playback",
+	"description": "Opt-in HTML5 and HLS video playback with file or folder sources, cached playlists, captions, fit modes, bounded recovery, external control, and interaction telemetry.",
+	"vendor": {
+		"name": "hls.js",
+		"version": "0.7.9",
+		"license": "Apache-2.0",
+		"licenseFile": "vendor/LICENSE"
+	},
+	"compressedAssets": [
+		{
+			"source": "vendor/hls.min.js.gz",
+			"target": "src/capabilities/video/vendor/hls.min.js",
+			"compressedSha256": "3e8469deb24ccdb15af79f9b36b7cfe15681116b004adf2327be2adf5ce93ad6",
+			"outputSha256": "4f19150c794c3502dd53ee29419d3d769826cea992157c693533dc618f6048b8"
+		}
+	],
+	"files": [
+		"src/capabilities/video/index.ts",
+		"src/capabilities/video/source.ts",
+		"src/capabilities/video/types.ts",
+		"src/capabilities/video/video-player.tsx",
+		"src/capabilities/video/video-player.module.scss",
+		"src/capabilities/video/vendor/hls.min.d.ts",
+		"src/capabilities/video/vendor/hls.min.js"
+	]
+}

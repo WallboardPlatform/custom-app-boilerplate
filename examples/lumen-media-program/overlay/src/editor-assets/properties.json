@@ -1,0 +1,111 @@
+{
+	"version": "1",
+	"name": "Lumen Media Program",
+	"interactive": true,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Media",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Source", "type": "select", "property": "sourceMode", "default": "file",
+					"options": [
+						{ "label": "Single video", "value": "file" },
+						{ "label": "Video folder", "value": "folder" },
+						{ "label": "JSON playlist", "value": "playlist" }
+					]
+				},
+				{
+					"label": "Video file", "type": "file", "property": "videoFile", "fileType": "video",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "file", "dependsOn": "sourceMode" }], "rule": "#1" }
+				},
+				{
+					"label": "Video folder", "type": "folder", "property": "videoFolder", "fileType": "video",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" },
+					"tooltip": "Loads videos alphabetically from the selected File System folder."
+				},
+				{
+					"label": "Include subfolders", "type": "checkbox", "property": "recursiveFolder", "default": true,
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" }
+				},
+				{
+					"label": "Playlist JSON", "type": "textarea", "property": "playlistJson", "default": "",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "playlist", "dependsOn": "sourceMode" }], "rule": "#1" },
+					"tooltip": "Array or object with items/videos/rows. Each item accepts id, name, url/location/src, poster, type, and caption tracks."
+				}
+			]
+		},
+		{
+			"label": "Playback",
+			"type": "group",
+			"properties": [
+				{ "label": "Autoplay", "type": "checkbox", "property": "autoplay", "default": true },
+				{ "label": "Muted", "type": "checkbox", "property": "muted", "default": true },
+				{ "label": "Volume", "type": "slider", "property": "volume", "default": 0, "min": 0, "max": 100, "step": 1 },
+				{
+					"label": "Repeat", "type": "select", "property": "repeat", "default": "playlist",
+					"options": [
+						{ "label": "Do not repeat", "value": "none" },
+						{ "label": "Current video", "value": "item" },
+						{ "label": "Complete playlist", "value": "playlist" }
+					]
+				},
+				{
+					"label": "Fit", "type": "select", "property": "fit", "default": "cover",
+					"options": [
+						{ "label": "Cover", "value": "cover" },
+						{ "label": "Contain", "value": "contain" },
+						{ "label": "Fill", "value": "fill" }
+					]
+				},
+				{ "label": "Start position seconds", "type": "number", "property": "startAtSeconds", "default": 0, "min": 0, "max": 86400, "step": 0.1 },
+				{ "label": "Show captions", "type": "checkbox", "property": "showCaptions", "default": true },
+				{ "label": "Retry attempts", "type": "number", "property": "retryCount", "default": 2, "min": 0, "max": 5, "step": 1 },
+				{ "label": "Advance after failure", "type": "checkbox", "property": "advanceOnError", "default": true }
+			]
+		},
+		{
+			"label": "Program chrome",
+			"type": "group",
+			"properties": [
+				{ "label": "Venue", "type": "text", "property": "venueName", "default": "Lumen public media" },
+				{ "label": "Program", "type": "text", "property": "programName", "default": "Night signal" },
+				{ "label": "Show program chrome", "type": "checkbox", "property": "showChrome", "default": true },
+				{ "label": "Show touch controls", "type": "checkbox", "property": "showControls", "default": false }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#080b0d", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f5f2e9", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Secondary text", "type": "color", "property": "mutedTextColor", "default": "#b8c0c5", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#ff5a3d", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": [
+		{ "label": "Play", "command": "playVideo" },
+		{ "label": "Pause", "command": "pauseVideo" },
+		{ "label": "Toggle playback", "command": "toggleVideo" },
+		{ "label": "Previous video", "command": "previousVideo" },
+		{ "label": "Next video", "command": "nextVideo" },
+		{ "label": "Reload video", "command": "reloadVideo" },
+		{ "label": "Select video", "command": "selectVideo", "parameters": [{ "parameter": "index", "label": "Zero-based index", "type": "number" }, { "parameter": "id", "label": "Video id", "type": "text" }] },
+		{ "label": "Seek", "command": "seekVideo", "parameters": [{ "parameter": "seconds", "label": "Seconds", "type": "number" }] },
+		{ "label": "Set volume", "command": "setVideoVolume", "parameters": [{ "parameter": "volume", "label": "Volume 0-100", "type": "number" }] },
+		{ "label": "Mute", "command": "muteVideo" },
+		{ "label": "Unmute", "command": "unmuteVideo" }
+	]
+}
