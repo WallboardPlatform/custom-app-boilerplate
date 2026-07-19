@@ -11,41 +11,67 @@ export interface AutoFitTextOptions extends TextFitOptions {
 export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElement) => void) => {
 	let element: HTMLElement | undefined;
 	let resizeObserver: ResizeObserver | undefined;
+	let resizePoller: number | undefined;
 	let animationFrame: number | undefined;
 	let mounted = false;
+	let observedWidth = 0;
+	let observedHeight = 0;
 
 	const fit = (): void => {
-		if (element) {
-			element.style.fontSize = '';
+		if (!element) return;
 
-			const cssMaximum: number = Number.parseFloat(window.getComputedStyle(element).fontSize);
-			const maxFontSize: number = Number.isFinite(cssMaximum)
-				? Math.min(options.maxFontSize, cssMaximum)
-				: options.maxFontSize;
+		element.style.fontSize = '';
 
-			fitTextElement(element, { ...options, maxFontSize });
-		}
+		const cssMaximum: number = Number.parseFloat(window.getComputedStyle(element).fontSize);
+		const maxFontSize: number = Number.isFinite(cssMaximum)
+			? Math.min(options.maxFontSize, cssMaximum)
+			: options.maxFontSize;
+
+		fitTextElement(element, { ...options, maxFontSize });
 	};
 
 	const scheduleFit = (): void => {
-		if (animationFrame !== undefined) {
-			window.cancelAnimationFrame(animationFrame);
-		}
+		if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
 
 		animationFrame = window.requestAnimationFrame((): void => {
 			animationFrame = undefined;
 			fit();
 		});
 	};
-	const observeElement = (): void => {
-		resizeObserver?.disconnect();
 
-		if (!mounted || !element) {
-			return;
+	const stopObserving = (): void => {
+		resizeObserver?.disconnect();
+		resizeObserver = undefined;
+
+		if (resizePoller !== undefined) {
+			window.clearInterval(resizePoller);
+			resizePoller = undefined;
 		}
 
-		resizeObserver = new ResizeObserver(scheduleFit);
-		resizeObserver.observe(element);
+		window.removeEventListener('resize', scheduleFit);
+	};
+
+	const observeElement = (): void => {
+		stopObserving();
+
+		if (!mounted || !element) return;
+
+		if (typeof window.ResizeObserver === 'function') {
+			resizeObserver = new window.ResizeObserver(scheduleFit);
+			resizeObserver.observe(element);
+		} else {
+			observedWidth = element.clientWidth;
+			observedHeight = element.clientHeight;
+			resizePoller = window.setInterval((): void => {
+				if (!element || (element.clientWidth === observedWidth && element.clientHeight === observedHeight)) return;
+
+				observedWidth = element.clientWidth;
+				observedHeight = element.clientHeight;
+				scheduleFit();
+			}, 250);
+			window.addEventListener('resize', scheduleFit);
+		}
+
 		scheduleFit();
 	};
 
@@ -61,11 +87,9 @@ export const useAutoFitText = (options: AutoFitTextOptions): ((element: HTMLElem
 
 	onCleanup((): void => {
 		mounted = false;
-		resizeObserver?.disconnect();
+		stopObserving();
 
-		if (animationFrame !== undefined) {
-			window.cancelAnimationFrame(animationFrame);
-		}
+		if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
 	});
 
 	return (target: HTMLElement): void => {

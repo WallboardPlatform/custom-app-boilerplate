@@ -4,7 +4,7 @@ Reuse these mechanics without inheriting an example's visual language.
 
 | Need | Capability | Evidence/reference |
 |------|------------|--------------------|
-| Bounded primary text | `useAutoFitText`, `src/utils/text-fit.ts` | Long-text scenario; minimum size and ink checks |
+| Bounded primary text | `useAutoFitText`, `src/utils/text-fit.ts` | Long-text scenario; minimum size and ink checks; legacy resize fallback |
 | Theme presets | `resolveTheme`, `mixHexColors`, `readableTextColor` | Setting effect plus light/dark/custom scenarios |
 | Rich text/SVG | `src/utils/sanitize.ts` | Malicious/unsupported markup test |
 | Wrapped datasource arrays | `extractArrayAtPaths` | Direct, serialized, documented wrapper fixtures |

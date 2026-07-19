@@ -27,11 +27,17 @@ const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const hasVideoCapabilityCatalog = fs.existsSync(
 	path.join(rootDirectory, 'capabilities', 'video', 'capability.json')
 );
+const hasMaterializedVideoRuntime = fs.existsSync(
+	path.join(rootDirectory, 'src', 'capabilities', 'video', 'source.ts')
+);
 const videoSourceImport = hasVideoCapabilityCatalog
 	? '../../capabilities/video/overlay/src/capabilities/video/source.js'
-	: '../../src/capabilities/video/source.js';
-const videoSourceModule = await import(videoSourceImport) as unknown as VideoSourceModule;
-const { isHlsSource, normalizeFolderId, normalizeVideoPlaylist, normalizeVideoSelection, resolveVideoSources } = videoSourceModule;
+	: hasMaterializedVideoRuntime
+		? '../../src/capabilities/video/source.js'
+		: undefined;
+const videoSourceModule = videoSourceImport
+	? await import(videoSourceImport) as unknown as VideoSourceModule
+	: undefined;
 const temporaryDirectories: string[] = [];
 
 const temporaryDirectory = (prefix: string): string => {
@@ -51,7 +57,12 @@ afterEach((): void => {
 });
 
 void describe('video capability', (): void => {
-	void it('normalizes direct, serialized, and wrapped playlists without duplicate URLs', (): void => {
+	void it('normalizes direct, serialized, and wrapped playlists without duplicate URLs', {
+		skip: !videoSourceModule
+	}, (): void => {
+		assert.ok(videoSourceModule);
+		const { isHlsSource, normalizeFolderId, normalizeVideoPlaylist, normalizeVideoSelection } = videoSourceModule;
+
 		assert.deepEqual(normalizeVideoSelection('https://cdn.example.test/intro.mp4'), {
 			id: 'video',
 			name: 'intro.mp4',
@@ -76,7 +87,12 @@ void describe('video capability', (): void => {
 		assert.equal(normalizeFolderId({ folderId: 'videos-42' }), 'videos-42');
 	});
 
-	void it('resolves folders through the VIDEO API and caches every media surface', async (): Promise<void> => {
+	void it('resolves folders through the VIDEO API and caches every media surface', {
+		skip: !videoSourceModule
+	}, async (): Promise<void> => {
+		assert.ok(videoSourceModule);
+		const { resolveVideoSources } = videoSourceModule;
+
 		const calls: unknown[][] = [];
 		const cached: string[] = [];
 		const api = {

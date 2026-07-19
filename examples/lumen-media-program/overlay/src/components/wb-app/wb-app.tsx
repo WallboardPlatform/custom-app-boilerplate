@@ -5,6 +5,7 @@ import type { ApiService, IExternalCommandService } from 'wallboard-app-sdk';
 import { useApiMethods } from 'wallboard-app-sdk';
 
 import { getMetadata } from '@hooks/system/getMetadata';
+import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useExternalCommandListener } from '@hooks/system/useExternalCommandListener';
 import { useSettings } from '@hooks/system/useSettings';
 
@@ -16,7 +17,6 @@ import style from '@components/wb-app/wb-app.module.scss';
 
 import { previewVideos } from '../../assets/preview-videos';
 import { resolveVideoSources, VideoPlayer } from '../../capabilities/video';
-import { useLegacyAutoFitText as useAutoFitText } from '../../hooks/useLegacyAutoFitText';
 import type {
 	VideoInteractionEvent,
 	VideoPlayerController,
