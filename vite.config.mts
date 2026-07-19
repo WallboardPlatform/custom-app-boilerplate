@@ -43,7 +43,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       solidSvg(),
       viteEslint({
         failOnError: false,
-        failOnWarning: false
+        failOnWarning: false,
+        exclude: ['node_modules', 'dist', 'src/editor-assets', 'src/**/vendor/**']
       }),
       stylelint({
         emitWarning: false,
@@ -52,7 +53,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         exclude: [
           'node_modules',
           'dist',
-          'src/editor-assets'
+          'src/editor-assets',
+          'src/**/vendor/**'
         ]
       }),
       WBAppPostExecution(config, isProd),
@@ -105,7 +107,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           format: 'iife',
           dir: 'dist/assets/',
           entryFileNames: 'app.js',
-          assetFileNames: 'index.[ext]'
+          assetFileNames: (assetInfo) => assetInfo.name?.includes('pdf.worker')
+            ? 'pdf.worker.js'
+            : 'index.[ext]'
         }
       }
     }

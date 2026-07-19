@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const excludedRoots = new Set(['.git', '.tmp', 'benchmarks', 'dist', 'examples', 'node_modules', 'templates']);
+import { applyCapability } from './capability-materialization.mjs';
+
+const excludedRoots = new Set(['.git', '.tmp', 'benchmarks', 'capabilities', 'dist', 'examples', 'node_modules', 'templates']);
 
 const resolveInside = (directory, relativePath, label) => {
 	const resolvedPath = path.resolve(directory, relativePath);
@@ -61,6 +63,14 @@ export const materializeExample = ({ rootDirectory, exampleId, targetDirectory, 
 
 	for (const relativePath of manifest.remove ?? []) {
 		fs.rmSync(resolveInside(targetDirectory, relativePath, 'Removal path'), { recursive: true, force: true });
+	}
+
+	for (const capabilityId of manifest.capabilities ?? []) {
+		applyCapability({
+			rootDirectory,
+			targetDirectory,
+			capabilityId
+		});
 	}
 
 	fs.cpSync(overlayDirectory, targetDirectory, { recursive: true, force: true });

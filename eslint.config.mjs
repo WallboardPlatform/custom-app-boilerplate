@@ -171,6 +171,7 @@ export default tseslint.config(
 		ignores: [
 			'node_modules',
 			'dist',
+			'src/**/vendor/**',
 			'build_tools',
 			'project-builder-utilities',
 			'src/editor-assets/',

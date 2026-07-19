@@ -1,0 +1,151 @@
+{
+	"version": "1",
+	"name": "Northline Document Workspace",
+	"interactive": true,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Documents",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Source", "type": "select", "property": "sourceMode", "default": "file",
+					"options": [
+						{ "label": "Single PDF", "value": "file" },
+						{ "label": "PDF folder", "value": "folder" }
+					]
+				},
+				{
+					"label": "PDF file", "type": "file", "property": "pdfFile", "fileType": "pdf",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "file", "dependsOn": "sourceMode" }], "rule": "#1" }
+				},
+				{
+					"label": "PDF folder", "type": "folder", "property": "pdfFolder", "fileType": "pdf",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" },
+					"tooltip": "Loads PDF files alphabetically from the selected File System folder."
+				},
+				{
+					"label": "Include subfolders", "type": "checkbox", "property": "recursiveFolder", "default": true,
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" }
+				},
+				{ "label": "Password", "type": "text", "property": "password", "default": "", "tooltip": "Optional shared password for encrypted PDFs." },
+				{ "label": "Workspace title", "type": "text", "property": "title", "default": "Document workspace" }
+			]
+		},
+		{
+			"label": "Navigation",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Page mode", "type": "select", "property": "pageMode", "default": "continuous",
+					"options": [
+						{ "label": "Continuous", "value": "continuous" },
+						{ "label": "Single page", "value": "single" }
+					]
+				},
+				{
+					"label": "Scroll direction", "type": "select", "property": "scrollDirection", "default": "vertical",
+					"options": [
+						{ "label": "Vertical", "value": "vertical" },
+						{ "label": "Horizontal", "value": "horizontal" }
+					]
+				},
+				{
+					"label": "Fit", "type": "select", "property": "fit", "default": "contain",
+					"options": [
+						{ "label": "Contain", "value": "contain" },
+						{ "label": "Fill", "value": "fill" },
+						{ "label": "Cover", "value": "cover" },
+						{ "label": "Fit width", "value": "width" },
+						{ "label": "Fit height", "value": "height" },
+						{ "label": "Actual size", "value": "actual" }
+					]
+				},
+				{ "label": "Initial page", "type": "number", "property": "initialPage", "default": 1, "min": 1, "max": 10000, "step": 1 },
+				{ "label": "First included page", "type": "number", "property": "pageStart", "default": 1, "min": 1, "max": 10000, "step": 1 },
+				{ "label": "Last included page", "type": "number", "property": "pageEnd", "default": 0, "min": 0, "max": 10000, "step": 1, "tooltip": "Use 0 to include every remaining page." },
+				{ "label": "Show sidebar", "type": "checkbox", "property": "showSidebar", "default": true },
+				{ "label": "Show controls", "type": "checkbox", "property": "showControls", "default": true },
+				{ "label": "Hide scrollbars", "type": "checkbox", "property": "hideScrollbars", "default": false },
+				{
+					"label": "Initial sidebar", "type": "select", "property": "sidebarDefault", "default": "documents",
+					"options": [
+						{ "label": "Documents", "value": "documents" },
+						{ "label": "Outline", "value": "outline" },
+						{ "label": "Search", "value": "search" }
+					]
+				}
+			]
+		},
+		{
+			"label": "PDF layers",
+			"type": "group",
+			"properties": [
+				{ "label": "Selectable text and search", "type": "checkbox", "property": "renderTextLayer", "default": true },
+				{ "label": "Links and annotations", "type": "checkbox", "property": "interactiveAnnotations", "default": true },
+				{ "label": "Interactive forms", "type": "checkbox", "property": "renderForms", "default": true },
+				{ "label": "Preload screens", "type": "number", "property": "preloadScreens", "default": 1, "min": 0, "max": 6, "step": 1 },
+				{ "label": "Page spacing", "type": "slider", "property": "pagePadding", "default": 18, "min": 0, "max": 120, "step": 1 },
+				{ "label": "Separator width", "type": "slider", "property": "separatorSize", "default": 1, "min": 0, "max": 24, "step": 1 },
+				{ "label": "Separator", "type": "color", "property": "separatorColor", "default": "#27322f" },
+				{ "label": "Minimum zoom", "type": "number", "property": "zoomMinimum", "default": 0.35, "min": 0.1, "max": 1, "step": 0.05 },
+				{ "label": "Maximum zoom", "type": "number", "property": "zoomMaximum", "default": 4, "min": 1, "max": 10, "step": 0.25 },
+				{ "label": "Zoom step", "type": "number", "property": "zoomStep", "default": 0.15, "min": 0.05, "max": 1, "step": 0.05 }
+			]
+		},
+		{
+			"label": "Auto scroll",
+			"type": "group",
+			"properties": [
+				{ "label": "Enabled", "type": "checkbox", "property": "autoScrollEnabled", "default": false },
+				{ "label": "Pixels per second", "type": "slider", "property": "autoScrollSpeed", "default": 36, "min": 1, "max": 500, "step": 1 },
+				{ "label": "End pause seconds", "type": "number", "property": "autoScrollEndPauseSeconds", "default": 3, "min": 0, "max": 60, "step": 0.5 },
+				{ "label": "Rewind seconds", "type": "number", "property": "autoScrollRewindSeconds", "default": 1.5, "min": 0, "max": 15, "step": 0.5 },
+				{ "label": "Pause on hover", "type": "checkbox", "property": "autoScrollPauseOnHover", "default": true }
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme", "type": "select", "property": "themePreset", "default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#101514", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Panel", "type": "color", "property": "panelColor", "default": "#18201e", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Toolbar", "type": "color", "property": "toolbarColor", "default": "#121918", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#f5f2e9", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Secondary text", "type": "color", "property": "mutedTextColor", "default": "#9caaa6", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Border", "type": "color", "property": "borderColor", "default": "#34413e", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#42d6b5", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js",
+		"assets/pdf.worker.js"
+	],
+	"externalCommands": [
+		{ "label": "First page", "command": "firstPage" },
+		{ "label": "Previous page", "command": "previousPage" },
+		{ "label": "Next page", "command": "nextPage" },
+		{ "label": "Last page", "command": "lastPage" },
+		{ "label": "Set page", "command": "setPage", "parameters": [{ "parameter": "page", "label": "Page", "type": "number" }] },
+		{ "label": "Set document", "command": "setDocument", "parameters": [{ "parameter": "document", "label": "Document", "type": "number" }] },
+		{ "label": "Search", "command": "searchPdf", "parameters": [{ "parameter": "query", "label": "Query", "type": "text" }] },
+		{ "label": "Next search result", "command": "nextSearchMatch" },
+		{ "label": "Previous search result", "command": "previousSearchMatch" },
+		{ "label": "Zoom in", "command": "zoomIn" },
+		{ "label": "Zoom out", "command": "zoomOut" },
+		{ "label": "Reset zoom", "command": "resetZoom" },
+		{ "label": "Download current PDF", "command": "downloadPdf" },
+		{ "label": "Submit PDF forms", "command": "submitPdfForms" },
+		{ "label": "Reset PDF forms", "command": "resetPdfForms" }
+	]
+}

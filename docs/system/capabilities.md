@@ -16,6 +16,7 @@ Reuse these mechanics without inheriting an example's visual language.
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
+| PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
 
 Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
 
@@ -29,3 +30,13 @@ Planned capability proofs and their promotion gates live in [capability-roadmap.
 - Missing, empty, invalid, maximum, odd, long-text, broken-media, last-page, and live-update states are capabilities to design and test, not one shared layout.
 - Examples prove techniques. The prompt/reference/domain still determines hierarchy, palette, density, geometry, media treatment, and pagination style.
 - Preview exposes datasources, actions, sensor events, and commands. Guard writes; editor mode returns `editor-blocked`.
+
+## Opt-in capabilities
+
+Capabilities are excluded from ordinary projects and builds. Add one explicitly:
+
+```bash
+npm run capability:add -- pdf
+```
+
+The PDF capability expands its checksum-pinned runtime into `src/capabilities/pdf`. Keep `assets/pdf.worker.js` in `resourceList`; the runtime resolves it beside the loaded custom-app script in Wallboard and falls back to Vite's imported URL in local preview.

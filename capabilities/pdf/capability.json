@@ -1,0 +1,50 @@
+{
+	"id": "pdf",
+	"version": 1,
+	"title": "PDF document workspace",
+	"description": "Opt-in PDF.js renderer with multi-document navigation, text search, outlines, annotation and AcroForm layers, zoom, fit modes, lazy rendering, and external control surfaces.",
+	"vendor": {
+		"name": "PDF.js",
+		"version": "2.3.200",
+		"license": "Apache-2.0",
+		"licenseFile": "vendor/LICENSE"
+	},
+	"compressedAssets": [
+		{
+			"source": "vendor/pdf.min.js.gz",
+			"target": "src/capabilities/pdf/vendor/pdf.min.js",
+			"compressedSha256": "75b5c7845fbdbe2777acb6ef6004eab2255b1de5679fe0e0494d405435d600c7",
+			"outputSha256": "44574bcf05ce109fc5351c446062e03ab868116791da871a90237f5321c081bc"
+		},
+		{
+			"source": "vendor/pdf.worker.min.js.gz",
+			"target": "src/capabilities/pdf/vendor/pdf.worker.min.js",
+			"compressedSha256": "b6270a7ab941cdbabf4aee7f6a5492c2108727ad3550943469f6429296a5d700",
+			"outputSha256": "238a3c909e502310283fdc7bd8e52e82f075263979b6b73d5e51362cf279a39a"
+		}
+	],
+	"files": [
+		"src/capabilities/pdf/index.ts",
+		"src/capabilities/pdf/pdf-viewer.tsx",
+		"src/capabilities/pdf/pdf-page.tsx",
+		"src/capabilities/pdf/pdf-viewer.module.scss",
+		"src/capabilities/pdf/pdfjs.ts",
+		"src/capabilities/pdf/document-store.ts",
+		"src/capabilities/pdf/layout.ts",
+		"src/capabilities/pdf/link-service.ts",
+		"src/capabilities/pdf/types.ts",
+		"src/capabilities/pdf/source.ts",
+		"src/capabilities/pdf/vendor.d.ts",
+		"src/capabilities/pdf/images/annotation-check.svg",
+		"src/capabilities/pdf/images/annotation-comment.svg",
+		"src/capabilities/pdf/images/annotation-help.svg",
+		"src/capabilities/pdf/images/annotation-insert.svg",
+		"src/capabilities/pdf/images/annotation-key.svg",
+		"src/capabilities/pdf/images/annotation-newparagraph.svg",
+		"src/capabilities/pdf/images/annotation-noicon.svg",
+		"src/capabilities/pdf/images/annotation-note.svg",
+		"src/capabilities/pdf/images/annotation-paragraph.svg",
+		"src/capabilities/pdf/vendor/pdf.min.js",
+		"src/capabilities/pdf/vendor/pdf.worker.min.js"
+	]
+}

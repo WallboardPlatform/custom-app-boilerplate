@@ -61,6 +61,14 @@ npm run example:accept -- restaurant-menu
 
 The explicit target must be new or empty. See `examples/README.md`. Use examples for normalization, layout, chart, timing, test, and packaging techniques; do not copy their visual language by default. Git stores only one or two representative screenshots per example; CI retains full acceptance matrices.
 
+Heavy, specialized runtimes are opt-in. For a PDF app, either materialize `pdf-document-workspace` or add the capability to a project before implementation:
+
+```bash
+npm run capability:add -- pdf
+```
+
+Ordinary apps do not receive PDF.js or its worker.
+
 ## Commands
 
 | Purpose | Command |

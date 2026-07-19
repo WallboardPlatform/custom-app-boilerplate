@@ -52,6 +52,7 @@ jobs:
           - market-rotation-ticker
           - museum-welcome
           - newsroom-spotlight
+          - pdf-document-workspace
           - pharmacy-pickup-queue
           - product-catalog
           - recognition-mosaic
