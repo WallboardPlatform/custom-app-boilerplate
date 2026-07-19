@@ -39,6 +39,7 @@ module.exports = (env, argv) => {
                 fs: false,
                 http: false,
                 https: false,
+                'node-ensure': false,
                 url: false,
                 zlib: false
             }
