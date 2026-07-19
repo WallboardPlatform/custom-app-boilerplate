@@ -1,0 +1,134 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "Create a full-bleed video program that proves reliable file, folder, JSON playlist, HLS, caption, recovery, telemetry, and remote-control behavior without adding video runtime to unrelated custom apps.",
+		"audience": "Visitors and employees watching unattended media programs, plus near-view operators using touch or external controls.",
+		"primaryGoal": "Keep the active video visually dominant while making program identity, source order, current progress, and failure recovery unambiguous."
+	},
+	"assumptions": [
+		"Wallboard File System files and folders are resolved and cached through the SDK before playback.",
+		"The packaged fictional Lumen videos make the app immediately testable and act as the offline preview fallback.",
+		"hls.js 0.7.9 is pinned from the proven legacy renderer and exists only inside apps opting into the video capability.",
+		"Custom apps can emit playback sensor events but cannot call the platform native player, synchronized playback, audio ducking, or proof-of-display APIs through the current SDK."
+	],
+	"app": { "mode": "new", "name": "Lumen Media Program", "version": 1 },
+	"surfaceStrategy": { "mode": "adaptive", "rationale": "Full-screen programs and embedded playlist zones both need deliberate full-bleed playback and bounded chrome." },
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-bleed landscape program with playlist rail and progress strip.", "minimumContentCoverage": { "width": 100, "height": 100 } },
+		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide playlist strip that removes secondary chrome before reducing media area.", "minimumContentCoverage": { "width": 100, "height": 100 } },
+		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait program with horizontal source selector above the bottom status rail.", "minimumContentCoverage": { "width": 100, "height": 100 } },
+		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Square playlist tile that preserves active media and a bounded horizontal source selector.", "minimumContentCoverage": { "width": 100, "height": 100 } },
+		{ "id": "compact", "width": 640, "height": 360, "role": "fallback", "purpose": "Compact media tile retaining identity and progress without playlist clutter.", "minimumContentCoverage": { "width": 100, "height": 100 } }
+	],
+	"data": { "mode": "static", "bindings": [] },
+	"ownership": [
+		{ "id": "media-source", "area": "content", "owner": "setting", "targets": ["sourceMode", "videoFile", "videoFolder", "recursiveFolder", "playlistJson"], "rationale": "Operators choose one File System video, an ordered folder, or a structured playlist without code changes." },
+		{ "id": "playback-policy", "area": "behavior", "owner": "setting", "targets": ["autoplay", "muted", "volume", "repeat", "fit", "startAtSeconds", "showCaptions", "retryCount", "advanceOnError"], "rationale": "Each placement explicitly owns sound, fit, sequence, caption, and recovery behavior." },
+		{ "id": "program-presentation", "area": "presentation", "owner": "setting", "targets": ["venueName", "programName", "showChrome", "showControls", "themePreset", "backgroundColor", "primaryTextColor", "mutedTextColor", "accentColor"], "rationale": "Preset-safe program chrome can be hidden completely or branded through a complete Custom palette." },
+		{ "id": "playback-session", "area": "state", "owner": "interaction", "targets": ["current-source", "position", "runtime-muted-state", "runtime-volume", "playback-state"], "rationale": "Playback state is local to the placed app and resets on remount." },
+		{ "id": "remote-control", "area": "behavior", "owner": "external-command", "targets": ["remote-play", "remote-pause", "remote-toggle", "remote-previous", "remote-next", "remote-reload", "remote-select", "remote-seek", "remote-volume", "remote-mute"], "rationale": "Control contents and automations operate the player without simulated pointer input." },
+		{ "id": "video-runtime", "area": "behavior", "owner": "locked", "targets": ["source-normalization", "platform-cache", "hls-fallback", "bounded-retry", "cleanup", "progress-milestones"], "rationale": "Compatibility and lifecycle safety remain code-owned invariants." }
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "program", "purpose": "Render the active video full bleed with optional program chrome." },
+			{ "id": "source-list", "purpose": "Expose ordered playlist identity and direct source selection." }
+		],
+		"inputs": [
+			{ "id": "pointer-controls", "type": "pointer", "action": "Select videos and use optional playback controls." },
+			{ "id": "touch-controls", "type": "touch", "action": "Use the same bounded controls on kiosk and touch displays." },
+			{ "id": "external-controls", "type": "external-command", "action": "Play, pause, seek, select, navigate, reload, mute, or set volume remotely." }
+		],
+		"session": { "reset": "none", "expectation": "Playback remains placement-local until remount, source update, completion policy, or explicit command." }
+	},
+	"outputs": [
+		{ "id": "playback-event", "channel": "sensor-event", "target": "video-playback", "operation": "emit", "editorPolicy": "preview-mock", "expectation": "Emit source, start, pause, quarter-progress, completion, and terminal failure interactions.", "failure": "Playback remains authoritative if telemetry is unavailable." }
+	],
+	"rendering": { "mode": "reflow", "letterbox": "background", "rationale": "Video preserves its selected contain, cover, or fill behavior while program chrome reflows by assigned ratio." },
+	"motion": { "default": "off", "transition": "none", "techniques": [], "rationale": "The video is the motion; decorative app transitions would compete with it." },
+	"media": [
+		{ "id": "configured-video", "type": "video", "source": "setting", "properties": ["videoFile", "videoFolder", "playlistJson"], "fit": "cover", "cache": "platform", "preview": "data-uri", "fallback": "Use the packaged fictional program and show a bounded source notice after a configured source error.", "rationale": "Production media is resolved through File System or explicit playlist settings and cached by Wallboard." },
+		{ "id": "packaged-program", "type": "video", "source": "packaged", "fit": "cover", "cache": "bundle", "preview": "packaged", "fallback": "Show the designed no-source state if packaged fixtures are removed.", "rationale": "Small synthetic videos make local preview, visual QA, and an upload smoke test deterministic." }
+	],
+	"branding": { "source": "settings", "editable": true, "provenance": "The Lumen identity and synthetic videos are fictional and generated for this example.", "fallback": "Use the coordinated Dark preset and fictional Lumen identity when no customer reference exists." },
+	"presentation": {
+		"themes": ["dark", "light", "custom"],
+		"density": "sparse",
+		"viewingDistance": "room",
+		"textRoles": [
+			{ "role": "primary", "selectors": ["[data-text-role='video-title']"] },
+			{ "role": "secondary", "selectors": ["[data-text-role='venue-name']"] },
+			{ "role": "metadata", "selectors": ["[data-text-role='program-name']"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "sourceMode", "purpose": "Selects one video, a File System folder, or a JSON playlist." },
+		{ "property": "videoFile", "purpose": "Selects the direct File System video." },
+		{ "property": "videoFolder", "purpose": "Selects the File System folder containing videos." },
+		{ "property": "recursiveFolder", "purpose": "Includes nested video files in folder mode." },
+		{ "property": "playlistJson", "purpose": "Defines ordered URL, poster, type, and caption metadata." },
+		{ "property": "autoplay", "purpose": "Starts playback after the source is ready." },
+		{ "property": "muted", "purpose": "Starts playback muted for unattended autoplay compatibility." },
+		{ "property": "volume", "purpose": "Sets browser-player volume from 0 to 100.", "effect": "player-volume" },
+		{ "property": "repeat", "purpose": "Selects no repeat, current-item repeat, or playlist repeat." },
+		{ "property": "fit", "purpose": "Selects Cover, Contain, or Fill media geometry.", "effect": "media-fit" },
+		{ "property": "startAtSeconds", "purpose": "Seeks to a bounded initial position after metadata loads." },
+		{ "property": "showCaptions", "purpose": "Enables configured WebVTT caption tracks." },
+		{ "property": "retryCount", "purpose": "Bounds retries for a failed source." },
+		{ "property": "advanceOnError", "purpose": "Advances a multi-item playlist after retries are exhausted." },
+		{ "property": "venueName", "purpose": "Sets the program owner label." },
+		{ "property": "programName", "purpose": "Sets the program series label." },
+		{ "property": "showChrome", "purpose": "Shows or hides all app-owned overlays." },
+		{ "property": "showControls", "purpose": "Shows or hides touch playback controls." },
+		{ "property": "themePreset", "purpose": "Selects the complete Dark, Light, or Custom chrome palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Sets the Custom player background." },
+		{ "property": "primaryTextColor", "purpose": "Sets Custom primary text." },
+		{ "property": "mutedTextColor", "purpose": "Sets Custom supporting text." },
+		{ "property": "accentColor", "purpose": "Sets Custom progress, active, and identity emphasis.", "effect": "custom-accent" }
+	],
+	"dynamicText": [
+		{ "id": "video-titles", "role": "primary", "source": { "type": "computed", "properties": ["videoFile", "videoFolder", "playlistJson"] }, "selectors": ["[data-text-role='video-title']"], "strategy": "ellipsis", "limits": { "maximumLines": 1 }, "fallback": "Ellipsize arbitrary filenames after preserving sequence and active state.", "rationale": "Media and progress geometry must not change for pathological filenames.", "evidenceScenario": "long-title" },
+		{ "id": "venue-name", "role": "secondary", "source": { "type": "setting", "properties": ["venueName"] }, "selectors": ["[data-text-role='venue-name']"], "strategy": "ellipsis", "limits": { "maximumLines": 1 }, "fallback": "Ellipsize the venue label before reducing video area.", "rationale": "Program identity is supporting information.", "evidenceScenario": "long-title" },
+		{ "id": "program-name", "role": "metadata", "source": { "type": "setting", "properties": ["programName"] }, "selectors": ["[data-text-role='program-name']"], "strategy": "ellipsis", "limits": { "maximumLines": 1 }, "fallback": "Ellipsize the program label.", "rationale": "The active video remains the primary surface.", "evidenceScenario": "long-title" }
+	],
+	"states": [
+		{ "scenario": "full-hd", "expectation": "The synthetic two-item program autoplays muted and advances while chrome remains legible." },
+		{ "scenario": "wide-low", "expectation": "The wide-low surface preserves the full media viewport and reduces secondary chrome before primary status." },
+		{ "scenario": "portrait", "expectation": "The light preset reflows playlist choices above the footer without covering primary media." },
+		{ "scenario": "square", "expectation": "The square surface keeps playback dominant and the source selector bounded." },
+		{ "scenario": "compact", "expectation": "Secondary playlist chrome disappears before media or primary status becomes unreadable." },
+		{ "scenario": "long-title", "expectation": "Long venue, program, and source labels remain bounded without changing playback geometry." },
+		{ "scenario": "custom-theme", "expectation": "The custom palette changes the authored chrome while preserving readable text and media contrast." },
+		{ "scenario": "source-error", "expectation": "A failed source retries a bounded number of times, emits failure telemetry, and advances or shows a designed fallback." }
+	],
+	"behaviors": [
+		{ "id": "real-playback", "expectation": "The packaged WebM enters playing state and advances its progress through the real browser media element.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "playlist-advance", "expectation": "Completion and next/previous commands select exact playlist items without an empty frame.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "external-control", "expectation": "Play, pause, seek, select, navigation, mute, and volume commands operate the active player.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "platform-cache-path", "expectation": "Configured remote media, posters, and captions pass through the SDK cache path before rendering.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "bounded-recovery", "expectation": "Failed media retries only the configured count and advances when policy permits.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "cleanup", "expectation": "Destroy pauses media, destroys HLS, removes source state, and clears retry timers.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+	],
+	"visualDirection": {
+		"source": "creative-led",
+		"summary": "A cinematic program ident where video occupies the complete canvas and the UI behaves like quiet broadcast metadata rather than a dashboard.",
+		"references": ["Proven legacy Wallboard video and video-gallery playback behavior"],
+		"signatureChoices": ["A compact numbered program ledger floats over the moving image.", "A low broadcast progress rail carries current identity without framing the video in a card."],
+		"avoid": ["Dashboard cards", "Decorative gradients", "Persistent browser-style controls", "Bundling video or HLS code into non-video apps"]
+	},
+	"visualReview": {
+		"intent": "A production media channel where the moving image remains primary and every overlay reads as deliberate broadcast chrome.",
+		"focus": [
+			"Verify active video fills or letterboxes exactly according to the configured fit mode at every ratio.",
+			"Verify playlist, captions, program identity, and progress never cover essential center-frame content or overlap each other.",
+			"Verify long file and program names truncate cleanly without shrinking below room-readable floors.",
+			"Verify Dark, Light, and Custom palettes update every app-owned chrome color while leaving the video unchanged."
+		]
+	}
+}
