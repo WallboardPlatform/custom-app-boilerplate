@@ -1,0 +1,14 @@
+{
+	"title": "PDF Document Workspace",
+	"description": "Opt-in PDF.js example with file or folder sources, multiple documents, outlines, search, links, annotations, interactive forms, zoom, auto-scroll, lazy rendering, downloads, and external commands.",
+	"capabilities": ["pdf"],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json"],
+	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+}

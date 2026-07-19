@@ -29,9 +29,19 @@ module.exports = (env, argv) => {
                 arrowFunction: false
             }
         },
+        externals: {
+            './pdf.worker.js': 'commonjs ./pdf.worker.js'
+        },
         resolve: {
             extensions: ['.js'],
-            plugins: [new TsconfigPathsPlugin({ baseUrl: './' })]
+            plugins: [new TsconfigPathsPlugin({ baseUrl: './' })],
+            fallback: {
+                fs: false,
+                http: false,
+                https: false,
+                url: false,
+                zlib: false
+            }
         },
         optimization: {
             minimize: true,
@@ -50,6 +60,12 @@ module.exports = (env, argv) => {
             ]
         },
         module: {
+            parser: {
+                javascript: {
+                    // Vite already emitted and named runtime assets. Preserve those URLs instead of rebundling assets.
+                    url: false
+                }
+            },
             rules: [
                 {
                     test: /\.js$/,

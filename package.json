@@ -50,6 +50,7 @@
 		"validate:package": "npm run validate:identity && npm run validate:project && npm run validate:examples && npm run typecheck:scripts && npm run validate:legacy && npm run prepare:datasource-package && cross-env DISABLE_MINIO_UPLOAD=true SIMPLE_OUTPUT=true npm run build:production:zip && npm run validate:package-assets",
 		"deliver": "tsx scripts/create-delivery.mjs",
 		"deliver:unverified": "tsx scripts/create-delivery.mjs --unverified",
+		"capability:add": "node scripts/add-capability.mjs",
 		"example:materialize": "node scripts/materialize-example.mjs",
 		"example:review:prepare": "node scripts/example-review.mjs --prepare",
 		"example:review:promote": "node scripts/example-review.mjs --promote",
