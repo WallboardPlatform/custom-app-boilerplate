@@ -4,6 +4,8 @@ import path from 'node:path';
 import { applyCapability } from './capability-materialization.mjs';
 
 const excludedRoots = new Set(['.git', '.tmp', 'benchmarks', 'capabilities', 'dist', 'examples', 'node_modules', 'templates']);
+const datasourceSamplePattern = /^sample-(?:datasource(?:-.+)?|.+-datasource)\.json$/u;
+const generatedDatasourceEditorAssetPattern = /^datasource-(?:contract|template(?:-.+)?)\.json$/u;
 
 const resolveInside = (directory, relativePath, label) => {
 	const resolvedPath = path.resolve(directory, relativePath);
@@ -13,6 +15,61 @@ const resolveInside = (directory, relativePath, label) => {
 	}
 
 	return resolvedPath;
+};
+
+const collectDatasourceSamplePaths = (rootDirectory) => {
+	const samplePaths = new Set();
+	const contractPath = path.join(rootDirectory, 'datasource-contract.json');
+
+	for (const entry of fs.readdirSync(rootDirectory, { withFileTypes: true })) {
+		if (entry.isFile() && datasourceSamplePattern.test(entry.name)) {
+			samplePaths.add(entry.name);
+		}
+	}
+
+	if (!fs.existsSync(contractPath)) {
+		return samplePaths;
+	}
+
+	const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
+	const bindings = Array.isArray(contract.bindings) ? contract.bindings : [{ source: contract.source }];
+
+	for (const binding of bindings) {
+		const sampleData = binding?.source?.sampleData;
+
+		if (typeof sampleData === 'string' && sampleData.trim() !== '') {
+			resolveInside(rootDirectory, sampleData, 'Datasource sample');
+			samplePaths.add(sampleData);
+		}
+	}
+
+	return samplePaths;
+};
+
+const removeRootProjectArtifacts = (rootDirectory, targetDirectory) => {
+	const artifactPaths = new Set([
+		'generation-brief.json',
+		'datasource-contract.json',
+		path.join('preview', 'visual-review.json'),
+		...collectDatasourceSamplePaths(rootDirectory)
+	]);
+
+	for (const relativePath of artifactPaths) {
+		fs.rmSync(resolveInside(targetDirectory, relativePath, 'Root project artifact'), {
+			recursive: true,
+			force: true
+		});
+	}
+
+	const editorAssetsDirectory = path.join(targetDirectory, 'src', 'editor-assets');
+
+	if (fs.existsSync(editorAssetsDirectory)) {
+		for (const entry of fs.readdirSync(editorAssetsDirectory, { withFileTypes: true })) {
+			if (entry.isFile() && generatedDatasourceEditorAssetPattern.test(entry.name)) {
+				fs.rmSync(path.join(editorAssetsDirectory, entry.name), { force: true });
+			}
+		}
+	}
 };
 
 export const materializeExample = ({ rootDirectory, exampleId, targetDirectory, requireEmpty = false }) => {
@@ -60,6 +117,8 @@ export const materializeExample = ({ rootDirectory, exampleId, targetDirectory, 
 			}
 		});
 	}
+
+	removeRootProjectArtifacts(rootDirectory, targetDirectory);
 
 	for (const relativePath of manifest.remove ?? []) {
 		fs.rmSync(resolveInside(targetDirectory, relativePath, 'Removal path'), { recursive: true, force: true });
