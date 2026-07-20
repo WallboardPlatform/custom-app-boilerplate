@@ -7,4 +7,4 @@ export {
 } from './keyboard';
 export type { KeyboardLayout, KeyboardLayoutId } from './keyboard';
 export { OnScreenKeyboard } from './on-screen-keyboard';
-export type { OnScreenKeyboardProps } from './on-screen-keyboard';
+export type { OnScreenKeyboardLabels, OnScreenKeyboardProps } from './on-screen-keyboard';

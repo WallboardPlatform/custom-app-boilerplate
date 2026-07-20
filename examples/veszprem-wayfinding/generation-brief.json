@@ -43,6 +43,13 @@
 			"rationale": "The accepted reference artwork and calibrated interaction geometry must remain synchronized."
 		},
 		{
+			"id": "walkable-space",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["walkable-mask.json", "reviewed-corridors"],
+			"rationale": "The independently reviewed pedestrian-space mask certifies that generated routes stay on the accepted street and crossing network."
+		},
+		{
 			"id": "route-topology",
 			"area": "behavior",
 			"owner": "locked",
@@ -53,7 +60,7 @@
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "mapRatio"],
+			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "mapRatio"],
 			"rationale": "Operators can adapt the public kiosk copy, start location, touch keyboard, reset timing, and distance calibration."
 		},
 		{
@@ -137,6 +144,7 @@
 		{ "property": "subtitle", "purpose": "Directory instruction." },
 		{ "property": "startLocationId", "purpose": "Graph location id used as the current position." },
 		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
+		{ "property": "interfaceLanguages", "purpose": "Selects English, Hungarian, or an on-screen language selector." },
 		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
 		{ "property": "keyboardLanguages", "purpose": "Selects Hungarian, English, or both keyboard layouts." },
 		{ "property": "routeResetSeconds", "purpose": "Idle interval before route and search reset.", "effect": "route-reset" },
@@ -169,7 +177,7 @@
 			"selectors": [".wb-veszprem-destination-name"],
 			"strategy": "wrap",
 			"limits": { "maximumLines": 2 },
-			"fallback": "Wrap to two lines and paginate the directory before reducing touch-target height.",
+			"fallback": "Wrap to two lines and keep the directory continuously scrollable before reducing touch-target height.",
 			"rationale": "Landmark identity is essential and cannot be truncated in search results.",
 			"evidenceScenario": "long-destination-list"
 		},
@@ -207,6 +215,9 @@
 		{ "id": "off-map-selection", "expectation": "Off-map destinations show details without drawing a route.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "session-reset", "expectation": "The configured timeout clears route, selection, query, category, and keyboard state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "touch-keyboard", "expectation": "The app-owned keyboard enters Hungarian and Latin search text and can be dismissed without losing the query.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "multilingual-interface", "expectation": "The language selector switches all app-owned labels while destination content follows its TABLE translations.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "continuous-directory", "expectation": "The full filtered destination list is continuously scrollable without ambiguous pagination controls.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "touch-map-navigation", "expectation": "Pointer drag and pinch gestures move and zoom the map without accidentally selecting a destination.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "live-destination-update", "expectation": "A live destination table update replaces content without rebuilding map geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
 	],
 	"assets": [
@@ -214,6 +225,7 @@
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
 		{ "id": "reference-map", "source": "packaged", "path": "src/assets/veszprem-map.webp", "required": true },
 		{ "id": "annotated-map", "source": "packaged", "path": "src/assets/map.svg", "required": true },
+		{ "id": "walkable-mask", "source": "packaged", "path": "src/assets/walkable-mask.json", "required": true },
 		{ "id": "route-graph", "source": "packaged", "path": "src/assets/route-graph.json", "required": true }
 	],
 	"visualDirection": {

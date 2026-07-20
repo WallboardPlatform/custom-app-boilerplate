@@ -9,6 +9,6 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-map.webp", "overlay/src/assets/map.svg", "overlay/src/assets/route-graph.json"],
+	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-map.webp", "overlay/src/assets/map.svg", "overlay/src/assets/walkable-mask.json", "overlay/src/assets/route-graph.json"],
 	"referenceScreenshots": ["app-default-1920x1080.png", "compact-1366x768.png"]
 }

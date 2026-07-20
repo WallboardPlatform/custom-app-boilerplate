@@ -16,6 +16,7 @@ export interface Settings extends Record<string, unknown> {
 	accentColor: string;
 	backgroundColor: string;
 	emptyStateText: string;
+	interfaceLanguages: 'en' | 'hu' | 'en-hu';
 	keyboardLanguages: 'en' | 'hu' | 'hu-en';
 	mapRatio: number;
 	motionPreset: MotionPreset;
@@ -35,6 +36,7 @@ export interface ConfigValues {
 	accentColor?: string;
 	backgroundColor?: string;
 	emptyStateText?: string;
+	interfaceLanguages?: string;
 	keyboardLanguages?: string;
 	mapRatio?: number;
 	motionPreset?: string;

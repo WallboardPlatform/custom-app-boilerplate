@@ -18,6 +18,7 @@
 				<label>Map image<input id="image-file" type="file" accept="image/*"></label>
 				<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
 				<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
+				<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
 			</section>
 			<section>
 				<h2>Walkable extraction</h2>
@@ -32,9 +33,14 @@
 					<button type="button" data-tool="graph">Graph</button>
 				</div>
 				<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
+				<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
 				<div class="commands">
 					<button id="extract-mask" type="button">Extract connected mask</button>
 					<button id="clear-mask" type="button" class="secondary">Clear mask</button>
+				</div>
+				<div class="commands">
+					<button id="generate-centerlines" type="button">Generate centerline graph</button>
+					<button id="confirm-contained" type="button" class="secondary">Confirm contained edges</button>
 				</div>
 			</section>
 			<section>
@@ -43,6 +49,28 @@
 				<div class="commands">
 					<button id="export-mask" type="button">Export mask JSON</button>
 					<button id="export-graph" type="button" class="secondary">Export graph JSON</button>
+					<button id="export-destinations" type="button" class="secondary">Export destination TABLE</button>
+				</div>
+			</section>
+			<section id="metadata-editor" class="metadata-editor" hidden>
+				<h2>Destination metadata</h2>
+				<p id="metadata-summary">Load a destination datasource to edit public copy.</p>
+				<label>Destination<select id="destination-select"></select></label>
+				<div class="field-pair">
+					<label>Map number<input id="destination-map-number" type="text"></label>
+					<label>Stable id<input id="destination-id" type="text" readonly></label>
+				</div>
+				<label>Hungarian name<input id="destination-name" type="text"></label>
+				<label>English name<input id="destination-english-name" type="text"></label>
+				<label>Category<input id="destination-category" type="text"></label>
+				<label>Description<textarea id="destination-description" rows="4"></textarea></label>
+				<div class="field-pair">
+					<label>Hours<input id="destination-hours" type="text"></label>
+					<label>Status<input id="destination-status" type="text"></label>
+				</div>
+				<div class="field-pair">
+					<label>Accessibility<select id="destination-accessible"><option value="">Unverified</option><option value="true">Step-free verified</option><option value="false">Not step-free</option></select></label>
+					<label>Routing<select id="destination-routeable"><option value="true">Routeable</option><option value="false">Listed only</option></select></label>
 				</div>
 			</section>
 		</aside>

@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "dbf2f997d4995f34303827304fbd804c92b5c224caeb309d02870e20d12c2704",
-	"reviewedAt": "2026-07-20T13:00:47.8931678Z",
+	"sourceHash": "35da5407c7cdfc34109c8cb7d5af7f93ebafd23ef83afcce2c1ce99ced06bbb1",
+	"reviewedAt": "2026-07-20T15:11:39.0540379Z",
 	"reviewer": "Codex visual review",
 	"criteria": [
 		{
@@ -54,7 +54,7 @@
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full source map and seven-row directory fill the accepted Full-HD surface without overflow."
+			"notes": "Full source map and continuously scrollable destination directory fill the accepted Full-HD surface without unintended overflow."
 		},
 		{
 			"file": "compact-1366x768.png",
@@ -109,7 +109,7 @@
 		{
 			"file": "scenario-keyboard-open-1366x768.png",
 			"status": "pass",
-			"notes": "The app-owned Hungarian keyboard is fully visible and leaves the map unobstructed."
+			"notes": "The large app-owned Hungarian keyboard, typed-value field, language controls, and close action are fully visible and touch-readable."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",

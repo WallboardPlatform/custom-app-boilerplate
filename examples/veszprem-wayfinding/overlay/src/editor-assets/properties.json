@@ -20,6 +20,14 @@
 			"properties": [
 				{ "label": "Title", "type": "text", "property": "title", "default": "Veszprem Downtown Wayfinding" },
 				{ "label": "Instruction", "type": "text", "property": "subtitle", "default": "Choose a landmark or tap its number on the map." },
+				{
+					"label": "Interface languages", "type": "select", "property": "interfaceLanguages", "default": "en-hu",
+					"options": [
+						{ "label": "English + Hungarian", "value": "en-hu" },
+						{ "label": "English", "value": "en" },
+						{ "label": "Hungarian", "value": "hu" }
+					]
+				},
 				{ "label": "Start location ID", "type": "text", "property": "startLocationId", "default": "tourinform-veszprem", "tooltip": "Use a routeable id from the destination table and route graph." },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No destinations are available." },
 				{ "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true, "tooltip": "Opens an app-owned touch keyboard when destination search receives focus." },

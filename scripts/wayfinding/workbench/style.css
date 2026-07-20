@@ -11,7 +11,9 @@ html,
 body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 
 button,
-input { font: inherit; }
+input,
+select,
+textarea { font: inherit; }
 
 button { cursor: pointer; }
 
@@ -86,6 +88,26 @@ main {
 	background: #ffffff;
 	font-size: 11px;
 }
+
+.controls input[type="text"],
+.controls select,
+.controls textarea {
+	display: block;
+	width: 100%;
+	margin-top: 6px;
+	padding: 8px;
+	border: 1px solid #c5ceca;
+	border-radius: 0;
+	background: #ffffff;
+	color: #17201f;
+	font-size: 11px;
+}
+
+.controls textarea { resize: vertical; }
+.controls input[readonly] { color: #687571; background: #eef2f0; }
+
+.field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.metadata-editor[hidden] { display: none; }
 
 .controls input[type="range"] { width: 100%; margin-top: 7px; accent-color: #18826f; }
 

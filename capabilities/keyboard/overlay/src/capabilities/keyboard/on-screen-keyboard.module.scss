@@ -22,7 +22,7 @@
 
 .panel {
 	width: 100%;
-	max-width: 1180px;
+	max-width: 1440px;
 	padding: 18px;
 	border: 1px solid var(--wb-keyboard-border);
 	background: var(--wb-keyboard-background);
@@ -55,7 +55,7 @@
 
 .panel button {
 	min-width: 48px;
-	min-height: 48px;
+	min-height: 56px;
 	margin: 3px;
 	padding: 8px 12px;
 	border: 1px solid var(--wb-keyboard-border);
@@ -63,7 +63,7 @@
 	background: transparent;
 	color: var(--wb-keyboard-text);
 	font: inherit;
-	font-size: 18px;
+	font-size: 20px;
 	font-weight: 700;
 	line-height: 1.15;
 	cursor: pointer;
@@ -83,7 +83,7 @@
 	padding: 10px 14px;
 	border: 1px solid var(--wb-keyboard-border);
 	overflow: hidden;
-	font-size: 22px;
+	font-size: 26px;
 	line-height: 1.3;
 	text-overflow: ellipsis;
 	white-space: nowrap;

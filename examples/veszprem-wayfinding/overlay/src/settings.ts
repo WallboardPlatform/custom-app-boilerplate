@@ -59,6 +59,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 	return {
 		...palette,
 		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
+		interfaceLanguages: config.interfaceLanguages === 'en' || config.interfaceLanguages === 'hu' ? config.interfaceLanguages : 'en-hu',
 		keyboardLanguages: config.keyboardLanguages === 'en' || config.keyboardLanguages === 'hu' ? config.keyboardLanguages : 'hu-en',
 		mapRatio: numberSetting(config.mapRatio, 0.8, 0.2, 5),
 		motionPreset: motionPreset(config.motionPreset),

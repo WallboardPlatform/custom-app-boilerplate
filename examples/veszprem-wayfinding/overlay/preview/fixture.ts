@@ -29,6 +29,9 @@ const baseConfig: Record<string, unknown> = {
 	subtitle: 'Select a landmark or use the search.',
 	startLocationId: 'tourinform-veszprem',
 	emptyStateText: 'No destinations are available.',
+	interfaceLanguages: 'en-hu',
+	keyboardLanguages: 'hu-en',
+	onScreenKeyboard: true,
 	routeResetSeconds: 45,
 	mapRatio: 0.8,
 	motionPreset: 'subtle',
@@ -199,8 +202,8 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 96, height: 94 },
 		liveDatasourceUpdate: {
 			property: 'destinationData',
-			value: withRows([{ ...sampleDatasource.Destinations.rows[0], name: 'Updated Visitor Gateway', englishName: 'Updated gateway English label' }]),
-			expectedText: 'Updated gateway English label'
+			value: withRows([{ ...sampleDatasource.Destinations.rows[1], name: 'Frissített Modern Képtár', englishName: 'Updated Modern Gallery' }]),
+			expectedText: 'Updated Modern Gallery'
 		}
 	}
 ];

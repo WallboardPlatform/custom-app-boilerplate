@@ -26,9 +26,142 @@ interface MapPoint {
 	y: number;
 }
 
+interface ActivePointer {
+	current: MapPoint;
+	locationId?: string;
+	moved: boolean;
+	origin: MapPoint;
+}
+
+type UiLanguage = 'en' | 'hu';
+
+interface UiCopy {
+	accessibilityConfirmation: string;
+	accessibilityNo: string;
+	accessibilityUnknown: string;
+	accessibilityYes: string;
+	alreadyHere: string;
+	allDestinations: string;
+	approximateDistance: string;
+	back: string;
+	clear: string;
+	clearRoute: string;
+	close: string;
+	categoryLabel: string;
+	delete: string;
+	destinationPrompt: string;
+	distanceUnavailable: string;
+	externalMap: string;
+	findLandmark: string;
+	fitMap: string;
+	hours: string;
+	keyboardLabel: string;
+	languageSelector: string;
+	loadingMap: string;
+	map: string;
+	mapControls: string;
+	mapInstruction: string;
+	mapUnavailable: string;
+	openKeyboard: string;
+	reset: string;
+	routeApproximate: string;
+	searchPlaceholder: string;
+	shift: string;
+	showResults: string;
+	space: string;
+	status: string;
+	youAreHere: string;
+	walkingTime: string;
+	zoomIn: string;
+	zoomOut: string;
+}
+
+const UI_COPY: Record<UiLanguage, UiCopy> = {
+	en: {
+		accessibilityConfirmation: 'Accessibility requires venue confirmation',
+		accessibilityNo: 'STEP-FREE ACCESS NOT CONFIRMED',
+		accessibilityUnknown: 'ACCESSIBILITY NOT VERIFIED',
+		accessibilityYes: 'STEP-FREE DESTINATION',
+		alreadyHere: 'You are already at this destination',
+		allDestinations: 'All destinations',
+		approximateDistance: 'APPROX. DISTANCE',
+		back: 'Back to directory',
+		clear: 'Clear',
+		clearRoute: 'Clear route',
+		close: 'Close',
+		categoryLabel: 'Destination category',
+		delete: 'Delete',
+		destinationPrompt: 'Where would you like to go?',
+		distanceUnavailable: 'No route is available from the configured start',
+		externalMap: 'Listed outside the downtown route map',
+		findLandmark: 'FIND A LANDMARK',
+		fitMap: 'Fit map',
+		hours: 'Hours',
+		keyboardLabel: 'Search destinations',
+		languageSelector: 'Interface language',
+		loadingMap: 'Loading map...',
+		map: 'Map',
+		mapControls: 'Map zoom controls',
+		mapInstruction: 'Tap a highlighted landmark',
+		mapUnavailable: 'Map artwork unavailable',
+		openKeyboard: 'Open touch keyboard',
+		reset: 'Reset',
+		routeApproximate: 'Routes are approximate',
+		searchPlaceholder: 'Search destinations',
+		shift: 'Shift',
+		showResults: 'Show results',
+		space: 'Space',
+		status: 'Status',
+		youAreHere: 'YOU ARE HERE',
+		walkingTime: 'WALKING TIME',
+		zoomIn: 'Zoom in',
+		zoomOut: 'Zoom out'
+	},
+	hu: {
+		accessibilityConfirmation: 'Az akadálymentesség helyszíni megerősítést igényel',
+		accessibilityNo: 'AKADÁLYMENTES ÚTVONAL NINCS MEGERŐSÍTVE',
+		accessibilityUnknown: 'AKADÁLYMENTESSÉG NINCS ELLENŐRIZVE',
+		accessibilityYes: 'AKADÁLYMENTES CÉLPONT',
+		alreadyHere: 'Már ennél a helyszínnél áll',
+		allDestinations: 'Minden helyszín',
+		approximateDistance: 'BECSÜLT TÁVOLSÁG',
+		back: 'Vissza a listához',
+		clear: 'Törlés',
+		clearRoute: 'Útvonal törlése',
+		close: 'Bezárás',
+		categoryLabel: 'Helyszínkategória',
+		delete: 'Visszatörlés',
+		destinationPrompt: 'Hová szeretne menni?',
+		distanceUnavailable: 'A beállított kiindulóponttól nincs elérhető útvonal',
+		externalMap: 'A helyszín a belvárosi útvonaltérképen kívül található',
+		findLandmark: 'HELYSZÍN KERESÉSE',
+		fitMap: 'Térkép illesztése',
+		hours: 'Nyitvatartás',
+		keyboardLabel: 'Helyszín keresése',
+		languageSelector: 'Felület nyelve',
+		loadingMap: 'Térkép betöltése...',
+		map: 'Térkép',
+		mapControls: 'Térkép nagyítása',
+		mapInstruction: 'Érintsen meg egy kiemelt helyszínt',
+		mapUnavailable: 'A térkép nem érhető el',
+		openKeyboard: 'Érintőbillentyűzet megnyitása',
+		reset: 'Alaphelyzet',
+		routeApproximate: 'Az útvonal tájékoztató jellegű',
+		searchPlaceholder: 'Helyszín keresése',
+		shift: 'Nagybetű',
+		showResults: 'Találatok',
+		space: 'Szóköz',
+		status: 'Állapot',
+		youAreHere: 'ÖN ITT ÁLL',
+		walkingTime: 'SÉTAIDŐ',
+		zoomIn: 'Nagyítás',
+		zoomOut: 'Kicsinyítés'
+	}
+};
+
 const MAP_WIDTH = 1341;
 const MAP_HEIGHT = 947;
-const PAGE_SIZE = 7;
+const ALL_CATEGORIES = '__all__';
 const ROUTE_GROUP_ID = 'wb-veszprem-wayfinding-route';
 
 const normalizeSearch = (value: string): string => value
@@ -43,8 +176,7 @@ const clamp = (value: number, minimum: number, maximum: number): number => Math.
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
-	const [category, setCategory] = createSignal('All destinations');
-	const [currentPage, setCurrentPage] = createSignal(0);
+	const [category, setCategory] = createSignal(ALL_CATEGORIES);
 	const [keyboardOpen, setKeyboardOpen] = createSignal(false);
 	const [mapCenter, setMapCenter] = createSignal<MapPoint>({ x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 });
 	const [mapState, setMapState] = createSignal<MapState>('loading');
@@ -53,6 +185,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [routeResult, setRouteResult] = createSignal<WayfindingRouteResult>();
 	const [routeState, setRouteState] = createSignal<RouteState>('idle');
 	const [selectedId, setSelectedId] = createSignal<string>();
+	const [uiLanguage, setUiLanguage] = createSignal<UiLanguage>('en');
+	const activePointers = new Map<number, ActivePointer>();
 	let mapHost!: HTMLDivElement;
 	let resetTimer: ReturnType<typeof setTimeout> | undefined;
 	let svg: SVGSVGElement | undefined;
@@ -64,9 +198,25 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return keyboardLayoutsFor(languages);
 	});
+	const copy: Accessor<UiCopy> = createMemo((): UiCopy => UI_COPY[uiLanguage()]);
+	const showLanguageSelector: Accessor<boolean> = createMemo((): boolean => settings().interfaceLanguages === 'en-hu');
+	const destinationName = (destination: Destination): string => {
+		return uiLanguage() === 'en' ? destination.englishName || destination.name : destination.name;
+	};
+	const destinationSecondaryName = (destination: Destination): string => {
+		const secondary: string = uiLanguage() === 'en' ? destination.name : destination.englishName;
+
+		return secondary && secondary !== destinationName(destination) ? secondary : destination.category;
+	};
 
 	createEffect((): void => {
 		if (!settings().onScreenKeyboard) setKeyboardOpen(false);
+	});
+
+	createEffect((): void => {
+		const configuredLanguages = settings().interfaceLanguages;
+
+		if (configuredLanguages === 'en' || configuredLanguages === 'hu') setUiLanguage(configuredLanguages);
 	});
 
 	const hasBoundDestinations: Accessor<boolean> = createMemo((): boolean => {
@@ -83,13 +233,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		return new Map(destinations().map((destination: Destination): [string, Destination] => [destination.id, destination]));
 	});
 	const categories: Accessor<string[]> = createMemo((): string[] => {
-		return ['All destinations', ...Array.from(new Set(destinations().map((destination: Destination): string => destination.category)))];
+		return Array.from(new Set(destinations().map((destination: Destination): string => destination.category)));
 	});
 	const filteredDestinations: Accessor<Destination[]> = createMemo((): Destination[] => {
 		const normalizedQuery: string = normalizeSearch(query().trim());
 
 		return destinations().filter((destination: Destination): boolean => {
-			const categoryMatches: boolean = category() === 'All destinations' || destination.category === category();
+			const categoryMatches: boolean = category() === ALL_CATEGORIES || destination.category === category();
 			const queryMatches: boolean = normalizedQuery === '' || normalizeSearch([
 				destination.mapNumber,
 				destination.name,
@@ -100,12 +250,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 			return categoryMatches && queryMatches;
 		});
-	});
-	const pageCount: Accessor<number> = createMemo((): number => Math.max(1, Math.ceil(filteredDestinations().length / PAGE_SIZE)));
-	const visibleDestinations: Accessor<Destination[]> = createMemo((): Destination[] => {
-		const start: number = currentPage() * PAGE_SIZE;
-
-		return filteredDestinations().slice(start, start + PAGE_SIZE);
 	});
 	const selectedDestination: Accessor<Destination | undefined> = createMemo((): Destination | undefined => {
 		return selectedId() ? destinationById().get(selectedId()!) : undefined;
@@ -122,7 +266,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const fitSelectedName = useAutoFitText({
 		minFontSize: 22,
 		maxFontSize: 38,
-		watch: (): string => selectedDestination()?.name ?? ''
+		watch: (): string => selectedDestination() ? destinationName(selectedDestination()!) : ''
 	});
 
 	const resetMapView = (): void => {
@@ -148,8 +292,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const resetSession = (): void => {
 		clearResetTimer();
 		removeRouteMarkup();
-		setCategory('All destinations');
-		setCurrentPage(0);
+		setCategory(ALL_CATEGORIES);
 		setKeyboardOpen(false);
 		setQuery('');
 		setRouteResult(undefined);
@@ -252,26 +395,106 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (restartTimer) scheduleReset();
 	};
 
-	const handleMapClick = (event: MouseEvent): void => {
-		let element: Element | null = event.target instanceof Element ? event.target : null;
+	const panMap = (deltaX: number, deltaY: number): void => {
+		if (!svg) return;
 
-		while (element && element !== svg) {
-			const locationId: string | null = element.getAttribute('data-wayfinding-location-id');
-			const destination: Destination | undefined = locationId ? destinationById().get(locationId) : undefined;
+		const bounds: DOMRect = svg.getBoundingClientRect();
 
-			if (destination) {
-				drawRoute(destination);
+		if (bounds.width <= 0 || bounds.height <= 0) return;
 
-				return;
-			}
+		const visibleWidth: number = MAP_WIDTH / mapZoom();
+		const visibleHeight: number = MAP_HEIGHT / mapZoom();
+		setMapCenter((center: MapPoint): MapPoint => ({
+			x: center.x - deltaX * visibleWidth / bounds.width,
+			y: center.y - deltaY * visibleHeight / bounds.height
+		}));
+	};
 
-			element = element.parentElement;
+	const pointerPosition = (event: PointerEvent): MapPoint => ({ x: event.clientX, y: event.clientY });
+
+	const handleMapPointerDown = (event: PointerEvent): void => {
+		const target: Element | null = event.target instanceof Element ? event.target : null;
+
+		if (target?.closest(`.${style['map-controls']}`)) return;
+
+		const origin: MapPoint = pointerPosition(event);
+		const locationTarget: Element | null = target?.closest('[data-wayfinding-location-id]') ?? null;
+		activePointers.set(event.pointerId, {
+			current: origin,
+			locationId: locationTarget?.getAttribute('data-wayfinding-location-id') ?? undefined,
+			moved: false,
+			origin
+		});
+
+		if (activePointers.size > 1) {
+			for (const pointer of activePointers.values()) pointer.moved = true;
 		}
+
+		mapHost.setPointerCapture?.(event.pointerId);
+		scheduleReset();
+	};
+
+	const handleMapPointerMove = (event: PointerEvent): void => {
+		const pointer: ActivePointer | undefined = activePointers.get(event.pointerId);
+
+		if (!pointer) return;
+
+		const previousPointers = new Map(Array.from(activePointers, ([pointerId, state]): [number, ActivePointer] => [pointerId, { ...state }]));
+		const previousPosition: MapPoint = pointer.current;
+		const nextPosition: MapPoint = pointerPosition(event);
+		pointer.current = nextPosition;
+		pointer.moved = pointer.moved || Math.hypot(nextPosition.x - pointer.origin.x, nextPosition.y - pointer.origin.y) > 6;
+
+		if (activePointers.size === 1) {
+			if (pointer.moved) panMap(nextPosition.x - previousPosition.x, nextPosition.y - previousPosition.y);
+
+			return;
+		}
+
+		for (const activePointer of activePointers.values()) activePointer.moved = true;
+
+		const pointerIds: number[] = Array.from(activePointers.keys()).slice(0, 2);
+		const oldFirst: MapPoint | undefined = previousPointers.get(pointerIds[0])?.current;
+		const oldSecond: MapPoint | undefined = previousPointers.get(pointerIds[1])?.current;
+		const nextFirst: MapPoint | undefined = activePointers.get(pointerIds[0])?.current;
+		const nextSecond: MapPoint | undefined = activePointers.get(pointerIds[1])?.current;
+
+		if (!oldFirst || !oldSecond || !nextFirst || !nextSecond) return;
+
+		const oldDistance: number = Math.hypot(oldSecond.x - oldFirst.x, oldSecond.y - oldFirst.y);
+		const nextDistance: number = Math.hypot(nextSecond.x - nextFirst.x, nextSecond.y - nextFirst.y);
+		const oldMidpoint: MapPoint = { x: (oldFirst.x + oldSecond.x) / 2, y: (oldFirst.y + oldSecond.y) / 2 };
+		const nextMidpoint: MapPoint = { x: (nextFirst.x + nextSecond.x) / 2, y: (nextFirst.y + nextSecond.y) / 2 };
+
+		if (oldDistance > 0 && nextDistance > 0) {
+			setMapZoom((zoom: number): number => clamp(zoom * nextDistance / oldDistance, 1, 3.5));
+		}
+
+		panMap(nextMidpoint.x - oldMidpoint.x, nextMidpoint.y - oldMidpoint.y);
+	};
+
+	const handleMapPointerEnd = (event: PointerEvent): void => {
+		const pointer: ActivePointer | undefined = activePointers.get(event.pointerId);
+		const isTap: boolean = event.type === 'pointerup' && activePointers.size === 1 && Boolean(pointer && !pointer.moved);
+		activePointers.delete(event.pointerId);
+
+		if (mapHost.hasPointerCapture?.(event.pointerId)) mapHost.releasePointerCapture(event.pointerId);
+
+		if (isTap && pointer?.locationId) {
+			const destination: Destination | undefined = destinationById().get(pointer.locationId);
+
+			if (destination) drawRoute(destination);
+		}
+	};
+
+	const handleMapWheel = (event: WheelEvent): void => {
+		event.preventDefault();
+		setMapZoom((zoom: number): number => clamp(zoom + (event.deltaY < 0 ? 0.2 : -0.2), 1, 3.5));
+		scheduleReset();
 	};
 
 	const changeQuery = (value: string): void => {
 		setQuery(value);
-		setCurrentPage(0);
 		scheduleReset();
 	};
 
@@ -297,7 +520,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		image.addEventListener('error', (): void => { setMapState('error'); }, { once: true });
 		image.setAttribute('href', mapArtwork);
 		image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', mapArtwork);
-		mapHost.addEventListener('click', handleMapClick);
+		mapHost.addEventListener('pointerdown', handleMapPointerDown);
+		mapHost.addEventListener('pointermove', handleMapPointerMove);
+		mapHost.addEventListener('pointerup', handleMapPointerEnd);
+		mapHost.addEventListener('pointercancel', handleMapPointerEnd);
+		mapHost.addEventListener('wheel', handleMapWheel, { passive: false });
 	});
 
 	createEffect((): void => {
@@ -309,10 +536,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const y: number = clamp(center.y - height / 2, 0, MAP_HEIGHT - height);
 
 		svg?.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
-	});
-
-	createEffect((): void => {
-		if (currentPage() >= pageCount()) setCurrentPage(pageCount() - 1);
 	});
 
 	createEffect((): void => {
@@ -343,7 +566,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	onCleanup((): void => {
 		clearResetTimer();
-		mapHost?.removeEventListener('click', handleMapClick);
+		mapHost?.removeEventListener('pointerdown', handleMapPointerDown);
+		mapHost?.removeEventListener('pointermove', handleMapPointerMove);
+		mapHost?.removeEventListener('pointerup', handleMapPointerEnd);
+		mapHost?.removeEventListener('pointercancel', handleMapPointerEnd);
+		mapHost?.removeEventListener('wheel', handleMapWheel);
 	});
 
 	return (
@@ -372,31 +599,37 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<h1 ref={fitTitle} class="wb-veszprem-title">{settings().title}</h1>
 				</div>
 				<div class={style['locator']}>
-					<span class="wb-veszprem-metadata">YOU ARE HERE</span>
-					<strong class="wb-veszprem-secondary">{startDestination()?.name || settings().startLocationId}</strong>
+					<span class="wb-veszprem-metadata">{copy().youAreHere}</span>
+					<strong class="wb-veszprem-secondary">{startDestination() ? destinationName(startDestination()!) : settings().startLocationId}</strong>
 				</div>
-				<button class={style['reset-button']} type="button" onClick={resetSession}>Reset</button>
+				<Show when={showLanguageSelector()}>
+					<div class={style['language-selector']} aria-label={copy().languageSelector}>
+						<button type="button" aria-pressed={uiLanguage() === 'en'} onClick={(): void => { setUiLanguage('en'); scheduleReset(); }}>EN</button>
+						<button type="button" aria-pressed={uiLanguage() === 'hu'} onClick={(): void => { setUiLanguage('hu'); scheduleReset(); }}>HU</button>
+					</div>
+				</Show>
+				<button class={style['reset-button']} type="button" onClick={resetSession}>{copy().reset}</button>
 			</header>
 
 			<main class={style['content']}>
-				<section class={style['map-panel']} aria-label="Map">
+				<section class={style['map-panel']} aria-label={copy().map}>
 					<div ref={mapHost} class={style['map-canvas']}>
 						<div class={style['map-markup']} innerHTML={mapMarkup} />
 						<Show when={mapState() !== 'ready'}>
-							<div class={style['map-status']}>{mapState() === 'error' ? 'Map artwork unavailable' : 'Loading map...'}</div>
+							<div class={style['map-status']}>{mapState() === 'error' ? copy().mapUnavailable : copy().loadingMap}</div>
 						</Show>
-						<div class={style['map-controls']} aria-label="Map zoom controls">
-							<button type="button" title="Zoom in" aria-label="Zoom in" onClick={(): void => { setMapZoom((value: number): number => clamp(value + 0.25, 1, 2.5)); scheduleReset(); }}>+</button>
-							<button type="button" title="Zoom out" aria-label="Zoom out" onClick={(): void => { setMapZoom((value: number): number => clamp(value - 0.25, 1, 2.5)); scheduleReset(); }}>−</button>
-							<button type="button" title="Fit map" aria-label="Fit map" onClick={(): void => { resetMapView(); scheduleReset(); }}>⛶</button>
+						<div class={style['map-controls']} aria-label={copy().mapControls}>
+							<button type="button" title={copy().zoomIn} aria-label={copy().zoomIn} onClick={(): void => { setMapZoom((value: number): number => clamp(value + 0.25, 1, 2.5)); scheduleReset(); }}>+</button>
+							<button type="button" title={copy().zoomOut} aria-label={copy().zoomOut} onClick={(): void => { setMapZoom((value: number): number => clamp(value - 0.25, 1, 2.5)); scheduleReset(); }}>−</button>
+							<button type="button" title={copy().fitMap} aria-label={copy().fitMap} onClick={(): void => { resetMapView(); scheduleReset(); }}>⛶</button>
 						</div>
 					</div>
 					<div class={style['map-instruction']}>
-						<span>Tap a numbered landmark</span>
+						<span>{copy().mapInstruction}</span>
 						<i aria-hidden="true" />
-						<span>Routes are approximate</span>
+						<span>{copy().routeApproximate}</span>
 						<i aria-hidden="true" />
-						<span>Accessibility requires venue confirmation</span>
+						<span>{copy().accessibilityConfirmation}</span>
 					</div>
 				</section>
 
@@ -404,36 +637,37 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<Show when={selectedDestination()} keyed fallback={
 						<>
 							<div class={style['directory-intro']}>
-								<p class="wb-veszprem-metadata">FIND A LANDMARK</p>
-								<h2 class="wb-veszprem-secondary">Where would you like to go?</h2>
+								<p class="wb-veszprem-metadata">{copy().findLandmark}</p>
+								<h2 class="wb-veszprem-secondary">{copy().destinationPrompt}</h2>
 								<span>{settings().subtitle}</span>
 							</div>
 							<div class={style['filters']}>
 								<div class={style['search-field']}>
 									<input
-										aria-label="Search destinations"
-										inputMode="none"
-										placeholder="Search destinations"
+										aria-label={copy().keyboardLabel}
+										inputMode={settings().onScreenKeyboard ? 'none' : 'search'}
+										placeholder={copy().searchPlaceholder}
 										type="search"
 										value={query()}
-										onFocus={(): void => { setKeyboardOpen(true); scheduleReset(); }}
+										onFocus={(): void => { if (settings().onScreenKeyboard) setKeyboardOpen(true); scheduleReset(); }}
 										onInput={(event): void => { changeQuery(event.currentTarget.value); }}
 									/>
-									<button type="button" aria-label="Open touch keyboard" title="Open touch keyboard" onClick={(): void => { setKeyboardOpen(true); scheduleReset(); }}>ABC</button>
+									<Show when={settings().onScreenKeyboard}><button type="button" aria-label={copy().openKeyboard} title={copy().openKeyboard} onClick={(): void => { setKeyboardOpen(true); scheduleReset(); }}>ABC</button></Show>
 								</div>
-								<select aria-label="Destination category" value={category()} onChange={(event): void => { setCategory(event.currentTarget.value); setCurrentPage(0); scheduleReset(); }}>
+								<select aria-label={copy().categoryLabel} value={category()} onChange={(event): void => { setCategory(event.currentTarget.value); scheduleReset(); }}>
+									<option value={ALL_CATEGORIES}>{copy().allDestinations}</option>
 									<For each={categories()}>{(name: string): JSX.Element => <option value={name}>{name}</option>}</For>
 								</select>
 							</div>
 
-							<div class={style['destination-list']} data-destination-count={filteredDestinations().length}>
-								<Show when={visibleDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
-									<For each={visibleDestinations()}>{(destination: Destination): JSX.Element => (
+							<div class={style['destination-list']} data-destination-count={filteredDestinations().length} data-preview-allow-overflow>
+								<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
+									<For each={filteredDestinations()}>{(destination: Destination): JSX.Element => (
 										<button type="button" data-routeable={destination.routeable} onClick={(): void => { drawRoute(destination); }}>
 											<small data-wide={destination.mapNumber.length > 2}>{destination.mapNumber || '•'}</small>
 											<span>
-												<strong class="wb-veszprem-destination-name">{destination.name}</strong>
-												<em>{destination.englishName || destination.category}</em>
+												<strong class="wb-veszprem-destination-name">{destinationName(destination)}</strong>
+												<em>{destinationSecondaryName(destination)}</em>
 											</span>
 											<i aria-hidden="true">›</i>
 										</button>
@@ -441,44 +675,38 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								</Show>
 							</div>
 
-							<div class={style['pagination']}>
-								<button type="button" aria-label="Previous destination page" disabled={currentPage() === 0} onClick={(): void => { setCurrentPage((value: number): number => Math.max(0, value - 1)); scheduleReset(); }}>‹</button>
-								<span>{filteredDestinations().length === 0 ? '0 / 0' : `${currentPage() + 1} / ${pageCount()}`}</span>
-								<button type="button" aria-label="Next destination page" disabled={currentPage() >= pageCount() - 1} onClick={(): void => { setCurrentPage((value: number): number => Math.min(pageCount() - 1, value + 1)); scheduleReset(); }}>›</button>
-							</div>
-
 						</>
 					}>
 						{(destination: Destination): JSX.Element => (
 							<section class={style['route-card']}>
-								<button class={style['back-button']} type="button" onClick={resetSession}>‹ Back to directory</button>
+								<button class={style['back-button']} type="button" onClick={resetSession}>‹ {copy().back}</button>
 								<div class={style['detail-number']}>{destination.mapNumber || 'INFO'}</div>
 								<p class="wb-veszprem-metadata">{destination.category}</p>
-								<h2 ref={fitSelectedName} class="wb-veszprem-selected-name">{destination.name}</h2>
-								<Show when={destination.englishName}><h3>{destination.englishName}</h3></Show>
+								<h2 ref={fitSelectedName} class="wb-veszprem-selected-name">{destinationName(destination)}</h2>
+								<Show when={destinationSecondaryName(destination)}><h3>{destinationSecondaryName(destination)}</h3></Show>
 								<Show when={destination.description}><p class={style['description']}>{destination.description}</p></Show>
-								<Show when={destination.hours}><p class={style['fact']}><span>Hours</span>{destination.hours}</p></Show>
-								<Show when={destination.status}><p class={style['fact']}><span>Status</span>{destination.status}</p></Show>
+								<Show when={destination.hours}><p class={style['fact']}><span>{copy().hours}</span>{destination.hours}</p></Show>
+								<Show when={destination.status}><p class={style['fact']}><span>{copy().status}</span>{destination.status}</p></Show>
 								<span class={style['accessibility']} data-accessibility={destination.accessible === null ? 'unknown' : destination.accessible ? 'yes' : 'no'}>
-									{destination.accessible === null ? 'ACCESSIBILITY NOT VERIFIED' : destination.accessible ? 'STEP-FREE DESTINATION' : 'STEP-FREE ACCESS NOT CONFIRMED'}
+									{destination.accessible === null ? copy().accessibilityUnknown : destination.accessible ? copy().accessibilityYes : copy().accessibilityNo}
 								</span>
 								<div class={style['route-summary']}>
 									<Show when={routeState() === 'active' && routeResult()} keyed fallback={
 										<strong>{routeState() === 'external'
-											? 'Listed outside the downtown route map'
+										? copy().externalMap
 											: routeState() === 'unavailable'
-												? 'No route is available from the configured start'
-												: 'You are already at this destination'}</strong>
+																? copy().distanceUnavailable
+												: copy().alreadyHere}</strong>
 									}>
 										{(result: WayfindingRouteResult): JSX.Element => (
 											<>
-												<div><span>APPROX. DISTANCE</span><strong>{result.walkingDistance} m</strong></div>
-												<div><span>WALKING TIME</span><strong>{formatWalkTime(result.walkingSeconds)}</strong></div>
+													<div><span>{copy().approximateDistance}</span><strong>{result.walkingDistance} m</strong></div>
+													<div><span>{copy().walkingTime}</span><strong>{formatWalkTime(result.walkingSeconds)}</strong></div>
 											</>
 										)}
 									</Show>
 								</div>
-								<button class={style['clear-button']} type="button" onClick={resetSession}>Clear route</button>
+								<button class={style['clear-button']} type="button" onClick={resetSession}>{copy().clearRoute}</button>
 							</section>
 						)}
 					</Show>
@@ -489,13 +717,14 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					accentColor={settings().accentColor}
 					backgroundColor={settings().panelColor}
 					borderColor={settings().secondaryTextColor}
-					label="Search destinations"
+					label={copy().keyboardLabel}
+					labels={{ clear: copy().clear, close: copy().close, delete: copy().delete, shift: copy().shift, space: copy().space }}
 					layouts={keyboardLayouts()}
 					maximumLength={80}
 					onClose={(): void => { setKeyboardOpen(false); }}
-					onInput={setQuery}
+					onInput={changeQuery}
 					onSubmit={(): void => { setKeyboardOpen(false); }}
-					submitLabel="Show results"
+					submitLabel={copy().showResults}
 					textColor={settings().primaryTextColor}
 					value={query()}
 				/>

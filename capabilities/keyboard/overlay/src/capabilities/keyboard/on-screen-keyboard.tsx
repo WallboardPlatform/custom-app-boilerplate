@@ -15,6 +15,7 @@ export interface OnScreenKeyboardProps {
 	backgroundColor?: string;
 	borderColor?: string;
 	label?: string;
+	labels?: Partial<OnScreenKeyboardLabels>;
 	layouts?: readonly KeyboardLayout[];
 	maximumLength?: number;
 	onClose: () => void;
@@ -25,11 +26,28 @@ export interface OnScreenKeyboardProps {
 	value: string;
 }
 
+export interface OnScreenKeyboardLabels {
+	clear: string;
+	close: string;
+	delete: string;
+	shift: string;
+	space: string;
+}
+
+const DEFAULT_LABELS: OnScreenKeyboardLabels = {
+	clear: 'Clear',
+	close: 'Close',
+	delete: 'Delete',
+	shift: 'Shift',
+	space: 'Space'
+};
+
 export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 	const [layoutIndex, setLayoutIndex] = createSignal(0);
 	const [shifted, setShifted] = createSignal(false);
 	const layouts = createMemo((): readonly KeyboardLayout[] => props.layouts?.length ? props.layouts : [ENGLISH_KEYBOARD_LAYOUT]);
 	const layout = createMemo((): KeyboardLayout => layouts()[Math.min(layoutIndex(), layouts().length - 1)]);
+	const labels = createMemo((): OnScreenKeyboardLabels => ({ ...DEFAULT_LABELS, ...props.labels }));
 	const rootStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-keyboard-accent': props.accentColor ?? '#42d6b5',
 		'--wb-keyboard-background': props.backgroundColor ?? '#121918',
@@ -62,7 +80,7 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 								{candidate.label}
 							</button>
 						)}</For>
-						<button type="button" onClick={(): void => props.onClose()}>Close</button>
+						<button type="button" onClick={(): void => props.onClose()}>{labels().close}</button>
 					</div>
 				</header>
 
@@ -86,10 +104,10 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 				</div>
 
 				<footer>
-					<button type="button" aria-pressed={shifted()} onClick={(): void => { setShifted((value): boolean => !value); }}>Shift</button>
-					<button type="button" onClick={(): void => props.onInput(appendKeyboardValue(props.value, ' ', props.maximumLength))}>Space</button>
-					<button type="button" onClick={(): void => props.onInput(removeLastKeyboardCharacter(props.value))}>Delete</button>
-					<button type="button" onClick={(): void => props.onInput('')}>Clear</button>
+					<button type="button" aria-pressed={shifted()} onClick={(): void => { setShifted((value): boolean => !value); }}>{labels().shift}</button>
+					<button type="button" onClick={(): void => props.onInput(appendKeyboardValue(props.value, ' ', props.maximumLength))}>{labels().space}</button>
+					<button type="button" onClick={(): void => props.onInput(removeLastKeyboardCharacter(props.value))}>{labels().delete}</button>
+					<button type="button" onClick={(): void => props.onInput('')}>{labels().clear}</button>
 					<button
 						class={style.submit}
 						type="button"

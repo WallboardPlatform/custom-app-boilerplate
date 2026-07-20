@@ -6,6 +6,13 @@ import type {
 	WayfindingWalkableMaskDocument,
 	WayfindingWalkableMaskRun
 } from '../../../src/utils/wayfinding';
+import {
+	closeWalkableMask,
+	extractSkeletonNetwork,
+	nearestSkeletonIndex,
+	retainAnchorNetworkCore,
+	skeletonizeWalkableMask
+} from '../centerline.mts';
 
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'graph';
 
@@ -16,6 +23,27 @@ interface ColorSample {
 	r: number;
 	row: number;
 }
+
+interface DestinationRow extends Record<string, unknown> {
+	accessible?: boolean;
+	category?: string;
+	description?: string;
+	englishName?: string;
+	hours?: string;
+	id: string;
+	mapNumber?: string;
+	name: string;
+	routeable?: boolean;
+	status?: string;
+}
+
+interface DestinationTable {
+	connectors?: Record<string, unknown>;
+	header?: Record<string, string>;
+	rows: DestinationRow[];
+}
+
+type DestinationDatasourceDocument = Record<string, DestinationTable>;
 
 interface DraggedVertex {
 	edgeId: string;
@@ -40,13 +68,16 @@ const context: CanvasRenderingContext2D = canvas.getContext('2d', { alpha: false
 const imageFile = requireElement<HTMLInputElement>('#image-file');
 const graphFile = requireElement<HTMLInputElement>('#graph-file');
 const maskFile = requireElement<HTMLInputElement>('#mask-file');
+const destinationFile = requireElement<HTMLInputElement>('#destination-file');
 const cellSizeInput = requireElement<HTMLInputElement>('#cell-size');
 const toleranceInput = requireElement<HTMLInputElement>('#tolerance');
 const brushInput = requireElement<HTMLInputElement>('#brush-size');
+const bridgeInput = requireElement<HTMLInputElement>('#bridge-size');
 const maskConfirmedInput = requireElement<HTMLInputElement>('#mask-confirmed');
 const cellSizeValue = requireElement<HTMLOutputElement>('#cell-size-value');
 const toleranceValue = requireElement<HTMLOutputElement>('#tolerance-value');
 const brushValue = requireElement<HTMLOutputElement>('#brush-value');
+const bridgeValue = requireElement<HTMLOutputElement>('#bridge-value');
 const maskStatus = requireElement<HTMLElement>('#mask-status');
 const coverageStatus = requireElement<HTMLElement>('#coverage-status');
 const edgeSummary = requireElement<HTMLElement>('#edge-summary');
@@ -54,10 +85,26 @@ const edgeFailures = requireElement<HTMLElement>('#edge-failures');
 const selectedEdgeHost = requireElement<HTMLElement>('#selected-edge');
 const edgeList = requireElement<HTMLElement>('#edge-list');
 const stageEmpty = requireElement<HTMLElement>('#stage-empty');
+const metadataEditor = requireElement<HTMLElement>('#metadata-editor');
+const metadataSummary = requireElement<HTMLElement>('#metadata-summary');
+const destinationSelect = requireElement<HTMLSelectElement>('#destination-select');
+const destinationMapNumber = requireElement<HTMLInputElement>('#destination-map-number');
+const destinationId = requireElement<HTMLInputElement>('#destination-id');
+const destinationName = requireElement<HTMLInputElement>('#destination-name');
+const destinationEnglishName = requireElement<HTMLInputElement>('#destination-english-name');
+const destinationCategory = requireElement<HTMLInputElement>('#destination-category');
+const destinationDescription = requireElement<HTMLTextAreaElement>('#destination-description');
+const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
+const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
+const destinationAccessible = requireElement<HTMLSelectElement>('#destination-accessible');
+const destinationRouteable = requireElement<HTMLSelectElement>('#destination-routeable');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
 let graph: WayfindingGraphDocument | undefined;
+let destinationDocument: DestinationDatasourceDocument | undefined;
+let destinationTableName: string | undefined;
+let selectedDestinationId: string | undefined;
 let mask = new Uint8Array();
 let maskColumns = 0;
 let maskRows = 0;
@@ -78,8 +125,71 @@ let offsetY = 0;
 const cellSize = (): number => Number(cellSizeInput.value);
 const tolerance = (): number => Number(toleranceInput.value);
 const brushRadius = (): number => Number(brushInput.value);
+const bridgeRadius = (): number => Number(bridgeInput.value);
 
 const graphNode = (id: string): WayfindingNode | undefined => graph?.nodes.find((node: WayfindingNode): boolean => node.id === id);
+
+const destinationRows = (): DestinationRow[] => destinationTableName && destinationDocument
+	? destinationDocument[destinationTableName]?.rows ?? []
+	: [];
+
+const selectedDestination = (): DestinationRow | undefined => destinationRows().find((row: DestinationRow): boolean => row.id === selectedDestinationId);
+
+const stringValue = (value: unknown): string => typeof value === 'string' ? value : '';
+
+const renderMetadataEditor = (): void => {
+	const rows: DestinationRow[] = destinationRows();
+	metadataEditor.hidden = rows.length === 0;
+
+	if (rows.length === 0) return;
+
+	if (!selectedDestinationId || !rows.some((row: DestinationRow): boolean => row.id === selectedDestinationId)) {
+		selectedDestinationId = rows[0].id;
+	}
+
+	destinationSelect.replaceChildren(...rows.map((row: DestinationRow): HTMLOptionElement => {
+		const option: HTMLOptionElement = document.createElement('option');
+		option.value = row.id;
+		option.textContent = [stringValue(row.mapNumber), row.name].filter(Boolean).join(' - ');
+
+		return option;
+	}));
+	destinationSelect.value = selectedDestinationId;
+
+	const row: DestinationRow | undefined = selectedDestination();
+	const graphLocationIds = new Set((graph?.nodes ?? []).filter((node: WayfindingNode): boolean => node.kind === 'location').map((node: WayfindingNode): string | undefined => node.locationId));
+	const missingRouteAnchors: number = rows.filter((candidate: DestinationRow): boolean => candidate.routeable !== false && !graphLocationIds.has(candidate.id)).length;
+	metadataSummary.textContent = `${rows.length} destinations - ${missingRouteAnchors === 0 ? 'all routeable rows have graph anchors' : `${missingRouteAnchors} routeable row(s) need graph anchors`}`;
+
+	if (!row) return;
+
+	destinationMapNumber.value = stringValue(row.mapNumber);
+	destinationId.value = row.id;
+	destinationName.value = row.name;
+	destinationEnglishName.value = stringValue(row.englishName);
+	destinationCategory.value = stringValue(row.category);
+	destinationDescription.value = stringValue(row.description);
+	destinationHours.value = stringValue(row.hours);
+	destinationStatus.value = stringValue(row.status);
+	destinationAccessible.value = typeof row.accessible === 'boolean' ? String(row.accessible) : '';
+	destinationRouteable.value = String(row.routeable !== false);
+	draw();
+};
+
+const updateSelectedDestination = (field: keyof DestinationRow, value: unknown): void => {
+	const row: DestinationRow | undefined = selectedDestination();
+
+	if (!row) return;
+
+	if (value === undefined || value === '') delete row[field];
+	else row[field] = value as never;
+
+	if (field === 'name' || field === 'mapNumber') {
+		const selectedOption: HTMLOptionElement | undefined = Array.from(destinationSelect.options).find((option: HTMLOptionElement): boolean => option.value === row.id);
+
+		if (selectedOption) selectedOption.textContent = [stringValue(row.mapNumber), row.name].filter(Boolean).join(' - ');
+	}
+};
 
 const edgePoints = (edge: WayfindingEdge): WayfindingPoint[] => {
 	const from: WayfindingNode | undefined = graphNode(edge.from);
@@ -340,6 +450,18 @@ const draw = (): void => {
 				}
 			}
 		}
+
+		const selectedNode: WayfindingNode | undefined = graph.nodes.find((node: WayfindingNode): boolean => node.locationId === selectedDestinationId);
+
+		if (selectedNode) {
+			context.beginPath();
+			context.arc(selectedNode.x, selectedNode.y, 12 / scale, 0, Math.PI * 2);
+			context.fillStyle = 'rgba(255, 211, 78, 0.36)';
+			context.fill();
+			context.lineWidth = 4 / scale;
+			context.strokeStyle = '#ffd34e';
+			context.stroke();
+		}
 	}
 
 	context.restore();
@@ -529,6 +651,152 @@ const maskRuns = (): WayfindingWalkableMaskRun[] => {
 	return runs;
 };
 
+const pointForMaskIndex = (index: number): WayfindingPoint => ({
+	x: (index % maskColumns + 0.5) * cellSize(),
+	y: (Math.floor(index / maskColumns) + 0.5) * cellSize()
+});
+
+const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] => {
+	if (points.length <= 2) return points;
+
+	let splitIndex = -1;
+	let maximumDistance = 0;
+	const start: WayfindingPoint = points[0];
+	const end: WayfindingPoint = points[points.length - 1];
+
+	for (let index = 1; index < points.length - 1; index += 1) {
+		const distance: number = distanceToSegment(points[index], start, end);
+
+		if (distance > maximumDistance) {
+			maximumDistance = distance;
+			splitIndex = index;
+		}
+	}
+
+	if (maximumDistance <= toleranceValue || splitIndex < 0) return [start, end];
+
+	const left: WayfindingPoint[] = simplifyGeometry(points.slice(0, splitIndex + 1), toleranceValue);
+	const right: WayfindingPoint[] = simplifyGeometry(points.slice(splitIndex), toleranceValue);
+
+	return [...left.slice(0, -1), ...right];
+};
+
+const geometryContained = (points: WayfindingPoint[]): boolean => {
+	const step: number = Math.max(1, cellSize() / 2);
+
+	for (let index = 1; index < points.length; index += 1) {
+		const left: WayfindingPoint = points[index - 1];
+		const right: WayfindingPoint = points[index];
+		const length: number = Math.hypot(right.x - left.x, right.y - left.y);
+		const samples: number = Math.max(1, Math.ceil(length / step));
+
+		for (let sampleIndex = 0; sampleIndex <= samples; sampleIndex += 1) {
+			const ratio: number = sampleIndex / samples;
+
+			if (!pointWalkable({ x: left.x + (right.x - left.x) * ratio, y: left.y + (right.y - left.y) * ratio })) return false;
+		}
+	}
+
+	return true;
+};
+
+const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[] => {
+	for (const toleranceFactor of [0.75, 0.5, 0.25]) {
+		const simplified: WayfindingPoint[] = simplifyGeometry(points, cellSize() * toleranceFactor);
+
+		if (geometryContained(simplified)) return simplified;
+	}
+
+	return points;
+};
+
+const generateCenterlineGraph = (): void => {
+	if (!graph || !sourceImage || mask.length === 0) return;
+
+	mask = closeWalkableMask(mask, maskColumns, maskRows, bridgeRadius());
+	maskReviewStatus = 'proposed';
+	maskConfirmedInput.checked = false;
+	const skeleton: Uint8Array = skeletonizeWalkableMask(mask, maskColumns, maskRows);
+	const usedAnchorIndices = new Set<number>();
+	const locationNodeByIndex = new Map<number, WayfindingNode>();
+	const locationNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId));
+
+	for (const locationNode of locationNodes) {
+		const nearestIndex: number | undefined = nearestSkeletonIndex(skeleton, maskColumns, {
+			column: Math.floor(locationNode.x / cellSize()),
+			row: Math.floor(locationNode.y / cellSize())
+		}, usedAnchorIndices);
+
+		if (nearestIndex === undefined) continue;
+
+		usedAnchorIndices.add(nearestIndex);
+		locationNodeByIndex.set(nearestIndex, locationNode);
+	}
+
+	const network = extractSkeletonNetwork(mask, maskColumns, maskRows, usedAnchorIndices);
+	const nodeIdByIndex = new Map<number, string>();
+	const nodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
+		const point: WayfindingPoint = pointForMaskIndex(index);
+		const locationNode: WayfindingNode | undefined = locationNodeByIndex.get(index);
+		const node: WayfindingNode = locationNode
+			? { ...locationNode, ...point }
+			: { id: `route-auto-${String(nodeIndex + 1).padStart(4, '0')}`, kind: 'route', levelId: locationNodes[0]?.levelId ?? 'level-0', ...point };
+		nodeIdByIndex.set(index, node.id);
+
+		return node;
+	});
+	const edges: WayfindingEdge[] = network.chains.flatMap((chain, edgeIndex: number): WayfindingEdge[] => {
+		const from: string | undefined = nodeIdByIndex.get(chain.indices[0]);
+		const to: string | undefined = nodeIdByIndex.get(chain.indices[chain.indices.length - 1]);
+
+		if (!from || !to || from === to) return [];
+
+		return [{
+			accessible: true,
+			bidirectional: true,
+			corridorWidth: 1,
+			from,
+			geometry: simplifyContainedGeometry(chain.indices.map(pointForMaskIndex)),
+			id: `centerline-${String(edgeIndex + 1).padStart(4, '0')}`,
+			kind: 'outdoor',
+			reviewStatus: 'proposed',
+			to,
+			traversal: 'outdoor-path'
+		}];
+	});
+	const anchorNodeIds = new Set(locationNodes.map((node: WayfindingNode): string => node.id));
+	const retained = retainAnchorNetworkCore(nodes.map((node: WayfindingNode): string => node.id), edges, anchorNodeIds);
+	const retainedNodes: WayfindingNode[] = nodes.filter((node: WayfindingNode): boolean => retained.nodeIds.has(node.id));
+	const retainedEdges: WayfindingEdge[] = edges.filter((edge: WayfindingEdge): boolean => retained.edgeIds.has(edge.id));
+
+	graph = { ...graph, contractVersion: 2, nodes: retainedNodes, edges: retainedEdges };
+	selectedEdgeId = undefined;
+	coverageStatus.textContent = `Generated ${retainedNodes.length} destination-core nodes and ${retainedEdges.length} edges; review the mask before confirmation`;
+	renderReview();
+	draw();
+};
+
+const confirmContainedEdges = (): void => {
+	if (!graph || mask.length === 0 || maskReviewStatus !== 'confirmed') {
+		coverageStatus.textContent = 'Confirm the reviewed walkable mask before confirming its contained centerlines';
+
+		return;
+	}
+
+	let confirmedCount = 0;
+
+	for (const edge of graph.edges) {
+		if (edgeFailuresFor(edge).length > 0) continue;
+
+		edge.reviewStatus = 'confirmed';
+		confirmedCount += 1;
+	}
+
+	coverageStatus.textContent = `${confirmedCount}/${graph.edges.length} contained edges confirmed`;
+	renderReview();
+	draw();
+};
+
 const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> => {
 	const file: File | undefined = input.files?.[0];
 
@@ -568,6 +836,7 @@ imageFile.addEventListener('change', async (): Promise<void> => {
 graphFile.addEventListener('change', async (): Promise<void> => {
 	graph = await loadJsonFile<WayfindingGraphDocument>(graphFile);
 	selectedEdgeId = undefined;
+	renderMetadataEditor();
 	renderReview();
 	draw();
 });
@@ -595,6 +864,51 @@ maskFile.addEventListener('change', async (): Promise<void> => {
 	draw();
 });
 
+destinationFile.addEventListener('change', async (): Promise<void> => {
+	const value: unknown = await loadJsonFile<unknown>(destinationFile);
+
+	if (Array.isArray(value)) {
+		destinationTableName = 'Destinations';
+		destinationDocument = { Destinations: { rows: value as DestinationRow[] } };
+	} else if (value && typeof value === 'object') {
+		const tables = Object.entries(value as Record<string, unknown>)
+			.filter((entry): entry is [string, DestinationTable] => Boolean(entry[1]) && typeof entry[1] === 'object' && Array.isArray((entry[1] as DestinationTable).rows));
+
+		if (tables.length === 0) throw new Error('Destination datasource must contain a table with a rows array.');
+
+		destinationDocument = value as DestinationDatasourceDocument;
+		destinationTableName = tables[0][0];
+	}
+
+	selectedDestinationId = destinationRows()[0]?.id;
+	renderMetadataEditor();
+});
+
+destinationSelect.addEventListener('change', (): void => {
+	selectedDestinationId = destinationSelect.value;
+	renderMetadataEditor();
+});
+
+for (const [input, field] of [
+	[destinationMapNumber, 'mapNumber'],
+	[destinationName, 'name'],
+	[destinationEnglishName, 'englishName'],
+	[destinationCategory, 'category'],
+	[destinationDescription, 'description'],
+	[destinationHours, 'hours'],
+	[destinationStatus, 'status']
+] as const) {
+	input.addEventListener('input', (): void => { updateSelectedDestination(field, input.value); });
+}
+
+destinationAccessible.addEventListener('change', (): void => {
+	updateSelectedDestination('accessible', destinationAccessible.value === '' ? undefined : destinationAccessible.value === 'true');
+});
+destinationRouteable.addEventListener('change', (): void => {
+	updateSelectedDestination('routeable', destinationRouteable.value === 'true');
+	renderMetadataEditor();
+});
+
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 	button.addEventListener('click', (): void => {
 		tool = button.dataset.tool as Tool;
@@ -603,7 +917,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')
 	});
 }
 
-for (const [input, output] of [[cellSizeInput, cellSizeValue], [toleranceInput, toleranceValue], [brushInput, brushValue]] as const) {
+for (const [input, output] of [[cellSizeInput, cellSizeValue], [toleranceInput, toleranceValue], [brushInput, brushValue], [bridgeInput, bridgeValue]] as const) {
 	input.addEventListener('input', (): void => { output.value = input.value; });
 }
 
@@ -611,6 +925,8 @@ cellSizeInput.addEventListener('change', (): void => { resetMaskGrid(); renderRe
 toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
+requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', generateCenterlineGraph);
+requireElement<HTMLButtonElement>('#confirm-contained').addEventListener('click', confirmContainedEdges);
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
@@ -628,6 +944,9 @@ requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): 
 	} satisfies WayfindingWalkableMaskDocument);
 });
 requireElement<HTMLButtonElement>('#export-graph').addEventListener('click', (): void => { if (graph) downloadJson('route-graph.json', graph); });
+requireElement<HTMLButtonElement>('#export-destinations').addEventListener('click', (): void => {
+	if (destinationDocument) downloadJson('destinations-datasource.json', destinationDocument);
+});
 
 canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	pointerDown = true;

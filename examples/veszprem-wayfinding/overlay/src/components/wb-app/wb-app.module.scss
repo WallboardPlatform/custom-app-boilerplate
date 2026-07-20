@@ -114,10 +114,9 @@
 .reset-button,
 .back-button,
 .clear-button,
-.pagination button,
 .map-controls button,
 .search-field button,
-.keyboard button {
+.language-selector button {
   border: 0;
   background: transparent;
   color: inherit;
@@ -133,6 +132,30 @@
   color: var(--wb-veszprem-primary);
   font-size: 13px;
   font-weight: 800;
+}
+
+.language-selector {
+  display: flex;
+  min-width: 96px;
+  margin-left: 18px;
+  border: 1px solid var(--wb-veszprem-accent);
+}
+
+.language-selector button {
+  width: 48px;
+  height: 40px;
+  color: var(--wb-veszprem-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.language-selector button + button {
+  border-left: 1px solid var(--wb-veszprem-accent);
+}
+
+.language-selector button[aria-pressed='true'] {
+  background: var(--wb-veszprem-accent);
+  color: #ffffff;
 }
 
 .content {
@@ -160,6 +183,8 @@
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden;
+  cursor: grab;
+  touch-action: none;
 }
 
 .map-markup,
@@ -172,6 +197,17 @@
 .map-markup :global([data-wayfinding-location-id]) {
   pointer-events: all;
   cursor: pointer;
+  fill: var(--wb-veszprem-panel);
+  fill-opacity: 0.42;
+  stroke: var(--wb-veszprem-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-markup :global([data-wayfinding-location-id]:hover),
+.map-markup :global([data-wayfinding-location-id]:focus) {
+  fill-opacity: 0.78;
+  stroke-width: 4;
 }
 
 .map-markup :global([data-wb-wayfinding-selected]) {
@@ -332,7 +368,11 @@
 .destination-list {
   min-height: 0;
   flex: 1 1 auto;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--wb-veszprem-accent) transparent;
+  scrollbar-width: thin;
 }
 
 .destination-list > button {
@@ -425,104 +465,6 @@
   font-size: 16px;
   line-height: 1.4;
   text-align: center;
-}
-
-.pagination {
-  display: flex;
-  height: 44px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid rgba(23, 49, 47, 0.16);
-}
-
-.pagination button {
-  width: 48px;
-  height: 36px;
-  color: var(--wb-veszprem-accent);
-  font-size: 25px;
-  font-weight: 800;
-}
-
-.pagination button:disabled {
-  cursor: default;
-  opacity: 0.28;
-}
-
-.pagination span {
-  color: var(--wb-veszprem-secondary);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.keyboard {
-  position: absolute;
-  top: 132px;
-  right: 14px;
-  bottom: 14px;
-  left: 14px;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 14px;
-  border: 1px solid rgba(23, 49, 47, 0.24);
-  background: var(--wb-veszprem-panel);
-  box-shadow: 0 12px 28px rgba(23, 49, 47, 0.2);
-}
-
-.keyboard-header {
-  display: flex;
-  height: 42px;
-  min-height: 42px;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  border-bottom: 1px solid rgba(23, 49, 47, 0.16);
-}
-
-.keyboard-header strong {
-  font-size: 15px;
-}
-
-.keyboard-header button {
-  color: var(--wb-veszprem-accent);
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.keyboard-row,
-.keyboard-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 7px;
-}
-
-.keyboard-row button {
-  width: 34px;
-  height: 44px;
-  margin: 0 3px;
-  border: 1px solid rgba(23, 49, 47, 0.25);
-  background: var(--wb-veszprem-background);
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.keyboard-actions button {
-  height: 44px;
-  min-width: 86px;
-  margin: 0 4px;
-  border: 1px solid var(--wb-veszprem-accent);
-  color: var(--wb-veszprem-primary);
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.keyboard button:hover,
-.keyboard button:focus {
-  outline: none;
-  background: var(--wb-veszprem-accent);
-  color: #ffffff;
 }
 
 .route-card {
@@ -746,11 +688,6 @@
     font-size: 10px;
   }
 
-  .pagination {
-    height: 38px;
-    min-height: 38px;
-  }
-
   .map-instruction {
     height: 36px;
     min-height: 36px;
@@ -795,23 +732,4 @@
     margin-top: 10px;
   }
 
-  .keyboard {
-    top: 105px;
-    padding: 10px;
-  }
-
-  .keyboard-row {
-    margin-top: 5px;
-  }
-
-  .keyboard-row button {
-    width: 29px;
-    height: 36px;
-    margin: 0 2px;
-    font-size: 12px;
-  }
-
-  .keyboard-actions button {
-    height: 36px;
-  }
 }
