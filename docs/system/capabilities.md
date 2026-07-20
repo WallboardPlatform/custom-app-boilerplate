@@ -18,6 +18,7 @@ Reuse these mechanics without inheriting an example's visual language.
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 | PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
 | Video playback | Opt-in `video` capability; hls.js 0.7.9 is materialized only on request | `lumen-media-program`: direct file/folder/JSON playlist, cache, native MP4/WebM/HLS, poster/captions, autoplay/sound/fit/repeat/seek/retry, commands, telemetry, cleanup |
+| Wayfinding routing | `WayfindingGraph`, explicit graph schema, SVG synchronizer, route/graph report | `wayfinding.md`; standard/step-free paths, disabled edges, legacy proximity audit, topology warnings |
 
 Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
 

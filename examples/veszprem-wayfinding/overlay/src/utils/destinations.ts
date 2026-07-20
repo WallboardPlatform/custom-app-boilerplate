@@ -64,9 +64,13 @@ export const normalizeDestinations = (rawValue: unknown): Destination[] => {
 			category: text(row.category) || 'Other destinations',
 			description: text(row.description),
 			englishName: text(row.englishName),
+			floor: text(row.floor),
+			hours: text(row.hours),
 			id,
+			keywords: text(row.keywords),
 			name,
-			routeable: boolean(row.routeable, true)
+			routeable: boolean(row.routeable, true),
+			status: text(row.status)
 		}];
 	}).sort((left: Destination, right: Destination): number => {
 		return left.category.localeCompare(right.category, undefined, { numeric: true })

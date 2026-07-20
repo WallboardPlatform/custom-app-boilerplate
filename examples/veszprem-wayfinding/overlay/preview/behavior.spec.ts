@@ -49,12 +49,16 @@ test('bound empty data stays empty and live table updates replace it', async ({ 
 	await page.evaluate((): void => {
 		(window as PreviewWindow).__wallboardPreview?.pushDatasource('destinationData', {
 			Destinations: {
-				rows: [{ id: 'hosok-kapuja', name: 'Live Visitor Gateway', englishName: 'Live gateway', category: 'Live update', description: 'Updated in place.', accessible: true, routeable: true }]
+				rows: [{ id: 'hosok-kapuja', name: 'Live Visitor Gateway', englishName: 'Live gateway', category: 'Live update', description: 'Updated in place.', floor: 'Ground floor', hours: 'Open until 18:00', status: 'Open', keywords: 'entrance help', accessible: true, routeable: true }]
 			}
 		});
 	});
 
 	await expect(page.getByRole('button', { name: 'Live Visitor Gateway Live gateway' })).toBeVisible();
+	await page.getByRole('button', { name: 'Live Visitor Gateway Live gateway' }).click();
+	await expect(page.getByText('Ground floor')).toBeVisible();
+	await expect(page.getByText('Open until 18:00')).toBeVisible();
+	await expect(page.getByText('Open', { exact: true })).toBeVisible();
 });
 
 test('route reset returns the kiosk to the destination list', async ({ page }): Promise<void> => {

@@ -6,9 +6,11 @@ import { useDataSources } from '@hooks/system/useDataSources';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
-import type { Destination, RoutePoint, RouteResult } from '@interfaces/wayfinding.interface';
+import type { Destination } from '@interfaces/wayfinding.interface';
+import type { WayfindingNode, WayfindingRouteResult } from '@utils/wayfinding';
+import { WayfindingGraph } from '@utils/wayfinding';
 import { normalizeDestinations } from '@utils/destinations';
-import { extractRoutePoints, RouteGraph } from '@utils/route-graph';
+import { createLegacyRouteGraph } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
 import veszpremMapMarkup from '../../assets/veszprem-belvaros-wayfinding.svg?raw';
@@ -28,11 +30,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const [category, setCategory] = createSignal('All destinations');
 	const [query, setQuery] = createSignal('');
-	const [routeResult, setRouteResult] = createSignal<RouteResult>();
+	const [routeResult, setRouteResult] = createSignal<WayfindingRouteResult>();
 	const [routeState, setRouteState] = createSignal<RouteState>('idle');
 	const [selectedId, setSelectedId] = createSignal<string>();
 	let mapHost!: HTMLDivElement;
-	let routeGraph: RouteGraph | undefined;
+	let routeGraph: WayfindingGraph | undefined;
 	let routeResetTimer: ReturnType<typeof setTimeout> | undefined;
 	let svg: SVGSVGElement | undefined;
 
@@ -57,7 +59,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return destinations().filter((destination: Destination): boolean => {
 			const categoryMatches: boolean = category() === 'All destinations' || destination.category === category();
-			const queryMatches: boolean = normalizedQuery === '' || [destination.name, destination.englishName, destination.category]
+			const queryMatches: boolean = normalizedQuery === '' || [destination.name, destination.englishName, destination.category, destination.keywords]
 				.join(' ')
 				.toLocaleLowerCase()
 				.includes(normalizedQuery);
@@ -121,17 +123,24 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			return;
 		}
 
-		const startPointId: string = `lp-${settings().startLocationId}`;
-		const destinationPointId: string = `lp-${destination.id}`;
+		const startPoint: WayfindingNode | undefined = routeGraph.locationNode(settings().startLocationId);
+		const destinationPoint: WayfindingNode | undefined = routeGraph.locationNode(destination.id);
 
-		if (startPointId === destinationPointId) {
+		if (!startPoint || !destinationPoint) {
+			setRouteResult(undefined);
+			setRouteState('unavailable');
+
+			return;
+		}
+
+		if (startPoint.id === destinationPoint.id) {
 			setRouteResult(undefined);
 			setRouteState('active');
 
 			return;
 		}
 
-		const result: RouteResult | undefined = routeGraph.route(startPointId, destinationPointId, settings().mapRatio);
+		const result: WayfindingRouteResult | undefined = routeGraph.route(startPoint.id, destinationPoint.id, { mapRatio: settings().mapRatio });
 
 		if (!result) {
 			setRouteResult(undefined);
@@ -140,8 +149,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			return;
 		}
 
-		const routePoints: RoutePoint[] = result.pointIds.flatMap((id: string): RoutePoint[] => {
-			const point: RoutePoint | undefined = routeGraph?.point(id);
+		const routePoints: WayfindingNode[] = result.nodeIds.flatMap((id: string): WayfindingNode[] => {
+			const point: WayfindingNode | undefined = routeGraph?.node(id);
 
 			return point ? [point] : [];
 		});
@@ -157,7 +166,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const group: SVGGElement = document.createElementNS(namespace, 'g');
 		const route: SVGPathElement = document.createElementNS(namespace, 'path');
 		group.id = ROUTE_GROUP_ID;
-		route.setAttribute('d', routePoints.map((point: RoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '));
+		route.setAttribute('d', routePoints.map((point: WayfindingNode, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '));
 		route.setAttribute('fill', 'none');
 		route.setAttribute('stroke', settings().routeColor);
 		route.setAttribute('stroke-linecap', 'round');
@@ -228,7 +237,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		svg.setAttribute('role', 'img');
 		svg.setAttribute('aria-label', 'Interactive Veszprem downtown visitor map');
 		mapHost.addEventListener('click', handleMapClick);
-		routeGraph = new RouteGraph(extractRoutePoints(svg), settings().wayfindingSensitivity);
+		routeGraph = createLegacyRouteGraph(svg, settings().wayfindingSensitivity);
 	});
 
 	createEffect((): void => {
@@ -237,7 +246,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		if (!svg) return;
 
-		routeGraph = new RouteGraph(extractRoutePoints(svg), sensitivity);
+		routeGraph = createLegacyRouteGraph(svg, sensitivity);
 		const selected: Destination | undefined = untrack(selectedDestination);
 
 		if (selected && mapRatio > 0) untrack((): void => drawRoute(selected));
@@ -341,12 +350,19 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						</div>
 					}>
 						{(destination: Destination): JSX.Element => (
-							<section class={style['route-card']} data-route-state={routeState()}>
+							<section class={style['route-card']} data-route-state={routeState()} data-preview-allow-overflow>
 								<button class={style['back-button']} type="button" onClick={clearRoute}>&lt;- All destinations</button>
 								<p class="wb-veszprem-wayfinding-metadata">{destination.category}</p>
 								<h2 ref={fitSelectedName} class="wb-veszprem-wayfinding-selected-name">{destination.name}</h2>
 								<Show when={destination.englishName}><h3>{destination.englishName}</h3></Show>
 								<p class={style['description']}>{destination.description}</p>
+								<Show when={destination.floor || destination.hours || destination.status}>
+									<dl class={style['destination-details']}>
+										<Show when={destination.floor}><div><dt>LEVEL</dt><dd>{destination.floor}</dd></div></Show>
+										<Show when={destination.hours}><div><dt>HOURS</dt><dd>{destination.hours}</dd></div></Show>
+										<Show when={destination.status}><div><dt>STATUS</dt><dd>{destination.status}</dd></div></Show>
+									</dl>
+								</Show>
 								<Show when={destination.accessible}><span class={style['accessibility']}>STEP-FREE DESTINATION</span></Show>
 								<div class={style['route-summary']}>
 									<Show when={routeState() === 'active' && routeResult()} keyed fallback={
@@ -356,7 +372,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 												? 'No connected walking route in this map'
 												: 'You are already at this destination'}</strong>
 									}>
-										{(result: RouteResult): JSX.Element => (
+										{(result: WayfindingRouteResult): JSX.Element => (
 											<>
 												<div><span>APPROX. DISTANCE</span><strong>{result.walkingDistance} m</strong></div>
 												<div><span>WALKING TIME</span><strong>{formatWalkTime(result.walkingSeconds)}</strong></div>

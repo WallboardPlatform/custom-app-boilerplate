@@ -9,7 +9,11 @@ interface PreviewDestinationRow extends Record<string, unknown> {
 	category: string;
 	description: string;
 	accessible: boolean;
+	floor?: string;
+	hours?: string;
+	keywords?: string;
 	routeable: boolean;
+	status?: string;
 }
 
 interface PreviewDestinationDatasource {
@@ -67,6 +71,16 @@ const longRows: PreviewDestinationRow[] = sampleDatasource.Destinations.rows.map
 	} : row
 );
 
+const detailRows: PreviewDestinationRow[] = sampleDatasource.Destinations.rows.map(
+	(row: PreviewDestinationRow): PreviewDestinationRow => row.id === 'hangvilla' ? {
+		...row,
+		floor: 'Ground floor',
+		hours: 'Open until 22:00',
+		keywords: 'concert hall music accessible entrance',
+		status: 'Program in progress'
+	} : row
+);
+
 const previewFixture: PreviewFixture = {
 	id: 'veszprem-wayfinding-unbound',
 	readySelector: '[data-preview-id="veszprem-wayfinding-root"]',
@@ -102,6 +116,13 @@ export const previewScenarios: PreviewScenario[] = [
 		fixture: createFixture('veszprem-wayfinding-external'),
 		viewport: { width: 1366, height: 768, background: 'light' },
 		interactionSteps: [{ type: 'click', role: 'button', name: 'Veszprém Aréna Sport- és Rendezvénycsarnok' }],
+		minimumContentCoverage: { width: 96, height: 94 }
+	},
+	{
+		id: 'destination-details',
+		fixture: createFixture('veszprem-wayfinding-destination-details', withRows(detailRows)),
+		viewport: { width: 1366, height: 768, background: 'light' },
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Hangvilla Cultural Centre' }],
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{

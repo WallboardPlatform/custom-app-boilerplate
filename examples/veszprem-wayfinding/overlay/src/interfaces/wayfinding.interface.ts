@@ -5,19 +5,9 @@ export interface Destination {
 	category: string;
 	description: string;
 	accessible: boolean;
+	floor: string;
+	hours: string;
 	routeable: boolean;
-}
-
-export interface RoutePoint {
-	id: string;
-	x: number;
-	y: number;
-	endPoint: boolean;
-}
-
-export interface RouteResult {
-	distancePixels: number;
-	pointIds: string[];
-	walkingSeconds: number;
-	walkingDistance: number;
+	status: string;
+	keywords: string;
 }

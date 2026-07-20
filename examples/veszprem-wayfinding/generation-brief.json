@@ -61,7 +61,7 @@
 			"area": "behavior",
 			"owner": "locked",
 			"targets": ["svg-point-extraction", "dijkstra-shortest-path", "route-rendering", "off-map-state"],
-			"rationale": "Graph construction and route semantics follow the proven Wallboard map implementation and are not operator-authored content."
+			"rationale": "Route semantics are code-owned. This historical example still derives compatibility topology from point proximity; new maps must ship an explicit validated route graph."
 		}
 	],
 	"experience": {
@@ -174,6 +174,7 @@
 		{ "scenario": "compact", "expectation": "The dark shell preserves near-viewing text and touch targets around the unchanged reference map." },
 		{ "scenario": "active-route", "expectation": "A connected landmark draws an animated route and displays approximate distance and walking time." },
 		{ "scenario": "external-destination", "expectation": "An off-map venue remains discoverable but never receives an invented route." },
+		{ "scenario": "destination-details", "expectation": "Editable floor, hours, status, description, and accessibility metadata remain legible in the selected destination panel." },
 		{ "scenario": "custom-theme", "expectation": "Every flat custom color control applies to the shell and route semantics." },
 		{ "scenario": "long-title", "expectation": "A long operator title remains bounded beside the reference identity and current location." },
 		{ "scenario": "long-destination-list", "expectation": "Long bilingual destination labels preserve stable touch rows." },
@@ -183,7 +184,7 @@
 		{ "scenario": "live-datasource-update", "expectation": "Quick-edited destination labels update without rebuilding the app." }
 	],
 	"behaviors": [
-		{ "id": "shortest-path", "expectation": "Route and location points build the same proximity graph rule as the production map app and Dijkstra selects the shortest connected path.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "shortest-path", "expectation": "The shared route engine selects the shortest connected path. This historical map uses the documented legacy proximity adapter until its topology is curated explicitly.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "shared-selection", "expectation": "Map-shape taps and directory buttons drive the same selected destination and route rendering.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "off-map-state", "expectation": "Destinations outside the supplied downtown route graph remain labeled as off-map without fabricated geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "route-reset", "expectation": "The configured timeout removes route geometry and restores the complete destination list.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
