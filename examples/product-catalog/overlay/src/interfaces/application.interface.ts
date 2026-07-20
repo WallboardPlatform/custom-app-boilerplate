@@ -9,11 +9,10 @@ export interface DataSourceValue<T = unknown> {
 	value?: T;
 }
 
-export type DataSourceKey = 'products' | 'productImages';
+export type DataSourceKey = 'products';
 
 export interface DataPickerValues {
 	products?: DataSourceValue['value'];
-	productImages?: DataSourceValue['value'];
 }
 
 export type DataSources = { [K in DataSourceKey]?: DataSourceValue };

@@ -24,30 +24,18 @@
 				{ "name": "availability", "type": "string", "required": false },
 				{ "name": "detailOne", "type": "string", "required": false },
 				{ "name": "detailTwo", "type": "string", "required": false },
-				{ "name": "imageKey", "type": "string", "required": false },
+				{ "name": "image", "type": "filePicker", "required": false },
 				{ "name": "sortOrder", "type": "number", "required": true }
 			]
-		},
-		{
-			"property": "productImages",
-			"dataPickerType": "any",
-			"source": {
-				"contract": "EXISTING",
-				"sampleData": "sample-product-images-filesystem-datasource.json"
-			},
-			"delivery": {
-				"suggestedDatasourceName": "Field Note Product Images (File System)",
-				"quickEditEligible": false
-			}
 		}
 	],
-	"rationale": "Product copy and order remain quick-editable TABLE rows. Images stay in an independently managed File System datasource and match the row imageKey to the image filename stem.",
+	"rationale": "Product copy, order, and selected image remain quick-editable in one TABLE. The image filePicker column stores Wallboard's {name, id, location} media reference directly in each row.",
 	"behavior": {
 		"unbound": "render bundled synthetic product rows with designed no-image treatments",
 		"boundEmpty": "render the configured empty-state message",
 		"invalidRows": "skip rows missing sku, name, or category",
-		"assetLookup": "match Products.imageKey to File System content[].name without its extension",
-		"assetFallback": "show a color-led product silhouette when an image is missing or fails",
+		"assetLookup": "read the selected file from Products.image.location and cache it through the platform",
+		"assetFallback": "show a color-led product silhouette when an image is empty or fails",
 		"pagination": "rotate one product per page and preserve the active product across live data reordering"
 	}
 }

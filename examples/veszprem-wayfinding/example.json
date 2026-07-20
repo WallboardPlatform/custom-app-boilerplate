@@ -1,6 +1,7 @@
 {
 	"title": "Veszprem Downtown Wayfinding",
 	"description": "Reference-led interactive landmark routing over a real structured SVG map with a separate quick-edit destination table.",
+	"capabilities": ["keyboard"],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",

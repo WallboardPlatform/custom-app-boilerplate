@@ -59,8 +59,12 @@ test('document and outline navigation select exact PDF destinations', async ({ p
 test('search spans all documents and remote commands can move through results', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await page.getByRole('tab', { name: 'Search' }).click();
+	await page.getByLabel('Search all documents').click();
+	await expect(page.getByRole('dialog', { name: 'Search documents' })).toBeVisible();
+	await page.getByRole('button', { name: 'Key h' }).click();
+	await expect(page.getByLabel('Search all documents')).toHaveValue('h');
 	await page.getByLabel('Search all documents').fill('handover');
-	await page.getByRole('button', { name: 'Find' }).click();
+	await page.getByRole('dialog', { name: 'Search documents' }).getByRole('button', { name: 'Find' }).click();
 	await expect(page.getByText(/matches$/)).not.toHaveText('0 matches');
 	await expect(page.locator('.pdf-search-highlight').first()).toBeVisible();
 

@@ -1,10 +1,10 @@
-import type { Product } from '@interfaces/product.interface';
+import type { Product, ProductImage } from '@interfaces/product.interface';
 
 import sampleDatasourceJson from '../../sample-products-table-datasource.json';
 
 type UnknownRecord = Record<string, unknown>;
 
-const sampleRows = (sampleDatasourceJson as { Products: { rows: Product[] } }).Products.rows;
+const sampleRows: unknown = (sampleDatasourceJson as { Products: { rows: unknown } }).Products.rows;
 
 const isRecord = (value: unknown): value is UnknownRecord => {
 	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -44,7 +44,29 @@ const readRows = (value: unknown): unknown[] => {
 
 const text = (value: unknown): string => typeof value === 'string' ? value.trim() : '';
 
-export const SAMPLE_PRODUCTS: Product[] = sampleRows;
+const safeImageUrl = (value: unknown): string => {
+	const url = text(value);
+
+	return /^(?:https?:\/\/|data:image\/|blob:|\/)/i.test(url) ? url : '';
+};
+
+export const normalizeProductImage = (value: unknown): ProductImage | null => {
+	const parsed = parseValue(value);
+
+	if (typeof parsed === 'string') {
+		const url = safeImageUrl(parsed);
+
+		return url ? { name: '', url } : null;
+	}
+
+	if (!isRecord(parsed)) {
+		return null;
+	}
+
+	const url = safeImageUrl(parsed.location) || safeImageUrl(parsed.url) || safeImageUrl(parsed.thumbnailUrl);
+
+	return url ? { name: text(parsed.name), url } : null;
+};
 
 export const normalizeProducts = (value: unknown): Product[] => {
 	return readRows(value).flatMap((row): Product[] => {
@@ -70,8 +92,10 @@ export const normalizeProducts = (value: unknown): Product[] => {
 			availability: text(row.availability),
 			detailOne: text(row.detailOne),
 			detailTwo: text(row.detailTwo),
-			imageKey: text(row.imageKey),
+			image: normalizeProductImage(row.image),
 			sortOrder: typeof row.sortOrder === 'number' && Number.isFinite(row.sortOrder) ? row.sortOrder : 9999
 		}];
 	}).sort((left, right): number => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
 };
+
+export const SAMPLE_PRODUCTS: Product[] = normalizeProducts(sampleRows);

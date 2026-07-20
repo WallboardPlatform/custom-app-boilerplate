@@ -219,6 +219,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			class={`${style.root} wb-lumen-media-program-root`}
 			data-host-ready={Boolean(props.hostElement)}
 			data-fit={settings().fit}
+			data-repeat={settings().repeat}
 			data-volume={settings().volume}
 			data-source-count={sources().length}
 			data-status={playerState().status}

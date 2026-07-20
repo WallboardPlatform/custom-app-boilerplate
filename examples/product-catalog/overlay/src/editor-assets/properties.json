@@ -8,8 +8,7 @@
 			"label": "Datasource bindings",
 			"type": "group",
 			"properties": [
-				{ "label": "Products table", "type": "dataPicker", "property": "products", "dataPickerType": "any", "tooltip": "Select the editable Products TABLE datasource." },
-				{ "label": "Product images (File System)", "type": "dataPicker", "property": "productImages", "dataPickerType": "any", "tooltip": "Select a File System datasource. Each product imageKey matches the image filename without its extension." }
+				{ "label": "Products table", "type": "dataPicker", "property": "products", "dataPickerType": "any", "tooltip": "Select the editable Products TABLE datasource. Choose each product image directly in the table's image file-picker column." }
 			]
 		},
 		{

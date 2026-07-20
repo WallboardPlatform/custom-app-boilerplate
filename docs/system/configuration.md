@@ -35,7 +35,7 @@ Editor wizards and layout editors are opt-in under `templates/editor-assets/`. C
 | `checkbox` | boolean | `property`, `default` |
 | `select` | selected value | `property`, `default`, `options[{label,value}]` |
 | `color` | string | `property`, `default` |
-| `file`, `folder` | platform selection | `property`; folder may use `fileType` |
+| `file`, `folder` | platform selection | `property`; `file` uses a base `fileType` such as `video` or `pdf`; `folder` requires the matching `_folder` suffix such as `video_folder` or `pdf_folder` or the legacy editor will not render a picker |
 | `dataPicker` | datasource binding | `property` |
 | `button` | custom action | `property`, `customSettingsUrl` |
 | `fontFamily`, `fontSize`, `fontStyle`, `fontColor` | grouped font object | `propertyContainer` |

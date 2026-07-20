@@ -11,6 +11,8 @@ import { normalizeDestinations } from '@utils/destinations';
 import { extractRoutePoints, RouteGraph } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
+import { keyboardLayoutsFor, OnScreenKeyboard } from '../../capabilities/keyboard';
+import type { KeyboardLayoutId } from '../../capabilities/keyboard';
 import veszpremMapMarkup from '../../assets/veszprem-belvaros-wayfinding.svg?raw';
 import sampleDestinationData from '../../../sample-destinations-datasource.json';
 
@@ -28,6 +30,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const [category, setCategory] = createSignal('All destinations');
 	const [query, setQuery] = createSignal('');
+	const [keyboardOpen, setKeyboardOpen] = createSignal(false);
 	const [routeResult, setRouteResult] = createSignal<RouteResult>();
 	const [routeState, setRouteState] = createSignal<RouteState>('idle');
 	const [selectedId, setSelectedId] = createSignal<string>();
@@ -35,6 +38,18 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	let routeGraph: RouteGraph | undefined;
 	let routeResetTimer: ReturnType<typeof setTimeout> | undefined;
 	let svg: SVGSVGElement | undefined;
+	const keyboardLayouts = createMemo(() => {
+		const configuredLanguage = settings().keyboardLanguages;
+		const languages: KeyboardLayoutId[] = configuredLanguage === 'hu-en'
+			? ['hu', 'en']
+			: [configuredLanguage];
+
+		return keyboardLayoutsFor(languages);
+	});
+
+	createEffect((): void => {
+		if (!settings().onScreenKeyboard) setKeyboardOpen(false);
+	});
 
 	const hasBoundDestinations: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'destinationData');
@@ -318,6 +333,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							type="search"
 							value={query()}
 							onInput={(event): void => { setQuery(event.currentTarget.value); }}
+							onFocus={(): void => {
+								if (settings().onScreenKeyboard) setKeyboardOpen(true);
+							}}
 						/>
 						<select aria-label="Destination category" value={category()} onChange={(event): void => { setCategory(event.currentTarget.value); }}>
 							<For each={categories()}>{(name: string): JSX.Element => <option value={name}>{name}</option>}</For>
@@ -370,6 +388,22 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					</Show>
 				</aside>
 			</main>
+			<Show when={keyboardOpen()}>
+				<OnScreenKeyboard
+					accentColor={settings().accentColor}
+					backgroundColor={settings().panelColor}
+					borderColor={settings().secondaryTextColor}
+					label="Search destinations"
+					layouts={keyboardLayouts()}
+					maximumLength={80}
+					onClose={(): void => { setKeyboardOpen(false); }}
+					onInput={setQuery}
+					onSubmit={(): void => { setKeyboardOpen(false); }}
+					submitLabel="Show results"
+					textColor={settings().primaryTextColor}
+					value={query()}
+				/>
+			</Show>
 		</div>
 	);
 };

@@ -78,6 +78,7 @@ Rules:
 - Add explicit numeric order columns when display order matters.
 - Keep display strings such as formatted prices as `string` when values may contain units, ranges, or labels.
 - Use `boolean` for availability and visibility instead of deleting temporarily unavailable records.
+- Use `filePicker` for row-owned media and consume its `{name,id,location}` value directly. Use `folderPicker` only when one row intentionally owns a folder. Do not add a second File System datasource merely to attach one image to each editable row.
 - Flatten repeated entities into rows. Group them in the widget using keys such as `section` and `sectionOrder`.
 - Keep datasource IDs out of source code and generated artifacts.
 

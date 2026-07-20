@@ -30,6 +30,8 @@ test('renders normalized platform weather and routes media through the cache pat
 	await expect(page.locator('.wb-weather-window-temperature')).toHaveText('21°');
 	await expect(page.locator('.wb-weather-window-forecast-item')).toHaveCount(4);
 	await expect(page.locator('.wb-weather-window-forecast-item').first()).toContainText('Sunday');
+	await expect(page.locator('.wb-weather-window-forecast-label')).toContainText('4');
+	await expect(page.locator('.wb-weather-window-forecast-label')).toContainText('DAY OUTLOOK');
 
 	const cachedUrls = await page.evaluate((): string[] => {
 		return (window as PreviewWindow).__wallboardPreview?.platform.cachedUrls ?? [];

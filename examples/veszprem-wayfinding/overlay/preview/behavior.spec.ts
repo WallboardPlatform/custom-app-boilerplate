@@ -26,6 +26,19 @@ test('selecting a destination draws a connected shortest path and route details'
 	await expect(page.locator('#Level0-Locations #hangvilla')).toHaveAttribute('data-wb-wayfinding-selected', 'true');
 });
 
+test('destination search uses the app-owned multilingual signage keyboard', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByLabel('Search destinations').click();
+	const keyboard = page.getByRole('dialog', { name: 'Search destinations' });
+
+	await expect(keyboard).toBeVisible();
+	await expect(keyboard.getByRole('button', { name: 'HU' })).toHaveAttribute('aria-pressed', 'true');
+	await keyboard.getByRole('button', { name: 'Key v' }).click();
+	await expect(page.getByRole('searchbox', { name: 'Search destinations' })).toHaveValue('v');
+	await keyboard.getByRole('button', { name: 'Show results' }).click();
+	await expect(keyboard).toHaveCount(0);
+});
+
 test('tapping a mapped location uses the same routing path as the directory', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await page.locator('#Level0-Locations #petofi-szinhaz').click({ force: true });

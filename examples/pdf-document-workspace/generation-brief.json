@@ -35,7 +35,7 @@
 			"id": "reader-configuration",
 			"area": "behavior",
 			"owner": "setting",
-			"targets": ["pageMode", "scrollDirection", "fit", "initialPage", "pageStart", "pageEnd", "showSidebar", "showControls", "hideScrollbars", "sidebarDefault", "renderTextLayer", "interactiveAnnotations", "renderForms", "preloadScreens", "pagePadding", "separatorSize", "separatorColor", "zoomMinimum", "zoomMaximum", "zoomStep", "autoScrollEnabled", "autoScrollSpeed", "autoScrollEndPauseSeconds", "autoScrollRewindSeconds", "autoScrollPauseOnHover"],
+			"targets": ["pageMode", "scrollDirection", "fit", "initialPage", "pageStart", "pageEnd", "showSidebar", "showControls", "hideScrollbars", "onScreenKeyboard", "keyboardLanguages", "sidebarDefault", "renderTextLayer", "interactiveAnnotations", "renderForms", "preloadScreens", "pagePadding", "separatorSize", "separatorColor", "zoomMinimum", "zoomMaximum", "zoomStep", "autoScrollEnabled", "autoScrollSpeed", "autoScrollEndPauseSeconds", "autoScrollRewindSeconds", "autoScrollPauseOnHover"],
 			"rationale": "The same renderer supports kiosk, unattended reader, form station, and controlled-document use cases."
 		},
 		{
@@ -78,7 +78,7 @@
 		"inputs": [
 			{ "id": "pointer-controls", "type": "pointer", "action": "Navigate pages, documents, outlines, links, form fields, downloads, search, and zoom." },
 			{ "id": "touch-controls", "type": "touch", "action": "Use the same large reader and sidebar controls on kiosk displays." },
-			{ "id": "keyboard-entry", "type": "keyboard", "action": "Enter search queries and AcroForm values and activate focused controls." },
+			{ "id": "keyboard-entry", "type": "keyboard", "action": "Enter search queries through the app-owned multilingual touch keyboard; physical keyboard entry and AcroForm input remain supported." },
 			{ "id": "external-controls", "type": "external-command", "action": "Navigate, search, zoom, download, submit forms, or reset forms remotely." }
 		],
 		"session": { "reset": "none", "expectation": "Navigation, search, zoom, and form values remain instance-local until remount or explicit reset." }
@@ -148,6 +148,8 @@
 		{ "property": "showSidebar", "purpose": "Shows the document, outline, and search tools." },
 		{ "property": "showControls", "purpose": "Shows page and zoom controls." },
 		{ "property": "hideScrollbars", "purpose": "Hides native scrollbars without disabling navigation." },
+		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when document search receives focus." },
+		{ "property": "keyboardLanguages", "purpose": "Selects English, Hungarian, or both keyboard layouts." },
 		{ "property": "sidebarDefault", "purpose": "Selects the initially visible sidebar tool." },
 		{ "property": "renderTextLayer", "purpose": "Enables selectable text and highlighted search matches." },
 		{ "property": "interactiveAnnotations", "purpose": "Enables links, notes, and annotation actions." },
@@ -218,7 +220,7 @@
 	"behaviors": [
 		{ "id": "multi-document-load", "expectation": "Folder mode loads two ordered PDFs and six pages while keeping active canvases bounded.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "destination-navigation", "expectation": "Document and outline controls navigate to the exact document page.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "cross-document-search", "expectation": "Search extracts text across documents, highlights the current page, and wraps result navigation.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "cross-document-search", "expectation": "The app-owned touch keyboard enters the query; search extracts text across documents, highlights the current page, and wraps result navigation.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "interactive-forms", "expectation": "AcroForm values remain editable and submit as a structured sensor interaction.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "external-command-control", "expectation": "Parameterized commands select exact pages and documents without pointer input.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "automatic-scroll", "expectation": "Configured continuous auto-scroll moves the viewport and remains hover-pausable and rewindable.", "evidence": { "testFile": "preview/behavior.spec.ts" } },

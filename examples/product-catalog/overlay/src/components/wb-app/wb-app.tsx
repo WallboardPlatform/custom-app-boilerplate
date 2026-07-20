@@ -9,7 +9,10 @@ import {
 	untrack
 } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
+import type { ApiService } from 'wallboard-app-sdk';
+import { useApiMethods } from 'wallboard-app-sdk';
 
+import { getMetadata } from '@hooks/system/getMetadata';
 import { useAutoFitText } from '@hooks/system/useAutoFitText';
 import { useDataSources } from '@hooks/system/useDataSources';
 import { useSettings } from '@hooks/system/useSettings';
@@ -17,11 +20,7 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Product } from '@interfaces/product.interface';
 
-import {
-	buildFileSystemMediaIndex,
-	findFileSystemMedia,
-	type FileSystemMediaRecord
-} from '@utils/media';
+import { resolveCachedMediaUrl } from '@utils/media';
 import { resolveMotion } from '@utils/motion';
 import { createRotationController } from '@utils/rotation';
 import { createTransitionController, type TransitionState } from '@utils/transition';
@@ -53,9 +52,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	let transitionInitialized = false;
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
+	const api: ApiService = useApiMethods(getMetadata());
 	const [layoutMode, setLayoutMode] = createSignal<LayoutMode>('landscape');
 	const [pageIndex, setPageIndex] = createSignal(0);
 	const [failedMediaKey, setFailedMediaKey] = createSignal('');
+	const [resolvedMediaUrl, setResolvedMediaUrl] = createSignal('');
 	const [transitionState, setTransitionState] = createSignal<TransitionState>({
 		currentKey: 'initial',
 		previousKey: null,
@@ -75,16 +76,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return items.length > 0 ? items[Math.min(pageIndex(), items.length - 1)] : undefined;
 	});
-	const imageIndex = createMemo(() => buildFileSystemMediaIndex(dataSources().productImages?.value));
-	const currentMedia = createMemo((): FileSystemMediaRecord | undefined => {
-		const product = currentProduct();
-
-		return product ? findFileSystemMedia(imageIndex(), product.imageKey) : undefined;
-	});
 	const mediaVisible = createMemo((): boolean => {
 		const product = currentProduct();
 
-		return Boolean(product && currentMedia() && failedMediaKey() !== product.sku);
+		return Boolean(product && resolvedMediaUrl() && failedMediaKey() !== product.sku);
 	});
 	const fitCollectionTitle = useAutoFitText({
 		minFontSize: 16,
@@ -143,6 +138,25 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		setFailedMediaKey('');
 	});
 
+	let mediaGeneration = 0;
+	createEffect((): void => {
+		const url = currentProduct()?.image?.url ?? '';
+		mediaGeneration += 1;
+		const generation = mediaGeneration;
+		setResolvedMediaUrl(url);
+
+		if (!url) {
+			return;
+		}
+
+		void resolveCachedMediaUrl(url, (sourceUrl: string): Promise<string> => api.cacheFile(sourceUrl))
+			.then((cachedUrl): void => {
+				if (generation === mediaGeneration) {
+					setResolvedMediaUrl(cachedUrl);
+				}
+			});
+	});
+
 	onCleanup((): void => rotation.destroy());
 	onCleanup((): void => transition.destroy());
 	onCleanup((): void => resizeObserver?.disconnect());
@@ -179,7 +193,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<main class="wb-product-catalog-stage" data-product-key={product().sku}>
 						<section class="wb-product-catalog-media">
 							<img
-								src={failedMediaKey() === product().sku ? FALLBACK_PAINT_PIXEL : currentMedia()?.url ?? FALLBACK_PAINT_PIXEL}
+								src={failedMediaKey() === product().sku ? FALLBACK_PAINT_PIXEL : resolvedMediaUrl() || FALLBACK_PAINT_PIXEL}
 								alt=""
 								data-visible={String(mediaVisible())}
 								style={{ 'object-fit': settings().mediaFit }}

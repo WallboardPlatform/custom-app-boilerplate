@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "b94db129922d87a881f913e17ce1f46f545e268c90b3e18220b7a797ef7202aa",
-	"reviewedAt": "2026-07-19T13:33:25.995Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "22b55fa6c08098797975293dc2461def78341c9d2d579866821830a86b12b604",
+	"reviewedAt": "2026-07-20T08:45:49.603Z",
+	"reviewer": "Codex live-field hardening review",
 	"criteria": [
 		{
 			"id": "promptFidelity",

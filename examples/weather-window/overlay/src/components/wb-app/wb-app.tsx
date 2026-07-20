@@ -291,8 +291,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 						<footer class="wb-weather-window-forecast">
 							<div class="wb-weather-window-forecast-label">
-								<span>FORECAST HORIZON</span>
-								<small>{weather().updatedAt || 'AUTO REFRESH'}</small>
+								<strong>{weather().forecast.length}</strong>
+								<div>
+									<span>DAY OUTLOOK</span>
+									<small>{weather().updatedAt || 'AUTO REFRESH'}</small>
+								</div>
 							</div>
 							<div class="wb-weather-window-forecast-days" data-count={weather().forecast.length}>
 								<For each={weather().forecast}>{(day): JSX.Element => <ForecastItem day={day} />}</For>

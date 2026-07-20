@@ -39,7 +39,7 @@
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "routeResetSeconds", "wayfindingSensitivity", "mapRatio"],
+			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "wayfindingSensitivity", "mapRatio"],
 			"rationale": "The kiosk label, origin, reset timing, and map calibration belong to the installed instance."
 		},
 		{
@@ -72,7 +72,7 @@
 		],
 		"inputs": [
 			{ "id": "touch-destination", "type": "touch", "action": "Select a destination from the directory or directly from its map shape." },
-			{ "id": "keyboard-search", "type": "keyboard", "action": "Filter destination names and categories." }
+			{ "id": "keyboard-search", "type": "keyboard", "action": "Filter destination names and categories through the app-owned Hungarian and English touch layouts." }
 		],
 		"session": {
 			"reset": "timeout",
@@ -123,6 +123,8 @@
 		{ "property": "subtitle", "purpose": "Short instruction above the destination directory." },
 		{ "property": "startLocationId", "purpose": "SVG and table id used as the kiosk's route origin." },
 		{ "property": "emptyStateText", "purpose": "Message shown for a bound but empty destination table." },
+		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
+		{ "property": "keyboardLanguages", "purpose": "Selects Hungarian, English, or both keyboard layouts." },
 		{ "property": "routeResetSeconds", "purpose": "Seconds before the selected route clears.", "effect": "route-reset" },
 		{ "property": "wayfindingSensitivity", "purpose": "Maximum SVG distance used to connect neighboring route points.", "effect": "route-sensitivity" },
 		{ "property": "mapRatio", "purpose": "SVG pixels per displayed metre for approximate route detail.", "effect": "map-ratio" },

@@ -1,14 +1,14 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Create a retail product catalog that keeps product copy quick-editable while images remain independently managed in Wallboard File System.",
+		"summary": "Create a retail product catalog whose copy, order, and selected images remain quick-editable in one Wallboard TABLE.",
 		"audience": "Customers browsing a curated collection on shared retail signage.",
 		"primaryGoal": "Present one product at a time with editorial impact, reliable image lookup, and a clear fallback when media is unavailable."
 	},
 	"assumptions": [
 		"The operator creates the Products TABLE from the supplied table sample and binds it to products.",
-		"The operator uploads the supplied synthetic JPG files to File System, exposes that folder as a datasource, and binds it to productImages.",
-		"Products.imageKey matches the File System filename without its extension."
+		"The operator uploads or selects each product image directly in the TABLE image filePicker column.",
+		"The filePicker cell uses Wallboard's {name, id, location} value and does not require a second datasource."
 	],
 	"app": { "mode": "new", "name": "Field Note Product Catalog", "version": "1" },
 	"surfaceStrategy": {
@@ -24,8 +24,7 @@
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "products", "source": "generated", "contract": "TABLE", "access": "read" },
-			{ "property": "productImages", "source": "existing", "contract": "EXISTING", "access": "read" }
+			{ "property": "products", "source": "generated", "contract": "TABLE", "access": "read" }
 		]
 	},
 	"ownership": [
@@ -63,13 +62,6 @@
 			"owner": "datasource",
 			"targets": ["products"],
 			"rationale": "Product content and ordering are quick-editable TABLE rows."
-		},
-		{
-			"id": "product-image-files",
-			"area": "content",
-			"owner": "datasource",
-			"targets": ["productImages"],
-			"rationale": "Product photography is managed independently in File System."
 		}
 	],
 	"experience": {
@@ -98,20 +90,14 @@
 		{
 			"id": "product-photo",
 			"type": "image",
-			"source": "file-system",
+			"source": "datasource",
 			"fit": "cover",
-			"binding": "productImages",
-			"lookup": {
-				"recordBinding": "products",
-				"recordField": "imageKey",
-				"assetField": "name",
-				"urlFields": ["url", "thumbnailUrl", "location"],
-				"match": "filename-stem"
-			},
+			"binding": "products",
+			"fields": ["image.location", "image.url", "image"],
 			"cache": "platform",
 			"preview": "platform-mock",
 			"fallback": "Render the panel-colored geometric product treatment and category label.",
-			"rationale": "The TABLE remains easy to edit while File System handles binary assets and the app uses the platform media interceptor."
+			"rationale": "The TABLE filePicker keeps copy and binary selection in one quick-editable row while the app uses the platform media cache."
 		}
 	],
 	"branding": {
@@ -200,8 +186,8 @@
 			"evidence": { "testFile": "preview/behavior.spec.ts" }
 		},
 		{
-			"id": "file-system-lookup",
-			"expectation": "Products.imageKey resolves against File System filenames by filename stem.",
+			"id": "table-file-picker",
+			"expectation": "Products.image filePicker values resolve their location directly without a second datasource.",
 			"evidence": { "testFile": "preview/behavior.spec.ts" }
 		},
 		{
@@ -213,7 +199,7 @@
 	"assets": [
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "product-images", "source": "datasource", "binding": "productImages", "required": false }
+		{ "id": "product-images", "source": "datasource", "binding": "products", "required": false }
 	],
 	"visualDirection": {
 		"source": "creative-led",
