@@ -21,8 +21,6 @@ npm install --registry=https://registry.npmjs.org/
 
 Optional setup variables: `WALLBOARD_SDK_REGISTRY`, `WALLBOARD_APP_SDK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_URL`, and `WALLBOARD_APP_SDK_FALLBACK_SHA256`.
 
-`config.json` is optional. Copy `config.json.sample` only to override the ZIP output path; local builds otherwise derive identity from `src/editor-assets/properties.json` and write ZIPs to Desktop.
-
 ## Generation
 
 Agents start with `AGENTS.md`. Before implementation:
@@ -76,7 +74,6 @@ Ordinary apps receive neither PDF.js nor hls.js.
 |---------|---------|
 | Development build | `npm run build:development` |
 | Production build | `npm run build:production` |
-| Production ZIP | `npm run build:production:zip` |
 | Identity/brief/datasource/legacy/package gates | `npm run validate:package` |
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |

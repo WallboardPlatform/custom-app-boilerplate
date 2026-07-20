@@ -1,29 +1,13 @@
 /* eslint-disable */
-const fs = require('fs');
 const path = require('path');
-const SimpleProgressWebpackPlugin = require('simple-progress-webpack-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
-// Load config.json if it exists
-const configFilePath = path.resolve(__dirname, '../config.json');
-let config= {};
-if(fs.existsSync(configFilePath)) {
-    config = require(configFilePath);
-} else {
-    console.log('[Chrome-49] config.json not found. Fallback to "dist/" folder.');
-}
-
 module.exports = (env, argv) => {
     return {
-        entry: config.url ? path.resolve(config.url, './assets/app.js') : path.resolve('./dist/assets/app.js'),
-        plugins: [
-            new SimpleProgressWebpackPlugin({
-                format: 'expanded'
-            })
-        ],
+        entry: path.resolve('./dist/assets/app.js'),
         output: {
-            path: config.url ? path.resolve(config.url, './assets/') : path.resolve('./dist/assets/'),
+            path: path.resolve('./dist/assets/'),
             filename: 'app-chrome-49.js',
             environment: {
                 arrowFunction: false
