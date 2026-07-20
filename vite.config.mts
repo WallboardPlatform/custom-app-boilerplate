@@ -7,13 +7,13 @@ import viteEslint from 'vite-plugin-eslint';
 import stylelint from 'vite-plugin-stylelint';
 import solidSvg from 'vite-plugin-solid-svg';
 
-import WBAppPostExecution , { PluginConfig } from './package-tools/plugins/wb-app-post-execution';
-import WBAppZipperPlugin from './package-tools/plugins/wb-app-zipper';
+import WBAppPostExecution from './package-tools/plugins/wb-app-post-execution';
+import WBAppZipperPlugin, { PluginConfig as ZipperPluginConfig } from './package-tools/plugins/wb-app-zipper';
 
 // Load optional local build config and always read app metadata.
 const configFilePath: string = resolve(__dirname, 'config.json');
 const propertiesPath: string = resolve(__dirname, 'src', 'editor-assets', 'properties.json');
-let config: PluginConfig = {};
+let config: ZipperPluginConfig = {};
 let properties: { name?: string, version?: string } = {};
 
 if (fs.existsSync(configFilePath)) {
@@ -57,7 +57,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           'src/**/vendor/**'
         ]
       }),
-      WBAppPostExecution(config, isProd),
+      WBAppPostExecution(isProd),
       WBAppZipperPlugin({
         name: properties.name,
         version: properties.version,

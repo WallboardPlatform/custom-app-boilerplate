@@ -21,7 +21,7 @@ npm install --registry=https://registry.npmjs.org/
 
 Optional setup variables: `WALLBOARD_SDK_REGISTRY`, `WALLBOARD_APP_SDK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_URL`, and `WALLBOARD_APP_SDK_FALLBACK_SHA256`.
 
-`config.json` is optional. Copy `config.json.sample` only for a custom zip path or MinIO upload; local builds otherwise derive identity from `src/editor-assets/properties.json` and write ZIPs to Desktop.
+`config.json` is optional. Copy `config.json.sample` only to override the ZIP output path; local builds otherwise derive identity from `src/editor-assets/properties.json` and write ZIPs to Desktop.
 
 ## Generation
 
