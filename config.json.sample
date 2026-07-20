@@ -1,12 +1,3 @@
 {
-    "id": "my-app-id",
-    "minio": {
-        "host": "localhost",
-        "port": 31001,
-        "useSSL": false,
-        "accessKey": "minio-access-key",
-        "secretKey": "minio-secret-key",
-        "bucket": "my-minio-bucket"
-    },
     "zipOutput": ""
 }
