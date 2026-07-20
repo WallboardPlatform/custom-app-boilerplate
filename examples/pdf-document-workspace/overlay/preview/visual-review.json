@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "0ce54fff1f35abaa9fdd53030cd32582269cd87a5650634a59a3f9c46a7c9671",
-	"reviewedAt": "2026-07-20T08:45:40.691Z",
-	"reviewer": "Codex live-field hardening review",
+	"sourceHash": "a91d04201b904a3bebaa7d7f95fb32166be2f2b38159e37b42d99992e6767311",
+	"reviewedAt": "2026-07-20T15:27:59.837Z",
+	"reviewer": "Codex compact-layout regression review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
@@ -59,7 +59,7 @@
 		{
 			"file": "compact-800x600.png",
 			"status": "pass",
-			"notes": "Compact mode removes the sidebar and retains an unclipped page and complete navigation."
+			"notes": "Container-driven compact mode collapses the configured sidebar, retains a complete page, and exposes an explicit Show panel action."
 		},
 		{
 			"file": "landscape-960x540.png",
@@ -99,7 +99,7 @@
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Square mode uses its constrained viewport without overlap; fit and zoom remain available."
+			"notes": "Square mode auto-collapses the sidebar and retains a complete fit-page view with all navigation controls available."
 		},
 		{
 			"file": "wide-low-1536x432.png",

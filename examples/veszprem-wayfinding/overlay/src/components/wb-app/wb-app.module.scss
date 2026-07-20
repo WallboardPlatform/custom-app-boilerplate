@@ -1,4 +1,11 @@
 .wb-app {
+  --wb-veszprem-accent: #d08b2e;
+  --wb-veszprem-background: #ead9c8;
+  --wb-veszprem-panel: #fff9ef;
+  --wb-veszprem-primary: #17312f;
+  --wb-veszprem-route: #cf332b;
+  --wb-veszprem-secondary: #5d716d;
+
   display: flex;
   width: 100%;
   height: 100%;
@@ -8,43 +15,49 @@
   overflow: hidden;
   background: var(--wb-veszprem-background);
   color: var(--wb-veszprem-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.wb-app,
+.wb-app * {
+  box-sizing: border-box;
 }
 
 .header {
   display: flex;
-  height: 116px;
-  min-height: 116px;
+  height: 96px;
+  min-height: 96px;
   align-items: center;
-  padding: 0 34px;
+  padding: 0 28px;
   border-bottom: 1px solid rgba(23, 49, 47, 0.2);
   background: var(--wb-veszprem-panel);
 }
 
 .identity {
   display: flex;
-  min-width: 226px;
+  width: 215px;
+  min-width: 215px;
   align-items: center;
-  margin-right: 30px;
-  color: var(--wb-veszprem-accent);
+  margin-right: 24px;
 }
 
 .identity strong {
   display: flex;
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   align-items: center;
   justify-content: center;
-  border: 4px solid currentColor;
-  border-radius: 50%;
-  font-size: 30px;
+  border: 3px solid var(--wb-veszprem-accent);
+  color: var(--wb-veszprem-primary);
+  font-size: 27px;
+  font-weight: 900;
   line-height: 1;
 }
 
 .identity span {
-  margin-left: 14px;
-  font-size: 20px;
-  font-weight: 800;
+  margin-left: 12px;
+  font-size: 18px;
+  font-weight: 900;
 }
 
 .heading {
@@ -53,41 +66,96 @@
 }
 
 .heading p,
-.directory-intro > p,
 .route-card > p,
-.locator span {
+.directory-intro p {
   margin: 0;
   color: var(--wb-veszprem-accent);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .heading h1 {
-  height: 45px;
+  height: 43px;
   margin: 4px 0 0;
-  padding-bottom: 0.12em;
+  padding-bottom: 0.14em;
   overflow: hidden;
   font-size: 36px;
-  line-height: 1.12;
-  text-overflow: ellipsis;
+  line-height: 1.08;
   white-space: nowrap;
 }
 
 .locator {
-  min-width: 240px;
-  margin-left: 28px;
-  padding-left: 24px;
-  border-left: 1px solid rgba(23, 49, 47, 0.22);
-  text-align: right;
+  width: 235px;
+  min-width: 235px;
+  margin-left: 22px;
+  padding-left: 22px;
+  border-left: 1px solid rgba(23, 49, 47, 0.2);
+}
+
+.locator span,
+.route-summary span,
+.fact span {
+  display: block;
+  color: var(--wb-veszprem-secondary);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .locator strong {
   display: block;
-  margin-top: 7px;
-  font-size: 18px;
-  line-height: 1.2;
+  margin-top: 5px;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reset-button,
+.back-button,
+.clear-button,
+.map-controls button,
+.search-field button,
+.language-selector button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.reset-button {
+  min-width: 84px;
+  height: 42px;
+  margin-left: 18px;
+  border: 1px solid var(--wb-veszprem-accent);
+  color: var(--wb-veszprem-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.language-selector {
+  display: flex;
+  min-width: 96px;
+  margin-left: 18px;
+  border: 1px solid var(--wb-veszprem-accent);
+}
+
+.language-selector button {
+  width: 48px;
+  height: 40px;
+  color: var(--wb-veszprem-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.language-selector button + button {
+  border-left: 1px solid var(--wb-veszprem-accent);
+}
+
+.language-selector button[aria-pressed='true'] {
+  background: var(--wb-veszprem-accent);
+  color: #ffffff;
 }
 
 .content {
@@ -95,7 +163,7 @@
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
-  padding: 18px;
+  padding: 16px;
 }
 
 .map-panel {
@@ -105,118 +173,196 @@
   flex: 1 1 auto;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(23, 49, 47, 0.22);
-  border-radius: 4px;
-  background: #ead9c8;
+  border: 1px solid rgba(23, 49, 47, 0.24);
+  background: #efe5d8;
 }
 
 .map-canvas {
+  position: relative;
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
 }
 
-.map-markup {
-  width: 100%;
-  height: 100%;
-}
-
+.map-markup,
 .map-markup :global(svg) {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.map-markup :global(#Level0-Locations path) {
+.map-markup :global([data-wayfinding-location-id]) {
+  pointer-events: all;
   cursor: pointer;
-  transition: fill-opacity 160ms ease-out, stroke 160ms ease-out;
+  fill: var(--wb-veszprem-panel);
+  fill-opacity: 0.42;
+  stroke: var(--wb-veszprem-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-markup :global([data-wayfinding-location-id]:hover),
+.map-markup :global([data-wayfinding-location-id]:focus) {
+  fill-opacity: 0.78;
+  stroke-width: 4;
+}
+
+.map-markup :global([data-wb-wayfinding-selected]) {
+  fill: var(--wb-veszprem-route);
+  fill-opacity: 0.22;
+  stroke: var(--wb-veszprem-route);
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #efe5d8;
+  color: #37524d;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.map-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  border: 1px solid rgba(23, 49, 47, 0.25);
+  background: rgba(255, 249, 239, 0.96);
+  box-shadow: 0 2px 12px rgba(23, 49, 47, 0.14);
+}
+
+.map-controls button {
+  width: 46px;
+  height: 46px;
+  color: #17312f;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.map-controls button + button {
+  border-left: 1px solid rgba(23, 49, 47, 0.18);
+}
+
+.map-controls button:hover,
+.map-controls button:focus,
+.reset-button:hover,
+.reset-button:focus {
+  outline: none;
+  background: var(--wb-veszprem-accent);
+  color: #ffffff;
 }
 
 .map-instruction {
   display: flex;
-  height: 44px;
-  min-height: 44px;
+  height: 42px;
+  min-height: 42px;
   align-items: center;
-  padding: 0 18px;
+  justify-content: center;
+  padding: 0 16px;
   border-top: 1px solid rgba(23, 49, 47, 0.18);
   color: #37524d;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .map-instruction i {
   width: 4px;
   height: 4px;
-  margin: 0 12px;
+  margin: 0 11px;
   border-radius: 50%;
   background: #d08b2e;
 }
 
 .directory {
+  position: relative;
   display: flex;
   width: 430px;
   min-width: 430px;
   min-height: 0;
   flex-direction: column;
-  margin-left: 18px;
-  padding: 24px;
+  margin-left: 16px;
+  padding: 22px;
   overflow: hidden;
-  border: 1px solid rgba(23, 49, 47, 0.18);
-  border-radius: 4px;
+  border: 1px solid rgba(23, 49, 47, 0.2);
   background: var(--wb-veszprem-panel);
 }
 
 .directory-intro h2 {
   margin: 5px 0 7px;
   padding-bottom: 0.12em;
-  font-size: 26px;
+  font-size: 25px;
   line-height: 1.16;
 }
 
 .directory-intro > span {
   display: block;
   color: var(--wb-veszprem-secondary);
-  font-size: 14px;
-  line-height: 1.42;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .filters {
-  display: flex;
-  margin-top: 18px;
-  padding-bottom: 14px;
+  margin-top: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid rgba(23, 49, 47, 0.15);
+}
+
+.search-field {
+  display: flex;
+  min-width: 0;
 }
 
 .filters input,
 .filters select {
-  height: 44px;
+  height: 42px;
   min-width: 0;
-  border: 1px solid rgba(23, 49, 47, 0.24);
-  border-radius: 3px;
+  border: 1px solid rgba(23, 49, 47, 0.26);
+  border-radius: 0;
   outline: none;
   background: var(--wb-veszprem-background);
   color: var(--wb-veszprem-primary);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .filters input {
   flex: 1 1 auto;
-  padding: 0 12px;
+  padding: 0 11px;
+}
+
+.search-field button {
+  width: 54px;
+  min-width: 54px;
+  border: 1px solid var(--wb-veszprem-accent);
+  border-left: 0;
+  color: var(--wb-veszprem-primary);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .filters select {
-  width: 155px;
-  margin-left: 8px;
-  padding: 0 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0 9px;
 }
 
 .filters input:focus,
-.filters select:focus {
+.filters select:focus,
+.search-field button:focus {
   border-color: var(--wb-veszprem-accent);
-  box-shadow: 0 0 0 2px var(--wb-veszprem-accent);
+  box-shadow: inset 0 0 0 2px var(--wb-veszprem-accent);
 }
 
 .destination-list {
@@ -224,15 +370,17 @@
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-right: 5px;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--wb-veszprem-accent) transparent;
+  scrollbar-width: thin;
 }
 
-.destination-list button {
+.destination-list > button {
   display: flex;
   width: 100%;
-  min-height: 64px;
+  min-height: 62px;
   align-items: center;
-  padding: 10px 8px;
+  padding: 8px 5px;
   border: 0;
   border-bottom: 1px solid rgba(23, 49, 47, 0.13);
   background: transparent;
@@ -242,50 +390,63 @@
   text-align: left;
 }
 
-.destination-list button:hover,
-.destination-list button:focus {
+.destination-list > button:hover,
+.destination-list > button:focus {
   outline: none;
   background: var(--wb-veszprem-background);
 }
 
 .destination-list button > small {
-  width: 30px;
-  min-width: 30px;
-  color: var(--wb-veszprem-accent);
-  font-size: 12px;
-  font-weight: 800;
+  display: flex;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--wb-veszprem-accent);
+  border-radius: 50%;
+  color: var(--wb-veszprem-primary);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.destination-list button > small[data-wide='true'] {
+  font-size: 7px;
 }
 
 .destination-list button > span {
   min-width: 0;
   flex: 1 1 auto;
+  margin-left: 10px;
 }
 
 .destination-list strong,
 .destination-list em {
   display: block;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .destination-list strong {
-  font-size: 16px;
-  line-height: 1.25;
+  max-height: 37px;
+  font-size: 14px;
+  line-height: 1.28;
+  overflow-wrap: break-word;
 }
 
 .destination-list em {
-  margin-top: 3px;
+  margin-top: 2px;
   color: var(--wb-veszprem-secondary);
-  font-size: 12px;
+  font-size: 11px;
   font-style: normal;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .destination-list button > i {
   margin-left: 8px;
   color: var(--wb-veszprem-accent);
-  font-size: 17px;
+  font-size: 22px;
   font-style: normal;
   font-weight: 800;
 }
@@ -299,8 +460,10 @@
   height: 100%;
   align-items: center;
   justify-content: center;
+  padding: 24px;
   color: var(--wb-veszprem-secondary);
   font-size: 16px;
+  line-height: 1.4;
   text-align: center;
 }
 
@@ -309,33 +472,39 @@
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  padding-top: 4px;
-}
-
-.back-button,
-.clear-button {
-  border: 0;
-  background: transparent;
-  color: var(--wb-veszprem-accent);
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  text-align: left;
 }
 
 .back-button {
-  margin: 0 0 44px;
-  padding: 8px 0;
+  align-self: flex-start;
+  min-height: 42px;
+  margin-bottom: 26px;
+  color: var(--wb-veszprem-accent);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.detail-number {
+  display: flex;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+  border: 3px solid var(--wb-veszprem-accent);
+  border-radius: 50%;
+  color: var(--wb-veszprem-primary);
+  font-size: 15px;
+  font-weight: 900;
 }
 
 .route-card h2 {
-	max-height: 112px;
-	flex-shrink: 0;
-	margin: 8px 0 0;
+  max-height: 132px;
+  flex-shrink: 0;
+  margin: 7px 0 0;
   padding-bottom: 0.14em;
   overflow: hidden;
-  font-size: 34px;
+  font-size: 38px;
   line-height: 1.08;
   overflow-wrap: break-word;
 }
@@ -343,16 +512,23 @@
 .route-card h3 {
   margin: 8px 0 0;
   color: var(--wb-veszprem-secondary);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .description {
-  margin: 24px 0 0;
+  margin: 20px 0 0;
   color: var(--wb-veszprem-secondary);
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.45;
+}
+
+.fact {
+  margin: 15px 0 0;
+  color: var(--wb-veszprem-primary);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .accessibility {
@@ -362,8 +538,12 @@
   border-left: 3px solid var(--wb-veszprem-accent);
   background: var(--wb-veszprem-background);
   color: var(--wb-veszprem-primary);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.accessibility[data-accessibility='unknown'] {
+  border-left-color: var(--wb-veszprem-secondary);
 }
 
 .route-summary {
@@ -385,60 +565,76 @@
   border-left: 1px solid rgba(23, 49, 47, 0.16);
 }
 
-.route-summary span {
-  display: block;
-  color: var(--wb-veszprem-secondary);
-  font-size: 11px;
-  font-weight: 800;
+.route-summary > strong {
+  font-size: 17px;
+  line-height: 1.35;
 }
 
 .route-summary strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   font-size: 20px;
   line-height: 1.2;
 }
 
 .clear-button {
-  margin-top: 18px;
-  padding: 14px 16px;
+  min-height: 46px;
+  margin-top: 16px;
   border: 1px solid var(--wb-veszprem-accent);
-  border-radius: 3px;
+  color: var(--wb-veszprem-primary);
+  font-size: 13px;
+  font-weight: 900;
   text-align: center;
+}
+
+.clear-button:hover,
+.clear-button:focus,
+.back-button:focus {
+  outline: none;
+  background: var(--wb-veszprem-accent);
+  color: #ffffff;
 }
 
 @media (max-width: 1500px), (max-height: 850px) {
   .header {
-    height: 90px;
-    min-height: 90px;
-    padding: 0 24px;
+    height: 82px;
+    min-height: 82px;
+    padding: 0 20px;
   }
 
   .identity {
-    min-width: 175px;
-    margin-right: 20px;
+    width: 180px;
+    min-width: 180px;
+    margin-right: 18px;
   }
 
   .identity strong {
-    width: 46px;
-    height: 46px;
-    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
   }
 
   .identity span {
-    margin-left: 10px;
-    font-size: 16px;
+    margin-left: 9px;
+    font-size: 15px;
   }
 
   .heading h1 {
-    height: 36px;
+    height: 34px;
     font-size: 28px;
   }
 
   .locator {
-    min-width: 190px;
+    width: 205px;
+    min-width: 205px;
     margin-left: 14px;
     padding-left: 14px;
+  }
+
+  .reset-button {
+    min-width: 70px;
+    height: 38px;
+    margin-left: 12px;
   }
 
   .content {
@@ -446,70 +642,94 @@
   }
 
   .directory {
-    width: 365px;
-    min-width: 365px;
+    width: 370px;
+    min-width: 370px;
     margin-left: 12px;
-    padding: 18px;
+    padding: 16px;
   }
 
   .directory-intro h2 {
-    font-size: 22px;
+    font-size: 21px;
   }
 
   .directory-intro > span {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .filters {
-    margin-top: 12px;
-    padding-bottom: 10px;
+    margin-top: 10px;
+    padding-bottom: 9px;
   }
 
   .filters input,
   .filters select {
-    height: 38px;
+    height: 36px;
     font-size: 12px;
   }
 
-  .filters select {
-    width: 132px;
+  .destination-list > button {
+    min-height: 54px;
+    padding: 5px 3px;
   }
 
-  .destination-list button {
-    min-height: 54px;
-    padding: 7px 5px;
+  .destination-list button > small {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    font-size: 9px;
   }
 
   .destination-list strong {
+    max-height: 36px;
     font-size: 14px;
   }
 
-  .back-button {
-    margin-bottom: 24px;
-  }
-
-  .route-card h2 {
-	max-height: 92px;
-    font-size: 28px;
-  }
-
-  .description {
-    margin-top: 14px;
-    font-size: 14px;
-  }
-
-  .route-summary {
-    min-height: 88px;
-    padding: 12px 0;
-  }
-
-  .clear-button {
-    margin-top: 12px;
-    padding: 11px;
+  .destination-list em {
+    font-size: 10px;
   }
 
   .map-instruction {
     height: 36px;
     min-height: 36px;
+    font-size: 9px;
   }
+
+  .back-button {
+    margin-bottom: 15px;
+  }
+
+  .detail-number {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 14px;
+  }
+
+  .route-card h2 {
+    max-height: 100px;
+    font-size: 30px;
+  }
+
+  .route-card h3 {
+    font-size: 14px;
+  }
+
+  .description {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  .accessibility {
+    margin-top: 12px;
+  }
+
+  .route-summary {
+    min-height: 82px;
+    padding: 10px 0;
+  }
+
+  .clear-button {
+    min-height: 40px;
+    margin-top: 10px;
+  }
+
 }

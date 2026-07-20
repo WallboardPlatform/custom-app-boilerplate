@@ -5,7 +5,7 @@ description: Create or repair a Wallboard interactive wayfinding custom app from
 
 # Create Wayfinding App
 
-Build three independent artifacts: visual `map.svg`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only.
+Build four independent artifacts: visual `map.svg`, confirmed `walkable-mask.json`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only.
 
 ## Workflow
 
@@ -16,21 +16,22 @@ Build three independent artifacts: visual `map.svg`, canonical `route-graph.json
    - **Schematic:** simplify geometry when distance readability matters more than fidelity.
    - **Exact vector:** trace when reliable geometry is required and available.
 4. Create the generation brief and pass `npm run validate:brief` before app implementation.
-5. Author the artifacts using [references/artifacts.md](references/artifacts.md). Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
+5. Author the artifacts using [references/artifacts.md](references/artifacts.md). For raster/PDF sources, use `npm run wayfinding:workbench` to review traversable space and generated centerlines. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
 6. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
 7. Validate and generate the QA dashboard/overlay:
 
 ```bash
-npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinations destinations.json --start <location-id> --route-to <representative-location-id> --report-dir wayfinding-report --strict
+npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start <location-id> --route-to <representative-location-id> --report-dir wayfinding-report
 ```
 
-8. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Rendering alone is not route proof.
+8. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Use `--strict` only when warnings must also fail delivery; never invent accessibility or operational facts to obtain a warning-free report. Rendering alone is not route proof.
 9. Build the app with `WayfindingGraph`. Provide search/filter, an app-owned keyboard when text input is used, selected-location details, route reset, unreachable/off-map states, and step-free routing when requested.
 10. Test default, selected route, long metadata, empty, unreachable, step-free, floor transition, reset, and live datasource update states that apply. Complete normal visual review and delivery.
 
 ## Non-Negotiable
 
 - Use native location annotations and explicit edges. The SVG structure and coordinate space follow the accepted source and design.
+- Require an independently confirmed walkable mask for generated v2 centerlines. AI/OCR proposals are not confirmation.
 - Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
 - Place a location node at its walkable entrance/approach, not its polygon centroid.
 - Keep mutable names, descriptions, hours, images, status, localization, and CTA content in the destination TABLE.
@@ -42,4 +43,4 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinat
 
 ## Deliver
 
-Return the uploadable app ZIP and separate source ZIP, plus `map.svg`, `route-graph.json`, destination contract/template, validation report, graph overlay, and installation/binding notes.
+Return the uploadable app ZIP and separate source ZIP, plus `map.svg`, `walkable-mask.json`, `route-graph.json`, destination contract/template, validation report, graph overlay, and installation/binding notes.

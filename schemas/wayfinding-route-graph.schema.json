@@ -6,7 +6,7 @@
 	"additionalProperties": false,
 	"required": ["contractVersion", "graphId", "nodes", "edges"],
 	"properties": {
-		"contractVersion": { "const": 1 },
+		"contractVersion": { "enum": [1, 2] },
 		"graphId": { "$ref": "#/$defs/nonEmptyString" },
 		"nodes": {
 			"type": "array",
@@ -54,8 +54,45 @@
 				"kind": { "enum": ["walk", "outdoor", "stairs", "elevator", "escalator", "shuttle"] },
 				"accessible": { "type": "boolean" },
 				"bidirectional": { "type": "boolean" },
-				"distanceMeters": { "type": "number", "exclusiveMinimum": 0 }
+				"corridorWidth": { "type": "number", "exclusiveMinimum": 0 },
+				"distanceMeters": { "type": "number", "exclusiveMinimum": 0 },
+				"geometry": {
+					"type": "array",
+					"minItems": 2,
+					"items": { "$ref": "#/$defs/point" }
+				},
+				"reviewStatus": { "enum": ["confirmed", "proposed"] },
+				"traversal": { "enum": ["outdoor-path", "crossing", "indoor-corridor", "open-area", "portal", "transition"] }
+			}
+		},
+		"point": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["x", "y"],
+			"properties": {
+				"x": { "type": "number" },
+				"y": { "type": "number" }
 			}
 		}
-	}
+	},
+	"allOf": [
+		{
+			"if": { "properties": { "contractVersion": { "const": 2 } } },
+			"then": {
+				"properties": {
+					"edges": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"reviewStatus": { "enum": ["confirmed", "proposed"] },
+								"traversal": { "enum": ["outdoor-path", "crossing", "indoor-corridor", "open-area", "portal", "transition"] }
+							},
+							"required": ["reviewStatus", "traversal"]
+						}
+					}
+				}
+			}
+		}
+	]
 }

@@ -2,10 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
+import type { WayfindingGraphDocument, WayfindingWalkableMaskDocument } from '../../src/utils/wayfinding.js';
 import { parseDestinationMetadata, parseWayfindingSvg } from './model.mjs';
 import { writeWayfindingReport } from './report.mjs';
-import { parseRouteGraph } from './schema.mjs';
+import { parseRouteGraph, parseWalkableMask } from './schema.mjs';
 import { validateWayfinding } from './validation.mjs';
 
 const argument = (name: string): string | undefined => {
@@ -33,7 +33,7 @@ const readJson = (filePath: string): unknown => {
 };
 
 if (hasFlag('help')) {
-	console.log('Usage: npm run wayfinding:validate -- --svg <map.svg> --graph <route-graph.json> --destinations <sample.json> --start <location-id> [--route-to <location-id>] [--report-dir <directory>] [--strict]');
+	console.log('Usage: npm run wayfinding:validate -- --svg <map.svg> --graph <route-graph.json> --destinations <sample.json> --start <location-id> [--walkable-mask <mask.json>] [--route-to <location-id>] [--report-dir <directory>] [--strict]');
 	process.exit(0);
 }
 
@@ -44,13 +44,18 @@ const map = parseWayfindingSvg(sourceSvg);
 const destinations = parseDestinationMetadata(readJson(destinationPath));
 const graphPath: string = requirePath('graph');
 const graph: WayfindingGraphDocument = parseRouteGraph(fs.readFileSync(graphPath, 'utf8'));
+const walkableMaskPath: string | undefined = argument('walkable-mask');
+const walkableMask: WayfindingWalkableMaskDocument | undefined = walkableMaskPath
+	? parseWalkableMask(fs.readFileSync(path.resolve(walkableMaskPath), 'utf8'))
+	: undefined;
 
 const report = validateWayfinding({
 	destinations,
 	graph,
 	highlightDestinationId: argument('route-to'),
 	map,
-	startLocationId: argument('start')
+	startLocationId: argument('start'),
+	walkableMask
 });
 const reportDirectory: string = path.resolve(argument('report-dir') ?? path.join(path.dirname(svgPath), 'wayfinding-report'));
 writeWayfindingReport(reportDirectory, sourceSvg, graph, report);

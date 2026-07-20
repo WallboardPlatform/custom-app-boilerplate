@@ -1,5 +1,6 @@
 import type { ConfigValues, Settings } from '@interfaces/application.interface';
 
+import { motionPreset } from '@utils/motion';
 import { resolveTheme, themePresetSetting } from '@utils/theme';
 import type { ThemePreset } from '@utils/theme';
 
@@ -58,14 +59,15 @@ export default function mapSettings(config: ConfigValues): Settings {
 	return {
 		...palette,
 		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
+		interfaceLanguages: config.interfaceLanguages === 'en' || config.interfaceLanguages === 'hu' ? config.interfaceLanguages : 'en-hu',
 		keyboardLanguages: config.keyboardLanguages === 'en' || config.keyboardLanguages === 'hu' ? config.keyboardLanguages : 'hu-en',
-		mapRatio: numberSetting(config.mapRatio, 1, 0.5, 20),
+		mapRatio: numberSetting(config.mapRatio, 0.8, 0.2, 5),
+		motionPreset: motionPreset(config.motionPreset),
 		onScreenKeyboard: booleanSetting(config.onScreenKeyboard, true),
 		routeResetSeconds: numberSetting(config.routeResetSeconds, 45, 10, 180),
-		startLocationId: textSetting(config.startLocationId, 'hosok-kapuja'),
-		subtitle: textSetting(config.subtitle, 'Choose a destination to draw a walking route from Heroes\' Gate.'),
+		startLocationId: textSetting(config.startLocationId, 'tourinform-veszprem'),
+		subtitle: textSetting(config.subtitle, 'Choose a landmark or tap its number on the map.'),
 		themePreset,
-		title: textSetting(config.title, 'Veszprem Downtown Wayfinding'),
-		wayfindingSensitivity: numberSetting(config.wayfindingSensitivity, 50, 10, 100)
+		title: textSetting(config.title, 'Veszprem Downtown Wayfinding')
 	};
 }

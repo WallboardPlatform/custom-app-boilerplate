@@ -2,6 +2,35 @@ export type WayfindingNodeKind = 'route' | 'location' | 'transition';
 
 export type WayfindingEdgeKind = 'walk' | 'outdoor' | 'stairs' | 'elevator' | 'escalator' | 'shuttle';
 
+export type WayfindingTraversal = 'outdoor-path' | 'crossing' | 'indoor-corridor' | 'open-area' | 'portal' | 'transition';
+
+export type WayfindingReviewStatus = 'confirmed' | 'proposed';
+
+export interface WayfindingPoint {
+	x: number;
+	y: number;
+}
+
+export interface WayfindingRoutePoint extends WayfindingPoint {
+	levelId: string;
+}
+
+export type WayfindingWalkableMaskRun = [row: number, startColumn: number, endColumn: number];
+
+export interface WayfindingWalkableMaskDocument {
+	cellSize: number;
+	columns: number;
+	contractVersion: 1;
+	height: number;
+	mapId: string;
+	originX?: number;
+	originY?: number;
+	reviewStatus: WayfindingReviewStatus;
+	rows: number;
+	walkableRuns: WayfindingWalkableMaskRun[];
+	width: number;
+}
+
 export interface WayfindingNode {
 	id: string;
 	levelId: string;
@@ -18,11 +47,15 @@ export interface WayfindingEdge {
 	kind: WayfindingEdgeKind;
 	accessible: boolean;
 	bidirectional: boolean;
+	corridorWidth?: number;
 	distanceMeters?: number;
+	geometry?: WayfindingPoint[];
+	reviewStatus?: WayfindingReviewStatus;
+	traversal?: WayfindingTraversal;
 }
 
 export interface WayfindingGraphDocument {
-	contractVersion: 1;
+	contractVersion: 1 | 2;
 	graphId: string;
 	nodes: WayfindingNode[];
 	edges: WayfindingEdge[];
@@ -39,6 +72,7 @@ export interface WayfindingRouteResult {
 	distancePixels: number;
 	edgeIds: string[];
 	nodeIds: string[];
+	path: WayfindingRoutePoint[];
 	walkingDistance: number;
 	walkingSeconds: number;
 }
@@ -53,14 +87,28 @@ interface QueueNode {
 	priority: number;
 }
 
-const pixelDistance = (left: WayfindingNode, right: WayfindingNode): number => {
-	if (left.levelId !== right.levelId) return 0;
-
+const pointDistance = (left: WayfindingPoint, right: WayfindingPoint): number => {
 	return Math.hypot(right.x - left.x, right.y - left.y);
 };
 
+const edgePoints = (edge: WayfindingEdge, left: WayfindingNode, right: WayfindingNode): WayfindingPoint[] => {
+	const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [left, right];
+
+	return edge.from === left.id ? points : [...points].reverse();
+};
+
+const edgePixelDistance = (edge: WayfindingEdge, left: WayfindingNode, right: WayfindingNode): number => {
+	if (left.levelId !== right.levelId) return 0;
+
+	const points: WayfindingPoint[] = edgePoints(edge, left, right);
+
+	return points.slice(1).reduce((total: number, point: WayfindingPoint, index: number): number => {
+		return total + pointDistance(points[index], point);
+	}, 0);
+};
+
 const edgeCost = (edge: WayfindingEdge, left: WayfindingNode, right: WayfindingNode, mapRatio: number): number => {
-	return edge.distanceMeters ?? pixelDistance(left, right) / Math.max(0.1, mapRatio);
+	return edge.distanceMeters ?? edgePixelDistance(edge, left, right) / Math.max(0.1, mapRatio);
 };
 
 export class WayfindingGraph {
@@ -91,6 +139,28 @@ export class WayfindingGraph {
 		return this.document.nodes.find((node: WayfindingNode): boolean => node.kind === 'location' && node.locationId === locationId);
 	}
 
+	public routePath(result: Pick<WayfindingRouteResult, 'edgeIds' | 'nodeIds'>): WayfindingRoutePoint[] {
+		const path: WayfindingRoutePoint[] = [];
+
+		for (let index = 1; index < result.nodeIds.length; index += 1) {
+			const left: WayfindingNode | undefined = this.nodeById.get(result.nodeIds[index - 1]);
+			const right: WayfindingNode | undefined = this.nodeById.get(result.nodeIds[index]);
+			const edge: WayfindingEdge | undefined = this.document.edges.find((candidate: WayfindingEdge): boolean => candidate.id === result.edgeIds[index - 1]);
+
+			if (!left || !right || !edge || left.levelId !== right.levelId) continue;
+
+			for (const point of edgePoints(edge, left, right)) {
+				const previous: WayfindingRoutePoint | undefined = path[path.length - 1];
+
+				if (previous && previous.levelId === left.levelId && previous.x === point.x && previous.y === point.y) continue;
+
+				path.push({ ...point, levelId: left.levelId });
+			}
+		}
+
+		return path;
+	}
+
 	public route(startId: string, destinationId: string, options: WayfindingRouteOptions = {}): WayfindingRouteResult | undefined {
 		const start: WayfindingNode | undefined = this.nodeById.get(startId);
 		const destination: WayfindingNode | undefined = this.nodeById.get(destinationId);
@@ -98,7 +168,14 @@ export class WayfindingGraph {
 		if (!start || !destination) return undefined;
 
 		if (startId === destinationId) {
-			return { distancePixels: 0, edgeIds: [], nodeIds: [startId], walkingDistance: 0, walkingSeconds: 0 };
+			return {
+				distancePixels: 0,
+				edgeIds: [],
+				nodeIds: [startId],
+				path: [{ levelId: start.levelId, x: start.x, y: start.y }],
+				walkingDistance: 0,
+				walkingSeconds: 0
+			};
 		}
 
 		const mapRatio: number = Math.max(0.1, options.mapRatio ?? 1);
@@ -160,7 +237,7 @@ export class WayfindingGraph {
 			const left: WayfindingNode = this.nodeById.get(nodeIds[index - 1])!;
 			const right: WayfindingNode = this.nodeById.get(nodeIds[index])!;
 			const edge: WayfindingEdge = this.document.edges.find((candidate: WayfindingEdge): boolean => candidate.id === edgeIds[index - 1])!;
-			const pixels: number = pixelDistance(left, right);
+			const pixels: number = edgePixelDistance(edge, left, right);
 			distancePixels += pixels;
 			walkingDistance += edge.distanceMeters ?? pixels / mapRatio;
 		}
@@ -172,6 +249,7 @@ export class WayfindingGraph {
 			distancePixels,
 			edgeIds,
 			nodeIds,
+			path: this.routePath({ edgeIds, nodeIds }),
 			walkingDistance: roundedDistance,
 			walkingSeconds: Math.max(1, Math.round(roundedDistance / walkingSpeed))
 		};

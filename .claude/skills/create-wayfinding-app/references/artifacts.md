@@ -18,6 +18,13 @@ Validate against `schemas/wayfinding-route-graph.schema.json`.
 - Cross-floor edges use transition nodes and `stairs`, `elevator`, or `escalator` kinds.
 - Prefer a small intentional graph over an unnecessarily dense mesh. Add a node at every real junction and bend required for route shape.
 
+## `walkable-mask.json`
+
+- Generate in the same root coordinate system as `map.svg`; bounds must match the SVG viewBox.
+- Review connected traversable space against the visible source. Correct crossings, doors, false-positive background regions, and route margins explicitly.
+- Keep `reviewStatus: "proposed"` until a reviewer confirms the overlay. Only confirmed masks can certify generated centerlines.
+- Derive centerlines from the mask, collapse junction clusters, and remove dangling branches not used by destination anchors.
+
 ## Destination `TABLE`
 
 Minimum: `id`, `name`, `category`, `description`, `accessible`, `routeable`. Leave `accessible` empty/unknown until a source or reviewer verifies it.
@@ -30,4 +37,5 @@ Add only useful fields: `shortName`, aliases/keywords, `floor`, `hours`, `status
 - Verify standard and step-free profiles separately.
 - Inspect long edges, crossings without nodes, high-degree nodes, closed routes, and floor transitions.
 - Compare the visual map to the source at the real kiosk dimensions.
+- Require every reviewed edge corridor to remain inside the independently confirmed walkable mask.
 - Record uncertain OCR, entrances, route topology, and missing operational metadata as review items instead of guessing.

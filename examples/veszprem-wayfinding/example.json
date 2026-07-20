@@ -1,6 +1,6 @@
 {
 	"title": "Veszprem Downtown Wayfinding",
-	"description": "Reference-led interactive landmark routing over a real structured SVG map with a separate quick-edit destination table.",
+	"description": "Source-first interactive landmark routing over the supplied Veszprem tourism map with an explicit graph and quick-edit destination table.",
 	"capabilities": ["keyboard"],
 	"remove": [
 		"src/components/wb-app",
@@ -9,6 +9,6 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-belvaros-wayfinding.svg"],
+	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-map.webp", "overlay/src/assets/map.svg", "overlay/src/assets/walkable-mask.json", "overlay/src/assets/route-graph.json"],
 	"referenceScreenshots": ["app-default-1920x1080.png", "compact-1366x768.png"]
 }

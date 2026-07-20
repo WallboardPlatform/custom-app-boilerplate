@@ -1,23 +1,12 @@
 export interface Destination {
-	id: string;
-	name: string;
-	englishName: string;
+	accessible: boolean | null;
 	category: string;
 	description: string;
-	accessible: boolean;
-	routeable: boolean;
-}
-
-export interface RoutePoint {
+	englishName: string;
+	hours: string;
 	id: string;
-	x: number;
-	y: number;
-	endPoint: boolean;
-}
-
-export interface RouteResult {
-	distancePixels: number;
-	pointIds: string[];
-	walkingSeconds: number;
-	walkingDistance: number;
+	mapNumber: string;
+	name: string;
+	routeable: boolean;
+	status: string;
 }

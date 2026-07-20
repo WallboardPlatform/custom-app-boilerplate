@@ -1,6 +1,6 @@
 # Wayfinding
 
-Generate wayfinding as a visual map, explicit route graph, and editable destination table. A structurally valid SVG is not proof of usable routing.
+Generate wayfinding as visual map geometry, a confirmed walkable mask, an explicit route graph, and an editable destination table. A structurally valid SVG is not proof of usable routing.
 
 ## Source Decision
 
@@ -17,6 +17,7 @@ Do not inpaint source labels/icons by default. Remove them only when they must b
 | Artifact | Owns | Must not own |
 |----------|------|--------------|
 | `map.svg` | Base artwork, location hit areas, level geometry, stable IDs | Mutable public copy, live status, route nodes or inferred topology |
+| `walkable-mask.json` | Independently reviewed traversable space in map coordinates | Route topology, destination copy, or inferred accessibility |
 | `route-graph.json` | Nodes, explicit edges, floor transitions, accessibility, optional measured distances | Destination descriptions or presentation |
 | destination `TABLE` | Name, aliases, description, category, floor, hours, image, status, accessibility, keywords, CTA | SVG geometry or graph edges |
 
@@ -44,6 +45,28 @@ Graph coordinates are always expressed in the root SVG viewBox coordinate system
 
 The shared `WayfindingGraph` supports standard and step-free shortest paths plus disabled edges.
 
+## Image/PDF Extraction
+
+Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image.
+
+1. AI/OCR proposes destination IDs and metadata; never treat OCR as confirmed copy.
+2. Sample representative walkable colors, extract the connected mask, then paint include/exclude corrections over crossings, doors, and false positives.
+3. Generate the centerline graph. The extractor closes small crossing gaps, skeletonizes traversable space, collapses junction clusters, snaps destination entrances, and removes branches that do not terminate at destinations.
+4. Review the source overlay, confirm the mask, then confirm only contained edges.
+5. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
+
+Automatic extraction is a proposal. Indoor, outdoor, and mixed maps require different walkability semantics, and entrances/topology remain reviewer decisions.
+
+## Metadata Updates
+
+| Change | Workflow |
+|--------|----------|
+| Name, translation, description, category, hours, image, status, keywords, CTA | Quick-edit the destination TABLE; no geometry rebuild |
+| `routeable` or destination visibility | Edit TABLE, then verify graph coverage if enabling routing |
+| Stable ID, entrance/approach point, walkable space, floor, transition, closure topology | Reopen workbench, review/export geometry, rerun validation |
+
+The workbench destination editor highlights the selected graph anchor and exports the native TABLE shape. It never rewrites map artwork from mutable public copy.
+
 ## Product Baseline
 
 - Search, category filters, aliases, app-owned multilingual keyboard.
@@ -59,16 +82,17 @@ The shared `WayfindingGraph` supports standard and step-free shortest paths plus
 The AI may propose visuals and extract OCR metadata, but ambiguous names, entrances, and corridor topology require an explicit review item. Never invent missing operational facts.
 
 ```bash
-npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinations destinations.json --start lobby --route-to auditorium --report-dir wayfinding-report --strict
+npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start lobby --route-to auditorium --report-dir wayfinding-report
 ```
 
-The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size. Review warnings for long edges, high-degree nodes, edge crossings without junctions, missing metadata, and inaccessible destinations without a step-free route. Do not accept a map from XML/render success alone.
+The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size. Review warnings for long edges, high-degree nodes, edge crossings without junctions, missing metadata, and destinations whose accessibility is intentionally unknown. Use `--strict` only when the project requires a warning-free report; never invent facts to silence warnings. Do not accept a map from XML/render success alone.
 
 ## Delivery
 
 Deliver the app ZIP plus:
 
 - native annotated `map.svg`;
+- confirmed `walkable-mask.json`;
 - canonical `route-graph.json`;
 - destination datasource contract and synthetic template;
 - validation report and graph overlay;

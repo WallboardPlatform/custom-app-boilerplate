@@ -1,25 +1,25 @@
 {
-	"briefVersion": 6,
+	"briefVersion": 7,
 	"request": {
-		"summary": "Create an interactive Veszprem downtown wayfinding kiosk from the supplied structured SVG map and a separate editable destination table.",
-		"audience": "Visitors choosing a downtown landmark on a landscape touch display in Veszprem.",
-		"primaryGoal": "Let a visitor find a named destination, draw a real route through the SVG point graph, and understand approximate distance without rebuilding the app when labels change."
+		"summary": "Rebuild the Veszprem downtown wayfinding kiosk directly from the supplied VeszpremTerkep.png reference with authored hit targets, explicit routes, and editable destination metadata.",
+		"audience": "Visitors choosing a downtown landmark on a shared landscape touch display in Veszprem.",
+		"primaryGoal": "Let a visitor search or tap a landmark, see its public details, and receive a trustworthy walking route from the configured current location."
 	},
 	"assumptions": [
-		"The supplied 1341x947 SVG is the authoritative map geometry and contains 35 location shapes, 35 location points, and 625 route points.",
-		"The destination table owns public labels and descriptions; SVG ids remain the stable routing keys.",
-		"Heroes' Gate is the representative kiosk start and can be changed to another valid SVG location id.",
-		"Veszprem Arena and the sports swimming pool appear in the map legend but sit outside the supplied downtown route graph, so they are explicitly marked off-map.",
-		"The package contains public landmark names and synthetic descriptive metadata only; it contains no customer or personal data."
+		"The supplied 1341x947 PNG is the sole visual and geometric reference for this proof.",
+		"The visible red location pin is the representative current position and is exposed as the configurable start id tourinform-veszprem.",
+		"The 35 numbered public landmark names are transcribed from the supplied map legend; descriptions, hours, live status, and accessibility are not invented.",
+		"Veszprem Arena and Veszprem Sports Swimming Pool are listed by the source but have no downtown route position, so they remain selectable and explicitly off-map.",
+		"The accepted surfaces are 1920x1080 and 1366x768 landscape touch displays."
 	],
-	"app": { "mode": "new", "name": "Veszprem Downtown Wayfinding", "version": "1" },
+	"app": { "mode": "replacement", "name": "Veszprem Downtown Wayfinding", "version": "1" },
 	"surfaceStrategy": {
 		"mode": "bounded",
-		"rationale": "The interaction is designed for 16:9 landscape kiosks at 1920x1080 and 1366x768; unsupported narrow and portrait zones should use a dedicated composition."
+		"rationale": "The reference map and touch directory need a landscape kiosk composition; portrait and narrow placements require a separate design."
 	},
 	"surfaces": [
 		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary visitor-centre touch kiosk.", "minimumContentCoverage": { "width": 96, "height": 94 } },
-		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape lobby touch display.", "minimumContentCoverage": { "width": 96, "height": 94 } }
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape visitor kiosk.", "minimumContentCoverage": { "width": 96, "height": 94 } }
 	],
 	"data": {
 		"mode": "bound",
@@ -33,186 +33,217 @@
 			"area": "content",
 			"owner": "datasource",
 			"targets": ["destinationData"],
-			"rationale": "Operators quick-edit destination names, categories, descriptions, accessibility, and route availability without changing code."
+			"rationale": "Operators can quick-edit public names, translations, descriptions, categories, hours, and status without rebuilding the app."
+		},
+		{
+			"id": "map-artwork",
+			"area": "presentation",
+			"owner": "locked",
+			"targets": ["veszprem-map.webp", "map.svg", "location-hit-targets"],
+			"rationale": "The accepted reference artwork and calibrated interaction geometry must remain synchronized."
+		},
+		{
+			"id": "walkable-space",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["walkable-mask.json", "reviewed-corridors"],
+			"rationale": "The independently reviewed pedestrian-space mask certifies that generated routes stay on the accepted street and crossing network."
+		},
+		{
+			"id": "route-topology",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["route-graph.json", "route-selection", "off-map-policy"],
+			"rationale": "Explicit reviewed adjacency is application behavior and must not be inferred from editable content."
 		},
 		{
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "wayfindingSensitivity", "mapRatio"],
-			"rationale": "The kiosk label, origin, reset timing, and map calibration belong to the installed instance."
+			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "mapRatio"],
+			"rationale": "Operators can adapt the public kiosk copy, start location, touch keyboard, reset timing, and distance calibration."
 		},
 		{
 			"id": "presentation-settings",
 			"area": "presentation",
 			"owner": "setting",
-			"targets": ["themePreset", "backgroundColor", "panelColor", "primaryTextColor", "secondaryTextColor", "accentColor", "routeColor"],
-			"rationale": "Coordinated presets are safe defaults while Custom exposes one flat semantic palette compatible with the editor."
+			"targets": ["motionPreset", "themePreset", "backgroundColor", "panelColor", "primaryTextColor", "secondaryTextColor", "accentColor", "routeColor"],
+			"rationale": "Coordinated presets are safe defaults while Custom exposes the complete surrounding interface palette."
 		},
 		{
 			"id": "visitor-session",
 			"area": "state",
 			"owner": "interaction",
-			"targets": ["search-query", "category-filter", "selected-destination", "active-route"],
-			"rationale": "Search and route selection exist only for the current visitor session."
-		},
-		{
-			"id": "routing-rules",
-			"area": "behavior",
-			"owner": "locked",
-			"targets": ["svg-point-extraction", "dijkstra-shortest-path", "route-rendering", "off-map-state"],
-			"rationale": "Graph construction and route semantics follow the proven Wallboard map implementation and are not operator-authored content."
+			"targets": ["query", "category", "selected-destination", "active-route", "keyboard-state"],
+			"rationale": "Search and route selection are private to the active kiosk session and clear on reset."
 		}
 	],
 	"experience": {
 		"mode": "interactive",
 		"views": [
-			{ "id": "directory", "purpose": "Search or browse landmarks while the complete reference map remains visible." },
-			{ "id": "route", "purpose": "Show the selected landmark, route line, approximate distance, walking time, and off-map state." }
+			{ "id": "directory", "purpose": "Browse, filter, search, or tap a destination." },
+			{ "id": "details", "purpose": "Show destination information and the selected route state." },
+			{ "id": "keyboard", "purpose": "Provide an app-owned multilingual touch keyboard for search." }
 		],
 		"inputs": [
-			{ "id": "touch-destination", "type": "touch", "action": "Select a destination from the directory or directly from its map shape." },
-			{ "id": "keyboard-search", "type": "keyboard", "action": "Filter destination names and categories through the app-owned Hungarian and English touch layouts." }
+			{ "id": "touch-map", "type": "touch", "action": "Select a numbered landmark directly on the map." },
+			{ "id": "touch-directory", "type": "touch", "action": "Search, filter, select, and reset destinations." },
+			{ "id": "touch-keyboard", "type": "keyboard", "action": "Filter destination names through the app-owned Hungarian and English touch layouts." },
+			{ "id": "physical-keyboard", "type": "keyboard", "action": "Type in search and activate focused controls." }
 		],
 		"session": {
 			"reset": "timeout",
 			"timeoutSeconds": 45,
-			"expectation": "An active route clears after the configured timeout; Clear route returns immediately to the complete destination list."
+			"expectation": "An active route and search state clear after the configured idle interval or an explicit reset."
 		}
 	},
 	"outputs": [],
 	"rendering": {
 		"mode": "reflow",
 		"letterbox": "background",
-		"rationale": "The map and directory preserve their landscape split while header, panel, and list density reallocate between the two bounded surfaces."
+		"rationale": "The map preserves its aspect ratio while the directory reallocates width between the two accepted landscape surfaces."
 	},
 	"motion": {
 		"default": "subtle",
-		"techniques": ["progress"],
-		"rationale": "Only the route stroke reveals progressively; directory and map remain stable for orientation."
+		"presetProperty": "motionPreset",
+		"transition": "custom",
+		"techniques": ["progress", "fade"],
+		"rationale": "A short route draw and detail fade clarify selection; Off shows the final route immediately."
 	},
 	"media": [
 		{
-			"id": "veszprem-map",
+			"id": "reference-map",
 			"type": "image",
 			"source": "packaged",
 			"fit": "contain",
-			"fallback": "Keep the destination directory available and show no route if the packaged SVG cannot mount.",
-			"rationale": "The supplied SVG contains both the reference artwork and the location and route geometry required by the experience."
+			"cache": "bundle",
+			"preview": "packaged",
+			"fallback": "Show a designed map-unavailable state while keeping the destination directory usable.",
+			"rationale": "The supplied illustrated map is the accepted visual source and must work offline."
 		}
 	],
 	"branding": {
 		"source": "reference",
 		"editable": false,
-		"provenance": "The Veszprem identity and map artwork come from the user-supplied veszprem-belvaros-wayfinding.svg reference.",
-		"fallback": "Preserve the reference artwork; operators may edit only the shell title and semantic palette."
+		"provenance": "The Veszprem identity and illustrated map come from the user-supplied public tourism map.",
+		"fallback": "Keep the reference artwork unchanged and theme only the surrounding interface."
 	},
 	"presentation": {
 		"themes": ["light", "dark", "custom"],
 		"density": "balanced",
 		"viewingDistance": "near",
 		"textRoles": [
-			{ "role": "primary", "selectors": [".wb-veszprem-wayfinding-title", ".wb-veszprem-wayfinding-selected-name"] },
-			{ "role": "secondary", "selectors": [".wb-veszprem-wayfinding-secondary", ".wb-veszprem-wayfinding-destination-name"] },
-			{ "role": "metadata", "selectors": [".wb-veszprem-wayfinding-metadata"] }
+			{ "role": "primary", "selectors": [".wb-veszprem-title", ".wb-veszprem-selected-name"] },
+			{ "role": "secondary", "selectors": [".wb-veszprem-destination-name", ".wb-veszprem-secondary"] },
+			{ "role": "metadata", "selectors": [".wb-veszprem-metadata"] }
 		]
 	},
 	"cadence": { "mode": "static" },
 	"settings": [
-		{ "property": "title", "purpose": "Primary kiosk title." },
-		{ "property": "subtitle", "purpose": "Short instruction above the destination directory." },
-		{ "property": "startLocationId", "purpose": "SVG and table id used as the kiosk's route origin." },
-		{ "property": "emptyStateText", "purpose": "Message shown for a bound but empty destination table." },
+		{ "property": "title", "purpose": "Public kiosk title." },
+		{ "property": "subtitle", "purpose": "Directory instruction." },
+		{ "property": "startLocationId", "purpose": "Graph location id used as the current position." },
+		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
+		{ "property": "interfaceLanguages", "purpose": "Selects English, Hungarian, or an on-screen language selector." },
 		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
 		{ "property": "keyboardLanguages", "purpose": "Selects Hungarian, English, or both keyboard layouts." },
-		{ "property": "routeResetSeconds", "purpose": "Seconds before the selected route clears.", "effect": "route-reset" },
-		{ "property": "wayfindingSensitivity", "purpose": "Maximum SVG distance used to connect neighboring route points.", "effect": "route-sensitivity" },
-		{ "property": "mapRatio", "purpose": "SVG pixels per displayed metre for approximate route detail.", "effect": "map-ratio" },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom shell palette.", "effect": "theme-preset" },
-		{ "property": "backgroundColor", "purpose": "Custom shell background." },
-		{ "property": "panelColor", "purpose": "Custom header and directory surface." },
+		{ "property": "routeResetSeconds", "purpose": "Idle interval before route and search reset.", "effect": "route-reset" },
+		{ "property": "mapRatio", "purpose": "SVG units per displayed metre for approximate distance.", "effect": "map-ratio" },
+		{ "property": "motionPreset", "purpose": "Selects Off or Subtle route feedback.", "effect": "motion-preset" },
+		{ "property": "themePreset", "purpose": "Selects the complete Light, Dark, or Custom interface palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom outer background." },
+		{ "property": "panelColor", "purpose": "Custom directory panel." },
 		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
-		{ "property": "secondaryTextColor", "purpose": "Custom supporting text." },
-		{ "property": "accentColor", "purpose": "Custom interaction accent." },
-		{ "property": "routeColor", "purpose": "Custom route and destination highlight." }
+		{ "property": "secondaryTextColor", "purpose": "Custom secondary text." },
+		{ "property": "accentColor", "purpose": "Custom actions and selected states." },
+		{ "property": "routeColor", "purpose": "Custom route line and endpoint markers." }
 	],
 	"dynamicText": [
 		{
 			"id": "kiosk-title",
 			"role": "primary",
 			"source": { "type": "setting", "properties": ["title"] },
-			"selectors": [".wb-veszprem-wayfinding-title"],
+			"selectors": [".wb-veszprem-title"],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
-			"fallback": "Reduce to the near-viewing floor, then preserve one line and ellipsize only the tail.",
-			"rationale": "A custom kiosk title must coexist with identity and current-location context in the bounded header.",
+			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
+			"fallback": "Preserve the complete title at the readable minimum and reduce adjacent metadata first.",
+			"rationale": "The kiosk identity must remain complete at both accepted widths.",
 			"evidenceScenario": "long-title"
 		},
 		{
-			"id": "directory-destination-names",
+			"id": "destination-list-names",
 			"role": "secondary",
 			"source": { "type": "datasource", "properties": ["destinationData"] },
-			"selectors": [".wb-veszprem-wayfinding-destination-name"],
-			"strategy": "ellipsis",
-			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
-			"fallback": "Keep the leading destination name and English label on separate stable rows; ellipsize only their tails.",
-			"rationale": "A scrollable touch directory needs stable row height while preserving recognizable prefixes.",
+			"selectors": [".wb-veszprem-destination-name"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Wrap to two lines and keep the directory continuously scrollable before reducing touch-target height.",
+			"rationale": "Landmark identity is essential and cannot be truncated in search results.",
 			"evidenceScenario": "long-destination-list"
 		},
 		{
 			"id": "selected-destination-name",
 			"role": "primary",
 			"source": { "type": "datasource", "properties": ["destinationData"] },
-			"selectors": [".wb-veszprem-wayfinding-selected-name"],
-			"strategy": "wrap",
-			"limits": { "minimumFontSize": 18, "maximumLines": 3 },
-			"fallback": "Wrap the selected destination to three lines before reducing description or route-detail density.",
-			"rationale": "The selected landmark is the route view's primary instruction and must remain complete.",
+			"selectors": [".wb-veszprem-selected-name"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 22, "maximumLines": 3 },
+			"fallback": "Use three lines at the readable minimum and move optional details below the fold.",
+			"rationale": "The selected destination must remain complete in the detail view.",
 			"evidenceScenario": "long-destination-selected"
 		}
 	],
 	"states": [
-		{ "scenario": "app-default", "expectation": "The complete supplied map and unbound representative destination table fill the primary kiosk." },
-		{ "scenario": "compact", "expectation": "The dark shell preserves near-viewing text and touch targets around the unchanged reference map." },
-		{ "scenario": "active-route", "expectation": "A connected landmark draws an animated route and displays approximate distance and walking time." },
-		{ "scenario": "external-destination", "expectation": "An off-map venue remains discoverable but never receives an invented route." },
-		{ "scenario": "custom-theme", "expectation": "Every flat custom color control applies to the shell and route semantics." },
-		{ "scenario": "long-title", "expectation": "A long operator title remains bounded beside the reference identity and current location." },
-		{ "scenario": "long-destination-list", "expectation": "Long bilingual destination labels preserve stable touch rows." },
-		{ "scenario": "long-destination-selected", "expectation": "The full selected destination wraps without colliding with route details or actions." },
-		{ "scenario": "empty", "expectation": "A bound empty destination table stays empty and shows the configured state." },
-		{ "scenario": "row-array", "expectation": "Processed TABLE row arrays normalize to the same destination model." },
-		{ "scenario": "live-datasource-update", "expectation": "Quick-edited destination labels update without rebuilding the app." }
+		{ "scenario": "app-default", "expectation": "The complete source map, current-location marker, and directory fill the Full-HD kiosk." },
+		{ "scenario": "compact", "expectation": "The same map and complete touch workflow remain usable at 1366x768." },
+		{ "scenario": "active-route", "expectation": "The museum route follows the reviewed street and park corridor without crossing building footprints." },
+		{ "scenario": "active-route-castle", "expectation": "The castle route approaches Heroes' Gate through the visible northbound street corridor." },
+		{ "scenario": "active-route-east", "expectation": "The Auer House route follows Boglyavari Street instead of a direct cross-block shortcut." },
+		{ "scenario": "active-route-far-east", "expectation": "The Gyarkert route follows Kossuth and Budapest streets around the large building footprint." },
+		{ "scenario": "external-destination", "expectation": "An off-map landmark remains selectable without an invented route." },
+		{ "scenario": "keyboard-open", "expectation": "The on-screen keyboard fits without covering search results or the close action." },
+		{ "scenario": "custom-theme", "expectation": "The complete custom palette applies to the interface, route, and selection states." },
+		{ "scenario": "long-title", "expectation": "A long title remains complete at the readable floor." },
+		{ "scenario": "long-destination-list", "expectation": "Long landmark names wrap without clipped glyphs or broken touch targets." },
+		{ "scenario": "long-destination-selected", "expectation": "Long selected names remain complete in the detail panel." },
+		{ "scenario": "empty", "expectation": "A bound empty table shows a stable designed state instead of bundled rows." },
+		{ "scenario": "row-array", "expectation": "A direct row array normalizes to the same complete destination directory." },
+		{ "scenario": "live-datasource-update", "expectation": "A live table update replaces destination metadata without changing authored map geometry." }
 	],
 	"behaviors": [
-		{ "id": "shortest-path", "expectation": "Route and location points build the same proximity graph rule as the production map app and Dijkstra selects the shortest connected path.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "shared-selection", "expectation": "Map-shape taps and directory buttons drive the same selected destination and route rendering.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "off-map-state", "expectation": "Destinations outside the supplied downtown route graph remain labeled as off-map without fabricated geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "route-reset", "expectation": "The configured timeout removes route geometry and restores the complete destination list.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update", "expectation": "Destination table updates replace visible labels in place.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+		{ "id": "explicit-route-selection", "expectation": "Directory and map selection use the same explicit graph and render the same connected route.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "off-map-selection", "expectation": "Off-map destinations show details without drawing a route.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "session-reset", "expectation": "The configured timeout clears route, selection, query, category, and keyboard state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "touch-keyboard", "expectation": "The app-owned keyboard enters Hungarian and Latin search text and can be dismissed without losing the query.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "multilingual-interface", "expectation": "The language selector switches all app-owned labels while destination content follows its TABLE translations.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "continuous-directory", "expectation": "The full filtered destination list is continuously scrollable without ambiguous pagination controls.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "touch-map-navigation", "expectation": "Pointer drag and pinch gestures move and zoom the map without accidentally selecting a destination.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-destination-update", "expectation": "A live destination table update replaces content without rebuilding map geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
 	],
 	"assets": [
-		{ "id": "veszprem-map-svg", "source": "packaged", "path": "src/assets/veszprem-belvaros-wayfinding.svg", "required": true },
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{ "id": "reference-map", "source": "packaged", "path": "src/assets/veszprem-map.webp", "required": true },
+		{ "id": "annotated-map", "source": "packaged", "path": "src/assets/map.svg", "required": true },
+		{ "id": "walkable-mask", "source": "packaged", "path": "src/assets/walkable-mask.json", "required": true },
+		{ "id": "route-graph", "source": "packaged", "path": "src/assets/route-graph.json", "required": true }
 	],
 	"visualDirection": {
 		"source": "reference-led",
-		"summary": "Keep the supplied illustrated Veszprem map dominant and add a restrained visitor-centre interaction shell rather than restyling it as a generic dashboard.",
-		"references": ["User-supplied veszprem-belvaros-wayfinding.svg"],
+		"summary": "Preserve the warm illustrated Veszprem tourism map as the primary object and surround it with a restrained, touch-first directory that borrows its parchment, teal, gold, and red cues.",
+		"references": ["C:/Users/Admin/Downloads/VeszpremTerkep.png"],
 		"signatureChoices": [
-			"The full bilingual illustrated map remains visible while the right rail acts as a focused touchscreen directory.",
-			"A red route line animates directly through the map's own route points and preserves its warm civic palette."
+			"The original map stays fully inspectable rather than becoming a dark dashboard background.",
+			"Numbered destination controls and the route line echo the source map's existing visual language."
 		],
-		"avoid": ["Generic KPI cards", "Replacing the supplied map artwork", "Inventing routes to disconnected external venues", "Tiny desktop controls"]
+		"avoid": ["Generic KPI cards", "Recreating the source illustration", "Unverified accessibility claims", "Routes that cross buildings or leave the mapped street network"]
 	},
 	"visualReview": {
-		"intent": "A credible visitor-centre kiosk where the reference map remains the hero and route selection is obvious, readable, and reversible.",
+		"intent": "A credible visitor-centre map where the source artwork remains legible, landmark selection is immediate, and the route never obscures destination identity.",
 		"focus": [
-			"Verify the complete SVG remains sharp and uncropped at both bounded surfaces.",
-			"Verify destination rows, selected names, route summaries, and descenders remain readable without overlap.",
-			"Verify map and list taps select the same landmark and route animation never obscures the underlying map.",
-			"Verify Light, Dark, and Custom shells remain coordinated with the fixed reference artwork."
+			"Verify the packaged source map is sharp and fully visible at both accepted surfaces.",
+			"Verify every route line follows the authored graph, endpoint targets align to the numbered landmarks, and off-map locations never receive a route.",
+			"Verify the touch keyboard, long names, detail panel, and Light/Dark/Custom palettes remain coherent without clipping."
 		]
 	}
 }

@@ -1,120 +1,140 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "418fb62352db35be0f98f53c715bac9a9f85e17a5ce4c281e5cb78b0bed199dc",
-	"reviewedAt": "2026-07-20T08:45:45.896Z",
-	"reviewer": "Codex live-field hardening review",
+	"sourceHash": "35da5407c7cdfc34109c8cb7d5af7f93ebafd23ef83afcce2c1ce99ced06bbb1",
+	"reviewedAt": "2026-07-20T15:11:39.0540379Z",
+	"reviewer": "Codex visual review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Provides a production-shaped destination directory and touch wayfinding flow for the supplied Veszprem map."
+			"notes": "The supplied Veszprem tourism map remains the primary surface, with destination search, explicit routes, detail states, and reset behavior around it."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "Keeps the supplied illustrated map dominant and draws routes against its real location and route-point IDs."
+			"notes": "The original map composition, labels, landmarks, current-location pin, and colors remain intact; the app does not redraw or reinterpret the source artwork."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Bilingual visitor-centre hierarchy, map treatment, directory controls, and route details are domain-specific."
+			"notes": "The visitor-map composition, numbered controls, restrained tourism palette, and source-led details are distinct from generic dashboard examples."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary instructions, destination names, route state, distance, and walking time meet room-readable floors."
+			"notes": "Primary controls and directory names satisfy the near-viewing text floors at both accepted surfaces; map labels retain source resolution."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light, Dark, and Custom shell palettes preserve contrast without recoloring or obscuring the supplied map."
+			"notes": "Light, dark, and custom interface palettes retain clear text, control, selection, and route contrast without recoloring the reference map."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long kiosk and destination names fit without clipped glyphs, overlap, or unreadable type reduction."
+			"notes": "Long title and destination states remain complete without clipped glyphs; destination rows wrap and selected names auto-fit."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Both declared landscape sizes keep the map dominant and the directory usable without dead or overflowing regions."
+			"notes": "The map stays fully inspectable and dominant at 1920x1080 and 1366x768 while the directory, detail view, and keyboard remain bounded."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "The packaged SVG remains sharp, clickable IDs survive bundling, and route overlays align with source geometry."
+			"notes": "The packaged WebP preserves the supplied 1341x947 artwork, loads without external dependencies, and has a designed unavailable state."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "This reference-led interactive map teaches graph routing and touch selection rather than reusing dashboard composition."
+			"notes": "The example follows the supplied map instead of copying card, KPI, pagination, or palette grammar from unrelated examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full-HD directory composition, map detail, hierarchy, and scroll containment inspected."
+			"notes": "Full source map and continuously scrollable destination directory fill the accepted Full-HD surface without unintended overflow."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact kiosk retains usable controls, readable rows, and a dominant uncropped map."
+			"notes": "Compact layout preserves map context, touch targets, and 14px destination names."
 		},
 		{
 			"file": "scenario-active-route-1920x1080.png",
 			"status": "pass",
-			"notes": "Connected route, endpoints, destination detail, distance, and reset action inspected."
+			"notes": "The Laczkó Museum route follows the reviewed street and park corridor around the library footprint, with no cross-building shortcut."
+		},
+		{
+			"file": "scenario-active-route-castle-1920x1080.png",
+			"status": "pass",
+			"notes": "The Heroes Gate route remains on the visible northbound street corridor through the castle quarter."
+		},
+		{
+			"file": "scenario-active-route-east-1920x1080.png",
+			"status": "pass",
+			"notes": "The Auer House route follows the curved Boglyavari street corridor instead of cutting across the intervening block."
+		},
+		{
+			"file": "scenario-active-route-far-east-1920x1080.png",
+			"status": "pass",
+			"notes": "The Gyarkert route follows Kossuth and Budapest streets around the striped building footprint."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Primary fixture matches the reviewed Full-HD default state."
+			"notes": "Named default scenario matches the accepted Full-HD composition."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Primary fixture matches the reviewed compact default state."
+			"notes": "Dark compact interface keeps sufficient contrast around the unchanged source map."
 		},
 		{
 			"file": "scenario-custom-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Custom palette changes every shell token while preserving map and text contrast."
+			"notes": "Custom palette consistently updates interface colors while preserving map fidelity."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",
 			"status": "pass",
-			"notes": "Empty bound data produces a stable, actionable state without stale destinations."
+			"notes": "Empty bound data keeps the map useful and presents a stable directory empty state."
 		},
 		{
 			"file": "scenario-external-destination-1366x768.png",
 			"status": "pass",
-			"notes": "Legend-only destinations are clearly marked off-map without inventing a route."
+			"notes": "Off-map destination metadata remains available without an invented route."
+		},
+		{
+			"file": "scenario-keyboard-open-1366x768.png",
+			"status": "pass",
+			"notes": "The large app-owned Hungarian keyboard, typed-value field, language controls, and close action are fully visible and touch-readable."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
 			"status": "pass",
-			"notes": "Live table replacement updates the visible destination directory cleanly."
+			"notes": "Updated destination metadata and the START badge remain bounded after live table replacement."
 		},
 		{
 			"file": "scenario-long-destination-list-1366x768.png",
 			"status": "pass",
-			"notes": "Long bilingual rows remain contained and navigable inside the intentional scroll region."
+			"notes": "The long Hungarian landmark name wraps within a complete touch target."
 		},
 		{
 			"file": "scenario-long-destination-selected-1366x768.png",
 			"status": "pass",
-			"notes": "Extended selected-place copy remains readable with clear route state and action placement."
+			"notes": "The long selected name auto-fits without clipping route metrics or actions."
 		},
 		{
 			"file": "scenario-long-title-1366x768.png",
 			"status": "pass",
-			"notes": "Long kiosk labels fit the header without colliding with the current-location block."
+			"notes": "The long kiosk title remains complete in the accepted compact header."
 		},
 		{
 			"file": "scenario-row-array-1366x768.png",
 			"status": "pass",
-			"notes": "Plain TABLE row-array input renders the same stable directory contract."
+			"notes": "Direct row-array input produces the same stable destination directory."
 		}
 	],
 	"unresolvedFindings": []

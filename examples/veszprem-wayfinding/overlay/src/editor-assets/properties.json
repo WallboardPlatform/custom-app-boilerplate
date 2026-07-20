@@ -12,15 +12,23 @@
 			"type": "dataPicker",
 			"property": "destinationData",
 			"dataPickerType": "any",
-			"tooltip": "Select the Veszprem Downtown Wayfinding Destinations table. Leave unbound to use the packaged representative landmark metadata."
+			"tooltip": "Select the Veszprem Downtown Wayfinding Destinations table. Leave unbound to use the packaged public landmark names from the supplied map."
 		},
 		{
 			"label": "Kiosk content",
 			"type": "group",
 			"properties": [
 				{ "label": "Title", "type": "text", "property": "title", "default": "Veszprem Downtown Wayfinding" },
-				{ "label": "Instruction", "type": "text", "property": "subtitle", "default": "Choose a destination to draw a walking route from Heroes' Gate." },
-				{ "label": "Start location ID", "type": "text", "property": "startLocationId", "default": "hosok-kapuja", "tooltip": "Use an id from the destination table and SVG, for example hosok-kapuja." },
+				{ "label": "Instruction", "type": "text", "property": "subtitle", "default": "Choose a landmark or tap its number on the map." },
+				{
+					"label": "Interface languages", "type": "select", "property": "interfaceLanguages", "default": "en-hu",
+					"options": [
+						{ "label": "English + Hungarian", "value": "en-hu" },
+						{ "label": "English", "value": "en" },
+						{ "label": "Hungarian", "value": "hu" }
+					]
+				},
+				{ "label": "Start location ID", "type": "text", "property": "startLocationId", "default": "tourinform-veszprem", "tooltip": "Use a routeable id from the destination table and route graph." },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No destinations are available." },
 				{ "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true, "tooltip": "Opens an app-owned touch keyboard when destination search receives focus." },
 				{
@@ -33,8 +41,23 @@
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "onScreenKeyboard" }], "rule": "#1" }
 				},
 				{ "label": "Route reset", "type": "slider", "property": "routeResetSeconds", "default": 45, "min": 10, "max": 180, "step": 5, "tooltip": "Seconds before an active route clears automatically." },
-				{ "label": "Route sensitivity", "type": "slider", "property": "wayfindingSensitivity", "default": 50, "min": 10, "max": 100, "step": 1, "tooltip": "Maximum SVG distance used to connect neighboring route points." },
-				{ "label": "Map ratio", "type": "slider", "property": "mapRatio", "default": 1, "min": 0.5, "max": 20, "step": 0.5, "tooltip": "SVG pixels per displayed meter for approximate distance and walking time." }
+				{ "label": "Map ratio", "type": "slider", "property": "mapRatio", "default": 0.8, "min": 0.2, "max": 5, "step": 0.1, "tooltip": "SVG units per displayed metre for approximate distance and walking time." }
+			]
+		},
+		{
+			"label": "Experience",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Motion",
+					"type": "select",
+					"property": "motionPreset",
+					"default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" }
+					]
+				}
 			]
 		},
 		{
@@ -64,7 +87,8 @@
 	],
 	"resourceList": [
 		"assets/app.js",
-		"assets/app-chrome-49.js"
+		"assets/app-chrome-49.js",
+		"assets/index.webp"
 	],
 	"externalCommands": []
 }

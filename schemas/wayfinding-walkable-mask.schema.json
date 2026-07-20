@@ -1,0 +1,29 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://wallboard.info/schemas/wayfinding-walkable-mask.schema.json",
+	"title": "Wallboard Wayfinding Walkable Mask",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["contractVersion", "mapId", "width", "height", "cellSize", "columns", "rows", "reviewStatus", "walkableRuns"],
+	"properties": {
+		"contractVersion": { "const": 1 },
+		"mapId": { "type": "string", "minLength": 1 },
+		"width": { "type": "number", "exclusiveMinimum": 0 },
+		"height": { "type": "number", "exclusiveMinimum": 0 },
+		"originX": { "type": "number" },
+		"originY": { "type": "number" },
+		"cellSize": { "type": "number", "exclusiveMinimum": 0 },
+		"columns": { "type": "integer", "minimum": 1 },
+		"rows": { "type": "integer", "minimum": 1 },
+		"reviewStatus": { "enum": ["confirmed", "proposed"] },
+		"walkableRuns": {
+			"type": "array",
+			"items": {
+				"type": "array",
+				"items": { "type": "integer", "minimum": 0 },
+				"minItems": 3,
+				"maxItems": 3
+			}
+		}
+	}
+}
