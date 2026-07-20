@@ -16,30 +16,81 @@ const openScenario = async (page: Page, scenario = 'app-default'): Promise<void>
 	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toBeVisible();
 };
 
-test('selecting a destination draws a connected shortest path and route details', async ({ page }): Promise<void> => {
+test('the supplied source map is packaged and reaches the ready state', async ({ page }): Promise<void> => {
 	await openScenario(page);
-	await page.getByRole('button', { name: 'Hangvilla Multifunkcionális Közösségi Tér' }).click();
+	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-state', 'ready');
+	await expect(page.locator('#map-artwork')).toHaveAttribute('href', /veszprem-map/);
+});
+
+test('selecting a destination draws the explicit graph route and details', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByRole('button', { name: /Hősök Kapuja/ }).click();
 
 	await expect(page.locator('#wb-veszprem-wayfinding-route path')).toHaveCount(1);
 	await expect(page.getByText('APPROX. DISTANCE')).toBeVisible();
 	await expect(page.getByText('WALKING TIME')).toBeVisible();
-	await expect(page.locator('#Level0-Locations #hangvilla')).toHaveAttribute('data-wb-wayfinding-selected', 'true');
+	await expect(page.locator('[data-wayfinding-location-id="hosok-kapuja"]')).toHaveAttribute('data-wb-wayfinding-selected', 'true');
 });
 
-test('tapping a mapped location uses the same routing path as the directory', async ({ page }): Promise<void> => {
+test('tapping an SVG hit target uses the same routing and metadata path', async ({ page }): Promise<void> => {
 	await openScenario(page);
-	await page.locator('#Level0-Locations #petofi-szinhaz').click({ force: true });
+	await page.locator('[data-wayfinding-location-id="petofi-szinhaz"]').click({ force: true });
 
 	await expect(page.getByRole('heading', { name: 'Veszprémi Petőfi Színház' })).toBeVisible();
 	await expect(page.locator('#wb-veszprem-wayfinding-route path')).toHaveCount(1);
 });
 
-test('off-map destinations remain selectable without inventing a route', async ({ page }): Promise<void> => {
+test('representative routes stay on the reviewed dense corridor network', async ({ page }): Promise<void> => {
 	await openScenario(page);
-	await page.getByRole('button', { name: 'Veszprém Aréna Sport- és Rendezvénycsarnok' }).click();
+	const routes: Array<{ destinationId: string; waypoints: string[] }> = [
+		{ destinationId: 'auer-haz', waypoints: ['L 432 404', 'L 457 384'] },
+		{ destinationId: 'laczko-dezso-muzeum', waypoints: ['L 345 553', 'L 334 581', 'L 352 640', 'L 445 640', 'L 510 625'] },
+		{ destinationId: 'acticity', waypoints: ['L 345 553', 'L 334 581', 'L 352 640', 'L 448 664'] },
+		{ destinationId: 'gyarkert-kulturpark', waypoints: ['L 579 518', 'L 614 520', 'L 649 508'] }
+	];
 
-	await expect(page.getByText('Outside the downtown walking map')).toBeVisible();
+	for (const expected of routes) {
+		await page.locator(`[data-wayfinding-location-id="${expected.destinationId}"]`).click({ force: true });
+		const route = page.locator('#wb-veszprem-wayfinding-route path');
+		const pathData: string = await route.getAttribute('d') ?? '';
+
+		for (const waypoint of expected.waypoints) expect(pathData).toContain(waypoint);
+
+		const values: number[] = (pathData.match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
+		const points: Array<[number, number]> = [];
+
+		for (let index = 0; index < values.length; index += 2) points.push([values[index], values[index + 1]]);
+
+		const longestSegment: number = Math.max(...points.slice(1).map((point: [number, number], index: number): number => {
+			const previous: [number, number] = points[index];
+
+			return Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+		}));
+
+		expect(longestSegment).toBeLessThanOrEqual(45);
+		await page.getByRole('button', { name: 'Clear route' }).click();
+	}
+});
+
+test('off-map destinations remain selectable without inventing a route', async ({ page }): Promise<void> => {
+	await openScenario(page, 'external-destination');
+	await page.getByRole('button', { name: /Veszprém Aréna Sport- és Rendezvénycsarnok/ }).click();
+
+	await expect(page.getByText('Listed outside the downtown route map')).toBeVisible();
 	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(0);
+});
+
+test('the app-owned Hungarian keyboard filters destinations without the OS keyboard', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	const search = page.getByLabel('Search destinations');
+
+	await expect(search).toHaveAttribute('inputmode', 'none');
+	await page.getByRole('button', { name: 'Open touch keyboard' }).click();
+	await expect(page.locator('[data-preview-keyboard="open"]')).toBeVisible();
+	await page.locator('[data-preview-keyboard="open"]').getByRole('button', { name: 'H', exact: true }).click();
+	await page.locator('[data-preview-keyboard="open"]').getByRole('button', { name: 'Ő', exact: true }).click();
+	await expect(search).toHaveValue('HŐ');
+	await expect(page.getByRole('button', { name: /Hősök Kapuja/ })).toBeVisible();
 });
 
 test('bound empty data stays empty and live table updates replace it', async ({ page }): Promise<void> => {
@@ -49,21 +100,49 @@ test('bound empty data stays empty and live table updates replace it', async ({ 
 	await page.evaluate((): void => {
 		(window as PreviewWindow).__wallboardPreview?.pushDatasource('destinationData', {
 			Destinations: {
-				rows: [{ id: 'hosok-kapuja', name: 'Live Visitor Gateway', englishName: 'Live gateway', category: 'Live update', description: 'Updated in place.', accessible: true, routeable: true }]
+				rows: [{
+					id: 'tourinform-veszprem',
+					mapNumber: 'START',
+					name: 'Live Visitor Gateway',
+					englishName: 'Live gateway',
+					category: 'Live update',
+					description: 'Updated in place.',
+					hours: '',
+					status: '',
+					accessible: null,
+					routeable: true
+				}]
 			}
 		});
 	});
 
-	await expect(page.getByRole('button', { name: 'Live Visitor Gateway Live gateway' })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Live Visitor Gateway Live gateway/ })).toBeVisible();
+});
+
+test('reset clears route, filters, keyboard, and map zoom', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByRole('button', { name: /Hősök Kapuja/ }).click();
+	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(1);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.getByRole('button', { name: 'Open touch keyboard' }).click();
+	await page.locator('[data-preview-keyboard="open"]').getByRole('button', { name: 'V', exact: true }).click();
+	await page.getByRole('button', { name: 'Zoom in' }).click();
+	await page.getByRole('button', { name: 'Reset' }).click();
+
+	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(0);
+	await expect(page.getByLabel('Search destinations')).toHaveValue('');
+	await expect(page.locator('[data-preview-keyboard="open"]')).toHaveCount(0);
+	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-zoom', '1');
 });
 
 test('route reset returns the kiosk to the destination list', async ({ page }): Promise<void> => {
 	await page.clock.install({ time: new Date('2026-07-17T12:00:00Z') });
 	await openScenario(page);
-	await page.getByRole('button', { name: 'Hangvilla Multifunkcionális Közösségi Tér' }).click();
+	await page.getByRole('button', { name: /Hősök Kapuja/ }).click();
 	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(1);
 
 	await page.clock.fastForward(45_000);
 	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(0);
-	await expect(page.getByRole('button', { name: 'Hangvilla Multifunkcionális Közösségi Tér' })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Hősök Kapuja/ })).toBeVisible();
 });

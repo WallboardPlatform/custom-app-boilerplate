@@ -6,34 +6,59 @@ import { useDataSources } from '@hooks/system/useDataSources';
 import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
-import type { Destination, RoutePoint, RouteResult } from '@interfaces/wayfinding.interface';
+import type { Destination } from '@interfaces/wayfinding.interface';
+import type { WayfindingNode, WayfindingRouteResult } from '@utils/wayfinding';
 import { normalizeDestinations } from '@utils/destinations';
-import { extractRoutePoints, RouteGraph } from '@utils/route-graph';
+import { routeBetweenLocations, routeNodes } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
-import veszpremMapMarkup from '../../assets/veszprem-belvaros-wayfinding.svg?raw';
+import mapMarkup from '../../assets/map.svg?raw';
+import mapArtwork from '../../assets/veszprem-map.webp';
 import sampleDestinationData from '../../../sample-destinations-datasource.json';
 
-
+type MapState = 'loading' | 'ready' | 'error';
 type RouteState = 'idle' | 'active' | 'external' | 'unavailable';
 
-const ROUTE_GROUP_ID = 'wb-veszprem-wayfinding-route';
+interface MapPoint {
+	x: number;
+	y: number;
+}
 
-const formatWalkTime = (seconds: number): string => {
-	return `${Math.max(1, Math.ceil(seconds / 60))} min walk`;
-};
+const MAP_WIDTH = 1341;
+const MAP_HEIGHT = 947;
+const PAGE_SIZE = 7;
+const ROUTE_GROUP_ID = 'wb-veszprem-wayfinding-route';
+const KEYBOARD_ROWS: string[][] = [
+	['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+	['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+	['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+	['Á', 'É', 'Í', 'Ó', 'Ö', 'Ő', 'Ú', 'Ü', 'Ű']
+];
+
+const normalizeSearch = (value: string): string => value
+	.normalize('NFD')
+	.replace(/[\u0300-\u036f]/g, '')
+	.toLocaleLowerCase();
+
+const formatWalkTime = (seconds: number): string => `${Math.max(1, Math.ceil(seconds / 60))} min`;
+
+const clamp = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, value));
 
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
 	const [category, setCategory] = createSignal('All destinations');
+	const [currentPage, setCurrentPage] = createSignal(0);
+	const [keyboardOpen, setKeyboardOpen] = createSignal(false);
+	const [mapCenter, setMapCenter] = createSignal<MapPoint>({ x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 });
+	const [mapState, setMapState] = createSignal<MapState>('loading');
+	const [mapZoom, setMapZoom] = createSignal(1);
 	const [query, setQuery] = createSignal('');
-	const [routeResult, setRouteResult] = createSignal<RouteResult>();
+	const [routeResult, setRouteResult] = createSignal<WayfindingRouteResult>();
 	const [routeState, setRouteState] = createSignal<RouteState>('idle');
 	const [selectedId, setSelectedId] = createSignal<string>();
 	let mapHost!: HTMLDivElement;
-	let routeGraph: RouteGraph | undefined;
-	let routeResetTimer: ReturnType<typeof setTimeout> | undefined;
+	let resetTimer: ReturnType<typeof setTimeout> | undefined;
 	let svg: SVGSVGElement | undefined;
 
 	const hasBoundDestinations: Accessor<boolean> = createMemo((): boolean => {
@@ -53,17 +78,26 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		return ['All destinations', ...Array.from(new Set(destinations().map((destination: Destination): string => destination.category)))];
 	});
 	const filteredDestinations: Accessor<Destination[]> = createMemo((): Destination[] => {
-		const normalizedQuery: string = query().trim().toLocaleLowerCase();
+		const normalizedQuery: string = normalizeSearch(query().trim());
 
 		return destinations().filter((destination: Destination): boolean => {
 			const categoryMatches: boolean = category() === 'All destinations' || destination.category === category();
-			const queryMatches: boolean = normalizedQuery === '' || [destination.name, destination.englishName, destination.category]
-				.join(' ')
-				.toLocaleLowerCase()
-				.includes(normalizedQuery);
+			const queryMatches: boolean = normalizedQuery === '' || normalizeSearch([
+				destination.mapNumber,
+				destination.name,
+				destination.englishName,
+				destination.category,
+				destination.status
+			].join(' ')).includes(normalizedQuery);
 
 			return categoryMatches && queryMatches;
 		});
+	});
+	const pageCount: Accessor<number> = createMemo((): number => Math.max(1, Math.ceil(filteredDestinations().length / PAGE_SIZE)));
+	const visibleDestinations: Accessor<Destination[]> = createMemo((): Destination[] => {
+		const start: number = currentPage() * PAGE_SIZE;
+
+		return filteredDestinations().slice(start, start + PAGE_SIZE);
 	});
 	const selectedDestination: Accessor<Destination | undefined> = createMemo((): Destination | undefined => {
 		return selectedId() ? destinationById().get(selectedId()!) : undefined;
@@ -72,181 +106,223 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		return destinationById().get(settings().startLocationId);
 	});
 	const fitTitle = useAutoFitText({
-		minFontSize: 18,
+		minFontSize: 20,
 		maxFontSize: 36,
 		widthOnly: true,
 		watch: (): string => settings().title
 	});
 	const fitSelectedName = useAutoFitText({
-		minFontSize: 18,
-		maxFontSize: 34,
+		minFontSize: 22,
+		maxFontSize: 38,
 		watch: (): string => selectedDestination()?.name ?? ''
 	});
 
-	const removeRoute = (): void => {
+	const resetMapView = (): void => {
+		setMapCenter({ x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 });
+		setMapZoom(1);
+	};
+
+	const removeRouteMarkup = (): void => {
 		if (!svg) return;
 
-		for (const route of Array.from(svg.querySelectorAll(`[id='${ROUTE_GROUP_ID}']`))) {
-			route.remove();
-		}
+		for (const route of Array.from(svg.querySelectorAll(`[id='${ROUTE_GROUP_ID}']`))) route.remove();
 
-		for (const location of Array.from(svg.querySelectorAll('#Level0-Locations [data-wb-wayfinding-selected]'))) {
-			location.removeAttribute('data-wb-wayfinding-selected');
-			location.setAttribute('fill-opacity', '0.5');
-			location.setAttribute('stroke', 'none');
-			location.setAttribute('stroke-width', '0');
+		for (const target of Array.from(svg.querySelectorAll('[data-wb-wayfinding-selected]'))) {
+			target.removeAttribute('data-wb-wayfinding-selected');
 		}
 	};
 
-	const clearRoute = (): void => {
-		if (routeResetTimer) clearTimeout(routeResetTimer);
-		routeResetTimer = undefined;
-		removeRoute();
+	const clearResetTimer = (): void => {
+		if (resetTimer) clearTimeout(resetTimer);
+		resetTimer = undefined;
+	};
+
+	const resetSession = (): void => {
+		clearResetTimer();
+		removeRouteMarkup();
+		setCategory('All destinations');
+		setCurrentPage(0);
+		setKeyboardOpen(false);
+		setQuery('');
 		setRouteResult(undefined);
 		setRouteState('idle');
 		setSelectedId(undefined);
+		resetMapView();
 	};
 
-	const drawRoute = (destination: Destination): void => {
-		if (!svg || !routeGraph) return;
+	const scheduleReset = (): void => {
+		clearResetTimer();
+		resetTimer = setTimeout(resetSession, settings().routeResetSeconds * 1000);
+	};
 
-		if (routeResetTimer) clearTimeout(routeResetTimer);
-		removeRoute();
+	const drawRoute = (
+		destination: Destination,
+		restartTimer = true,
+		startLocationId = settings().startLocationId,
+		mapRatio = settings().mapRatio
+	): void => {
+		if (!svg) return;
+
+		removeRouteMarkup();
 		setSelectedId(destination.id);
+		setKeyboardOpen(false);
 
 		if (!destination.routeable) {
 			setRouteResult(undefined);
 			setRouteState('external');
+			resetMapView();
+
+			if (restartTimer) scheduleReset();
 
 			return;
 		}
 
-		const startPointId: string = `lp-${settings().startLocationId}`;
-		const destinationPointId: string = `lp-${destination.id}`;
-
-		if (startPointId === destinationPointId) {
-			setRouteResult(undefined);
-			setRouteState('active');
-
-			return;
-		}
-
-		const result: RouteResult | undefined = routeGraph.route(startPointId, destinationPointId, settings().mapRatio);
+		const result: WayfindingRouteResult | undefined = routeBetweenLocations(
+			startLocationId,
+			destination.id,
+			mapRatio
+		);
 
 		if (!result) {
 			setRouteResult(undefined);
 			setRouteState('unavailable');
 
+			if (restartTimer) scheduleReset();
+
 			return;
 		}
 
-		const routePoints: RoutePoint[] = result.pointIds.flatMap((id: string): RoutePoint[] => {
-			const point: RoutePoint | undefined = routeGraph?.point(id);
+		const nodes: WayfindingNode[] = routeNodes(result);
 
-			return point ? [point] : [];
+		if (nodes.length > 1) {
+			const namespace = 'http://www.w3.org/2000/svg';
+			const group: SVGGElement = document.createElementNS(namespace, 'g');
+			const route: SVGPathElement = document.createElementNS(namespace, 'path');
+			group.id = ROUTE_GROUP_ID;
+			group.setAttribute('pointer-events', 'none');
+			route.setAttribute('d', nodes.map((node: WayfindingNode, index: number): string => `${index === 0 ? 'M' : 'L'} ${node.x} ${node.y}`).join(' '));
+			route.setAttribute('fill', 'none');
+			route.setAttribute('stroke', settings().routeColor);
+			route.setAttribute('stroke-linecap', 'round');
+			route.setAttribute('stroke-linejoin', 'round');
+			route.setAttribute('stroke-width', '7');
+			route.setAttribute('vector-effect', 'non-scaling-stroke');
+			group.append(route);
+
+			for (const node of [nodes[0], nodes[nodes.length - 1]]) {
+				const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
+				marker.setAttribute('cx', String(node.x));
+				marker.setAttribute('cy', String(node.y));
+				marker.setAttribute('fill', settings().panelColor);
+				marker.setAttribute('r', '10');
+				marker.setAttribute('stroke', settings().routeColor);
+				marker.setAttribute('stroke-width', '5');
+				marker.setAttribute('vector-effect', 'non-scaling-stroke');
+				group.append(marker);
+			}
+
+			svg.append(group);
+
+			if (settings().motionPreset !== 'off') {
+				const routeLength: number = route.getTotalLength();
+				route.style.strokeDasharray = String(routeLength);
+				route.style.strokeDashoffset = String(routeLength);
+				route.getBoundingClientRect();
+				route.style.transition = 'stroke-dashoffset 650ms ease-out';
+				route.style.strokeDashoffset = '0';
+			}
+		}
+
+		const target: Element | undefined = Array.from(svg.querySelectorAll('[data-wayfinding-location-id]')).find((element: Element): boolean => {
+			return element.getAttribute('data-wayfinding-location-id') === destination.id;
 		});
-		const level: Element | null = svg.querySelector('#Level0');
 
-		if (!level || routePoints.length < 2) {
-			setRouteState('unavailable');
-
-			return;
-		}
-
-		const namespace = 'http://www.w3.org/2000/svg';
-		const group: SVGGElement = document.createElementNS(namespace, 'g');
-		const route: SVGPathElement = document.createElementNS(namespace, 'path');
-		group.id = ROUTE_GROUP_ID;
-		route.setAttribute('d', routePoints.map((point: RoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '));
-		route.setAttribute('fill', 'none');
-		route.setAttribute('stroke', settings().routeColor);
-		route.setAttribute('stroke-linecap', 'round');
-		route.setAttribute('stroke-linejoin', 'round');
-		route.setAttribute('stroke-width', '7');
-		route.setAttribute('vector-effect', 'non-scaling-stroke');
-		group.append(route);
-
-		for (const point of [routePoints[0], routePoints[routePoints.length - 1]]) {
-			const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
-			marker.setAttribute('cx', String(point.x));
-			marker.setAttribute('cy', String(point.y));
-			marker.setAttribute('fill', settings().panelColor);
-			marker.setAttribute('r', '10');
-			marker.setAttribute('stroke', settings().routeColor);
-			marker.setAttribute('stroke-width', '6');
-			marker.setAttribute('vector-effect', 'non-scaling-stroke');
-			group.append(marker);
-		}
-
-		level.append(group);
-		const routeLength: number = route.getTotalLength();
-		route.style.strokeDasharray = String(routeLength);
-		route.style.strokeDashoffset = String(routeLength);
-		route.getBoundingClientRect();
-		route.style.transition = 'stroke-dashoffset 900ms ease-out';
-		route.style.strokeDashoffset = '0';
-
-		const location: Element | null = svg.querySelector(`#Level0-Locations [id='${destination.id}']`);
-
-		if (location) {
-			location.setAttribute('data-wb-wayfinding-selected', 'true');
-			location.setAttribute('fill-opacity', '0.82');
-			location.setAttribute('stroke', settings().routeColor);
-			location.setAttribute('stroke-width', '4');
-		}
-
+		target?.setAttribute('data-wb-wayfinding-selected', 'true');
 		setRouteResult(result);
 		setRouteState('active');
-		routeResetTimer = setTimeout(clearRoute, settings().routeResetSeconds * 1000);
-	};
 
-	const selectDestination = (destination: Destination): void => {
-		drawRoute(destination);
+		if (restartTimer) scheduleReset();
 	};
 
 	const handleMapClick = (event: MouseEvent): void => {
 		let element: Element | null = event.target instanceof Element ? event.target : null;
 
 		while (element && element !== svg) {
-			const destination: Destination | undefined = element.id ? destinationById().get(element.id) : undefined;
+			const locationId: string | null = element.getAttribute('data-wayfinding-location-id');
+			const destination: Destination | undefined = locationId ? destinationById().get(locationId) : undefined;
 
 			if (destination) {
-				selectDestination(destination);
+				drawRoute(destination);
 
 				return;
 			}
+
 			element = element.parentElement;
 		}
 	};
 
+	const changeQuery = (value: string): void => {
+		setQuery(value);
+		setCurrentPage(0);
+		scheduleReset();
+	};
+
+	const keyboardKey = (key: string): void => changeQuery(`${query()}${key}`);
+
 	onMount((): void => {
 		svg = mapHost.querySelector('svg') ?? undefined;
 
-		if (!svg) return;
+		if (!svg) {
+			setMapState('error');
+
+			return;
+		}
 
 		svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-		svg.setAttribute('role', 'img');
-		svg.setAttribute('aria-label', 'Interactive Veszprem downtown visitor map');
+		const image: SVGImageElement | null = svg.querySelector('#map-artwork');
+
+		if (!image) {
+			setMapState('error');
+
+			return;
+		}
+
+		image.addEventListener('load', (): void => { setMapState('ready'); }, { once: true });
+		image.addEventListener('error', (): void => { setMapState('error'); }, { once: true });
+		image.setAttribute('href', mapArtwork);
+		image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', mapArtwork);
 		mapHost.addEventListener('click', handleMapClick);
-		routeGraph = new RouteGraph(extractRoutePoints(svg), settings().wayfindingSensitivity);
 	});
 
 	createEffect((): void => {
-		const sensitivity: number = settings().wayfindingSensitivity;
-		const mapRatio: number = settings().mapRatio;
+		const zoom: number = mapZoom();
+		const center: MapPoint = mapCenter();
+		const width: number = MAP_WIDTH / zoom;
+		const height: number = MAP_HEIGHT / zoom;
+		const x: number = clamp(center.x - width / 2, 0, MAP_WIDTH - width);
+		const y: number = clamp(center.y - height / 2, 0, MAP_HEIGHT - height);
 
-		if (!svg) return;
+		svg?.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
+	});
 
-		routeGraph = new RouteGraph(extractRoutePoints(svg), sensitivity);
-		const selected: Destination | undefined = untrack(selectedDestination);
-
-		if (selected && mapRatio > 0) untrack((): void => drawRoute(selected));
+	createEffect((): void => {
+		if (currentPage() >= pageCount()) setCurrentPage(pageCount() - 1);
 	});
 
 	createEffect((): void => {
 		const selected: Destination | undefined = selectedDestination();
 
-		if (selectedId() && !selected) clearRoute();
+		if (selectedId() && !selected) resetSession();
+	});
+
+	createEffect((): void => {
+		const startLocationId: string = settings().startLocationId;
+		const mapRatio: number = settings().mapRatio;
+		const selected: Destination | undefined = untrack(selectedDestination);
+
+		if (selected && untrack(routeState) === 'active') {
+			untrack((): void => { drawRoute(selected, false, startLocationId, mapRatio); });
+		}
 	});
 
 	createEffect((): void => {
@@ -260,7 +336,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	onCleanup((): void => {
-		if (routeResetTimer) clearTimeout(routeResetTimer);
+		clearResetTimer();
 		mapHost?.removeEventListener('click', handleMapClick);
 	});
 
@@ -276,87 +352,132 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				'--wb-veszprem-secondary': settings().secondaryTextColor
 			}}
 			data-host-ready={Boolean(props.hostElement)}
+			data-map-state={mapState()}
 			data-map-ratio={settings().mapRatio}
+			data-map-zoom={mapZoom()}
+			data-motion={settings().motionPreset}
 			data-preview-id="veszprem-wayfinding-root"
 			data-route-reset={settings().routeResetSeconds}
-			data-route-sensitivity={settings().wayfindingSensitivity}
 		>
 			<header class={style['header']}>
-				<div class={style['identity']} aria-hidden="true"><strong>V</strong><span>VESZPRÉM</span></div>
+				<div class={style['identity']} aria-hidden="true"><strong>V</strong><span>VESZPREM</span></div>
 				<div class={style['heading']}>
-					<p class="wb-veszprem-wayfinding-metadata">DOWNTOWN VISITOR MAP / BELVÁROS</p>
-					<h1 ref={fitTitle} class="wb-veszprem-wayfinding-title">{settings().title}</h1>
+					<p class="wb-veszprem-metadata">DOWNTOWN VISITOR MAP / BELVAROS</p>
+					<h1 ref={fitTitle} class="wb-veszprem-title">{settings().title}</h1>
 				</div>
 				<div class={style['locator']}>
-					<span class="wb-veszprem-wayfinding-metadata">YOU ARE HERE</span>
-					<strong class="wb-veszprem-wayfinding-secondary">{startDestination()?.name || settings().startLocationId}</strong>
+					<span class="wb-veszprem-metadata">YOU ARE HERE</span>
+					<strong class="wb-veszprem-secondary">{startDestination()?.name || settings().startLocationId}</strong>
 				</div>
+				<button class={style['reset-button']} type="button" onClick={resetSession}>Reset</button>
 			</header>
 
 			<main class={style['content']}>
 				<section class={style['map-panel']} aria-label="Map">
 					<div ref={mapHost} class={style['map-canvas']}>
-						<div class={style['map-markup']} innerHTML={veszpremMapMarkup} />
+						<div class={style['map-markup']} innerHTML={mapMarkup} />
+						<Show when={mapState() !== 'ready'}>
+							<div class={style['map-status']}>{mapState() === 'error' ? 'Map artwork unavailable' : 'Loading map...'}</div>
+						</Show>
+						<div class={style['map-controls']} aria-label="Map zoom controls">
+							<button type="button" title="Zoom in" aria-label="Zoom in" onClick={(): void => { setMapZoom((value: number): number => clamp(value + 0.25, 1, 2.5)); scheduleReset(); }}>+</button>
+							<button type="button" title="Zoom out" aria-label="Zoom out" onClick={(): void => { setMapZoom((value: number): number => clamp(value - 0.25, 1, 2.5)); scheduleReset(); }}>−</button>
+							<button type="button" title="Fit map" aria-label="Fit map" onClick={(): void => { resetMapView(); scheduleReset(); }}>⛶</button>
+						</div>
 					</div>
 					<div class={style['map-instruction']}>
-						<span>Tap a numbered landmark on the map</span>
+						<span>Tap a numbered landmark</span>
 						<i aria-hidden="true" />
-						<span>Route clears after {settings().routeResetSeconds}s</span>
+						<span>Routes are approximate</span>
+						<i aria-hidden="true" />
+						<span>Accessibility requires venue confirmation</span>
 					</div>
 				</section>
 
 				<aside class={style['directory']}>
-					<div class={style['directory-intro']}>
-						<p class="wb-veszprem-wayfinding-metadata">FIND A LANDMARK</p>
-						<h2 class="wb-veszprem-wayfinding-secondary">Where would you like to go?</h2>
-						<span>{settings().subtitle}</span>
-					</div>
-					<div class={style['filters']}>
-						<input
-							aria-label="Search destinations"
-							placeholder="Search destinations"
-							type="search"
-							value={query()}
-							onInput={(event): void => { setQuery(event.currentTarget.value); }}
-						/>
-						<select aria-label="Destination category" value={category()} onChange={(event): void => { setCategory(event.currentTarget.value); }}>
-							<For each={categories()}>{(name: string): JSX.Element => <option value={name}>{name}</option>}</For>
-						</select>
-					</div>
-
 					<Show when={selectedDestination()} keyed fallback={
-						<div class={style['destination-list']} data-destination-count={filteredDestinations().length} data-preview-allow-overflow>
-							<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
-								<For each={filteredDestinations()}>{(destination: Destination, index): JSX.Element => (
-									<button type="button" onClick={(): void => selectDestination(destination)} data-routeable={destination.routeable}>
-										<small>{String(index() + 1).padStart(2, '0')}</small>
-										<span>
-											<strong class="wb-veszprem-wayfinding-destination-name">{destination.name}</strong>
-											<em>{destination.englishName || destination.category}</em>
-										</span>
-										<i aria-hidden="true">-&gt;</i>
-									</button>
-								)}</For>
+						<>
+							<div class={style['directory-intro']}>
+								<p class="wb-veszprem-metadata">FIND A LANDMARK</p>
+								<h2 class="wb-veszprem-secondary">Where would you like to go?</h2>
+								<span>{settings().subtitle}</span>
+							</div>
+							<div class={style['filters']}>
+								<div class={style['search-field']}>
+									<input
+										aria-label="Search destinations"
+										inputMode="none"
+										placeholder="Search destinations"
+										type="search"
+										value={query()}
+										onFocus={(): void => { setKeyboardOpen(true); scheduleReset(); }}
+										onInput={(event): void => { changeQuery(event.currentTarget.value); }}
+									/>
+									<button type="button" aria-label="Open touch keyboard" title="Open touch keyboard" onClick={(): void => { setKeyboardOpen(true); scheduleReset(); }}>ABC</button>
+								</div>
+								<select aria-label="Destination category" value={category()} onChange={(event): void => { setCategory(event.currentTarget.value); setCurrentPage(0); scheduleReset(); }}>
+									<For each={categories()}>{(name: string): JSX.Element => <option value={name}>{name}</option>}</For>
+								</select>
+							</div>
+
+							<div class={style['destination-list']} data-destination-count={filteredDestinations().length}>
+								<Show when={visibleDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
+									<For each={visibleDestinations()}>{(destination: Destination): JSX.Element => (
+										<button type="button" data-routeable={destination.routeable} onClick={(): void => { drawRoute(destination); }}>
+											<small data-wide={destination.mapNumber.length > 2}>{destination.mapNumber || '•'}</small>
+											<span>
+												<strong class="wb-veszprem-destination-name">{destination.name}</strong>
+												<em>{destination.englishName || destination.category}</em>
+											</span>
+											<i aria-hidden="true">›</i>
+										</button>
+									)}</For>
+								</Show>
+							</div>
+
+							<div class={style['pagination']}>
+								<button type="button" aria-label="Previous destination page" disabled={currentPage() === 0} onClick={(): void => { setCurrentPage((value: number): number => Math.max(0, value - 1)); scheduleReset(); }}>‹</button>
+								<span>{filteredDestinations().length === 0 ? '0 / 0' : `${currentPage() + 1} / ${pageCount()}`}</span>
+								<button type="button" aria-label="Next destination page" disabled={currentPage() >= pageCount() - 1} onClick={(): void => { setCurrentPage((value: number): number => Math.min(pageCount() - 1, value + 1)); scheduleReset(); }}>›</button>
+							</div>
+
+							<Show when={keyboardOpen()}>
+								<div class={style['keyboard']} data-preview-keyboard="open">
+									<div class={style['keyboard-header']}><strong>Search</strong><button type="button" onClick={(): void => { setKeyboardOpen(false); }}>Close</button></div>
+									<For each={KEYBOARD_ROWS}>{(row: string[]): JSX.Element => (
+										<div class={style['keyboard-row']}><For each={row}>{(key: string): JSX.Element => <button type="button" onClick={(): void => { keyboardKey(key); }}>{key}</button>}</For></div>
+									)}</For>
+									<div class={style['keyboard-actions']}>
+										<button type="button" onClick={(): void => { changeQuery(''); }}>Clear</button>
+										<button type="button" onClick={(): void => { keyboardKey(' '); }}>Space</button>
+										<button type="button" onClick={(): void => { changeQuery(query().slice(0, -1)); }}>Backspace</button>
+									</div>
+								</div>
 							</Show>
-						</div>
+						</>
 					}>
 						{(destination: Destination): JSX.Element => (
-							<section class={style['route-card']} data-route-state={routeState()}>
-								<button class={style['back-button']} type="button" onClick={clearRoute}>&lt;- All destinations</button>
-								<p class="wb-veszprem-wayfinding-metadata">{destination.category}</p>
-								<h2 ref={fitSelectedName} class="wb-veszprem-wayfinding-selected-name">{destination.name}</h2>
+							<section class={style['route-card']}>
+								<button class={style['back-button']} type="button" onClick={resetSession}>‹ Back to directory</button>
+								<div class={style['detail-number']}>{destination.mapNumber || 'INFO'}</div>
+								<p class="wb-veszprem-metadata">{destination.category}</p>
+								<h2 ref={fitSelectedName} class="wb-veszprem-selected-name">{destination.name}</h2>
 								<Show when={destination.englishName}><h3>{destination.englishName}</h3></Show>
-								<p class={style['description']}>{destination.description}</p>
-								<Show when={destination.accessible}><span class={style['accessibility']}>STEP-FREE DESTINATION</span></Show>
+								<Show when={destination.description}><p class={style['description']}>{destination.description}</p></Show>
+								<Show when={destination.hours}><p class={style['fact']}><span>Hours</span>{destination.hours}</p></Show>
+								<Show when={destination.status}><p class={style['fact']}><span>Status</span>{destination.status}</p></Show>
+								<span class={style['accessibility']} data-accessibility={destination.accessible === null ? 'unknown' : destination.accessible ? 'yes' : 'no'}>
+									{destination.accessible === null ? 'ACCESSIBILITY NOT VERIFIED' : destination.accessible ? 'STEP-FREE DESTINATION' : 'STEP-FREE ACCESS NOT CONFIRMED'}
+								</span>
 								<div class={style['route-summary']}>
 									<Show when={routeState() === 'active' && routeResult()} keyed fallback={
 										<strong>{routeState() === 'external'
-											? 'Outside the downtown walking map'
+											? 'Listed outside the downtown route map'
 											: routeState() === 'unavailable'
-												? 'No connected walking route in this map'
+												? 'No route is available from the configured start'
 												: 'You are already at this destination'}</strong>
 									}>
-										{(result: RouteResult): JSX.Element => (
+										{(result: WayfindingRouteResult): JSX.Element => (
 											<>
 												<div><span>APPROX. DISTANCE</span><strong>{result.walkingDistance} m</strong></div>
 												<div><span>WALKING TIME</span><strong>{formatWalkTime(result.walkingSeconds)}</strong></div>
@@ -364,7 +485,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 										)}
 									</Show>
 								</div>
-								<button class={style['clear-button']} type="button" onClick={clearRoute}>Clear route</button>
+								<button class={style['clear-button']} type="button" onClick={resetSession}>Clear route</button>
 							</section>
 						)}
 					</Show>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1341" height="947" viewBox="0 0 1341 947" role="img" aria-labelledby="map-title map-description">
+  <title id="map-title">Interactive Veszprem downtown map</title>
+  <desc id="map-description">Tourism map with selectable landmarks and an authored walking route overlay.</desc>
+  <image id="map-artwork" x="0" y="0" width="1341" height="947" preserveAspectRatio="xMidYMid meet"/>
+  <g id="location-hit-targets" fill="#ffffff" fill-opacity="0.001" stroke="none">
+    <circle id="hit-tourinform-veszprem" data-wayfinding-location-id="tourinform-veszprem" data-wayfinding-level="downtown" cx="372" cy="416" r="22"/>
+    <circle id="hit-hosok-kapuja" data-wayfinding-location-id="hosok-kapuja" data-wayfinding-level="downtown" cx="357" cy="310" r="17"/>
+    <circle id="hit-modern-keptar-vass-gyujtemeny" data-wayfinding-location-id="modern-keptar-vass-gyujtemeny" data-wayfinding-level="downtown" cx="287" cy="329" r="14"/>
+    <circle id="hit-tuztorony" data-wayfinding-location-id="tuztorony" data-wayfinding-level="downtown" cx="270" cy="338" r="14"/>
+    <circle id="hit-foton-audiovizualis-kozpont" data-wayfinding-location-id="foton-audiovizualis-kozpont" data-wayfinding-level="downtown" cx="238" cy="307" r="15"/>
+    <circle id="hit-csikasz-galeria" data-wayfinding-location-id="csikasz-galeria" data-wayfinding-level="downtown" cx="211" cy="282" r="15"/>
+    <circle id="hit-dubniczay-palota" data-wayfinding-location-id="dubniczay-palota" data-wayfinding-level="downtown" cx="195" cy="239" r="15"/>
+    <circle id="hit-biro-giczey-haz" data-wayfinding-location-id="biro-giczey-haz" data-wayfinding-level="downtown" cx="141" cy="213" r="15"/>
+    <circle id="hit-szent-istvan-templom" data-wayfinding-location-id="szent-istvan-templom" data-wayfinding-level="downtown" cx="116" cy="180" r="15"/>
+    <circle id="hit-kormendy-haz" data-wayfinding-location-id="kormendy-haz" data-wayfinding-level="downtown" cx="93" cy="148" r="15"/>
+    <circle id="hit-szent-istvan-es-gizella-szobor" data-wayfinding-location-id="szent-istvan-es-gizella-szobor" data-wayfinding-level="downtown" cx="112" cy="119" r="15"/>
+    <circle id="hit-benedek-hegy" data-wayfinding-location-id="benedek-hegy" data-wayfinding-level="downtown" cx="117" cy="58" r="17"/>
+    <circle id="hit-szent-gyorgy-kapolna" data-wayfinding-location-id="szent-gyorgy-kapolna" data-wayfinding-level="downtown" cx="133" cy="126" r="14"/>
+    <circle id="hit-szent-mihaly-foszekesegyhaz" data-wayfinding-location-id="szent-mihaly-foszekesegyhaz" data-wayfinding-level="downtown" cx="178" cy="154" r="15"/>
+    <circle id="hit-szentharomsag-szobor" data-wayfinding-location-id="szentharomsag-szobor" data-wayfinding-level="downtown" cx="184" cy="189" r="15"/>
+    <circle id="hit-varkut" data-wayfinding-location-id="varkut" data-wayfinding-level="downtown" cx="212" cy="173" r="15"/>
+    <circle id="hit-gizella-kapolna" data-wayfinding-location-id="gizella-kapolna" data-wayfinding-level="downtown" cx="238" cy="177" r="15"/>
+    <circle id="hit-erseki-palota" data-wayfinding-location-id="erseki-palota" data-wayfinding-level="downtown" cx="228" cy="220" r="15"/>
+    <circle id="hit-szent-imre-templom" data-wayfinding-location-id="szent-imre-templom" data-wayfinding-level="downtown" cx="277" cy="251" r="16"/>
+    <circle id="hit-deak-ferenc-rendezvenykozpont" data-wayfinding-location-id="deak-ferenc-rendezvenykozpont" data-wayfinding-level="downtown" cx="312" cy="223" r="17"/>
+    <circle id="hit-auer-haz" data-wayfinding-location-id="auer-haz" data-wayfinding-level="downtown" cx="473" cy="362" r="17"/>
+    <circle id="hit-posa-haz" data-wayfinding-location-id="posa-haz" data-wayfinding-level="downtown" cx="295" cy="389" r="17"/>
+    <circle id="hit-ruttner-haz-varborton" data-wayfinding-location-id="ruttner-haz-varborton" data-wayfinding-level="downtown" cx="165" cy="298" r="17"/>
+    <circle id="hit-code-digitalis-elmenykozpont" data-wayfinding-location-id="code-digitalis-elmenykozpont" data-wayfinding-level="downtown" cx="262" cy="549" r="18"/>
+    <circle id="hit-petofi-szinhaz" data-wayfinding-location-id="petofi-szinhaz" data-wayfinding-level="downtown" cx="393" cy="549" r="18"/>
+    <circle id="hit-hangvilla" data-wayfinding-location-id="hangvilla" data-wayfinding-level="downtown" cx="481" cy="535" r="18"/>
+    <circle id="hit-eotvos-karoly-megyei-konyvtar" data-wayfinding-location-id="eotvos-karoly-megyei-konyvtar" data-wayfinding-level="downtown" cx="370" cy="609" r="18"/>
+    <circle id="hit-szent-miklos-szeg" data-wayfinding-location-id="szent-miklos-szeg" data-wayfinding-level="downtown" cx="418" cy="634" r="18"/>
+    <circle id="hit-laczko-dezso-muzeum" data-wayfinding-location-id="laczko-dezso-muzeum" data-wayfinding-level="downtown" cx="534" cy="628" r="18"/>
+    <circle id="hit-bakonyi-haz" data-wayfinding-location-id="bakonyi-haz" data-wayfinding-level="downtown" cx="574" cy="662" r="18"/>
+    <circle id="hit-egyetemi-rekortan-sportpalyak" data-wayfinding-location-id="egyetemi-rekortan-sportpalyak" data-wayfinding-level="downtown" cx="530" cy="741" r="19"/>
+    <circle id="hit-acticity" data-wayfinding-location-id="acticity" data-wayfinding-level="downtown" cx="535" cy="852" r="19"/>
+    <circle id="hit-digitalis-tudaskozpont" data-wayfinding-location-id="digitalis-tudaskozpont" data-wayfinding-level="downtown" cx="505" cy="443" r="18"/>
+    <circle id="hit-gyarkert-kulturpark" data-wayfinding-location-id="gyarkert-kulturpark" data-wayfinding-level="downtown" cx="798" cy="365" r="20"/>
+    <circle id="hit-veszprem-arena" data-wayfinding-location-id="veszprem-arena" cx="1234" cy="34" r="28"/>
+    <circle id="hit-veszpremi-sportuszoda" data-wayfinding-location-id="veszpremi-sportuszoda" cx="1263" cy="112" r="28"/>
+  </g>
+</svg>

@@ -30,6 +30,18 @@ const boolean = (value: unknown, fallback: boolean): boolean => {
 	return fallback;
 };
 
+const optionalBoolean = (value: unknown): boolean | null => {
+	if (typeof value === 'boolean') return value;
+
+	if (typeof value === 'string') {
+		if (value.toLowerCase() === 'true') return true;
+
+		if (value.toLowerCase() === 'false') return false;
+	}
+
+	return null;
+};
+
 export const extractDestinationRows = (rawValue: unknown): unknown[] | undefined => {
 	const value: unknown = parseValue(rawValue);
 
@@ -60,13 +72,16 @@ export const normalizeDestinations = (rawValue: unknown): Destination[] => {
 		if (!id || !name) return [];
 
 		return [{
-			accessible: boolean(row.accessible, false),
+			accessible: optionalBoolean(row.accessible),
 			category: text(row.category) || 'Other destinations',
 			description: text(row.description),
 			englishName: text(row.englishName),
+			hours: text(row.hours),
 			id,
+			mapNumber: text(row.mapNumber),
 			name,
-			routeable: boolean(row.routeable, true)
+			routeable: boolean(row.routeable, true),
+			status: text(row.status)
 		}];
 	}).sort((left: Destination, right: Destination): number => {
 		return left.category.localeCompare(right.category, undefined, { numeric: true })

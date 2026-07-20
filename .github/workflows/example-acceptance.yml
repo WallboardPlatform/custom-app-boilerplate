@@ -58,6 +58,7 @@ jobs:
           - recognition-mosaic
           - restaurant-menu
           - single-hero-clock
+          - veszprem-wayfinding
           - weather-window
 
     steps:

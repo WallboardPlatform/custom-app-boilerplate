@@ -1,3 +1,4 @@
+import type { MotionPreset } from '@utils/motion';
 import type { ThemePreset } from '@utils/theme';
 
 export interface Config {
@@ -16,6 +17,7 @@ export interface Settings extends Record<string, unknown> {
 	backgroundColor: string;
 	emptyStateText: string;
 	mapRatio: number;
+	motionPreset: MotionPreset;
 	panelColor: string;
 	primaryTextColor: string;
 	routeColor: string;
@@ -25,7 +27,6 @@ export interface Settings extends Record<string, unknown> {
 	subtitle: string;
 	themePreset: ThemePreset;
 	title: string;
-	wayfindingSensitivity: number;
 }
 
 export interface ConfigValues {
@@ -33,6 +34,7 @@ export interface ConfigValues {
 	backgroundColor?: string;
 	emptyStateText?: string;
 	mapRatio?: number;
+	motionPreset?: string;
 	panelColor?: string;
 	primaryTextColor?: string;
 	routeColor?: string;
@@ -42,5 +44,4 @@ export interface ConfigValues {
 	subtitle?: string;
 	themePreset?: string;
 	title?: string;
-	wayfindingSensitivity?: number;
 }

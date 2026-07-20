@@ -15,11 +15,14 @@
 		"quickEditEligible": true
 	},
 	"columns": [
+		{ "name": "mapNumber", "type": "string", "required": false },
 		{ "name": "id", "type": "string", "required": true },
 		{ "name": "name", "type": "string", "required": true },
 		{ "name": "englishName", "type": "string", "required": false },
 		{ "name": "category", "type": "string", "required": true },
 		{ "name": "description", "type": "string", "required": false },
+		{ "name": "hours", "type": "string", "required": false },
+		{ "name": "status", "type": "string", "required": false },
 		{ "name": "accessible", "type": "boolean", "required": false },
 		{ "name": "routeable", "type": "boolean", "required": false }
 	],
@@ -29,10 +32,11 @@
 		"processed Destinations row array"
 	],
 	"behavior": {
-		"unbound": "render bundled representative destination metadata keyed to the supplied SVG",
+		"unbound": "render bundled public landmark names transcribed from the supplied reference map",
 		"boundEmpty": "render the configured empty state without restoring bundled rows",
 		"invalidRows": "skip rows whose id or name is missing",
 		"ordering": "sort by category and destination name while preserving the SVG id as the routing key",
-		"routeable": "false marks destinations shown on the reference map but outside its walking-route graph"
+		"routeable": "false marks destinations listed by the source but outside its downtown route graph",
+		"accessibility": "missing accessible values remain visibly unverified and are never inferred"
 	}
 }
