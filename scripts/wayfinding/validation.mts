@@ -2,7 +2,9 @@ import type {
 	WayfindingEdge,
 	WayfindingGraphDocument,
 	WayfindingNode,
-	WayfindingRouteResult
+	WayfindingPoint,
+	WayfindingRouteResult,
+	WayfindingWalkableMaskDocument
 } from '../../src/utils/wayfinding.js';
 import { WayfindingGraph } from '../../src/utils/wayfinding.js';
 import {
@@ -10,6 +12,7 @@ import {
 	type ParsedWayfindingLocation,
 	type ParsedWayfindingSvg
 } from './model.mjs';
+import { validateWalkableMaskStructure, WayfindingWalkableMask } from './walkable-mask.mjs';
 
 export type WayfindingIssueSeverity = 'error' | 'warning';
 
@@ -60,6 +63,7 @@ export interface WayfindingValidationOptions {
 	highlightDestinationId?: string;
 	map: ParsedWayfindingSvg;
 	startLocationId?: string;
+	walkableMask?: WayfindingWalkableMaskDocument;
 }
 
 const addIssue = (
@@ -130,13 +134,25 @@ const edgeKey = (edge: WayfindingEdge): string => edge.bidirectional
 	? [edge.from, edge.to].sort().join('<->')
 	: `${edge.from}->${edge.to}`;
 
-const orientation = (a: WayfindingNode, b: WayfindingNode, c: WayfindingNode): number => {
+const pointDistance = (left: WayfindingPoint, right: WayfindingPoint): number => {
+	return Math.hypot(right.x - left.x, right.y - left.y);
+};
+
+const edgePoints = (edge: WayfindingEdge, from: WayfindingNode, to: WayfindingNode): WayfindingPoint[] => {
+	return edge.geometry?.length ? edge.geometry : [from, to];
+};
+
+const polylineLength = (points: WayfindingPoint[]): number => {
+	return points.slice(1).reduce((total: number, point: WayfindingPoint, index: number): number => {
+		return total + pointDistance(points[index], point);
+	}, 0);
+};
+
+const orientation = (a: WayfindingPoint, b: WayfindingPoint, c: WayfindingPoint): number => {
 	return (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 };
 
-const crosses = (leftA: WayfindingNode, leftB: WayfindingNode, rightA: WayfindingNode, rightB: WayfindingNode): boolean => {
-	if (leftA.levelId !== leftB.levelId || leftA.levelId !== rightA.levelId || rightA.levelId !== rightB.levelId) return false;
-
+const crosses = (leftA: WayfindingPoint, leftB: WayfindingPoint, rightA: WayfindingPoint, rightB: WayfindingPoint): boolean => {
 	const o1: number = orientation(leftA, leftB, rightA);
 	const o2: number = orientation(leftA, leftB, rightB);
 	const o3: number = orientation(rightA, rightB, leftA);
@@ -145,10 +161,39 @@ const crosses = (leftA: WayfindingNode, leftB: WayfindingNode, rightA: Wayfindin
 	return o1 * o2 < 0 && o3 * o4 < 0;
 };
 
-const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg, issues: WayfindingIssue[]): number => {
+const validateGraph = (
+	graph: WayfindingGraphDocument,
+	map: ParsedWayfindingSvg,
+	issues: WayfindingIssue[],
+	walkableMaskDocument?: WayfindingWalkableMaskDocument
+): number => {
 	const nodeById = new Map<string, WayfindingNode>();
 	const degree = new Map<string, number>();
 	const [viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight] = map.viewBox;
+	const walkableMask: WayfindingWalkableMask | undefined = walkableMaskDocument ? new WayfindingWalkableMask(walkableMaskDocument) : undefined;
+
+	if (graph.contractVersion === 2 && !walkableMaskDocument) {
+		addIssue(issues, 'warning', 'walkable-mask-missing', 'Version 2 graph geometry has no independent reviewed walkable mask.');
+	}
+
+	if (walkableMaskDocument) {
+		for (const error of validateWalkableMaskStructure(walkableMaskDocument)) {
+			addIssue(issues, 'error', 'walkable-mask-invalid', `Walkable mask ${error}.`, [walkableMaskDocument.mapId]);
+		}
+
+		if (walkableMaskDocument.reviewStatus === 'proposed') {
+			addIssue(issues, 'warning', 'walkable-mask-review-required', 'The walkable mask is still proposed and must be confirmed against the source map.', [walkableMaskDocument.mapId]);
+		}
+
+		if (
+			Math.abs((walkableMaskDocument.originX ?? 0) - viewBoxX) > 0.01
+			|| Math.abs((walkableMaskDocument.originY ?? 0) - viewBoxY) > 0.01
+			|| Math.abs(walkableMaskDocument.width - viewBoxWidth) > 0.01
+			|| Math.abs(walkableMaskDocument.height - viewBoxHeight) > 0.01
+		) {
+			addIssue(issues, 'error', 'walkable-mask-map-mismatch', 'Walkable mask bounds do not match the SVG viewBox.', [walkableMaskDocument.mapId]);
+		}
+	}
 
 	for (const id of duplicateValues(graph.nodes.map((node: WayfindingNode): string => node.id))) {
 		addIssue(issues, 'error', 'duplicate-graph-node', `Graph node '${id}' is not unique.`, [id]);
@@ -171,7 +216,7 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 		addIssue(issues, 'error', 'duplicate-edge', `Graph contains duplicate connection '${key}'.`, [key]);
 	}
 
-	const validEdges: Array<{ edge: WayfindingEdge; from: WayfindingNode; to: WayfindingNode; pixels: number }> = [];
+	const validEdges: Array<{ edge: WayfindingEdge; from: WayfindingNode; points: WayfindingPoint[]; to: WayfindingNode; pixels: number }> = [];
 
 	for (const edge of graph.edges) {
 		const from: WayfindingNode | undefined = nodeById.get(edge.from);
@@ -209,9 +254,60 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 			}
 		}
 
+		const points: WayfindingPoint[] = edgePoints(edge, from, to);
+
+		if (graph.contractVersion === 2 && from.levelId === to.levelId) {
+			if (!edge.geometry) {
+				addIssue(issues, 'error', 'edge-geometry-required', `Version 2 edge '${edge.id}' requires authored centerline geometry.`, [edge.id]);
+			} else {
+				if (pointDistance(points[0], from) > 0.75) {
+					addIssue(issues, 'error', 'edge-geometry-start-mismatch', `Edge '${edge.id}' geometry does not start at node '${from.id}'.`, [edge.id, from.id]);
+				}
+
+				if (pointDistance(points[points.length - 1], to) > 0.75) {
+					addIssue(issues, 'error', 'edge-geometry-end-mismatch', `Edge '${edge.id}' geometry does not end at node '${to.id}'.`, [edge.id, to.id]);
+				}
+			}
+
+			if (edge.corridorWidth === undefined) {
+				addIssue(issues, 'error', 'edge-corridor-width-required', `Version 2 edge '${edge.id}' requires the reviewed walkable corridor width.`, [edge.id]);
+			}
+
+			if (edge.reviewStatus === 'proposed') {
+				addIssue(issues, 'warning', 'edge-review-required', `Edge '${edge.id}' is still proposed and must be confirmed against the source map.`, [edge.id]);
+			}
+		}
+
+		for (const [index, point] of points.entries()) {
+			if (point.x < viewBoxX || point.x > viewBoxX + viewBoxWidth || point.y < viewBoxY || point.y > viewBoxY + viewBoxHeight) {
+				addIssue(issues, 'error', 'edge-geometry-outside-viewbox', `Edge '${edge.id}' geometry point ${index} is outside the SVG viewBox.`, [edge.id, String(index)]);
+			}
+		}
+
+		for (let index = 1; index < points.length; index += 1) {
+			if (pointDistance(points[index - 1], points[index]) <= 0.01) {
+				addIssue(issues, 'error', 'edge-geometry-zero-segment', `Edge '${edge.id}' contains a zero-length centerline segment.`, [edge.id, String(index - 1)]);
+			}
+		}
+
+		if (walkableMask && from.levelId === to.levelId && edge.geometry && edge.corridorWidth !== undefined) {
+			const outside = walkableMask.outsideCorridor(points, edge.corridorWidth);
+
+			if (outside.length > 0) {
+				const first = outside[0];
+				addIssue(
+					issues,
+					'error',
+					'edge-outside-walkable-space',
+					`Edge '${edge.id}' leaves confirmed walkable space near (${Math.round(first.x)}, ${Math.round(first.y)}); ${outside.length} sampled cell(s) fail.`,
+					[edge.id, String(first.column), String(first.row)]
+				);
+			}
+		}
+
 		degree.set(from.id, (degree.get(from.id) ?? 0) + 1);
 		degree.set(to.id, (degree.get(to.id) ?? 0) + 1);
-		validEdges.push({ edge, from, pixels: from.levelId === to.levelId ? Math.hypot(to.x - from.x, to.y - from.y) : 0, to });
+		validEdges.push({ edge, from, pixels: from.levelId === to.levelId ? polylineLength(points) : 0, points, to });
 	}
 
 	const lengths: number[] = validEdges.map((item): number => item.pixels).filter((length: number): boolean => length > 0).sort((a: number, b: number): number => a - b);
@@ -229,9 +325,17 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 
 			if ([right.from.id, right.to.id].includes(left.from.id) || [right.from.id, right.to.id].includes(left.to.id)) continue;
 
-			if (!crosses(left.from, left.to, right.from, right.to)) continue;
+			let crossing = false;
 
-			addIssue(issues, 'warning', 'edge-crossing-without-node', `Edges '${left.edge.id}' and '${right.edge.id}' cross without a shared node.`, [left.edge.id, right.edge.id]);
+			for (let leftPoint = 1; leftPoint < left.points.length && !crossing; leftPoint += 1) {
+				for (let rightPoint = 1; rightPoint < right.points.length && !crossing; rightPoint += 1) {
+					crossing = crosses(left.points[leftPoint - 1], left.points[leftPoint], right.points[rightPoint - 1], right.points[rightPoint]);
+				}
+			}
+
+			if (crossing) {
+				addIssue(issues, 'warning', 'edge-crossing-without-node', `Edges '${left.edge.id}' and '${right.edge.id}' cross without a shared node.`, [left.edge.id, right.edge.id]);
+			}
 		}
 	}
 
@@ -353,7 +457,7 @@ const routeChecks = (
 export const validateWayfinding = (options: WayfindingValidationOptions): WayfindingValidationReport => {
 	const issues: WayfindingIssue[] = [];
 	validateMapStructure(options.map, issues);
-	const maxDegree: number = validateGraph(options.graph, options.map, issues);
+	const maxDegree: number = validateGraph(options.graph, options.map, issues, options.walkableMask);
 	validateDestinations(options.destinations, options.graph, options.map, issues);
 	const routes: WayfindingRouteCheck[] = routeChecks(options.destinations, options.graph, options.startLocationId, issues);
 	const highlightedRoute: WayfindingRouteCheck | undefined = options.highlightDestinationId

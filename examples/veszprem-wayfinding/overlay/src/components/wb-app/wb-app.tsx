@@ -7,9 +7,9 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Destination } from '@interfaces/wayfinding.interface';
-import type { WayfindingNode, WayfindingRouteResult } from '@utils/wayfinding';
+import type { WayfindingRoutePoint, WayfindingRouteResult } from '@utils/wayfinding';
 import { normalizeDestinations } from '@utils/destinations';
-import { routeBetweenLocations, routeNodes } from '@utils/route-graph';
+import { routeBetweenLocations } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
 import mapMarkup from '../../assets/map.svg?raw';
@@ -192,15 +192,15 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			return;
 		}
 
-		const nodes: WayfindingNode[] = routeNodes(result);
+		const path: WayfindingRoutePoint[] = result.path;
 
-		if (nodes.length > 1) {
+		if (path.length > 1) {
 			const namespace = 'http://www.w3.org/2000/svg';
 			const group: SVGGElement = document.createElementNS(namespace, 'g');
 			const route: SVGPathElement = document.createElementNS(namespace, 'path');
 			group.id = ROUTE_GROUP_ID;
 			group.setAttribute('pointer-events', 'none');
-			route.setAttribute('d', nodes.map((node: WayfindingNode, index: number): string => `${index === 0 ? 'M' : 'L'} ${node.x} ${node.y}`).join(' '));
+			route.setAttribute('d', path.map((point: WayfindingRoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '));
 			route.setAttribute('fill', 'none');
 			route.setAttribute('stroke', settings().routeColor);
 			route.setAttribute('stroke-linecap', 'round');
@@ -209,10 +209,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			route.setAttribute('vector-effect', 'non-scaling-stroke');
 			group.append(route);
 
-			for (const node of [nodes[0], nodes[nodes.length - 1]]) {
+			for (const point of [path[0], path[path.length - 1]]) {
 				const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
-				marker.setAttribute('cx', String(node.x));
-				marker.setAttribute('cy', String(node.y));
+				marker.setAttribute('cx', String(point.x));
+				marker.setAttribute('cy', String(point.y));
 				marker.setAttribute('fill', settings().panelColor);
 				marker.setAttribute('r', '10');
 				marker.setAttribute('stroke', settings().routeColor);

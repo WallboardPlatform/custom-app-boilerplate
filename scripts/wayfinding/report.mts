@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 
-import type { WayfindingEdge, WayfindingGraphDocument, WayfindingNode } from '../../src/utils/wayfinding.js';
+import type { WayfindingEdge, WayfindingGraphDocument, WayfindingNode, WayfindingPoint } from '../../src/utils/wayfinding.js';
 import type { WayfindingValidationReport } from './validation.mjs';
 
 const escapeHtml = (value: string): string => value
@@ -59,7 +59,18 @@ const sanitizeSvgForReport = (sourceSvg: string): string => {
 	return new XMLSerializer().serializeToString(document);
 };
 
-export const createDebugSvg = (sourceSvg: string, graph: WayfindingGraphDocument, highlightedNodeIds: string[] = []): string => {
+const edgePoints = (edge: WayfindingEdge, from: WayfindingNode, to: WayfindingNode): WayfindingPoint[] => {
+	return edge.geometry?.length ? edge.geometry : [from, to];
+};
+
+const polyline = (points: WayfindingPoint[]): string => points.map((point: WayfindingPoint): string => `${point.x},${point.y}`).join(' ');
+
+export const createDebugSvg = (
+	sourceSvg: string,
+	graph: WayfindingGraphDocument,
+	highlightedNodeIds: string[] = [],
+	highlightedEdgeIds: string[] = []
+): string => {
 	const nodeById = new Map(graph.nodes.map((node: WayfindingNode): [string, WayfindingNode] => [node.id, node]));
 	const lines: string[] = graph.edges.flatMap((edge: WayfindingEdge): string[] => {
 		const from: WayfindingNode | undefined = nodeById.get(edge.from);
@@ -67,7 +78,7 @@ export const createDebugSvg = (sourceSvg: string, graph: WayfindingGraphDocument
 
 		if (!from || !to || from.levelId !== to.levelId) return [];
 
-		return [`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${edgeColor(edge)}" stroke-width="1.5" stroke-opacity="0.68" vector-effect="non-scaling-stroke"><title>${escapeHtml(edge.id)}</title></line>`];
+		return [`<polyline points="${polyline(edgePoints(edge, from, to))}" fill="none" stroke="${edgeColor(edge)}" stroke-width="1.5" stroke-opacity="0.68" vector-effect="non-scaling-stroke"><title>${escapeHtml(edge.id)} (${escapeHtml(edge.traversal ?? 'unclassified')}, ${escapeHtml(edge.reviewStatus ?? 'legacy')})</title></polyline>`];
 	});
 	const nodes: string[] = graph.nodes.map((node: WayfindingNode): string => {
 		const color: string = node.kind === 'location' ? '#facc15' : node.kind === 'transition' ? '#a855f7' : '#2563eb';
@@ -75,13 +86,16 @@ export const createDebugSvg = (sourceSvg: string, graph: WayfindingGraphDocument
 
 		return `<circle cx="${node.x}" cy="${node.y}" r="${radius}" fill="${color}" stroke="#ffffff" stroke-width="0.8" vector-effect="non-scaling-stroke"><title>${escapeHtml(node.id)}</title></circle>`;
 	});
-	const highlightedRoute: string[] = highlightedNodeIds.slice(1).flatMap((nodeId: string, index: number): string[] => {
+	const highlightedRoute: string[] = highlightedEdgeIds.flatMap((edgeId: string, index: number): string[] => {
 		const from: WayfindingNode | undefined = nodeById.get(highlightedNodeIds[index]);
-		const to: WayfindingNode | undefined = nodeById.get(nodeId);
+		const to: WayfindingNode | undefined = nodeById.get(highlightedNodeIds[index + 1]);
+		const edge: WayfindingEdge | undefined = graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === edgeId);
 
-		if (!from || !to || from.levelId !== to.levelId) return [];
+		if (!from || !to || !edge || from.levelId !== to.levelId) return [];
 
-		return [`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="#dc2626" stroke-width="5" stroke-opacity="0.95" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`];
+		const points: WayfindingPoint[] = edge.from === from.id ? edgePoints(edge, from, to) : [...edgePoints(edge, to, from)].reverse();
+
+		return [`<polyline points="${polyline(points)}" fill="none" stroke="#dc2626" stroke-width="5" stroke-opacity="0.95" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`];
 	});
 	const overlay = `<g id="wb-wayfinding-debug" pointer-events="none">${lines.join('')}<g id="wb-wayfinding-route-highlight">${highlightedRoute.join('')}</g>${nodes.join('')}</g>`;
 
@@ -114,6 +128,6 @@ export const writeWayfindingReport = (
 ): void => {
 	fs.mkdirSync(directory, { recursive: true });
 	fs.writeFileSync(path.join(directory, 'wayfinding-report.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-	fs.writeFileSync(path.join(directory, 'wayfinding-debug.svg'), createDebugSvg(sourceSvg, graph, report.highlightedRoute?.nodeIds), 'utf8');
+	fs.writeFileSync(path.join(directory, 'wayfinding-debug.svg'), createDebugSvg(sourceSvg, graph, report.highlightedRoute?.nodeIds, report.highlightedRoute?.edgeIds), 'utf8');
 	fs.writeFileSync(path.join(directory, 'index.html'), createReportHtml(report), 'utf8');
 };

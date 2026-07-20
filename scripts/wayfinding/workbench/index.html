@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Wallboard Wayfinding Workbench</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<header class="topbar">
+		<div><span>WALLBOARD / WAYFINDING</span><h1>Walkable-space workbench</h1></div>
+		<div class="status"><span id="mask-status">NO MASK</span><strong id="coverage-status">Load an image and graph</strong></div>
+	</header>
+	<main>
+		<aside class="controls" aria-label="Authoring controls">
+			<section>
+				<h2>Source files</h2>
+				<label>Map image<input id="image-file" type="file" accept="image/*"></label>
+				<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
+				<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
+			</section>
+			<section>
+				<h2>Walkable extraction</h2>
+				<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
+				<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
+				<p>Choose Sample, then tap representative pedestrian paths or crossings. Connected extraction excludes similarly colored isolated buildings.</p>
+				<div class="segmented" role="group" aria-label="Mask tool">
+					<button type="button" data-tool="pan">Pan</button>
+					<button type="button" data-tool="sample" class="active">Sample</button>
+					<button type="button" data-tool="include">Include</button>
+					<button type="button" data-tool="exclude">Exclude</button>
+					<button type="button" data-tool="graph">Graph</button>
+				</div>
+				<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
+				<div class="commands">
+					<button id="extract-mask" type="button">Extract connected mask</button>
+					<button id="clear-mask" type="button" class="secondary">Clear mask</button>
+				</div>
+			</section>
+			<section>
+				<h2>Review and export</h2>
+				<label class="check"><input id="mask-confirmed" type="checkbox"> Mask reviewed against source</label>
+				<div class="commands">
+					<button id="export-mask" type="button">Export mask JSON</button>
+					<button id="export-graph" type="button" class="secondary">Export graph JSON</button>
+				</div>
+			</section>
+		</aside>
+		<section class="stage-shell" aria-label="Map authoring stage">
+			<div id="stage-empty" class="stage-empty"><strong>Load the original map image</strong><span>The source image remains visible under every extracted mask and route.</span></div>
+			<canvas id="stage" width="1341" height="947"></canvas>
+			<footer><span>Wheel: zoom</span><span>Pan mode: drag map</span><span>Graph mode: drag route vertices</span></footer>
+		</section>
+		<aside class="review" aria-label="Route review">
+			<div class="review-summary"><span>ROUTE REVIEW</span><strong id="edge-summary">0 edges</strong><small id="edge-failures">No graph loaded</small></div>
+			<div id="selected-edge" class="selected-edge"><p>Select an edge on the map to inspect it.</p></div>
+			<div id="edge-list" class="edge-list"></div>
+		</aside>
+	</main>
+	<script type="module" src="./workbench.ts"></script>
+</body>
+</html>

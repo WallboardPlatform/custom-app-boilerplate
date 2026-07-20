@@ -35,6 +35,7 @@
 		"test:visual-review": "tsx --test scripts/visual-review/model.test.mts",
 		"test:wayfinding": "tsx --test scripts/wayfinding/*.test.mts",
 		"wayfinding:validate": "tsx scripts/wayfinding/cli.mts",
+		"wayfinding:workbench": "vite --host 127.0.0.1 --config scripts/wayfinding/workbench/vite.config.mts",
 		"validate:identity": "node scripts/validate-app-identity.mjs",
 		"validate:brief": "tsx scripts/validate-generation-brief.mts --brief",
 		"validate:project": "tsx scripts/validate-generation-brief.mts --project",

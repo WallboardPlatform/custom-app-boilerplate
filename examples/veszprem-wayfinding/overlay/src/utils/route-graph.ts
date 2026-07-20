@@ -17,11 +17,3 @@ export const routeBetweenLocations = (
 
 	return start && destination ? routeGraph.route(start.id, destination.id, { mapRatio }) : undefined;
 };
-
-export const routeNodes = (result: WayfindingRouteResult): WayfindingNode[] => {
-	return result.nodeIds.flatMap((id: string): WayfindingNode[] => {
-		const node: WayfindingNode | undefined = routeGraph.node(id);
-
-		return node ? [node] : [];
-	});
-};

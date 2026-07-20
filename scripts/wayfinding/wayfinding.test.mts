@@ -4,11 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
+import type { WayfindingGraphDocument, WayfindingWalkableMaskDocument } from '../../src/utils/wayfinding.js';
 import { WayfindingGraph } from '../../src/utils/wayfinding.js';
 import { parseDestinationMetadata, parseWayfindingSvg } from './model.mjs';
 import { createDebugSvg, writeWayfindingReport } from './report.mjs';
-import { parseRouteGraph } from './schema.mjs';
+import { parseRouteGraph, parseWalkableMask } from './schema.mjs';
 import { validateWayfinding } from './validation.mjs';
 
 const fixtureDirectory = path.resolve('scripts', 'wayfinding', 'fixtures');
@@ -38,6 +38,145 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.equal(report.summary.routesReachable, 2);
 		assert.equal(report.graph.maxDegree, 2);
 		assert.deepEqual(report.routes.find((route): boolean => route.destinationId === 'gallery')?.nodeIds, ['lp-lobby', 'rp-west', 'rp-east', 'gallery-lp']);
+	});
+
+	void it('routes and measures version 2 edges through their reviewed centerline geometry', (): void => {
+		const curvedGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				corridorWidth: 18,
+				from: 'start',
+				geometry: [{ x: 100, y: 100 }, { x: 200, y: 160 }, { x: 300, y: 100 }],
+				id: 'curved-corridor',
+				kind: 'outdoor',
+				reviewStatus: 'confirmed',
+				to: 'finish',
+				traversal: 'outdoor-path'
+			}],
+			graphId: 'curved-corridor',
+			nodes: [
+				{ id: 'start', kind: 'location', levelId: 'ground', locationId: 'lobby', x: 100, y: 100 },
+				{ id: 'finish', kind: 'location', levelId: 'ground', locationId: 'gallery', x: 300, y: 100 }
+			]
+		};
+		const routeGraph = new WayfindingGraph(parseRouteGraph(JSON.stringify(curvedGraph)));
+		const forward = routeGraph.route('start', 'finish', { mapRatio: 1 });
+		const reverse = routeGraph.route('finish', 'start', { mapRatio: 1 });
+
+		assert.deepEqual(forward?.path, [
+			{ levelId: 'ground', x: 100, y: 100 },
+			{ levelId: 'ground', x: 200, y: 160 },
+			{ levelId: 'ground', x: 300, y: 100 }
+		]);
+		assert.deepEqual(reverse?.path, [...(forward?.path ?? [])].reverse());
+		assert.ok((forward?.distancePixels ?? 0) > 200);
+	});
+
+	void it('rejects unreviewed or malformed version 2 corridor geometry', (): void => {
+		const invalidGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				from: 'lp-lobby',
+				geometry: [{ x: 130, y: 225 }, { x: 540, y: 225 }],
+				id: 'unreviewed-corridor',
+				kind: 'walk',
+				reviewStatus: 'proposed',
+				to: 'rp-east',
+				traversal: 'indoor-corridor'
+			}],
+			graphId: 'invalid-corridor',
+			nodes: graph.nodes
+		};
+		const report = validateWayfinding({ destinations, graph: invalidGraph, map: parseWayfindingSvg(sourceSvg), startLocationId: 'lobby' });
+
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-geometry-start-mismatch'));
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-corridor-width-required'));
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-review-required'));
+	});
+
+	void it('rejects a connected route that leaves the independently confirmed walkable mask', (): void => {
+		const mask: WayfindingWalkableMaskDocument = parseWalkableMask(JSON.stringify({
+			cellSize: 25,
+			columns: 32,
+			contractVersion: 1,
+			height: 450,
+			mapId: 'fixture-ground-floor',
+			reviewStatus: 'confirmed',
+			rows: 18,
+			walkableRuns: [[8, 0, 31], [9, 0, 31], [10, 0, 31]],
+			width: 800
+		}));
+		const shortcutGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				corridorWidth: 20,
+				from: 'lp-lobby',
+				geometry: [{ x: 120, y: 225 }, { x: 400, y: 100 }, { x: 680, y: 225 }],
+				id: 'invalid-shortcut',
+				kind: 'walk',
+				reviewStatus: 'confirmed',
+				to: 'gallery-lp',
+				traversal: 'indoor-corridor'
+			}],
+			graphId: 'invalid-shortcut',
+			nodes: graph.nodes
+		};
+		const report = validateWayfinding({
+			destinations,
+			graph: shortcutGraph,
+			map: parseWayfindingSvg(sourceSvg),
+			startLocationId: 'lobby',
+			walkableMask: mask
+		});
+
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-outside-walkable-space'));
+	});
+
+	void it('accepts reviewed centerline geometry contained by a confirmed walkable mask', (): void => {
+		const mask: WayfindingWalkableMaskDocument = parseWalkableMask(JSON.stringify({
+			cellSize: 25,
+			columns: 32,
+			contractVersion: 1,
+			height: 450,
+			mapId: 'fixture-ground-floor',
+			reviewStatus: 'confirmed',
+			rows: 18,
+			walkableRuns: [[8, 0, 31], [9, 0, 31], [10, 0, 31]],
+			width: 800
+		}));
+		const reviewedGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: graph.edges.map((edge) => {
+				const from = graph.nodes.find((node): boolean => node.id === edge.from)!;
+				const to = graph.nodes.find((node): boolean => node.id === edge.to)!;
+
+				return {
+					...edge,
+					corridorWidth: 20,
+					geometry: [{ x: from.x, y: from.y }, { x: to.x, y: to.y }],
+					reviewStatus: 'confirmed' as const,
+					traversal: 'indoor-corridor' as const
+				};
+			}),
+			graphId: graph.graphId,
+			nodes: graph.nodes
+		};
+		const report = validateWayfinding({
+			destinations,
+			graph: reviewedGraph,
+			map: parseWayfindingSvg(sourceSvg),
+			startLocationId: 'lobby',
+			walkableMask: mask
+		});
+
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'edge-outside-walkable-space'));
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'walkable-mask-missing'));
 	});
 
 	void it('rejects malformed route graphs before validation', (): void => {
