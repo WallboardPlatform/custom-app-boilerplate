@@ -1,11 +1,14 @@
 import type {
 	WayfindingEdge,
+	WayfindingEdgeKind,
 	WayfindingGraphDocument,
 	WayfindingNode,
 	WayfindingPoint,
+	WayfindingTraversal,
 	WayfindingWalkableMaskDocument,
 	WayfindingWalkableMaskRun
 } from '../../../src/utils/wayfinding';
+import { addProposedEdge, addRouteNode, upsertLocationAnchor } from '../authoring.mts';
 import {
 	closeWalkableMask,
 	extractSkeletonNetwork,
@@ -14,7 +17,7 @@ import {
 	skeletonizeWalkableMask
 } from '../centerline.mts';
 
-type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'graph';
+type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph';
 
 interface ColorSample {
 	b: number;
@@ -48,6 +51,12 @@ type DestinationDatasourceDocument = Record<string, DestinationTable>;
 interface DraggedVertex {
 	edgeId: string;
 	pointIndex: number;
+}
+
+interface EdgeDraft {
+	levelId: string;
+	points: WayfindingPoint[];
+	startNodeId: string;
 }
 
 interface ImagePoint extends WayfindingPoint {
@@ -98,6 +107,11 @@ const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
 const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
 const destinationAccessible = requireElement<HTMLSelectElement>('#destination-accessible');
 const destinationRouteable = requireElement<HTMLSelectElement>('#destination-routeable');
+const levelIdInput = requireElement<HTMLInputElement>('#level-id');
+const edgeDraftHost = requireElement<HTMLElement>('#edge-draft');
+const edgeDraftStatus = requireElement<HTMLElement>('#edge-draft-status');
+const finishJunctionButton = requireElement<HTMLButtonElement>('#finish-junction');
+const cancelEdgeButton = requireElement<HTMLButtonElement>('#cancel-edge');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -116,6 +130,7 @@ let excludeOverrides = new Set<number>();
 let selectedEdgeId: string | undefined;
 let draggedVertex: DraggedVertex | undefined;
 let insertPointForEdge: string | undefined;
+let edgeDraft: EdgeDraft | undefined;
 let pointerDown = false;
 let previousPointer = { x: 0, y: 0 };
 let scale = 1;
@@ -128,6 +143,12 @@ const brushRadius = (): number => Number(brushInput.value);
 const bridgeRadius = (): number => Number(bridgeInput.value);
 
 const graphNode = (id: string): WayfindingNode | undefined => graph?.nodes.find((node: WayfindingNode): boolean => node.id === id);
+
+const graphDocument = (): WayfindingGraphDocument => {
+	graph ??= { contractVersion: 2, edges: [], graphId: 'wayfinding-map', nodes: [] };
+
+	return graph;
+};
 
 const destinationRows = (): DestinationRow[] => destinationTableName && destinationDocument
 	? destinationDocument[destinationTableName]?.rows ?? []
@@ -451,6 +472,33 @@ const draw = (): void => {
 			}
 		}
 
+		if (tool === 'anchor' || tool === 'draw') {
+			for (const node of graph.nodes) {
+				context.beginPath();
+				context.arc(node.x, node.y, (node.kind === 'location' ? 7 : 5) / scale, 0, Math.PI * 2);
+				context.fillStyle = node.kind === 'location' ? '#ffd34e' : '#fff8e9';
+				context.fill();
+				context.lineWidth = 2 / scale;
+				context.strokeStyle = '#17201f';
+				context.stroke();
+			}
+		}
+
+		if (edgeDraft && edgeDraft.points.length > 0) {
+			context.beginPath();
+			context.moveTo(edgeDraft.points[0].x, edgeDraft.points[0].y);
+
+			for (const point of edgeDraft.points.slice(1)) context.lineTo(point.x, point.y);
+
+			context.lineCap = 'round';
+			context.lineJoin = 'round';
+			context.lineWidth = 4 / scale;
+			context.setLineDash([10 / scale, 6 / scale]);
+			context.strokeStyle = '#ffd34e';
+			context.stroke();
+			context.setLineDash([]);
+		}
+
 		const selectedNode: WayfindingNode | undefined = graph.nodes.find((node: WayfindingNode): boolean => node.locationId === selectedDestinationId);
 
 		if (selectedNode) {
@@ -492,6 +540,22 @@ const nearestEdge = (point: WayfindingPoint): WayfindingEdge | undefined => {
 				minimumDistance = distance;
 				selected = edge;
 			}
+		}
+	}
+
+	return selected;
+};
+
+const nearestNode = (point: WayfindingPoint): WayfindingNode | undefined => {
+	let selected: WayfindingNode | undefined;
+	let minimumDistance = 16 / scale;
+
+	for (const node of graph?.nodes ?? []) {
+		const distance: number = Math.hypot(point.x - node.x, point.y - node.y);
+
+		if (distance < minimumDistance) {
+			minimumDistance = distance;
+			selected = node;
 		}
 	}
 
@@ -568,6 +632,90 @@ const selectEdge = (edgeId: string | undefined): void => {
 	draw();
 };
 
+const renderEdgeDraft = (): void => {
+	edgeDraftHost.hidden = !edgeDraft;
+	finishJunctionButton.disabled = !edgeDraft || edgeDraft.points.length < 2;
+	edgeDraftStatus.textContent = edgeDraft
+		? `${edgeDraft.startNodeId} - ${Math.max(0, edgeDraft.points.length - 1)} authored point(s)`
+		: 'Tap an existing node to start an edge.';
+};
+
+const placeDestinationAnchor = (point: WayfindingPoint): void => {
+	const destination: DestinationRow | undefined = selectedDestination();
+
+	if (!destination) {
+		coverageStatus.textContent = 'Load and select a destination before placing an anchor';
+
+		return;
+	}
+
+	const node: WayfindingNode = upsertLocationAnchor(graphDocument(), destination.id, point, levelIdInput.value.trim() || 'level-0');
+	selectedEdgeId = undefined;
+	renderMetadataEditor();
+	renderReview();
+	coverageStatus.textContent = `Placed ${destination.name} approach anchor at ${Math.round(node.x)}, ${Math.round(node.y)}; verify it is on walkable space`;
+	draw();
+};
+
+const finishEdgeAtNode = (node: WayfindingNode): void => {
+	if (!edgeDraft || node.id === edgeDraft.startNodeId || node.levelId !== edgeDraft.levelId) {
+		coverageStatus.textContent = node.levelId !== edgeDraft?.levelId ? 'Cross-level edges require an explicit transition workflow' : 'Choose a different end node';
+
+		return;
+	}
+
+	const edge: WayfindingEdge = addProposedEdge(graphDocument(), edgeDraft.startNodeId, node.id, [...edgeDraft.points, node]);
+	edgeDraft = undefined;
+	selectedEdgeId = edge.id;
+	renderEdgeDraft();
+	renderReview();
+	coverageStatus.textContent = `Created proposed edge ${edge.id}; classify and confirm it after mask review`;
+	draw();
+};
+
+const authorEdgePoint = (point: WayfindingPoint): void => {
+	const node: WayfindingNode | undefined = nearestNode(point);
+
+	if (!edgeDraft) {
+		if (!node) {
+			coverageStatus.textContent = 'Start an edge by tapping an existing destination or route node';
+
+			return;
+		}
+
+		edgeDraft = { levelId: node.levelId, points: [{ x: node.x, y: node.y }], startNodeId: node.id };
+		renderEdgeDraft();
+		coverageStatus.textContent = 'Tap corridor bends, then an existing node; or finish at a new junction';
+		draw();
+
+		return;
+	}
+
+	if (node) {
+		finishEdgeAtNode(node);
+
+		return;
+	}
+
+	edgeDraft.points.push({ x: point.x, y: point.y });
+	renderEdgeDraft();
+	draw();
+};
+
+const finishEdgeAtJunction = (): void => {
+	if (!edgeDraft || edgeDraft.points.length < 2) return;
+
+	const endpoint: WayfindingPoint = edgeDraft.points[edgeDraft.points.length - 1];
+	const node: WayfindingNode = addRouteNode(graphDocument(), endpoint, edgeDraft.levelId);
+	finishEdgeAtNode(node);
+};
+
+const cancelEdgeDraft = (): void => {
+	edgeDraft = undefined;
+	renderEdgeDraft();
+	draw();
+};
+
 const renderReview = (): void => {
 	const edges: WayfindingEdge[] = graph?.edges ?? [];
 	const invalidEdgeIds = new Set(edges.filter((edge: WayfindingEdge): boolean => mask.length > 0 && edgeFailuresFor(edge).length > 0).map((edge: WayfindingEdge): string => edge.id));
@@ -598,19 +746,76 @@ const renderReview = (): void => {
 		return;
 	}
 
-	selectedEdgeHost.innerHTML = '<h2></h2><dl><dt>Traversal</dt><dd></dd><dt>Review</dt><dd></dd><dt>Corridor width</dt><dd></dd><dt>Mask failures</dt><dd></dd></dl><button type="button" data-action="insert">Insert geometry point</button><button type="button" data-action="confirm">Confirm edge geometry</button>';
+	selectedEdgeHost.innerHTML = `
+		<h2></h2>
+		<div class="edge-fields">
+			<label>Kind<select data-edge-field="kind"><option value="walk">Walk</option><option value="outdoor">Outdoor</option><option value="stairs">Stairs</option><option value="elevator">Elevator</option><option value="escalator">Escalator</option><option value="shuttle">Shuttle</option></select></label>
+			<label>Traversal<select data-edge-field="traversal"><option value="outdoor-path">Outdoor path</option><option value="crossing">Crossing</option><option value="indoor-corridor">Indoor corridor</option><option value="open-area">Open area</option><option value="portal">Portal</option><option value="transition">Transition</option></select></label>
+			<label>Step-free status<select data-edge-field="accessible"><option value="false">Unverified / no</option><option value="true">Verified step-free</option></select></label>
+			<label>Corridor width<input data-edge-field="corridorWidth" type="number" min="0.1" step="0.5"></label>
+			<label class="check"><input data-edge-field="bidirectional" type="checkbox"> Bidirectional</label>
+		</div>
+		<dl><dt>Review</dt><dd></dd><dt>Mask failures</dt><dd></dd></dl>
+		<button type="button" data-action="insert">Insert geometry point</button>
+		<button type="button" data-action="confirm">Confirm contained geometry</button>
+		<button type="button" data-action="delete" class="danger">Delete edge</button>`;
 	selectedEdgeHost.querySelector('h2')!.textContent = selected.id;
 	const values: NodeListOf<HTMLElement> = selectedEdgeHost.querySelectorAll('dd');
-	values[0].textContent = selected.traversal ?? 'unclassified';
-	values[1].textContent = selected.reviewStatus ?? 'legacy';
-	values[2].textContent = String(selected.corridorWidth ?? 'not set');
-	values[3].textContent = String(invalidEdgeIds.has(selected.id) ? edgeFailuresFor(selected).length : 0);
+	values[0].textContent = selected.reviewStatus ?? 'legacy';
+	values[1].textContent = String(invalidEdgeIds.has(selected.id) ? edgeFailuresFor(selected).length : 0);
+	const kindSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="kind"]')!;
+	const traversalSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="traversal"]')!;
+	const accessibleSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="accessible"]')!;
+	const corridorWidthInput = selectedEdgeHost.querySelector<HTMLInputElement>('[data-edge-field="corridorWidth"]')!;
+	const bidirectionalInput = selectedEdgeHost.querySelector<HTMLInputElement>('[data-edge-field="bidirectional"]')!;
+	kindSelect.value = selected.kind;
+	traversalSelect.value = selected.traversal ?? 'open-area';
+	accessibleSelect.value = String(selected.accessible);
+	corridorWidthInput.value = String(selected.corridorWidth ?? cellSize());
+	bidirectionalInput.checked = selected.bidirectional;
+	const updateEdge = (): void => {
+		selected.reviewStatus = 'proposed';
+		renderReview();
+		draw();
+	};
+	kindSelect.addEventListener('change', (): void => { selected.kind = kindSelect.value as WayfindingEdgeKind; updateEdge(); });
+	traversalSelect.addEventListener('change', (): void => { selected.traversal = traversalSelect.value as WayfindingTraversal; updateEdge(); });
+	accessibleSelect.addEventListener('change', (): void => { selected.accessible = accessibleSelect.value === 'true'; updateEdge(); });
+	corridorWidthInput.addEventListener('change', (): void => {
+		const width: number = Number(corridorWidthInput.value);
+
+		if (Number.isFinite(width) && width > 0) selected.corridorWidth = width;
+		updateEdge();
+	});
+	bidirectionalInput.addEventListener('change', (): void => { selected.bidirectional = bidirectionalInput.checked; updateEdge(); });
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="insert"]')!.addEventListener('click', (): void => {
 		insertPointForEdge = selected.id;
 		coverageStatus.textContent = 'Tap the map to insert a point on the selected edge';
 	});
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="confirm"]')!.addEventListener('click', (): void => {
+		if (mask.length === 0 || maskReviewStatus !== 'confirmed') {
+			coverageStatus.textContent = 'Confirm the independently reviewed walkable mask before confirming an edge';
+
+			return;
+		}
+
+		const failures: WayfindingPoint[] = edgeFailuresFor(selected);
+
+		if (failures.length > 0) {
+			coverageStatus.textContent = `${selected.id} leaves walkable space at ${failures.length} sampled point(s)`;
+
+			return;
+		}
+
 		selected.reviewStatus = 'confirmed';
+		renderReview();
+		draw();
+	});
+	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="delete"]')!.addEventListener('click', (): void => {
+		if (!graph) return;
+
+		graph.edges = graph.edges.filter((edge: WayfindingEdge): boolean => edge.id !== selected.id);
+		selectedEdgeId = undefined;
 		renderReview();
 		draw();
 	});
@@ -776,27 +981,6 @@ const generateCenterlineGraph = (): void => {
 	draw();
 };
 
-const confirmContainedEdges = (): void => {
-	if (!graph || mask.length === 0 || maskReviewStatus !== 'confirmed') {
-		coverageStatus.textContent = 'Confirm the reviewed walkable mask before confirming its contained centerlines';
-
-		return;
-	}
-
-	let confirmedCount = 0;
-
-	for (const edge of graph.edges) {
-		if (edgeFailuresFor(edge).length > 0) continue;
-
-		edge.reviewStatus = 'confirmed';
-		confirmedCount += 1;
-	}
-
-	coverageStatus.textContent = `${confirmedCount}/${graph.edges.length} contained edges confirmed`;
-	renderReview();
-	draw();
-};
-
 const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> => {
 	const file: File | undefined = input.files?.[0];
 
@@ -836,6 +1020,8 @@ imageFile.addEventListener('change', async (): Promise<void> => {
 graphFile.addEventListener('change', async (): Promise<void> => {
 	graph = await loadJsonFile<WayfindingGraphDocument>(graphFile);
 	selectedEdgeId = undefined;
+	edgeDraft = undefined;
+	renderEdgeDraft();
 	renderMetadataEditor();
 	renderReview();
 	draw();
@@ -911,11 +1097,15 @@ destinationRouteable.addEventListener('change', (): void => {
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 	button.addEventListener('click', (): void => {
+		if (tool === 'draw' && button.dataset.tool !== 'draw') cancelEdgeDraft();
 		tool = button.dataset.tool as Tool;
 		setActiveTool();
 		draw();
 	});
 }
+
+finishJunctionButton.addEventListener('click', finishEdgeAtJunction);
+cancelEdgeButton.addEventListener('click', cancelEdgeDraft);
 
 for (const [input, output] of [[cellSizeInput, cellSizeValue], [toleranceInput, toleranceValue], [brushInput, brushValue], [bridgeInput, bridgeValue]] as const) {
 	input.addEventListener('input', (): void => { output.value = input.value; });
@@ -926,7 +1116,6 @@ toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
 requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', generateCenterlineGraph);
-requireElement<HTMLButtonElement>('#confirm-contained').addEventListener('click', confirmContainedEdges);
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
@@ -976,6 +1165,10 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		paintMask(imagePoint, tool === 'include');
 		renderReview();
 		draw();
+	} else if (tool === 'anchor') {
+		placeDestinationAnchor(imagePoint);
+	} else if (tool === 'draw') {
+		authorEdgePoint(imagePoint);
 	} else if (tool === 'graph' && graph) {
 		const edge: WayfindingEdge | undefined = selectedEdgeId
 			? graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId)
@@ -1032,5 +1225,6 @@ canvas.addEventListener('wheel', (event: WheelEvent): void => {
 
 window.addEventListener('resize', resizeCanvas);
 setActiveTool();
+renderEdgeDraft();
 renderReview();
 resizeCanvas();

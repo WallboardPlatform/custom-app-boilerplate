@@ -90,6 +90,7 @@ main {
 }
 
 .controls input[type="text"],
+.controls input[type="number"],
 .controls select,
 .controls textarea {
 	display: block;
@@ -120,7 +121,8 @@ main {
 	line-height: 1.45;
 }
 
-.segmented { display: grid; margin-top: 13px; grid-template-columns: repeat(5, 1fr); }
+.segmented { display: grid; margin-top: 13px; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.segmented.authoring-tools { grid-template-columns: repeat(3, 1fr); }
 
 .segmented button,
 .commands button {
@@ -138,11 +140,18 @@ main {
 	color: #44514e;
 }
 
-.segmented button + button { border-left: 0; }
 .segmented button.active { border-color: #18826f; background: #18826f; color: #ffffff; }
 
 .commands { display: grid; margin-top: 13px; gap: 8px; }
 .commands button.secondary { background: #ffffff; color: #126b5c; }
+.commands button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.edge-draft { margin-top: 13px; padding: 12px; border: 1px solid #d1ad35; background: #fff7d8; }
+.edge-draft[hidden] { display: none; }
+.edge-draft strong,
+.edge-draft span { display: block; }
+.edge-draft strong { color: #7b5a00; font-size: 10px; }
+.edge-draft span { margin-top: 5px; color: #574a26; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 
 .check { display: flex !important; align-items: center; gap: 8px; }
 .check input { width: 18px; height: 18px; accent-color: #18826f; }
@@ -205,6 +214,12 @@ main {
 .selected-edge dt { color: #687571; }
 .selected-edge dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .selected-edge button { width: 100%; height: 34px; margin-top: 12px; border: 1px solid #18826f; background: #ffffff; color: #126b5c; font-size: 11px; font-weight: 800; }
+.selected-edge button.danger { border-color: #b94034; color: #a3332a; }
+.edge-fields { display: grid; margin-bottom: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.edge-fields label { color: #687571; font-size: 10px; font-weight: 700; }
+.edge-fields select,
+.edge-fields input[type="number"] { display: block; width: 100%; height: 32px; margin-top: 4px; border: 1px solid #c5ceca; border-radius: 0; background: #ffffff; color: #17201f; font-size: 10px; }
+.edge-fields .check { grid-column: 1 / -1; }
 
 .edge-list { min-height: 0; }
 .edge-list button {

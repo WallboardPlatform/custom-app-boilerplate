@@ -382,8 +382,8 @@ const validateDestinations = (
 	}
 
 	for (const destination of destinations) {
-		if (!locationIds.has(destination.id)) {
-			addIssue(issues, 'error', 'destination-location-missing', `Destination '${destination.id}' has no SVG location shape.`, [destination.id]);
+		if (destination.routeable && !locationIds.has(destination.id)) {
+			addIssue(issues, 'error', 'destination-location-missing', `Routeable destination '${destination.id}' has no SVG location shape.`, [destination.id]);
 		}
 
 		if (destination.routeable && !graphLocationIds.has(destination.id)) {

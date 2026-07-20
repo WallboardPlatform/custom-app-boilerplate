@@ -32,6 +32,7 @@
 		"test:example-screenshots": "node --test scripts/example-screenshots.test.mjs",
 		"test:visual-review": "tsx --test scripts/visual-review/model.test.mts",
 		"test:wayfinding": "tsx --test scripts/wayfinding/*.test.mts",
+		"wayfinding:audit-source": "tsx scripts/wayfinding/source-audit-cli.mts",
 		"wayfinding:validate": "tsx scripts/wayfinding/cli.mts",
 		"wayfinding:workbench": "vite --host 127.0.0.1 --config scripts/wayfinding/workbench/vite.config.mts",
 		"validate:identity": "node scripts/validate-app-identity.mjs",

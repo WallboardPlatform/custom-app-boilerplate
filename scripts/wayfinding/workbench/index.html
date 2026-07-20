@@ -30,7 +30,6 @@
 					<button type="button" data-tool="sample" class="active">Sample</button>
 					<button type="button" data-tool="include">Include</button>
 					<button type="button" data-tool="exclude">Exclude</button>
-					<button type="button" data-tool="graph">Graph</button>
 				</div>
 				<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
 				<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
@@ -39,8 +38,25 @@
 					<button id="clear-mask" type="button" class="secondary">Clear mask</button>
 				</div>
 				<div class="commands">
-					<button id="generate-centerlines" type="button">Generate centerline graph</button>
-					<button id="confirm-contained" type="button" class="secondary">Confirm contained edges</button>
+					<button id="generate-centerlines" type="button">Generate centerline proposals</button>
+				</div>
+			</section>
+			<section>
+				<h2>Explicit graph authoring</h2>
+				<p>Place selected destination anchors at walkable entrances. Generated centerlines remain proposed topology; inspect, classify, and confirm every edge individually.</p>
+				<label>Level id<input id="level-id" type="text" value="level-0"></label>
+				<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
+					<button type="button" data-tool="anchor">Anchor</button>
+					<button type="button" data-tool="draw">Draw edge</button>
+					<button type="button" data-tool="graph">Edit edge</button>
+				</div>
+				<div id="edge-draft" class="edge-draft" hidden>
+					<strong>EDGE DRAFT</strong>
+					<span id="edge-draft-status">Tap an existing node to start an edge.</span>
+					<div class="commands">
+						<button id="finish-junction" type="button">Finish at new junction</button>
+						<button id="cancel-edge" type="button" class="secondary">Cancel draft</button>
+					</div>
 				</div>
 			</section>
 			<section>
@@ -77,7 +93,7 @@
 		<section class="stage-shell" aria-label="Map authoring stage">
 			<div id="stage-empty" class="stage-empty"><strong>Load the original map image</strong><span>The source image remains visible under every extracted mask and route.</span></div>
 			<canvas id="stage" width="1341" height="947"></canvas>
-			<footer><span>Wheel: zoom</span><span>Pan mode: drag map</span><span>Graph mode: drag route vertices</span></footer>
+			<footer><span>Wheel: zoom</span><span>Pan: drag map</span><span>Draw: nodes and corridor bends</span><span>Edit: drag route vertices</span></footer>
 		</section>
 		<aside class="review" aria-label="Route review">
 			<div class="review-summary"><span>ROUTE REVIEW</span><strong id="edge-summary">0 edges</strong><small id="edge-failures">No graph loaded</small></div>
