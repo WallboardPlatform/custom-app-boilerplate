@@ -34,7 +34,6 @@
 		"test:example-screenshots": "node --test scripts/example-screenshots.test.mjs",
 		"test:visual-review": "tsx --test scripts/visual-review/model.test.mts",
 		"test:wayfinding": "tsx --test scripts/wayfinding/*.test.mts",
-		"wayfinding:sync-svg": "tsx scripts/wayfinding/sync-svg.mts",
 		"wayfinding:validate": "tsx scripts/wayfinding/cli.mts",
 		"validate:identity": "node scripts/validate-app-identity.mjs",
 		"validate:brief": "tsx scripts/validate-generation-brief.mts --brief",

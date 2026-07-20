@@ -5,7 +5,7 @@ description: Create or repair a Wallboard interactive wayfinding custom app from
 
 # Create Wayfinding App
 
-Build three owned artifacts: visual `map.svg`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only.
+Build three independent artifacts: visual `map.svg`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only. Target the custom-app runtime, not the legacy Map widget.
 
 ## Workflow
 
@@ -17,12 +17,7 @@ Build three owned artifacts: visual `map.svg`, canonical `route-graph.json`, and
    - **Exact vector:** trace when reliable geometry is required and available.
 4. Create the generation brief and pass `npm run validate:brief` before app implementation.
 5. Author the artifacts using [references/artifacts.md](references/artifacts.md). Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
-6. Synchronize canonical nodes into the legacy SVG groups:
-
-```bash
-npm run wayfinding:sync-svg -- --svg authoring-map.svg --graph route-graph.json --out map.svg
-```
-
+6. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
 7. Validate and generate the QA dashboard/overlay:
 
 ```bash
@@ -35,7 +30,8 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinat
 
 ## Non-Negotiable
 
-- New maps use explicit edges. `createLegacyProximityGraph` and `--legacy-sensitivity` are audit/fallback paths, never topology certification.
+- New maps use native location annotations and explicit edges. They do not inherit legacy minimum dimensions, group ordering, point circles, or transform restrictions.
+- `createLegacyProximityGraph` and `--legacy-sensitivity` are migration/audit paths for existing maps, never topology certification or generated output.
 - Never tune proximity sensitivity merely until reachability passes. Use an existing installed value or compare candidates diagnostically; explicit edges are the fix.
 - Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
 - Place a location node at its walkable entrance/approach, not its polygon centroid.

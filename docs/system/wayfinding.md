@@ -16,25 +16,26 @@ Do not inpaint source labels/icons by default. Remove them only when they must b
 
 | Artifact | Owns | Must not own |
 |----------|------|--------------|
-| `map.svg` | Base artwork, location hit areas, level geometry, stable IDs, legacy point groups | Mutable public copy, live status, inferred topology |
+| `map.svg` | Base artwork, location hit areas, level geometry, stable IDs | Mutable public copy, live status, route nodes or inferred topology |
 | `route-graph.json` | Nodes, explicit edges, floor transitions, accessibility, optional measured distances | Destination descriptions or presentation |
 | destination `TABLE` | Name, aliases, description, category, floor, hours, image, status, accessibility, keywords, CTA | SVG geometry or graph edges |
 
-Location points represent walkable entrances/approach points, not polygon centroids. Keep `locationId` explicit in graph nodes and `data-location-id` on generated SVG circles. Plain SVG `label` remains a legacy fallback; the table is authoritative when present.
+Graph location nodes represent walkable entrances/approach points, not polygon centroids. Keep `locationId` explicit in graph nodes. Annotate the corresponding SVG hit target with `data-wayfinding-location-id`; the table is authoritative for public copy.
 
 ## SVG Contract
 
-Follow the [Wallboard SVG map structure](https://docs.wallboard.us/docs/content-editing/widgets/custom-apps/map/map_svg_creation/): `Base`, then each level with these direct groups in order:
+The native contract is intentionally independent of the legacy Map widget:
 
-1. `TransitionPoints`
-2. `LocationPoints`
-3. `RoutePoints`
-4. `Icons`
-5. `Legends`
-6. `Locations`
-7. `Walls`
+- use any positive, stable `viewBox` suited to the source and accepted design;
+- allow transforms, nested groups, raster backgrounds, and arbitrary visual layers;
+- give every interactive target a unique SVG `id` and `data-wayfinding-location-id`;
+- add `data-wayfinding-level` when the target belongs to a floor;
+- wrap multipart geometry in one annotated group;
+- keep route nodes and edges exclusively in `route-graph.json`.
 
-Use globally unique IDs, a minimum 1240x720 coordinate space, and no `transform` attributes. Create polygons only for interactive destinations/zones required by the accepted use case.
+Graph coordinates are always expressed in the root SVG viewBox coordinate system. Pointer and authoring tools must normalize transformed artwork into that coordinate space.
+
+Legacy seven-group SVGs remain accepted only as migration/audit input. New generated maps must not reproduce their point-circle topology or inherit their `1240x720`, group-order, or no-transform restrictions.
 
 ## Routing
 
@@ -62,7 +63,6 @@ The shared `WayfindingGraph` supports standard and step-free shortest paths plus
 The AI may propose visuals and extract OCR metadata, but ambiguous names, entrances, and corridor topology require an explicit review item. Never invent missing operational facts.
 
 ```bash
-npm run wayfinding:sync-svg -- --svg authoring-map.svg --graph route-graph.json --out map.svg
 npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinations destinations.json --start lobby --route-to auditorium --report-dir wayfinding-report --strict
 ```
 
@@ -74,7 +74,7 @@ For legacy audits, replace `--graph` with `--legacy-sensitivity <px>`. Use the i
 
 Deliver the app ZIP plus:
 
-- synchronized `map.svg`;
+- native annotated `map.svg`;
 - canonical `route-graph.json`;
 - destination datasource contract and synthetic template;
 - validation report and graph overlay;

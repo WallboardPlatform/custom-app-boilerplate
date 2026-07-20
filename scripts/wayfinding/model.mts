@@ -25,6 +25,12 @@ export interface ParsedSvgElement {
 	tag: string;
 }
 
+export interface ParsedWayfindingLocation extends ParsedSvgElement {
+	levelId?: string;
+	locationId: string;
+	source: 'native' | 'legacy-import';
+}
+
 export interface ParsedWayfindingLevel {
 	id: string;
 	locations: ParsedSvgElement[];
@@ -33,17 +39,19 @@ export interface ParsedWayfindingLevel {
 }
 
 export interface ParsedWayfindingSvg {
+	contractMode: 'legacy-import' | 'native' | 'unannotated';
 	elements: ParsedSvgElement[];
 	height: number;
 	ids: string[];
 	levels: ParsedWayfindingLevel[];
+	locations: ParsedWayfindingLocation[];
 	rootGroupIds: string[];
 	viewBox: [number, number, number, number];
 	width: number;
 }
 
 export interface DestinationMetadata {
-	accessible: boolean;
+	accessible: boolean | null;
 	category?: string;
 	description?: string;
 	floor?: string;
@@ -203,12 +211,31 @@ export const parseWayfindingSvg = (xml: string): ParsedWayfindingSvg => {
 
 	const width: number = finiteNumber(rootAttributes.width) ?? viewBoxValues[2];
 	const height: number = finiteNumber(rootAttributes.height) ?? viewBoxValues[3];
+	const nativeLocations: ParsedWayfindingLocation[] = elements.flatMap((element: ParsedSvgElement): ParsedWayfindingLocation[] => {
+		const locationId: string | undefined = element.attributes['data-wayfinding-location-id'];
+
+		return locationId ? [{
+			...element,
+			levelId: element.attributes['data-wayfinding-level'],
+			locationId,
+			source: 'native'
+		}] : [];
+	});
+	const legacyLocations: ParsedWayfindingLocation[] = levels.flatMap((level: ParsedWayfindingLevel): ParsedWayfindingLocation[] => level.locations.map((location: ParsedSvgElement): ParsedWayfindingLocation => ({
+		...location,
+		levelId: level.id,
+		locationId: location.attributes.id,
+		source: 'legacy-import'
+	})));
+	const locations: ParsedWayfindingLocation[] = nativeLocations.length > 0 ? nativeLocations : legacyLocations;
 
 	return {
+		contractMode: nativeLocations.length > 0 ? 'native' : legacyLocations.length > 0 ? 'legacy-import' : 'unannotated',
 		elements,
 		height,
 		ids: elements.map((element: ParsedSvgElement): string => element.attributes.id).filter(Boolean),
 		levels,
+		locations,
 		rootGroupIds,
 		viewBox: viewBoxValues as [number, number, number, number],
 		width: width
@@ -246,7 +273,7 @@ export const parseDestinationMetadata = (value: unknown): DestinationMetadata[] 
 			: undefined;
 
 		return [{
-			accessible: item.accessible !== false,
+			accessible: item.accessible === true ? true : item.accessible === false ? false : null,
 			category: optionalString('category'),
 			description: optionalString('description'),
 			floor: optionalString('floor'),

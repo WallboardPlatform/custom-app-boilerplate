@@ -6,9 +6,8 @@ import type {
 } from '../../src/utils/wayfinding.js';
 import { WayfindingGraph } from '../../src/utils/wayfinding.js';
 import {
-	WAYFINDING_LAYER_SUFFIXES,
 	type DestinationMetadata,
-	type ParsedWayfindingLevel,
+	type ParsedWayfindingLocation,
 	type ParsedWayfindingSvg
 } from './model.mjs';
 
@@ -87,32 +86,22 @@ const duplicateValues = (values: string[]): string[] => {
 	return [...duplicates].sort();
 };
 
-const expectedSubgroups = (levelId: string): string[] => {
-	return WAYFINDING_LAYER_SUFFIXES.map((suffix): string => `${levelId}-${suffix}`);
-};
-
 const validateMapStructure = (map: ParsedWayfindingSvg, issues: WayfindingIssue[]): void => {
 	const forbiddenTags = new Set(['script', 'foreignObject', 'iframe', 'object']);
 
-	if (map.width < 1240 || map.height < 720) {
-		addIssue(issues, 'error', 'map-minimum-size', `Map is ${map.width}x${map.height}; new maps require at least 1240x720 SVG units.`);
+	if (map.viewBox[2] <= 0 || map.viewBox[3] <= 0 || map.width <= 0 || map.height <= 0) {
+		addIssue(issues, 'error', 'map-coordinate-space-invalid', 'SVG dimensions and viewBox width/height must be positive.');
 	}
 
-	if (map.rootGroupIds[0] !== 'Base') {
-		addIssue(issues, 'error', 'base-layer-order', 'The first root group must be Base.', [map.rootGroupIds[0] ?? 'missing']);
-	}
-
-	if (map.levels.length === 0) {
-		addIssue(issues, 'error', 'level-missing', 'No level group with the required seven wayfinding subgroups was found.');
+	if (map.contractMode === 'unannotated') {
+		addIssue(issues, 'error', 'location-annotations-missing', 'No element has a stable data-wayfinding-location-id annotation.');
+	} else if (map.contractMode === 'legacy-import') {
+		addIssue(issues, 'warning', 'legacy-map-import', 'This SVG uses the legacy seven-group Map format. It is accepted only as migration input; new maps use data-wayfinding-location-id annotations.');
 	}
 
 	for (const element of map.elements) {
 		if (forbiddenTags.has(element.tag)) {
 			addIssue(issues, 'error', 'executable-svg-content', `SVG element '${element.tag}' is not allowed in generated maps.`, [element.attributes.id ?? element.tag]);
-		}
-
-		if (element.attributes.transform !== undefined) {
-			addIssue(issues, 'error', 'transform-forbidden', 'Transforms are not allowed in generated wayfinding SVGs.', [element.attributes.id ?? element.tag]);
 		}
 
 		for (const [name, value] of Object.entries(element.attributes)) {
@@ -130,25 +119,13 @@ const validateMapStructure = (map: ParsedWayfindingSvg, issues: WayfindingIssue[
 		addIssue(issues, 'error', 'duplicate-svg-id', `SVG id '${id}' is not unique.`, [id]);
 	}
 
-	for (const level of map.levels) {
-		const expected: string[] = expectedSubgroups(level.id);
-		const relevantOrder: string[] = level.subgroupIds.filter((id: string): boolean => expected.includes(id));
+	for (const locationId of duplicateValues(map.locations.map((location: ParsedWayfindingLocation): string => location.locationId))) {
+		addIssue(issues, 'error', 'duplicate-location-annotation', `Wayfinding location '${locationId}' is annotated more than once. Wrap multipart geometry in one annotated group.`, [locationId]);
+	}
 
-		for (const missing of expected.filter((id: string): boolean => !level.subgroupIds.includes(id))) {
-			addIssue(issues, 'error', 'level-subgroup-missing', `Level '${level.id}' is missing '${missing}'.`, [level.id, missing]);
-		}
-
-		if (relevantOrder.join('|') !== expected.join('|')) {
-			addIssue(issues, 'error', 'level-subgroup-order', `Level '${level.id}' subgroups are not in the required order.`, relevantOrder);
-		}
-
-		for (const location of level.locations) {
-			const id: string = location.attributes.id;
-			const label: string | undefined = location.attributes.label;
-
-			if (!label && location.attributes['inkscape:label']) {
-				addIssue(issues, 'warning', 'legacy-label-attribute', `Location '${id}' has only inkscape:label; the legacy runtime reads plain label.`, [id]);
-			}
+	for (const location of map.locations.filter((candidate: ParsedWayfindingLocation): boolean => candidate.source === 'native')) {
+		if (!location.attributes.id) {
+			addIssue(issues, 'error', 'location-element-id-missing', `Wayfinding location '${location.locationId}' requires a stable SVG element id.`, [location.locationId]);
 		}
 	}
 };
@@ -174,9 +151,8 @@ const crosses = (leftA: WayfindingNode, leftB: WayfindingNode, rightA: Wayfindin
 
 const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg, issues: WayfindingIssue[]): number => {
 	const nodeById = new Map<string, WayfindingNode>();
-	const svgNodeById = new Map(map.levels.flatMap((level: ParsedWayfindingLevel): WayfindingNode[] => level.pointNodes)
-		.map((node: WayfindingNode): [string, WayfindingNode] => [node.id, node]));
 	const degree = new Map<string, number>();
+	const [viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight] = map.viewBox;
 
 	for (const id of duplicateValues(graph.nodes.map((node: WayfindingNode): string => node.id))) {
 		addIssue(issues, 'error', 'duplicate-graph-node', `Graph node '${id}' is not unique.`, [id]);
@@ -185,27 +161,10 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 	for (const node of graph.nodes) {
 		nodeById.set(node.id, node);
 		degree.set(node.id, 0);
-		const svgNode: WayfindingNode | undefined = svgNodeById.get(node.id);
 
-		if (!svgNode) {
-			addIssue(issues, 'error', 'graph-node-missing-from-svg', `Graph node '${node.id}' has no matching SVG point.`, [node.id]);
-
-			continue;
+		if (node.x < viewBoxX || node.x > viewBoxX + viewBoxWidth || node.y < viewBoxY || node.y > viewBoxY + viewBoxHeight) {
+			addIssue(issues, 'error', 'graph-node-outside-viewbox', `Graph node '${node.id}' is outside the SVG viewBox.`, [node.id]);
 		}
-
-		if (svgNode.levelId !== node.levelId || svgNode.kind !== node.kind || Math.abs(svgNode.x - node.x) > 0.1 || Math.abs(svgNode.y - node.y) > 0.1) {
-			addIssue(issues, 'error', 'graph-node-svg-mismatch', `Graph node '${node.id}' does not match its SVG point.`, [node.id]);
-		}
-	}
-
-	const svgNodesMissingFromGraph: string[] = [...svgNodeById.keys()].filter((id: string): boolean => !nodeById.has(id));
-
-	for (const id of svgNodesMissingFromGraph.slice(0, 25)) {
-		addIssue(issues, 'warning', 'svg-point-missing-from-graph', `SVG point '${id}' is not part of the route graph.`, [id]);
-	}
-
-	if (svgNodesMissingFromGraph.length > 25) {
-		addIssue(issues, 'warning', 'svg-point-missing-summary', `${svgNodesMissingFromGraph.length - 25} additional SVG points are not part of the route graph.`);
 	}
 
 	for (const id of duplicateValues(graph.edges.map((edge: WayfindingEdge): string => edge.id))) {
@@ -303,7 +262,7 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 	}
 
 	if (graph.generation?.mode === 'legacy-proximity') {
-		addIssue(issues, 'warning', 'legacy-proximity-fallback', 'This graph was inferred by global proximity. It is compatible but not accepted as safe explicit topology without visual route review.');
+		addIssue(issues, 'warning', 'legacy-proximity-fallback', 'This graph was inferred by global proximity for migration analysis and is not accepted as safe explicit topology.');
 		addIssue(issues, 'warning', 'legacy-accessibility-unverified', 'Legacy proximity edges have unknown accessibility; step-free route coverage is not evaluated.');
 	}
 
@@ -316,7 +275,8 @@ const validateDestinations = (
 	map: ParsedWayfindingSvg,
 	issues: WayfindingIssue[]
 ): void => {
-	const locationIds = new Set(map.levels.flatMap((level: ParsedWayfindingLevel): string[] => level.locations.map((location): string => location.attributes.id)));
+	const locationIds = new Set(map.locations.map((location: ParsedWayfindingLocation): string => location.locationId));
+	const locationById = new Map(map.locations.map((location: ParsedWayfindingLocation): [string, ParsedWayfindingLocation] => [location.locationId, location]));
 	const graphLocationIds = new Set(graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location')
 		.map((node: WayfindingNode): string | undefined => node.locationId)
 		.filter((id): id is string => Boolean(id)));
@@ -324,6 +284,12 @@ const validateDestinations = (
 	for (const node of graph.nodes.filter((candidate: WayfindingNode): boolean => candidate.kind === 'location')) {
 		if (node.locationId && !locationIds.has(node.locationId)) {
 			addIssue(issues, 'error', 'graph-location-shape-missing', `Graph location node '${node.id}' references missing SVG location '${node.locationId}'.`, [node.id, node.locationId]);
+		}
+
+		const location: ParsedWayfindingLocation | undefined = node.locationId ? locationById.get(node.locationId) : undefined;
+
+		if (location?.levelId && location.levelId !== node.levelId) {
+			addIssue(issues, 'error', 'graph-location-level-mismatch', `Graph location node '${node.id}' is on '${node.levelId}', but its SVG target is on '${location.levelId}'.`, [node.id, node.locationId!, node.levelId, location.levelId]);
 		}
 	}
 
@@ -339,17 +305,17 @@ const validateDestinations = (
 		if (destination.routeable && !graphLocationIds.has(destination.id)) {
 			addIssue(issues, 'error', 'destination-route-node-missing', `Routeable destination '${destination.id}' has no graph location node.`, [destination.id]);
 		}
+
+		if (destination.routeable && destination.accessible === null) {
+			addIssue(issues, 'warning', 'destination-accessibility-unverified', `Destination '${destination.id}' has no verified accessibility value.`, [destination.id]);
+		}
 	}
 
 	const metadataIds = new Set(destinations.map((destination: DestinationMetadata): string => destination.id));
 
-	for (const level of map.levels) {
-		for (const location of level.locations) {
-			const id: string = location.attributes.id;
-
-			if (!metadataIds.has(id) && !location.attributes.label) {
-				addIssue(issues, 'warning', 'location-content-missing', `Location '${id}' has neither companion metadata nor a plain SVG label.`, [id]);
-			}
+	for (const location of map.locations) {
+		if (!metadataIds.has(location.locationId)) {
+			addIssue(issues, 'warning', 'location-content-missing', `Location '${location.locationId}' has no companion metadata row.`, [location.locationId]);
 		}
 	}
 };
@@ -389,7 +355,7 @@ const routeChecks = (
 			addIssue(issues, 'error', 'destination-unreachable', `Destination '${destination.id}' is marked routeable but cannot be reached from '${startLocationId}'.`, [startLocationId, destination.id]);
 		}
 
-		if (accessibilityVerified && destination.accessible && standard && !stepFree) {
+		if (accessibilityVerified && destination.accessible === true && standard && !stepFree) {
 			addIssue(issues, 'warning', 'accessible-route-unavailable', `Accessible destination '${destination.id}' has no step-free route from '${startLocationId}'.`, [startLocationId, destination.id]);
 		}
 
@@ -432,9 +398,9 @@ export const validateWayfinding = (options: WayfindingValidationOptions): Wayfin
 		issues,
 		map: {
 			height: options.map.height,
-			levels: options.map.levels.length,
-			locations: options.map.levels.reduce((sum: number, level: ParsedWayfindingLevel): number => sum + level.locations.length, 0),
-			pointNodes: options.map.levels.reduce((sum: number, level: ParsedWayfindingLevel): number => sum + level.pointNodes.length, 0),
+			levels: new Set(options.graph.nodes.map((node: WayfindingNode): string => node.levelId)).size,
+			locations: options.map.locations.length,
+			pointNodes: options.map.levels.reduce((sum: number, level): number => sum + level.pointNodes.length, 0),
 			width: options.map.width
 		},
 		routes,

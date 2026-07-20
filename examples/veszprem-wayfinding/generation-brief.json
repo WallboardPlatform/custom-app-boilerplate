@@ -3,7 +3,7 @@
 	"request": {
 		"summary": "Create an interactive Veszprem downtown wayfinding kiosk from the supplied structured SVG map and a separate editable destination table.",
 		"audience": "Visitors choosing a downtown landmark on a landscape touch display in Veszprem.",
-		"primaryGoal": "Let a visitor find a named destination, draw a real route through the SVG point graph, and understand approximate distance without rebuilding the app when labels change."
+		"primaryGoal": "Let a visitor find a named destination, draw a real route through the imported map graph, and understand approximate distance without rebuilding the app when labels change."
 	},
 	"assumptions": [
 		"The supplied 1341x947 SVG is the authoritative map geometry and contains 35 location shapes, 35 location points, and 625 route points.",

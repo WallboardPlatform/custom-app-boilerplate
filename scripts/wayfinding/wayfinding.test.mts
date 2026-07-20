@@ -6,7 +6,6 @@ import { describe, it } from 'node:test';
 
 import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
 import { createLegacyProximityGraph, WayfindingGraph } from '../../src/utils/wayfinding.js';
-import { synchronizeSvgPoints } from './compiler.mjs';
 import { parseDestinationMetadata, parseWayfindingSvg } from './model.mjs';
 import { createDebugSvg, writeWayfindingReport } from './report.mjs';
 import { parseRouteGraph } from './schema.mjs';
@@ -14,27 +13,21 @@ import { validateWayfinding } from './validation.mjs';
 
 const fixtureDirectory = path.resolve('scripts', 'wayfinding', 'fixtures');
 const sourceSvg = fs.readFileSync(path.join(fixtureDirectory, 'valid-map.svg'), 'utf8');
+const legacySvg = fs.readFileSync(path.join(fixtureDirectory, 'legacy-map.svg'), 'utf8');
 const graph = JSON.parse(fs.readFileSync(path.join(fixtureDirectory, 'valid-route-graph.json'), 'utf8')) as WayfindingGraphDocument;
 const destinations = parseDestinationMetadata(JSON.parse(fs.readFileSync(path.join(fixtureDirectory, 'valid-destinations.json'), 'utf8')));
 
 void describe('wayfinding authoring foundation', (): void => {
-	void it('parses the required layer structure and both legacy point naming conventions', (): void => {
+	void it('accepts native location annotations, arbitrary visual structure, transforms, and coordinate size', (): void => {
 		const map = parseWayfindingSvg(sourceSvg);
 
-		assert.equal(map.levels.length, 1);
-		assert.deepEqual(map.levels[0].subgroupIds, [
-			'Level0-TransitionPoints',
-			'Level0-LocationPoints',
-			'Level0-RoutePoints',
-			'Level0-Icons',
-			'Level0-Legends',
-			'Level0-Locations',
-			'Level0-Walls'
-		]);
-		assert.deepEqual(map.levels[0].pointNodes.filter((node): boolean => node.kind === 'location').map((node): string | undefined => node.locationId), ['lobby', 'gallery']);
+		assert.equal(map.contractMode, 'native');
+		assert.deepEqual(map.locations.map((location): string => location.locationId), ['lobby', 'gallery']);
+		assert.deepEqual(map.locations.map((location): string | undefined => location.levelId), ['ground', 'ground']);
+		assert.deepEqual({ width: map.width, height: map.height }, { width: 800, height: 450 });
 	});
 
-	void it('accepts a synchronized explicit graph and proves route coverage', (): void => {
+	void it('accepts an independent explicit graph and proves route coverage', (): void => {
 		const report = validateWayfinding({
 			destinations,
 			graph,
@@ -49,14 +42,22 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.deepEqual(report.routes.find((route): boolean => route.destinationId === 'gallery')?.nodeIds, ['lp-lobby', 'rp-west', 'rp-east', 'gallery-lp']);
 	});
 
-	void it('rejects malformed route graphs before synchronization or validation', (): void => {
+	void it('rejects malformed route graphs before validation', (): void => {
 		assert.throws(
 			(): void => { parseRouteGraph(JSON.stringify({ ...graph, edges: [{ id: 'broken', from: 'lobby-lp' }] })); },
 			/Route graph schema validation failed/
 		);
 	});
 
-	void it('rejects transforms and disconnected routeable destinations', (): void => {
+	void it('keeps missing accessibility unknown and requires review', (): void => {
+		const unknownDestinations = parseDestinationMetadata([{ id: 'lobby', name: 'Lobby', routeable: true }]);
+		const report = validateWayfinding({ destinations: unknownDestinations, graph, map: parseWayfindingSvg(sourceSvg), startLocationId: 'lobby' });
+
+		assert.equal(unknownDestinations[0].accessible, null);
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'destination-accessibility-unverified'));
+	});
+
+	void it('allows SVG transforms but rejects disconnected routeable destinations', (): void => {
 		const disconnected: WayfindingGraphDocument = {
 			...graph,
 			edges: graph.edges.slice(0, 2)
@@ -64,27 +65,28 @@ void describe('wayfinding authoring foundation', (): void => {
 		const report = validateWayfinding({
 			destinations,
 			graph: disconnected,
-			map: parseWayfindingSvg(sourceSvg.replace('<g id="Level0">', '<g id="Level0" transform="translate(1 1)">')),
+			map: parseWayfindingSvg(sourceSvg),
 			startLocationId: 'lobby'
 		});
 
-		assert.ok(report.issues.some((issue): boolean => issue.code === 'transform-forbidden' && issue.severity === 'error'));
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'transform-forbidden'));
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'destination-unreachable' && issue.references.includes('gallery')));
 	});
 
 	void it('keeps step-free coverage unknown for inferred legacy topology', (): void => {
-		const map = parseWayfindingSvg(sourceSvg);
+		const map = parseWayfindingSvg(legacySvg);
 		const legacyGraph = createLegacyProximityGraph('legacy-fixture', map.levels[0].pointNodes, 400);
 		const report = validateWayfinding({ destinations, graph: legacyGraph, map, startLocationId: 'lobby' });
 
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'legacy-map-import'));
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'legacy-accessibility-unverified'));
 		assert.ok(report.routes.every((route): boolean => route.stepFreeReachable === null));
 	});
 
 	void it('rejects executable SVG content instead of trusting authoring input', (): void => {
 		const unsafeSvg: string = sourceSvg.replace(
-			'<g id="Base">',
-			'<g id="Base"><script>alert(1)</script><rect id="unsafe-link" onclick="alert(1)"/>'
+			'<rect id="map-background"',
+			'<script>alert(1)</script><rect id="unsafe-link" onclick="alert(1)"/><rect id="map-background"'
 		);
 		const report = validateWayfinding({ destinations, graph, map: parseWayfindingSvg(unsafeSvg), startLocationId: 'lobby' });
 
@@ -121,10 +123,7 @@ void describe('wayfinding authoring foundation', (): void => {
 			edges: [{ ...graph.edges[0], distanceMeters: undefined, from: 'lp-lobby', id: 'cross-floor', to: 'gallery-lp' }],
 			nodes: graph.nodes.map((node): typeof node => node.id === 'gallery-lp' ? { ...node, levelId: 'Level1' } : node)
 		};
-		const multiLevelSvg: string = synchronizeSvgPoints(
-			sourceSvg.replace('</svg>', '<g id="Level1"><g id="Level1-TransitionPoints"/><g id="Level1-LocationPoints"/><g id="Level1-RoutePoints"/><g id="Level1-Icons"/><g id="Level1-Legends"/><g id="Level1-Locations"/><g id="Level1-Walls"/></g></svg>'),
-			multiLevelGraph
-		);
+		const multiLevelSvg: string = sourceSvg.replace('data-wayfinding-location-id="gallery" data-wayfinding-level="ground"', 'data-wayfinding-location-id="gallery" data-wayfinding-level="Level1"');
 		const report = validateWayfinding({ destinations, graph: multiLevelGraph, map: parseWayfindingSvg(multiLevelSvg), startLocationId: 'lobby' });
 
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'cross-level-distance-missing'));
@@ -143,13 +142,11 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'wayfinding-report.json'), 'utf8')).summary.errors, 0);
 	});
 
-	void it('synchronizes canonical graph nodes into legacy SVG point groups', (): void => {
-		const staleSvg: string = sourceSvg.replace('cx="320" cy="360"', 'cx="999" cy="999"');
-		const synchronized = synchronizeSvgPoints(staleSvg, graph);
-		const map = parseWayfindingSvg(synchronized);
-		const west = map.levels[0].pointNodes.find((node): boolean => node.id === 'rp-west');
+	void it('parses legacy point groups only as migration input', (): void => {
+		const map = parseWayfindingSvg(legacySvg);
 
-		assert.deepEqual(west && { x: west.x, y: west.y }, { x: 320, y: 360 });
-		assert.equal(map.levels[0].pointNodes.find((node): boolean => node.id === 'gallery-lp')?.locationId, 'gallery');
+		assert.equal(map.contractMode, 'legacy-import');
+		assert.deepEqual(map.levels[0].pointNodes.filter((node): boolean => node.kind === 'location').map((node): string | undefined => node.locationId), ['lobby', 'gallery']);
+		assert.deepEqual(map.locations.map((location): string => location.locationId), ['lobby', 'gallery']);
 	});
 });

@@ -80,7 +80,7 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Identity/brief/datasource/legacy/package gates | `npm run validate:package` |
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
-| Synchronize/validate wayfinding | `npm run wayfinding:sync-svg -- ...` / `npm run wayfinding:validate -- ...` |
+| Validate wayfinding | `npm run wayfinding:validate -- ...` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |

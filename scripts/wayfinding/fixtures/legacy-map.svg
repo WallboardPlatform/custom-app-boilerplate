@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="720" viewBox="0 0 1240 720">
+  <g id="Base"><rect id="legacy-background" width="1240" height="720" fill="#f4f1e8"/></g>
+  <g id="Level0">
+    <g id="Level0-TransitionPoints"/>
+    <g id="Level0-LocationPoints">
+      <circle id="lp-lobby" data-location-id="lobby" cx="120" cy="360" r="5"/>
+      <circle id="gallery-lp" data-location-id="gallery" cx="920" cy="360" r="5"/>
+    </g>
+    <g id="Level0-RoutePoints">
+      <circle id="rp-west" cx="320" cy="360" r="4"/>
+      <circle id="rp-east" cx="660" cy="360" r="4"/>
+    </g>
+    <g id="Level0-Icons"/>
+    <g id="Level0-Legends"/>
+    <g id="Level0-Locations">
+      <path id="lobby" label="Lobby" d="M40 280h160v160H40z"/>
+      <path id="gallery" label="Gallery" d="M840 280h160v160H840z"/>
+    </g>
+    <g id="Level0-Walls"/>
+  </g>
+</svg>

@@ -2,10 +2,10 @@
 
 ## `map.svg`
 
-- Root: minimum 1240x720, stable viewBox, no transforms.
-- Root groups: `Base`, then one or more level groups.
-- Each level contains, in order: `TransitionPoints`, `LocationPoints`, `RoutePoints`, `Icons`, `Legends`, `Locations`, `Walls`.
-- Location shapes use stable IDs. Point circles use globally unique IDs and `data-location-id` for location nodes.
+- Root: positive stable viewBox; dimensions and internal structure follow the accepted design.
+- Transforms, nested groups, raster backgrounds, and arbitrary visual layers are allowed.
+- Each interactive target has a stable SVG `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`.
+- Wrap multipart hit geometry in one annotated group. Keep route nodes and edges out of the SVG.
 - Keep base artwork visually useful; overlays must not wash it out.
 
 ## `route-graph.json`
@@ -13,13 +13,14 @@
 Validate against `schemas/wayfinding-route-graph.schema.json`.
 
 - Nodes own coordinates, level, kind, and location mapping.
+- Node coordinates use the root SVG viewBox coordinate system even when artwork is nested or transformed.
 - Edges own explicit adjacency, direction, route kind, accessibility, and optional measured metres.
 - Cross-floor edges use transition nodes and `stairs`, `elevator`, or `escalator` kinds.
 - Prefer a small intentional graph over dense proximity meshes. Add a node at every real junction and bend required for route shape.
 
 ## Destination `TABLE`
 
-Minimum: `id`, `name`, `category`, `description`, `accessible`, `routeable`.
+Minimum: `id`, `name`, `category`, `description`, `accessible`, `routeable`. Leave `accessible` empty/unknown until a source or reviewer verifies it.
 
 Add only useful fields: `shortName`, aliases/keywords, `floor`, `hours`, `status`, `statusDetail`, image/file reference, CTA label/target, and localized values. IDs must match SVG location shapes and graph location nodes.
 
