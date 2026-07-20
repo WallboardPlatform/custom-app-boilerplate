@@ -1,13 +1,13 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "11b199c2c24f68d1cf75036c622ca5bb585bb2f938206f284f2e7f9a720967d0",
-	"reviewedAt": "2026-07-19T13:27:50.338Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "60369c6c3d3731c25b8938c464d73ac5102ac5ca105eb012ac55791e0d5dfca9",
+	"reviewedAt": "2026-07-20T08:45:53.639Z",
+	"reviewer": "Codex live-field hardening review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The app implements one editable product TABLE plus one independently named File System image binding, deterministic matching, fallback, and bounded rotation."
+			"notes": "The app implements one editable product TABLE containing both copy and file-picker media references, plus fallback and bounded rotation."
 		},
 		{
 			"id": "referenceFidelity",
@@ -94,7 +94,7 @@
 		{
 			"file": "scenario-missing-image-1920x1080.png",
 			"status": "pass",
-			"notes": "Missing File System asset inspected; deterministic local fallback replaces the image without breaking layout."
+			"notes": "Missing TABLE file-picker asset inspected; deterministic local fallback replaces the image without breaking layout."
 		},
 		{
 			"file": "scenario-motion-off-1920x1080.png",

@@ -71,7 +71,7 @@ test.beforeEach(async ({ page }): Promise<void> => {
 	});
 });
 
-test('matches TABLE imageKey values to independent File System filenames', async ({ page }): Promise<void> => {
+test('renders file-picker images stored directly in TABLE rows', async ({ page }): Promise<void> => {
 	await expect(page.locator('.wb-product-catalog-root')).toHaveAttribute('data-media-visible', 'true');
 	await expect(page.locator('.wb-product-catalog-stage')).toHaveAttribute('data-product-key', 'FN-101');
 	await expect(page.locator('.wb-product-catalog-media img')).toHaveAttribute('src', /arc-lamp/);

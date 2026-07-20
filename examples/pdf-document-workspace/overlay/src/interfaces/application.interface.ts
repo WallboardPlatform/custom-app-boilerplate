@@ -24,7 +24,9 @@ export interface Settings extends Record<string, unknown> {
 	hideScrollbars: boolean;
 	initialPage: number;
 	interactiveAnnotations: boolean;
+	keyboardLanguages: 'en' | 'hu' | 'hu-en';
 	mutedTextColor: string;
+	onScreenKeyboard: boolean;
 	pageEnd: number;
 	pageMode: PdfPageMode;
 	pagePadding: number;
@@ -66,7 +68,9 @@ export interface ConfigValues {
 	hideScrollbars?: boolean;
 	initialPage?: number;
 	interactiveAnnotations?: boolean;
+	keyboardLanguages?: string;
 	mutedTextColor?: string;
+	onScreenKeyboard?: boolean;
 	pageEnd?: number;
 	pageMode?: string;
 	pagePadding?: number;

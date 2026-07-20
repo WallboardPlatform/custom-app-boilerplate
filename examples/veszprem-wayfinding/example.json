@@ -1,6 +1,7 @@
 {
 	"title": "Veszprem Downtown Wayfinding",
 	"description": "Source-first interactive landmark routing over the supplied Veszprem tourism map with an explicit graph and quick-edit destination table.",
+	"capabilities": ["keyboard"],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",

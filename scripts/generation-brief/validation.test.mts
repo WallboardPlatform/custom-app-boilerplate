@@ -598,6 +598,30 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /nested property group 'Custom colors'/);
 	});
 
+	void it('requires legacy-compatible file types for folder pickers', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'videoFolder', purpose: 'Select a folder of videos.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{ label: 'Video folder', type: 'folder', property: 'videoFolder', fileType: 'video' }]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /requires a fileType ending in '_folder'/);
+
+		const properties = JSON.parse(fs.readFileSync(context.propertiesPath, 'utf8')) as { properties: Array<Record<string, unknown>> };
+		properties.properties[0].fileType = 'video_folder';
+		fs.writeFileSync(context.propertiesPath, JSON.stringify(properties));
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
 	void it('rejects unscoped global classes in v4 app components', async (testContext) => {
 		const brief = createValidBrief();
 		const context = createProject(brief);

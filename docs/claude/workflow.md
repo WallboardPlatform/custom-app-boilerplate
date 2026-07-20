@@ -30,6 +30,7 @@ Do this before editing implementation artifacts.
 - Meet the v6+ semantic font floors. Reduce density, remove secondary detail, or paginate before shrinking below them.
 - Declare media ownership, platform caching, offline preview, and fallback. Use the shared bounded transition helper only when motion communicates a change.
 - Add `video` only for authored playback apps. Prefer direct File System file/folder or an explicit playlist contract; preserve muted autoplay, bounded recovery, teardown, and real-media tests. Do not promise native/external player mode, synchronized screens, audio ducking, or proof-of-display through the current SDK.
+- Add `keyboard` when a signage interaction requires text entry. Use the app-owned touch keyboard with requested layouts; never assume an OS keyboard or the legacy Angular User Input keyboard is available to a custom app.
 - Enforce ownership. Interactive apps declare views, inputs, resets, and outputs; writes are displayer-only.
 - Use the shared rotation lifecycle for timed pages; specialized continuous motion stays app-owned. Add behavior tests for timing, rotation, interaction, and teardown.
 

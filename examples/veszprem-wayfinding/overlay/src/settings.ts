@@ -23,6 +23,10 @@ const numberSetting = (value: number | undefined, fallback: number, minimum: num
 	return Math.min(maximum, Math.max(minimum, numericValue));
 };
 
+const booleanSetting = (value: boolean | undefined, fallback: boolean): boolean => {
+	return typeof value === 'boolean' ? value : fallback;
+};
+
 export default function mapSettings(config: ConfigValues): Settings {
 	const themePreset: ThemePreset = themePresetSetting(config.themePreset);
 	const palette: WayfindingPalette = resolveTheme(themePreset, {
@@ -55,8 +59,10 @@ export default function mapSettings(config: ConfigValues): Settings {
 	return {
 		...palette,
 		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
+		keyboardLanguages: config.keyboardLanguages === 'en' || config.keyboardLanguages === 'hu' ? config.keyboardLanguages : 'hu-en',
 		mapRatio: numberSetting(config.mapRatio, 0.8, 0.2, 5),
 		motionPreset: motionPreset(config.motionPreset),
+		onScreenKeyboard: booleanSetting(config.onScreenKeyboard, true),
 		routeResetSeconds: numberSetting(config.routeResetSeconds, 45, 10, 180),
 		startLocationId: textSetting(config.startLocationId, 'tourinform-veszprem'),
 		subtitle: textSetting(config.subtitle, 'Choose a landmark or tap its number on the map.'),

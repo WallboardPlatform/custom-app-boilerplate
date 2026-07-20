@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-import fs from 'fs';
 import { resolve } from 'path';
 import { ConfigEnv, defineConfig, UserConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
@@ -8,29 +6,6 @@ import stylelint from 'vite-plugin-stylelint';
 import solidSvg from 'vite-plugin-solid-svg';
 
 import WBAppPostExecution from './package-tools/plugins/wb-app-post-execution';
-import WBAppZipperPlugin, { PluginConfig as ZipperPluginConfig } from './package-tools/plugins/wb-app-zipper';
-
-// Load optional local build config and always read app metadata.
-const configFilePath: string = resolve(__dirname, 'config.json');
-const propertiesPath: string = resolve(__dirname, 'src', 'editor-assets', 'properties.json');
-let config: ZipperPluginConfig = {};
-let properties: { name?: string, version?: string } = {};
-
-if (fs.existsSync(configFilePath)) {
-  try {
-    config = JSON.parse(fs.readFileSync(configFilePath, 'utf-8'));
-  } catch (error) {
-    process.exit(1);
-  }
-}
-
-if (fs.existsSync(propertiesPath)) {
-  try {
-    properties = JSON.parse(fs.readFileSync(propertiesPath, 'utf-8'));
-  } catch (error) {
-    process.exit(1);
-  }
-}
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd: boolean = mode === 'production';
@@ -57,12 +32,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           'src/**/vendor/**'
         ]
       }),
-      WBAppPostExecution(isProd),
-      WBAppZipperPlugin({
-        name: properties.name,
-        version: properties.version,
-        zipOutput: config.zipOutput
-      })
+      WBAppPostExecution(isProd)
     ],
     optimizeDeps: {
       include: ['rxjs'],

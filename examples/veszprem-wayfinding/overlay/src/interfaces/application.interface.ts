@@ -16,8 +16,10 @@ export interface Settings extends Record<string, unknown> {
 	accentColor: string;
 	backgroundColor: string;
 	emptyStateText: string;
+	keyboardLanguages: 'en' | 'hu' | 'hu-en';
 	mapRatio: number;
 	motionPreset: MotionPreset;
+	onScreenKeyboard: boolean;
 	panelColor: string;
 	primaryTextColor: string;
 	routeColor: string;
@@ -33,8 +35,10 @@ export interface ConfigValues {
 	accentColor?: string;
 	backgroundColor?: string;
 	emptyStateText?: string;
+	keyboardLanguages?: string;
 	mapRatio?: number;
 	motionPreset?: string;
+	onScreenKeyboard?: boolean;
 	panelColor?: string;
 	primaryTextColor?: string;
 	routeColor?: string;

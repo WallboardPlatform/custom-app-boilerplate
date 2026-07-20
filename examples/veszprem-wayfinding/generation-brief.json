@@ -53,8 +53,8 @@
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "routeResetSeconds", "mapRatio"],
-			"rationale": "Operators can adapt the public kiosk copy, start location, reset timing, and distance calibration."
+			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "mapRatio"],
+			"rationale": "Operators can adapt the public kiosk copy, start location, touch keyboard, reset timing, and distance calibration."
 		},
 		{
 			"id": "presentation-settings",
@@ -81,6 +81,7 @@
 		"inputs": [
 			{ "id": "touch-map", "type": "touch", "action": "Select a numbered landmark directly on the map." },
 			{ "id": "touch-directory", "type": "touch", "action": "Search, filter, select, and reset destinations." },
+			{ "id": "touch-keyboard", "type": "keyboard", "action": "Filter destination names through the app-owned Hungarian and English touch layouts." },
 			{ "id": "physical-keyboard", "type": "keyboard", "action": "Type in search and activate focused controls." }
 		],
 		"session": {
@@ -136,6 +137,8 @@
 		{ "property": "subtitle", "purpose": "Directory instruction." },
 		{ "property": "startLocationId", "purpose": "Graph location id used as the current position." },
 		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
+		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
+		{ "property": "keyboardLanguages", "purpose": "Selects Hungarian, English, or both keyboard layouts." },
 		{ "property": "routeResetSeconds", "purpose": "Idle interval before route and search reset.", "effect": "route-reset" },
 		{ "property": "mapRatio", "purpose": "SVG units per displayed metre for approximate distance.", "effect": "map-ratio" },
 		{ "property": "motionPreset", "purpose": "Selects Off or Subtle route feedback.", "effect": "motion-preset" },

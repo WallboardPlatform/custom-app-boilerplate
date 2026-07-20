@@ -12,6 +12,8 @@ import { normalizeDestinations } from '@utils/destinations';
 import { routeBetweenLocations } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
+import { keyboardLayoutsFor, OnScreenKeyboard } from '../../capabilities/keyboard';
+import type { KeyboardLayoutId } from '../../capabilities/keyboard';
 import mapMarkup from '../../assets/map.svg?raw';
 import mapArtwork from '../../assets/veszprem-map.webp';
 import sampleDestinationData from '../../../sample-destinations-datasource.json';
@@ -28,12 +30,6 @@ const MAP_WIDTH = 1341;
 const MAP_HEIGHT = 947;
 const PAGE_SIZE = 7;
 const ROUTE_GROUP_ID = 'wb-veszprem-wayfinding-route';
-const KEYBOARD_ROWS: string[][] = [
-	['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-	['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-	['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-	['Á', 'É', 'Í', 'Ó', 'Ö', 'Ő', 'Ú', 'Ü', 'Ű']
-];
 
 const normalizeSearch = (value: string): string => value
 	.normalize('NFD')
@@ -60,6 +56,18 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	let mapHost!: HTMLDivElement;
 	let resetTimer: ReturnType<typeof setTimeout> | undefined;
 	let svg: SVGSVGElement | undefined;
+	const keyboardLayouts = createMemo(() => {
+		const configuredLanguage = settings().keyboardLanguages;
+		const languages: KeyboardLayoutId[] = configuredLanguage === 'hu-en'
+			? ['hu', 'en']
+			: [configuredLanguage];
+
+		return keyboardLayoutsFor(languages);
+	});
+
+	createEffect((): void => {
+		if (!settings().onScreenKeyboard) setKeyboardOpen(false);
+	});
 
 	const hasBoundDestinations: Accessor<boolean> = createMemo((): boolean => {
 		return Object.prototype.hasOwnProperty.call(dataSources(), 'destinationData');
@@ -267,8 +275,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		scheduleReset();
 	};
 
-	const keyboardKey = (key: string): void => changeQuery(`${query()}${key}`);
-
 	onMount((): void => {
 		svg = mapHost.querySelector('svg') ?? undefined;
 
@@ -441,19 +447,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								<button type="button" aria-label="Next destination page" disabled={currentPage() >= pageCount() - 1} onClick={(): void => { setCurrentPage((value: number): number => Math.min(pageCount() - 1, value + 1)); scheduleReset(); }}>›</button>
 							</div>
 
-							<Show when={keyboardOpen()}>
-								<div class={style['keyboard']} data-preview-keyboard="open">
-									<div class={style['keyboard-header']}><strong>Search</strong><button type="button" onClick={(): void => { setKeyboardOpen(false); }}>Close</button></div>
-									<For each={KEYBOARD_ROWS}>{(row: string[]): JSX.Element => (
-										<div class={style['keyboard-row']}><For each={row}>{(key: string): JSX.Element => <button type="button" onClick={(): void => { keyboardKey(key); }}>{key}</button>}</For></div>
-									)}</For>
-									<div class={style['keyboard-actions']}>
-										<button type="button" onClick={(): void => { changeQuery(''); }}>Clear</button>
-										<button type="button" onClick={(): void => { keyboardKey(' '); }}>Space</button>
-										<button type="button" onClick={(): void => { changeQuery(query().slice(0, -1)); }}>Backspace</button>
-									</div>
-								</div>
-							</Show>
 						</>
 					}>
 						{(destination: Destination): JSX.Element => (
@@ -491,6 +484,22 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					</Show>
 				</aside>
 			</main>
+			<Show when={keyboardOpen()}>
+				<OnScreenKeyboard
+					accentColor={settings().accentColor}
+					backgroundColor={settings().panelColor}
+					borderColor={settings().secondaryTextColor}
+					label="Search destinations"
+					layouts={keyboardLayouts()}
+					maximumLength={80}
+					onClose={(): void => { setKeyboardOpen(false); }}
+					onInput={setQuery}
+					onSubmit={(): void => { setKeyboardOpen(false); }}
+					submitLabel="Show results"
+					textColor={settings().primaryTextColor}
+					value={query()}
+				/>
+			</Show>
 		</div>
 	);
 };

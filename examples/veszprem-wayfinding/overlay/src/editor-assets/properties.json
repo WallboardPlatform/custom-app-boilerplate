@@ -22,6 +22,16 @@
 				{ "label": "Instruction", "type": "text", "property": "subtitle", "default": "Choose a landmark or tap its number on the map." },
 				{ "label": "Start location ID", "type": "text", "property": "startLocationId", "default": "tourinform-veszprem", "tooltip": "Use a routeable id from the destination table and route graph." },
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No destinations are available." },
+				{ "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true, "tooltip": "Opens an app-owned touch keyboard when destination search receives focus." },
+				{
+					"label": "Keyboard languages", "type": "select", "property": "keyboardLanguages", "default": "hu-en",
+					"options": [
+						{ "label": "Hungarian + English", "value": "hu-en" },
+						{ "label": "Hungarian", "value": "hu" },
+						{ "label": "English", "value": "en" }
+					],
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "onScreenKeyboard" }], "rule": "#1" }
+				},
 				{ "label": "Route reset", "type": "slider", "property": "routeResetSeconds", "default": 45, "min": 10, "max": 180, "step": 5, "tooltip": "Seconds before an active route clears automatically." },
 				{ "label": "Map ratio", "type": "slider", "property": "mapRatio", "default": 0.8, "min": 0.2, "max": 5, "step": 0.1, "tooltip": "SVG units per displayed metre for approximate distance and walking time." }
 			]
