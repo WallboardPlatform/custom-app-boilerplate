@@ -285,17 +285,37 @@
 	display: flex;
 	flex: 0 0 18%;
 	flex-direction: column;
-	justify-content: space-between;
+	justify-content: center;
 	min-width: 0;
 	padding: 1em 1.2em 0.7em 0;
 }
 
+:global(.wb-weather-window-forecast-label) strong {
+	display: block;
+	padding-bottom: 0.06em;
+	color: var(--wb-weather-window-text);
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 3.4em;
+	font-weight: 400;
+	line-height: 0.9;
+}
+
+:global(.wb-weather-window-forecast-label) > div {
+	min-width: 0;
+	margin-top: 0.7em;
+}
+
 :global(.wb-weather-window-forecast-label) span,
 :global(.wb-weather-window-forecast-label) small {
+	display: block;
+	min-width: 0;
 	font-size: 14px;
 	font-weight: 800;
 	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 :global(.wb-weather-window-forecast-label) span {
@@ -303,6 +323,7 @@
 }
 
 :global(.wb-weather-window-forecast-label) small {
+	margin-top: 0.3em;
 	color: var(--wb-weather-window-muted);
 	font-weight: 400;
 }
@@ -505,6 +526,14 @@
 	flex-basis: 13%;
 }
 
+.wb-app[data-layout='wide'] :global(.wb-weather-window-forecast-label) strong {
+	font-size: 2.25em;
+}
+
+.wb-app[data-layout='wide'] :global(.wb-weather-window-forecast-label) small {
+	display: none;
+}
+
 .wb-app[data-layout='wide'] :global(.wb-weather-window-forecast-item) {
 	flex-direction: row;
 	align-items: center;
@@ -589,7 +618,17 @@
 .wb-app[data-layout='portrait'] :global(.wb-weather-window-forecast-label) {
 	flex: 0 0 auto;
 	flex-direction: row;
+	align-items: center;
 	padding: 0.85em 0;
+}
+
+.wb-app[data-layout='portrait'] :global(.wb-weather-window-forecast-label) strong {
+	margin-right: 0.35em;
+	font-size: 2.6em;
+}
+
+.wb-app[data-layout='portrait'] :global(.wb-weather-window-forecast-label) > div {
+	margin-top: 0;
 }
 
 .wb-app[data-layout='portrait'] :global(.wb-weather-window-forecast-days) {

@@ -13,6 +13,8 @@ import type { Settings } from '@interfaces/application.interface';
 import { resolveTheme } from '@utils/theme';
 
 import style from '@components/wb-app/wb-app.module.scss';
+import { keyboardLayoutsFor, OnScreenKeyboard } from '../../capabilities/keyboard';
+import type { KeyboardLayoutId } from '../../capabilities/keyboard';
 import { PdfViewer, PDF_JS_VERSION, resolvePdfSources } from '../../capabilities/pdf';
 import type {
 	PdfInteractionEvent,
@@ -74,9 +76,18 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [sourceError, setSourceError] = createSignal('');
 	const [viewerState, setViewerState] = createSignal<PdfViewerState>(emptyState());
 	const [searchInput, setSearchInput] = createSignal('');
+	const [keyboardOpen, setKeyboardOpen] = createSignal(false);
 	const [formNotice, setFormNotice] = createSignal('');
 	let sourceGeneration = 0;
 	let lastPageEvent = '';
+	const keyboardLayouts = createMemo(() => {
+		const configuredLanguage = settings().keyboardLanguages;
+		const languages: KeyboardLayoutId[] = configuredLanguage === 'hu-en'
+			? ['hu', 'en']
+			: [configuredLanguage];
+
+		return keyboardLayoutsFor(languages);
+	});
 
 	const viewerOptions: Accessor<PdfViewerOptions> = createMemo((): PdfViewerOptions => ({
 		autoScrollEnabled: settings().autoScrollEnabled,
@@ -103,7 +114,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		zoomStep: settings().zoomStep
 	}));
 
-	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => {
+	const theme: Accessor<ThemeTokens> = createMemo((): ThemeTokens => {
 		const custom: ThemeTokens = {
 			accent: settings().accentColor,
 			background: settings().backgroundColor,
@@ -113,7 +124,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			primary: settings().primaryTextColor,
 			toolbar: settings().toolbarColor
 		};
-		const tokens: ThemeTokens = resolveTheme(settings().themePreset, {
+
+		return resolveTheme(settings().themePreset, {
 			custom,
 			dark: {
 				accent: '#42d6b5',
@@ -134,6 +146,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				toolbar: '#ffffff'
 			}
 		});
+	});
+	const themeStyle: Accessor<JSX.CSSProperties> = createMemo((): JSX.CSSProperties => {
+		const tokens = theme();
 
 		return {
 			'--wb-pdf-workspace-accent': tokens.accent,
@@ -178,6 +193,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	createEffect((): void => {
 		setSidebarOpen(settings().showSidebar);
 		setSidebarView(settings().sidebarDefault);
+
+		if (!settings().onScreenKeyboard) setKeyboardOpen(false);
 	});
 
 	const runSearch = async (): Promise<void> => {
@@ -473,6 +490,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 												onInput={(event): void => {
 													setSearchInput(event.currentTarget.value);
 												}}
+												onFocus={(): void => {
+													if (settings().onScreenKeyboard) setKeyboardOpen(true);
+												}}
 											/>
 											<button type="submit">Find</button>
 										</div>
@@ -597,6 +617,25 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					</Show>
 				</section>
 			</main>
+			<Show when={keyboardOpen() && sidebarOpen() && sidebarView() === 'search'}>
+				<OnScreenKeyboard
+					accentColor={theme().accent}
+					backgroundColor={theme().toolbar}
+					borderColor={theme().border}
+					label="Search documents"
+					layouts={keyboardLayouts()}
+					maximumLength={120}
+					onClose={(): void => { setKeyboardOpen(false); }}
+					onInput={setSearchInput}
+					onSubmit={(): void => {
+						setKeyboardOpen(false);
+						void runSearch();
+					}}
+					submitLabel="Find"
+					textColor={theme().primary}
+					value={searchInput()}
+				/>
+			</Show>
 		</div>
 	);
 };

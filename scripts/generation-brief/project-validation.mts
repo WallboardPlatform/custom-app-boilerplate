@@ -163,6 +163,22 @@ const collectProperties = (
 			property.property ?? property.propertyContainer,
 			'properties[].property or properties[].propertyContainer'
 		);
+		const propertyType = typeof property.type === 'string' ? property.type : '';
+		const fileType = typeof property.fileType === 'string' ? property.fileType.trim() : '';
+
+		if (propertyType === 'folder' && !fileType.endsWith('_folder')) {
+			fail(
+				context,
+				`folder property '${propertyName}' requires a fileType ending in '_folder' (for example 'video_folder' or 'pdf_folder') so the legacy editor renders its picker.`
+			);
+		}
+
+		if (propertyType === 'file' && fileType.endsWith('_folder')) {
+			fail(
+				context,
+				`file property '${propertyName}' must use the base fileType without the '_folder' suffix.`
+			);
+		}
 		const target = property.type === 'dataPicker' ? output.dataPickers : output.settings;
 
 		if (target.has(propertyName)) {

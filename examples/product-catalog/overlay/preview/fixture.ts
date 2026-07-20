@@ -12,7 +12,7 @@ interface ProductRow extends Record<string, unknown> {
 	availability: string;
 	detailOne: string;
 	detailTwo: string;
-	imageKey: string;
+	image: { id: string; location: string; name: string };
 	sortOrder: number;
 }
 
@@ -38,17 +38,6 @@ const baseConfig: Record<string, unknown> = {
 	accentColor: '#ef4b3e',
 	panelColor: '#d6e5dd'
 };
-const productImages = {
-	totalSize: 4,
-	size: 4,
-	content: [
-		{ name: 'arc-lamp.jpg', url: '/preview/catalog-assets/arc-lamp.jpg' },
-		{ name: 'pulse-speaker.jpg', url: '/preview/catalog-assets/pulse-speaker.jpg' },
-		{ name: 'pour-over-set.jpg', url: '/preview/catalog-assets/pour-over-set.jpg' },
-		{ name: 'weekender-bag.jpg', url: '/preview/catalog-assets/weekender-bag.jpg' }
-	]
-};
-
 const withRows = (rows: ProductRow[]): ProductsDatasource => ({
 	Products: {
 		...sampleDatasource.Products,
@@ -59,19 +48,27 @@ const withRows = (rows: ProductRow[]): ProductsDatasource => ({
 const createFixture = (
 	id: string,
 	rows: ProductRow[],
-	images: unknown = productImages,
 	configOverrides: Record<string, unknown> = {},
 	readySelector = '.wb-product-catalog-stage'
 ): PreviewFixture => ({
 	id,
 	readySelector,
 	configValues: { ...baseConfig, ...configOverrides },
-	dataPickerValues: { products: withRows(rows), productImages: images },
-	datasourceIds: { products: 'preview-products-table', productImages: 'preview-product-images' },
+	dataPickerValues: { products: withRows(rows) },
+	datasourceIds: { products: 'preview-products-table' },
 	additionalConfig: { licenseType: null, mockDatasource: {}, style: {} }
 });
 
-const rows = sampleDatasource.Products.rows;
+const previewImageLocations: Record<string, string> = {
+	'FN-101': '/preview/catalog-assets/arc-lamp.jpg',
+	'FN-204': '/preview/catalog-assets/pulse-speaker.jpg',
+	'FN-308': '/preview/catalog-assets/pour-over-set.jpg',
+	'FN-412': '/preview/catalog-assets/weekender-bag.jpg'
+};
+const rows: ProductRow[] = sampleDatasource.Products.rows.map((row): ProductRow => ({
+	...row,
+	image: { ...row.image, location: previewImageLocations[row.sku] ?? '' }
+}));
 const longRows: ProductRow[] = rows.map((row, index): ProductRow => index === 0 ? {
 	...row,
 	name: 'Arc Portable Ambient Table and Terrace Lamp',
@@ -106,7 +103,7 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'long-copy',
-		fixture: createFixture('field-note-catalog-long-copy', longRows, productImages, {
+		fixture: createFixture('field-note-catalog-long-copy', longRows, {
 			collectionTitle: 'Objects for rooms, roads, rituals, and unhurried weekends',
 			pageDurationSeconds: 30
 		}),
@@ -116,11 +113,10 @@ export const previewScenarios: PreviewScenario[] = [
 	{
 		id: 'missing-image',
 		fixture: {
-			...createFixture('field-note-catalog-missing-image', rows, {
-				totalSize: 3,
-				size: 3,
-				content: productImages.content.slice(1)
-			}, { pageDurationSeconds: 30 }),
+			...createFixture('field-note-catalog-missing-image', rows.map((row, index): ProductRow => index === 0 ? {
+				...row,
+				image: { name: '', id: '', location: '' }
+			} : row), { pageDurationSeconds: 30 }),
 			settleMs: 1000
 		},
 		viewport: { width: 1920, height: 1080, background: 'light' },
@@ -128,13 +124,13 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'empty',
-		fixture: createFixture('field-note-catalog-empty', [], productImages, {}, '.wb-product-catalog-empty h2'),
+		fixture: createFixture('field-note-catalog-empty', [], {}, '.wb-product-catalog-empty h2'),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		minimumContentCoverage: { width: 70, height: 53 }
 	},
 	{
 		id: 'last-product',
-		fixture: createFixture('field-note-catalog-last-product', rows, productImages, { pageDurationSeconds: 3 }),
+		fixture: createFixture('field-note-catalog-last-product', rows, { pageDurationSeconds: 3 }),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		advanceTimeMs: 9200,
 		minimumContentCoverage: { width: 92, height: 83 }
@@ -152,7 +148,7 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'motion-off',
-		fixture: createFixture('field-note-catalog-motion-off', rows, productImages, { motionPreset: 'off' }),
+		fixture: createFixture('field-note-catalog-motion-off', rows, { motionPreset: 'off' }),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		minimumContentCoverage: { width: 92, height: 83 }
 	}

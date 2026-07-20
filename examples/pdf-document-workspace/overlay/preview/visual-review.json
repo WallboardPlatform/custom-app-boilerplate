@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "c46206dc640a0945f42a7484526d7a294b740bff7948f2a4c3063581797236bb",
-	"reviewedAt": "2026-07-19T07:49:17.475Z",
-	"reviewer": "Codex independent visual review",
+	"sourceHash": "0ce54fff1f35abaa9fdd53030cd32582269cd87a5650634a59a3f9c46a7c9671",
+	"reviewedAt": "2026-07-20T08:45:40.691Z",
+	"reviewer": "Codex live-field hardening review",
 	"criteria": [
 		{
 			"id": "promptFidelity",

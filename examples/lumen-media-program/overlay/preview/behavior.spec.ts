@@ -18,7 +18,7 @@ const openProgram = async (page: Page, width = 1280, height = 720): Promise<void
 	expect(await page.evaluate((): string | undefined => document.documentElement.dataset.previewError)).toBeUndefined();
 };
 
-test('plays the packaged WebM through the real media element and emits bounded progress telemetry', async ({ page }): Promise<void> => {
+test('resolves two selected-folder videos and plays them through the real media element', async ({ page }): Promise<void> => {
 	await openProgram(page);
 	const root = page.locator('.wb-lumen-media-program-root');
 	await expect(root).toHaveAttribute('data-source-count', '2');
@@ -31,6 +31,36 @@ test('plays the packaged WebM through the real media element and emits bounded p
 		const payload = event as { data?: { event?: { event?: string } } };
 		return payload.data?.event?.event === 'video-playback';
 	})).toBe(true);
+});
+
+test('repeat current video stays on the active item while playlist repeat advances', async ({ page }): Promise<void> => {
+	await openProgram(page);
+	const preview = (command: string, parameters: Array<{ parameter: string; value: unknown }> = []): Promise<void> => page.evaluate(
+		([name, values]) => (window as unknown as PreviewWindow).__wallboardPreview?.pushExternalCommand(name as string, values as Array<{ parameter: string; value: unknown }>),
+		[command, parameters] as const
+	);
+	const root = page.locator('.wb-lumen-media-program-root');
+	const title = page.locator('[data-text-role="video-title"]').last();
+
+	await preview('pauseVideo');
+	await preview('selectVideo', [{ parameter: 'index', value: 0 }]);
+	const firstTitle = await title.textContent();
+
+	await page.evaluate((): void => {
+		(window as unknown as PreviewWindow).__wallboardPreview?.pushConfiguration({ repeat: 'item' });
+	});
+	await expect(root).toHaveAttribute('data-repeat', 'item');
+	await page.locator('video').dispatchEvent('ended');
+	await expect(title).toHaveText(firstTitle ?? '');
+	await preview('pauseVideo');
+	await preview('selectVideo', [{ parameter: 'index', value: 0 }]);
+
+	await page.evaluate((): void => {
+		(window as unknown as PreviewWindow).__wallboardPreview?.pushConfiguration({ repeat: 'playlist' });
+	});
+	await expect(root).toHaveAttribute('data-repeat', 'playlist');
+	await page.locator('video').dispatchEvent('ended');
+	await expect(title).not.toHaveText(firstTitle ?? '');
 });
 
 test('external commands select, pause, seek, play, mute, and set volume', async ({ page }): Promise<void> => {

@@ -1,0 +1,12 @@
+{
+	"id": "keyboard",
+	"version": 1,
+	"title": "On-screen keyboard",
+	"description": "Opt-in touch keyboard for signage search and form inputs with selectable language layouts, controlled values, and explicit submit, clear, delete, shift, and close actions.",
+	"files": [
+		"src/capabilities/keyboard/index.ts",
+		"src/capabilities/keyboard/keyboard.ts",
+		"src/capabilities/keyboard/on-screen-keyboard.tsx",
+		"src/capabilities/keyboard/on-screen-keyboard.module.scss"
+	]
+}

@@ -10,7 +10,7 @@
 			"availability": "string",
 			"detailOne": "string",
 			"detailTwo": "string",
-			"imageKey": "string",
+			"image": "filePicker",
 			"sortOrder": "number"
 		},
 		"rows": [
@@ -24,7 +24,7 @@
 				"availability": "IN STOCK",
 				"detailOne": "12 HOUR GLOW",
 				"detailTwo": "USB-C RECHARGEABLE",
-				"imageKey": "arc-lamp",
+				"image": { "name": "arc-lamp.jpg", "id": "", "location": "/files/field-note-products/arc-lamp.jpg" },
 				"sortOrder": 1
 			},
 			{
@@ -37,7 +37,7 @@
 				"availability": "IN STOCK",
 				"detailOne": "WATER RESISTANT",
 				"detailTwo": "18 HOUR PLAYBACK",
-				"imageKey": "pulse-speaker",
+				"image": { "name": "pulse-speaker.jpg", "id": "", "location": "/files/field-note-products/pulse-speaker.jpg" },
 				"sortOrder": 2
 			},
 			{
@@ -50,7 +50,7 @@
 				"availability": "LOW STOCK",
 				"detailOne": "4 CUP CARAFE",
 				"detailTwo": "REUSABLE FILTER",
-				"imageKey": "pour-over-set",
+				"image": { "name": "pour-over-set.jpg", "id": "", "location": "/files/field-note-products/pour-over-set.jpg" },
 				"sortOrder": 3
 			},
 			{
@@ -63,7 +63,7 @@
 				"availability": "ONLINE ONLY",
 				"detailOne": "RECYCLED CANVAS",
 				"detailTwo": "CABIN FRIENDLY",
-				"imageKey": "weekender-bag",
+				"image": { "name": "weekender-bag.jpg", "id": "", "location": "/files/field-note-products/weekender-bag.jpg" },
 				"sortOrder": 4
 			}
 		],

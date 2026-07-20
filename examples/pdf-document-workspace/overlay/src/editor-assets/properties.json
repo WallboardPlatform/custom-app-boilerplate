@@ -20,7 +20,7 @@
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "file", "dependsOn": "sourceMode" }], "rule": "#1" }
 				},
 				{
-					"label": "PDF folder", "type": "folder", "property": "pdfFolder", "fileType": "pdf",
+					"label": "PDF folder", "type": "folder", "property": "pdfFolder", "fileType": "pdf_folder",
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" },
 					"tooltip": "Loads PDF files alphabetically from the selected File System folder."
 				},
@@ -67,6 +67,16 @@
 				{ "label": "Show sidebar", "type": "checkbox", "property": "showSidebar", "default": true },
 				{ "label": "Show controls", "type": "checkbox", "property": "showControls", "default": true },
 				{ "label": "Hide scrollbars", "type": "checkbox", "property": "hideScrollbars", "default": false },
+				{ "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true, "tooltip": "Opens an app-owned touch keyboard when document search receives focus." },
+				{
+					"label": "Keyboard languages", "type": "select", "property": "keyboardLanguages", "default": "en",
+					"options": [
+						{ "label": "English", "value": "en" },
+						{ "label": "Hungarian", "value": "hu" },
+						{ "label": "Hungarian + English", "value": "hu-en" }
+					],
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "onScreenKeyboard" }], "rule": "#1" }
+				},
 				{
 					"label": "Initial sidebar", "type": "select", "property": "sidebarDefault", "default": "documents",
 					"options": [

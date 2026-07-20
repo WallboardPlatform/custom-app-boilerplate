@@ -8,6 +8,11 @@ export interface Product {
 	availability: string;
 	detailOne: string;
 	detailTwo: string;
-	imageKey: string;
+	image: ProductImage | null;
 	sortOrder: number;
+}
+
+export interface ProductImage {
+	name: string;
+	url: string;
 }

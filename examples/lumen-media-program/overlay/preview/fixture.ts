@@ -1,6 +1,14 @@
 import { previewVideos } from '../src/assets/preview-videos';
 import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fixture.types';
 
+const folderId = 'preview-video-folder';
+const folderVideos = previewVideos.map((video, index) => ({
+	contentType: 'VIDEO',
+	id: `preview-video-${index + 1}`,
+	location: video.dataUrl,
+	name: `${String(index + 1).padStart(2, '0')} ${video.label}.webm`
+}));
+
 const baseConfig: Record<string, unknown> = {
 	accentColor: '#ff5a3d',
 	advanceOnError: true,
@@ -18,12 +26,12 @@ const baseConfig: Record<string, unknown> = {
 	showCaptions: true,
 	showChrome: true,
 	showControls: false,
-	sourceMode: 'file',
+	sourceMode: 'folder',
 	startAtSeconds: 0,
 	themePreset: 'dark',
 	venueName: 'Lumen public media',
 	videoFile: null,
-	videoFolder: null,
+	videoFolder: { id: folderId, name: 'Lumen program' },
 	volume: 0
 };
 
@@ -39,7 +47,10 @@ const createFixture = (
 	dataPickerValues: {},
 	datasourceIds: {},
 	additionalConfig: { licenseType: null, mockDatasource: {}, style: {} },
-	platform: platformOverrides
+	platform: {
+		filesByFolder: { [folderId]: folderVideos },
+		...platformOverrides
+	}
 });
 
 const previewFixture: PreviewFixture = createFixture('lumen-media-program-default');

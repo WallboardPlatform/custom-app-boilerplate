@@ -13,7 +13,7 @@
 					"options": [
 						{ "label": "Single video", "value": "file" },
 						{ "label": "Video folder", "value": "folder" },
-						{ "label": "JSON playlist", "value": "playlist" }
+						{ "label": "Advanced JSON / stream playlist", "value": "playlist" }
 					]
 				},
 				{
@@ -21,7 +21,7 @@
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "file", "dependsOn": "sourceMode" }], "rule": "#1" }
 				},
 				{
-					"label": "Video folder", "type": "folder", "property": "videoFolder", "fileType": "video",
+					"label": "Video folder", "type": "folder", "property": "videoFolder", "fileType": "video_folder",
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" },
 					"tooltip": "Loads videos alphabetically from the selected File System folder."
 				},
@@ -30,9 +30,9 @@
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "folder", "dependsOn": "sourceMode" }], "rule": "#1" }
 				},
 				{
-					"label": "Playlist JSON", "type": "textarea", "property": "playlistJson", "default": "",
+					"label": "Playlist JSON (advanced)", "type": "textarea", "property": "playlistJson", "default": "",
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "playlist", "dependsOn": "sourceMode" }], "rule": "#1" },
-					"tooltip": "Array or object with items/videos/rows. Each item accepts id, name, url/location/src, poster, type, and caption tracks."
+					"tooltip": "Advanced source for remote streams or explicitly ordered items. Paste an array, or an object with items/videos/rows. Each item accepts id, name, url/location/src, poster, type, and caption tracks. Use Video folder for normal multi-video playback."
 				}
 			]
 		},
@@ -47,9 +47,10 @@
 					"label": "Repeat", "type": "select", "property": "repeat", "default": "playlist",
 					"options": [
 						{ "label": "Do not repeat", "value": "none" },
-						{ "label": "Current video", "value": "item" },
-						{ "label": "Complete playlist", "value": "playlist" }
-					]
+						{ "label": "Repeat current video", "value": "item" },
+						{ "label": "Repeat complete playlist", "value": "playlist" }
+					],
+					"tooltip": "Repeat current video restarts the active item indefinitely and never advances. Repeat complete playlist advances through every item, then starts again."
 				},
 				{
 					"label": "Fit", "type": "select", "property": "fit", "default": "cover",
