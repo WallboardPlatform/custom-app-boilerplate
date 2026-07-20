@@ -2,8 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { WayfindingGraphDocument, WayfindingNode } from '../../src/utils/wayfinding.js';
-import { createLegacyProximityGraph } from '../../src/utils/wayfinding.js';
+import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
 import { parseDestinationMetadata, parseWayfindingSvg } from './model.mjs';
 import { writeWayfindingReport } from './report.mjs';
 import { parseRouteGraph } from './schema.mjs';
@@ -34,7 +33,7 @@ const readJson = (filePath: string): unknown => {
 };
 
 if (hasFlag('help')) {
-	console.log('Usage: npm run wayfinding:validate -- --svg <map.svg> --destinations <sample.json> (--graph <route-graph.json> | --legacy-sensitivity <px>) --start <location-id> [--route-to <location-id>] [--report-dir <directory>] [--strict]');
+	console.log('Usage: npm run wayfinding:validate -- --svg <map.svg> --graph <route-graph.json> --destinations <sample.json> --start <location-id> [--route-to <location-id>] [--report-dir <directory>] [--strict]');
 	process.exit(0);
 }
 
@@ -43,22 +42,8 @@ const destinationPath: string = requirePath('destinations');
 const sourceSvg: string = fs.readFileSync(svgPath, 'utf8');
 const map = parseWayfindingSvg(sourceSvg);
 const destinations = parseDestinationMetadata(readJson(destinationPath));
-const graphPath: string | undefined = argument('graph');
-let graph: WayfindingGraphDocument;
-
-if (graphPath) {
-	const absoluteGraphPath: string = path.resolve(graphPath);
-	graph = parseRouteGraph(fs.readFileSync(absoluteGraphPath, 'utf8'));
-} else {
-	const sensitivity: number = Number(argument('legacy-sensitivity'));
-
-	if (!Number.isFinite(sensitivity) || sensitivity <= 0) {
-		throw new Error('Provide --graph for explicit topology or --legacy-sensitivity for a compatibility-only audit.');
-	}
-
-	const nodes: WayfindingNode[] = map.levels.flatMap((level): WayfindingNode[] => level.pointNodes);
-	graph = createLegacyProximityGraph(path.basename(svgPath, path.extname(svgPath)), nodes, sensitivity);
-}
+const graphPath: string = requirePath('graph');
+const graph: WayfindingGraphDocument = parseRouteGraph(fs.readFileSync(graphPath, 'utf8'));
 
 const report = validateWayfinding({
 	destinations,
@@ -72,7 +57,7 @@ writeWayfindingReport(reportDirectory, sourceSvg, graph, report);
 
 console.log(`Wayfinding report: ${path.join(reportDirectory, 'index.html')}`);
 console.log(`Map ${report.map.width}x${report.map.height}; ${report.map.levels} level(s), ${report.map.locations} location(s).`);
-console.log(`Graph ${report.graph.generationMode}; ${report.graph.nodes} nodes, ${report.graph.edges} edges, max degree ${report.graph.maxDegree}.`);
+console.log(`Graph ${report.graph.nodes} nodes, ${report.graph.edges} edges, max degree ${report.graph.maxDegree}.`);
 console.log(`Routes ${report.summary.routesReachable}/${report.summary.routeableDestinations}; ${report.summary.errors} error(s), ${report.summary.warnings} warning(s).`);
 
 if (report.summary.errors > 0 || (hasFlag('strict') && report.summary.warnings > 0)) process.exitCode = 1;

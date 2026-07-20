@@ -34,7 +34,6 @@ export interface WayfindingValidationReport {
 	generatedAt: string;
 	graph: {
 		edges: number;
-		generationMode: 'explicit' | 'legacy-proximity';
 		maxDegree: number;
 		nodes: number;
 	};
@@ -44,7 +43,6 @@ export interface WayfindingValidationReport {
 		height: number;
 		levels: number;
 		locations: number;
-		pointNodes: number;
 		width: number;
 	};
 	routes: WayfindingRouteCheck[];
@@ -93,10 +91,8 @@ const validateMapStructure = (map: ParsedWayfindingSvg, issues: WayfindingIssue[
 		addIssue(issues, 'error', 'map-coordinate-space-invalid', 'SVG dimensions and viewBox width/height must be positive.');
 	}
 
-	if (map.contractMode === 'unannotated') {
+	if (map.locations.length === 0) {
 		addIssue(issues, 'error', 'location-annotations-missing', 'No element has a stable data-wayfinding-location-id annotation.');
-	} else if (map.contractMode === 'legacy-import') {
-		addIssue(issues, 'warning', 'legacy-map-import', 'This SVG uses the legacy seven-group Map format. It is accepted only as migration input; new maps use data-wayfinding-location-id annotations.');
 	}
 
 	for (const element of map.elements) {
@@ -123,7 +119,7 @@ const validateMapStructure = (map: ParsedWayfindingSvg, issues: WayfindingIssue[
 		addIssue(issues, 'error', 'duplicate-location-annotation', `Wayfinding location '${locationId}' is annotated more than once. Wrap multipart geometry in one annotated group.`, [locationId]);
 	}
 
-	for (const location of map.locations.filter((candidate: ParsedWayfindingLocation): boolean => candidate.source === 'native')) {
+	for (const location of map.locations) {
 		if (!location.attributes.id) {
 			addIssue(issues, 'error', 'location-element-id-missing', `Wayfinding location '${location.locationId}' requires a stable SVG element id.`, [location.locationId]);
 		}
@@ -226,9 +222,6 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 		addIssue(issues, 'warning', 'long-edge-review', `Edge '${item.edge.id}' is ${Math.round(item.pixels)} SVG units long and should be reviewed for a shortcut.`, [item.edge.id]);
 	}
 
-	const crossingLimit = graph.generation?.mode === 'legacy-proximity' ? 25 : Number.POSITIVE_INFINITY;
-	let crossingCount = 0;
-
 	for (let leftIndex = 0; leftIndex < validEdges.length; leftIndex += 1) {
 		for (let rightIndex = leftIndex + 1; rightIndex < validEdges.length; rightIndex += 1) {
 			const left = validEdges[leftIndex];
@@ -238,32 +231,19 @@ const validateGraph = (graph: WayfindingGraphDocument, map: ParsedWayfindingSvg,
 
 			if (!crosses(left.from, left.to, right.from, right.to)) continue;
 
-			crossingCount += 1;
-
-			if (crossingCount <= crossingLimit) {
-				addIssue(issues, 'warning', 'edge-crossing-without-node', `Edges '${left.edge.id}' and '${right.edge.id}' cross without a shared node.`, [left.edge.id, right.edge.id]);
-			}
+			addIssue(issues, 'warning', 'edge-crossing-without-node', `Edges '${left.edge.id}' and '${right.edge.id}' cross without a shared node.`, [left.edge.id, right.edge.id]);
 		}
-	}
-
-	if (crossingCount > crossingLimit) {
-		addIssue(issues, 'warning', 'edge-crossing-summary', `${crossingCount - crossingLimit} additional edge crossings require visual graph review.`);
 	}
 
 	const maxDegree: number = Math.max(0, ...degree.values());
 	const highDegreeNodes: Array<[string, number]> = [...degree.entries()].filter(([, value]): boolean => value > 8);
 
 	for (const [nodeId, value] of highDegreeNodes.slice(0, 25)) {
-		addIssue(issues, 'warning', 'high-node-degree', `Node '${nodeId}' has degree ${value}; inspect for proximity shortcuts.`, [nodeId]);
+		addIssue(issues, 'warning', 'high-node-degree', `Node '${nodeId}' has degree ${value}; inspect for unintended shortcuts.`, [nodeId]);
 	}
 
 	if (highDegreeNodes.length > 25) {
 		addIssue(issues, 'warning', 'high-node-degree-summary', `${highDegreeNodes.length - 25} additional nodes have degree above 8.`);
-	}
-
-	if (graph.generation?.mode === 'legacy-proximity') {
-		addIssue(issues, 'warning', 'legacy-proximity-fallback', 'This graph was inferred by global proximity for migration analysis and is not accepted as safe explicit topology.');
-		addIssue(issues, 'warning', 'legacy-accessibility-unverified', 'Legacy proximity edges have unknown accessibility; step-free route coverage is not evaluated.');
 	}
 
 	return maxDegree;
@@ -333,7 +313,6 @@ const routeChecks = (
 	}
 
 	const graph = new WayfindingGraph(graphDocument);
-	const accessibilityVerified: boolean = graphDocument.generation?.mode !== 'legacy-proximity';
 	const locationNodeById = new Map(graphDocument.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location')
 		.map((node: WayfindingNode): [string, WayfindingNode] => [node.locationId!, node]));
 	const startNode: WayfindingNode | undefined = locationNodeById.get(startLocationId);
@@ -347,7 +326,7 @@ const routeChecks = (
 	return destinations.filter((destination: DestinationMetadata): boolean => destination.routeable).map((destination: DestinationMetadata): WayfindingRouteCheck => {
 		const destinationNode: WayfindingNode | undefined = locationNodeById.get(destination.id);
 		const standard: WayfindingRouteResult | undefined = destinationNode ? graph.route(startNode.id, destinationNode.id) : undefined;
-		const stepFree: WayfindingRouteResult | undefined = accessibilityVerified && destinationNode
+		const stepFree: WayfindingRouteResult | undefined = destinationNode
 			? graph.route(startNode.id, destinationNode.id, { profile: 'step-free' })
 			: undefined;
 
@@ -355,7 +334,7 @@ const routeChecks = (
 			addIssue(issues, 'error', 'destination-unreachable', `Destination '${destination.id}' is marked routeable but cannot be reached from '${startLocationId}'.`, [startLocationId, destination.id]);
 		}
 
-		if (accessibilityVerified && destination.accessible === true && standard && !stepFree) {
+		if (destination.accessible === true && standard && !stepFree) {
 			addIssue(issues, 'warning', 'accessible-route-unavailable', `Accessible destination '${destination.id}' has no step-free route from '${startLocationId}'.`, [startLocationId, destination.id]);
 		}
 
@@ -365,7 +344,7 @@ const routeChecks = (
 			nodeCount: standard?.nodeIds.length ?? 0,
 			nodeIds: standard?.nodeIds ?? [],
 			reachable: Boolean(standard),
-			stepFreeReachable: accessibilityVerified ? Boolean(stepFree) : null,
+			stepFreeReachable: Boolean(stepFree),
 			walkingDistance: standard?.walkingDistance
 		};
 	});
@@ -390,7 +369,6 @@ export const validateWayfinding = (options: WayfindingValidationOptions): Wayfin
 		generatedAt: new Date().toISOString(),
 		graph: {
 			edges: options.graph.edges.length,
-			generationMode: options.graph.generation?.mode ?? 'explicit',
 			maxDegree,
 			nodes: options.graph.nodes.length
 		},
@@ -400,7 +378,6 @@ export const validateWayfinding = (options: WayfindingValidationOptions): Wayfin
 			height: options.map.height,
 			levels: new Set(options.graph.nodes.map((node: WayfindingNode): string => node.levelId)).size,
 			locations: options.map.locations.length,
-			pointNodes: options.map.levels.reduce((sum: number, level): number => sum + level.pointNodes.length, 0),
 			width: options.map.width
 		},
 		routes,

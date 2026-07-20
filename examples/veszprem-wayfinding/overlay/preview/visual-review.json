@@ -1,100 +1,95 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "d7307bbef943bd64b28a46c3f72ef35fa979c39a78e9f56068f19a9d11fb49cb",
-	"reviewedAt": "2026-07-20T11:04:55.740Z",
-	"reviewer": "Codex wayfinding foundation review",
+	"sourceHash": "d3177ff3fb0d253ba654053ad7741481608bc3f1a0e6ba66f89fc1af4e2b3b8c",
+	"reviewedAt": "2026-07-19T13:31:57.911Z",
+	"reviewer": "Codex shared auto-fit migration re-review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The kiosk preserves the accepted destination search, map selection, route, off-map, reset, and editable detail workflow."
+			"notes": "Provides a production-shaped destination directory and touch wayfinding flow for the supplied Veszprem map."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The supplied illustrated Veszprem map remains dominant, sharp, and uncropped at both declared surfaces."
+			"notes": "Keeps the supplied illustrated map dominant and draws routes against its real location and route-point IDs."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The bilingual visitor-centre shell and map-first interaction remain specific to wayfinding rather than a generic dashboard."
+			"notes": "Bilingual visitor-centre hierarchy, map treatment, directory controls, and route details are domain-specific."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary destinations, route metrics, controls, and details remain readable at Full HD and compact kiosk size."
+			"notes": "Primary instructions, destination names, route state, distance, and walking time meet room-readable floors."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light, dark, and custom shell palettes preserve readable contrast around the fixed map artwork."
+			"notes": "Light, Dark, and Custom shell palettes preserve contrast without recoloring or obscuring the supplied map."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long titles and destination copy wrap or fit without clipped glyphs, collision, or unreadable reduction."
+			"notes": "Long kiosk and destination names fit without clipped glyphs, overlap, or unreadable type reduction."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "All 14 screenshots keep the map/list balance stable; the selected detail rail remains bounded with intentional scrolling as fallback."
+			"notes": "Both declared landscape sizes keep the map dominant and the directory usable without dead or overflowing regions."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Packaged SVG detail, semantic shell colors, location highlights, and route overlays remain visually aligned."
+			"notes": "The packaged SVG remains sharp, clickable IDs survive bundling, and route overlays align with source geometry."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "This map-led touchscreen composition teaches wayfinding mechanics without imposing dashboard styling on generated apps."
+			"notes": "This reference-led interactive map teaches graph routing and touch selection rather than reusing dashboard composition."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full-HD default map, directory hierarchy, touch rows, and complete zone coverage inspected."
+			"notes": "Full-HD directory composition, map detail, hierarchy, and scroll containment inspected."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact default preserves usable controls, readable rows, and an uncropped map."
+			"notes": "Compact kiosk retains usable controls, readable rows, and a dominant uncropped map."
 		},
 		{
 			"file": "scenario-active-route-1920x1080.png",
 			"status": "pass",
-			"notes": "Selected destination, connected route, endpoints, distance, walking time, and reset action inspected."
+			"notes": "Connected route, endpoints, destination detail, distance, and reset action inspected."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Scenario fixture matches the reviewed Full-HD default composition."
+			"notes": "Primary fixture matches the reviewed Full-HD default state."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Dark compact shell keeps map detail and directory controls legible."
+			"notes": "Primary fixture matches the reviewed compact default state."
 		},
 		{
 			"file": "scenario-custom-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Custom semantic colors apply coherently without reducing text contrast or map visibility."
-		},
-		{
-			"file": "scenario-destination-details-1366x768.png",
-			"status": "pass",
-			"notes": "Floor, hours, status, description, accessibility, distance, and reset action fit the compact selected state."
+			"notes": "Custom palette changes every shell token while preserving map and text contrast."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",
 			"status": "pass",
-			"notes": "Empty bound data shows a stable explicit message without stale destinations."
+			"notes": "Empty bound data produces a stable, actionable state without stale destinations."
 		},
 		{
 			"file": "scenario-external-destination-1366x768.png",
 			"status": "pass",
-			"notes": "Off-map destination is selectable and informative without fabricated route geometry."
+			"notes": "Legend-only destinations are clearly marked off-map without inventing a route."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
@@ -104,22 +99,22 @@
 		{
 			"file": "scenario-long-destination-list-1366x768.png",
 			"status": "pass",
-			"notes": "Long bilingual rows remain bounded and recognizable in the intentional directory scroll region."
+			"notes": "Long bilingual rows remain contained and navigable inside the intentional scroll region."
 		},
 		{
 			"file": "scenario-long-destination-selected-1366x768.png",
 			"status": "pass",
-			"notes": "Extended title and description remain complete without collision; route state and reset remain visible."
+			"notes": "Extended selected-place copy remains readable with clear route state and action placement."
 		},
 		{
 			"file": "scenario-long-title-1366x768.png",
 			"status": "pass",
-			"notes": "Long operator and current-location labels fit the bounded header without clipped descenders."
+			"notes": "Long kiosk labels fit the header without colliding with the current-location block."
 		},
 		{
 			"file": "scenario-row-array-1366x768.png",
 			"status": "pass",
-			"notes": "Plain TABLE row-array input produces the same stable directory composition."
+			"notes": "Plain TABLE row-array input renders the same stable directory contract."
 		}
 	],
 	"unresolvedFindings": []

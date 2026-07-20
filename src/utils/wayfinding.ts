@@ -26,10 +26,6 @@ export interface WayfindingGraphDocument {
 	graphId: string;
 	nodes: WayfindingNode[];
 	edges: WayfindingEdge[];
-	generation?: {
-		mode: 'explicit' | 'legacy-proximity';
-		sensitivity?: number;
-	};
 }
 
 export interface WayfindingRouteOptions {
@@ -181,41 +177,3 @@ export class WayfindingGraph {
 		};
 	}
 }
-
-export const createLegacyProximityGraph = (
-	graphId: string,
-	nodes: WayfindingNode[],
-	sensitivity: number
-): WayfindingGraphDocument => {
-	const edges: WayfindingEdge[] = [];
-
-	for (let leftIndex = 0; leftIndex < nodes.length; leftIndex += 1) {
-		for (let rightIndex = leftIndex + 1; rightIndex < nodes.length; rightIndex += 1) {
-			const left: WayfindingNode = nodes[leftIndex];
-			const right: WayfindingNode = nodes[rightIndex];
-
-			if (left.levelId !== right.levelId) continue;
-
-			if (left.kind === 'location' && right.kind === 'location') continue;
-
-			if (pixelDistance(left, right) > sensitivity) continue;
-
-			edges.push({
-				accessible: false,
-				bidirectional: true,
-				from: left.id,
-				id: `legacy-${left.id}-${right.id}`,
-				kind: 'walk',
-				to: right.id
-			});
-		}
-	}
-
-	return {
-		contractVersion: 1,
-		edges,
-		generation: { mode: 'legacy-proximity', sensitivity },
-		graphId,
-		nodes
-	};
-};

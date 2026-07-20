@@ -1,17 +1,5 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
-import type { WayfindingNode, WayfindingNodeKind } from '../../src/utils/wayfinding.js';
-
-export const WAYFINDING_LAYER_SUFFIXES = [
-	'TransitionPoints',
-	'LocationPoints',
-	'RoutePoints',
-	'Icons',
-	'Legends',
-	'Locations',
-	'Walls'
-] as const;
-
 type XmlAttributes = Record<string, string>;
 
 interface XmlNode {
@@ -28,24 +16,13 @@ export interface ParsedSvgElement {
 export interface ParsedWayfindingLocation extends ParsedSvgElement {
 	levelId?: string;
 	locationId: string;
-	source: 'native' | 'legacy-import';
-}
-
-export interface ParsedWayfindingLevel {
-	id: string;
-	locations: ParsedSvgElement[];
-	pointNodes: WayfindingNode[];
-	subgroupIds: string[];
 }
 
 export interface ParsedWayfindingSvg {
-	contractMode: 'legacy-import' | 'native' | 'unannotated';
 	elements: ParsedSvgElement[];
 	height: number;
 	ids: string[];
-	levels: ParsedWayfindingLevel[];
 	locations: ParsedWayfindingLocation[];
-	rootGroupIds: string[];
 	viewBox: [number, number, number, number];
 	width: number;
 }
@@ -96,53 +73,6 @@ const collectElements = (nodes: XmlNode[], groupIds: string[], output: ParsedSvg
 	}
 };
 
-const directGroups = (node: XmlNode): XmlNode[] => childrenOf(node).filter((child: XmlNode): boolean => tagOf(child) === 'g');
-
-const pointKind = (suffix: typeof WAYFINDING_LAYER_SUFFIXES[number]): WayfindingNodeKind | undefined => {
-	if (suffix === 'RoutePoints') return 'route';
-
-	if (suffix === 'LocationPoints') return 'location';
-
-	if (suffix === 'TransitionPoints') return 'transition';
-
-	return undefined;
-};
-
-const locationIdForPoint = (attributes: XmlAttributes): string | undefined => {
-	if (attributes['data-location-id']) return attributes['data-location-id'];
-
-	if (attributes.id.startsWith('lp-')) return attributes.id.slice(3);
-
-	if (attributes.id.endsWith('-lp')) return attributes.id.slice(0, -3);
-
-	return undefined;
-};
-
-const parsePointNodes = (levelId: string, suffix: typeof WAYFINDING_LAYER_SUFFIXES[number], group: XmlNode): WayfindingNode[] => {
-	const kind: WayfindingNodeKind | undefined = pointKind(suffix);
-
-	if (!kind) return [];
-
-	return childrenOf(group).flatMap((child: XmlNode): WayfindingNode[] => {
-		if (tagOf(child) !== 'circle') return [];
-
-		const attributes: XmlAttributes = attributesOf(child);
-		const x: number | undefined = finiteNumber(attributes.cx);
-		const y: number | undefined = finiteNumber(attributes.cy);
-
-		if (!attributes.id || x === undefined || y === undefined) return [];
-
-		return [{
-			id: attributes.id,
-			kind,
-			levelId,
-			locationId: kind === 'location' ? locationIdForPoint(attributes) : undefined,
-			x,
-			y
-		}];
-	});
-};
-
 export const parseWayfindingSvg = (xml: string): ParsedWayfindingSvg => {
 	const xmlValidation = XMLValidator.validate(xml);
 
@@ -171,74 +101,25 @@ export const parseWayfindingSvg = (xml: string): ParsedWayfindingSvg => {
 
 	const elements: ParsedSvgElement[] = [];
 	collectElements(childrenOf(root), [], elements);
-	const rootGroups: XmlNode[] = directGroups(root);
-	const rootGroupIds: string[] = rootGroups.map((group: XmlNode): string => attributesOf(group).id ?? '').filter(Boolean);
-	const levels: ParsedWayfindingLevel[] = [];
-
-	for (const group of rootGroups) {
-		const id: string | undefined = attributesOf(group).id;
-
-		if (!id || id === 'Base') continue;
-
-		const subgroups: XmlNode[] = directGroups(group);
-		const subgroupById = new Map(subgroups.map((subgroup: XmlNode): [string, XmlNode] => [attributesOf(subgroup).id ?? '', subgroup]));
-		const expectedIds: string[] = WAYFINDING_LAYER_SUFFIXES.map((suffix): string => `${id}-${suffix}`);
-
-		if (!expectedIds.some((expectedId: string): boolean => subgroupById.has(expectedId))) continue;
-
-		const pointNodes: WayfindingNode[] = WAYFINDING_LAYER_SUFFIXES.flatMap((suffix): WayfindingNode[] => {
-			const subgroup: XmlNode | undefined = subgroupById.get(`${id}-${suffix}`);
-
-			return subgroup ? parsePointNodes(id, suffix, subgroup) : [];
-		});
-		const locationGroup: XmlNode | undefined = subgroupById.get(`${id}-Locations`);
-		const locations: ParsedSvgElement[] = locationGroup
-			? childrenOf(locationGroup).flatMap((child: XmlNode): ParsedSvgElement[] => {
-				const tag: string | undefined = tagOf(child);
-				const attributes: XmlAttributes = attributesOf(child);
-
-				return tag && attributes.id ? [{ attributes, groupIds: [`${id}-Locations`], tag }] : [];
-			})
-			: [];
-
-		levels.push({
-			id,
-			locations,
-			pointNodes,
-			subgroupIds: subgroups.map((subgroup: XmlNode): string => attributesOf(subgroup).id ?? '').filter(Boolean)
-		});
-	}
-
 	const width: number = finiteNumber(rootAttributes.width) ?? viewBoxValues[2];
 	const height: number = finiteNumber(rootAttributes.height) ?? viewBoxValues[3];
-	const nativeLocations: ParsedWayfindingLocation[] = elements.flatMap((element: ParsedSvgElement): ParsedWayfindingLocation[] => {
+	const locations: ParsedWayfindingLocation[] = elements.flatMap((element: ParsedSvgElement): ParsedWayfindingLocation[] => {
 		const locationId: string | undefined = element.attributes['data-wayfinding-location-id'];
 
 		return locationId ? [{
 			...element,
 			levelId: element.attributes['data-wayfinding-level'],
-			locationId,
-			source: 'native'
+			locationId
 		}] : [];
 	});
-	const legacyLocations: ParsedWayfindingLocation[] = levels.flatMap((level: ParsedWayfindingLevel): ParsedWayfindingLocation[] => level.locations.map((location: ParsedSvgElement): ParsedWayfindingLocation => ({
-		...location,
-		levelId: level.id,
-		locationId: location.attributes.id,
-		source: 'legacy-import'
-	})));
-	const locations: ParsedWayfindingLocation[] = nativeLocations.length > 0 ? nativeLocations : legacyLocations;
 
 	return {
-		contractMode: nativeLocations.length > 0 ? 'native' : legacyLocations.length > 0 ? 'legacy-import' : 'unannotated',
 		elements,
 		height,
 		ids: elements.map((element: ParsedSvgElement): string => element.attributes.id).filter(Boolean),
-		levels,
 		locations,
-		rootGroupIds,
 		viewBox: viewBoxValues as [number, number, number, number],
-		width: width
+		width
 	};
 };
 

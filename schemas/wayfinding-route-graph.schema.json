@@ -17,15 +17,6 @@
 			"type": "array",
 			"minItems": 1,
 			"items": { "$ref": "#/$defs/edge" }
-		},
-		"generation": {
-			"type": "object",
-			"additionalProperties": false,
-			"required": ["mode"],
-			"properties": {
-				"mode": { "enum": ["explicit", "legacy-proximity"] },
-				"sensitivity": { "type": "number", "exclusiveMinimum": 0 }
-			}
 		}
 	},
 	"$defs": {

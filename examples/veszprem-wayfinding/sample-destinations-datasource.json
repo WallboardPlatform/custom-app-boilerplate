@@ -6,10 +6,6 @@
 			"englishName": "string",
 			"category": "string",
 			"description": "string",
-			"floor": "string",
-			"hours": "string",
-			"status": "string",
-			"keywords": "string",
 			"accessible": "boolean",
 			"routeable": "boolean"
 		},

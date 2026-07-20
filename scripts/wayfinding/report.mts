@@ -67,9 +67,7 @@ export const createDebugSvg = (sourceSvg: string, graph: WayfindingGraphDocument
 
 		if (!from || !to || from.levelId !== to.levelId) return [];
 
-		const legacy: boolean = graph.generation?.mode === 'legacy-proximity';
-
-		return [`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${legacy ? '#64748b' : edgeColor(edge)}" stroke-width="1.5" stroke-opacity="${legacy ? '0.42' : '0.68'}" vector-effect="non-scaling-stroke"><title>${escapeHtml(edge.id)}</title></line>`];
+		return [`<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${edgeColor(edge)}" stroke-width="1.5" stroke-opacity="0.68" vector-effect="non-scaling-stroke"><title>${escapeHtml(edge.id)}</title></line>`];
 	});
 	const nodes: string[] = graph.nodes.map((node: WayfindingNode): string => {
 		const color: string = node.kind === 'location' ? '#facc15' : node.kind === 'transition' ? '#a855f7' : '#2563eb';

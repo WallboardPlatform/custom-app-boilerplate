@@ -5,7 +5,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 
 import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
-import { createLegacyProximityGraph, WayfindingGraph } from '../../src/utils/wayfinding.js';
+import { WayfindingGraph } from '../../src/utils/wayfinding.js';
 import { parseDestinationMetadata, parseWayfindingSvg } from './model.mjs';
 import { createDebugSvg, writeWayfindingReport } from './report.mjs';
 import { parseRouteGraph } from './schema.mjs';
@@ -13,7 +13,6 @@ import { validateWayfinding } from './validation.mjs';
 
 const fixtureDirectory = path.resolve('scripts', 'wayfinding', 'fixtures');
 const sourceSvg = fs.readFileSync(path.join(fixtureDirectory, 'valid-map.svg'), 'utf8');
-const legacySvg = fs.readFileSync(path.join(fixtureDirectory, 'legacy-map.svg'), 'utf8');
 const graph = JSON.parse(fs.readFileSync(path.join(fixtureDirectory, 'valid-route-graph.json'), 'utf8')) as WayfindingGraphDocument;
 const destinations = parseDestinationMetadata(JSON.parse(fs.readFileSync(path.join(fixtureDirectory, 'valid-destinations.json'), 'utf8')));
 
@@ -21,7 +20,6 @@ void describe('wayfinding authoring foundation', (): void => {
 	void it('accepts native location annotations, arbitrary visual structure, transforms, and coordinate size', (): void => {
 		const map = parseWayfindingSvg(sourceSvg);
 
-		assert.equal(map.contractMode, 'native');
 		assert.deepEqual(map.locations.map((location): string => location.locationId), ['lobby', 'gallery']);
 		assert.deepEqual(map.locations.map((location): string | undefined => location.levelId), ['ground', 'ground']);
 		assert.deepEqual({ width: map.width, height: map.height }, { width: 800, height: 450 });
@@ -73,16 +71,6 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'destination-unreachable' && issue.references.includes('gallery')));
 	});
 
-	void it('keeps step-free coverage unknown for inferred legacy topology', (): void => {
-		const map = parseWayfindingSvg(legacySvg);
-		const legacyGraph = createLegacyProximityGraph('legacy-fixture', map.levels[0].pointNodes, 400);
-		const report = validateWayfinding({ destinations, graph: legacyGraph, map, startLocationId: 'lobby' });
-
-		assert.ok(report.issues.some((issue): boolean => issue.code === 'legacy-map-import'));
-		assert.ok(report.issues.some((issue): boolean => issue.code === 'legacy-accessibility-unverified'));
-		assert.ok(report.routes.every((route): boolean => route.stepFreeReachable === null));
-	});
-
 	void it('rejects executable SVG content instead of trusting authoring input', (): void => {
 		const unsafeSvg: string = sourceSvg.replace(
 			'<rect id="map-background"',
@@ -103,7 +91,6 @@ void describe('wayfinding authoring foundation', (): void => {
 				{ id: 'to-elevator', from: 'start', to: 'lift', kind: 'walk', accessible: true, bidirectional: true, distanceMeters: 8 },
 				{ id: 'from-elevator', from: 'lift', to: 'finish', kind: 'elevator', accessible: true, bidirectional: true, distanceMeters: 8 }
 			],
-			generation: { mode: 'explicit' },
 			graphId: 'accessible-choice',
 			nodes: [
 				{ id: 'start', levelId: 'Level0', kind: 'location', locationId: 'start', x: 0, y: 0 },
@@ -140,13 +127,5 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(fs.readFileSync(path.join(directory, 'wayfinding-debug.svg'), 'utf8').includes('wb-wayfinding-route-highlight'));
 		assert.ok(fs.readFileSync(path.join(directory, 'index.html'), 'utf8').includes('Route coverage'));
 		assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'wayfinding-report.json'), 'utf8')).summary.errors, 0);
-	});
-
-	void it('parses legacy point groups only as migration input', (): void => {
-		const map = parseWayfindingSvg(legacySvg);
-
-		assert.equal(map.contractMode, 'legacy-import');
-		assert.deepEqual(map.levels[0].pointNodes.filter((node): boolean => node.kind === 'location').map((node): string | undefined => node.locationId), ['lobby', 'gallery']);
-		assert.deepEqual(map.locations.map((location): string => location.locationId), ['lobby', 'gallery']);
 	});
 });

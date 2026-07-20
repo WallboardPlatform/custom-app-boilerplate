@@ -1,7 +1,6 @@
 {
   "contractVersion": 1,
   "graphId": "fixture-ground-floor",
-  "generation": { "mode": "explicit" },
   "nodes": [
     { "id": "lp-lobby", "levelId": "ground", "kind": "location", "locationId": "lobby", "x": 120, "y": 225 },
     { "id": "rp-west", "levelId": "ground", "kind": "route", "x": 260, "y": 225 },

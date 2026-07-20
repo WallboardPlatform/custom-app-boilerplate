@@ -5,7 +5,7 @@ description: Create or repair a Wallboard interactive wayfinding custom app from
 
 # Create Wayfinding App
 
-Build three independent artifacts: visual `map.svg`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only. Target the custom-app runtime, not the legacy Map widget.
+Build three independent artifacts: visual `map.svg`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only.
 
 ## Workflow
 
@@ -30,9 +30,7 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinat
 
 ## Non-Negotiable
 
-- New maps use native location annotations and explicit edges. They do not inherit legacy minimum dimensions, group ordering, point circles, or transform restrictions.
-- `createLegacyProximityGraph` and `--legacy-sensitivity` are migration/audit paths for existing maps, never topology certification or generated output.
-- Never tune proximity sensitivity merely until reachability passes. Use an existing installed value or compare candidates diagnostically; explicit edges are the fix.
+- Use native location annotations and explicit edges. The SVG structure and coordinate space follow the accepted source and design.
 - Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
 - Place a location node at its walkable entrance/approach, not its polygon centroid.
 - Keep mutable names, descriptions, hours, images, status, localization, and CTA content in the destination TABLE.

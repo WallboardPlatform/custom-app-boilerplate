@@ -3,7 +3,7 @@
 	"request": {
 		"summary": "Create an interactive Veszprem downtown wayfinding kiosk from the supplied structured SVG map and a separate editable destination table.",
 		"audience": "Visitors choosing a downtown landmark on a landscape touch display in Veszprem.",
-		"primaryGoal": "Let a visitor find a named destination, draw a real route through the imported map graph, and understand approximate distance without rebuilding the app when labels change."
+		"primaryGoal": "Let a visitor find a named destination, draw a real route through the SVG point graph, and understand approximate distance without rebuilding the app when labels change."
 	},
 	"assumptions": [
 		"The supplied 1341x947 SVG is the authoritative map geometry and contains 35 location shapes, 35 location points, and 625 route points.",
@@ -61,7 +61,7 @@
 			"area": "behavior",
 			"owner": "locked",
 			"targets": ["svg-point-extraction", "dijkstra-shortest-path", "route-rendering", "off-map-state"],
-			"rationale": "Route semantics are code-owned. This historical example still derives compatibility topology from point proximity; new maps must ship an explicit validated route graph."
+			"rationale": "Graph construction and route semantics follow the proven Wallboard map implementation and are not operator-authored content."
 		}
 	],
 	"experience": {
@@ -174,7 +174,6 @@
 		{ "scenario": "compact", "expectation": "The dark shell preserves near-viewing text and touch targets around the unchanged reference map." },
 		{ "scenario": "active-route", "expectation": "A connected landmark draws an animated route and displays approximate distance and walking time." },
 		{ "scenario": "external-destination", "expectation": "An off-map venue remains discoverable but never receives an invented route." },
-		{ "scenario": "destination-details", "expectation": "Editable floor, hours, status, description, and accessibility metadata remain legible in the selected destination panel." },
 		{ "scenario": "custom-theme", "expectation": "Every flat custom color control applies to the shell and route semantics." },
 		{ "scenario": "long-title", "expectation": "A long operator title remains bounded beside the reference identity and current location." },
 		{ "scenario": "long-destination-list", "expectation": "Long bilingual destination labels preserve stable touch rows." },
@@ -184,7 +183,7 @@
 		{ "scenario": "live-datasource-update", "expectation": "Quick-edited destination labels update without rebuilding the app." }
 	],
 	"behaviors": [
-		{ "id": "shortest-path", "expectation": "The shared route engine selects the shortest connected path. This historical map uses the documented legacy proximity adapter until its topology is curated explicitly.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "shortest-path", "expectation": "Route and location points build the same proximity graph rule as the production map app and Dijkstra selects the shortest connected path.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "shared-selection", "expectation": "Map-shape taps and directory buttons drive the same selected destination and route rendering.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "off-map-state", "expectation": "Destinations outside the supplied downtown route graph remain labeled as off-map without fabricated geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "route-reset", "expectation": "The configured timeout removes route geometry and restores the complete destination list.", "evidence": { "testFile": "preview/behavior.spec.ts" } },

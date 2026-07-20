@@ -24,8 +24,6 @@ Graph location nodes represent walkable entrances/approach points, not polygon c
 
 ## SVG Contract
 
-The native contract is intentionally independent of the legacy Map widget:
-
 - use any positive, stable `viewBox` suited to the source and accepted design;
 - allow transforms, nested groups, raster backgrounds, and arbitrary visual layers;
 - give every interactive target a unique SVG `id` and `data-wayfinding-location-id`;
@@ -35,18 +33,16 @@ The native contract is intentionally independent of the legacy Map widget:
 
 Graph coordinates are always expressed in the root SVG viewBox coordinate system. Pointer and authoring tools must normalize transformed artwork into that coordinate space.
 
-Legacy seven-group SVGs remain accepted only as migration/audit input. New generated maps must not reproduce their point-circle topology or inherit their `1240x720`, group-order, or no-transform restrictions.
-
 ## Routing
 
-- New generated maps require explicit graph edges. Global proximity inference is legacy compatibility only.
+- Generated maps require explicit graph edges.
 - Sample centerlines into nodes only as needed for route shape; topology comes from edges, not point density.
 - Connect every routeable location at its entrance. Mark off-map/non-routeable destinations explicitly.
 - Model cross-floor edges as `stairs`, `elevator`, or `escalator`; set accessibility per edge.
 - Keep stable edge IDs so live closures and external commands can disable edges and reroute.
 - Prefer authored `distanceMeters`; otherwise calibrate `mapRatio` and label distances approximate.
 
-The shared `WayfindingGraph` supports standard and step-free shortest paths plus disabled edges. `createLegacyProximityGraph` exists only for existing point-only maps.
+The shared `WayfindingGraph` supports standard and step-free shortest paths plus disabled edges.
 
 ## Product Baseline
 
@@ -67,8 +63,6 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --destinat
 ```
 
 The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size. Review warnings for long edges, high-degree nodes, edge crossings without junctions, missing metadata, and inaccessible destinations without a step-free route. Do not accept a map from XML/render success alone.
-
-For legacy audits, replace `--graph` with `--legacy-sensitivity <px>`. Use the installed app sensitivity when known; otherwise compare candidate values only to expose failure modes. Never tune sensitivity merely until all destinations become reachable: a denser shortcut mesh is not safer topology. Legacy audits leave step-free coverage unknown and always fail `--strict`, so they cannot certify delivery. A real kiosk start is required for certification; do not silently choose one.
 
 ## Delivery
 

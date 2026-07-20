@@ -16,7 +16,7 @@ Validate against `schemas/wayfinding-route-graph.schema.json`.
 - Node coordinates use the root SVG viewBox coordinate system even when artwork is nested or transformed.
 - Edges own explicit adjacency, direction, route kind, accessibility, and optional measured metres.
 - Cross-floor edges use transition nodes and `stairs`, `elevator`, or `escalator` kinds.
-- Prefer a small intentional graph over dense proximity meshes. Add a node at every real junction and bend required for route shape.
+- Prefer a small intentional graph over an unnecessarily dense mesh. Add a node at every real junction and bend required for route shape.
 
 ## Destination `TABLE`
 

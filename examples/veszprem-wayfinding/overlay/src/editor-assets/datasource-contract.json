@@ -20,10 +20,6 @@
 		{ "name": "englishName", "type": "string", "required": false },
 		{ "name": "category", "type": "string", "required": true },
 		{ "name": "description", "type": "string", "required": false },
-		{ "name": "floor", "type": "string", "required": false },
-		{ "name": "hours", "type": "string", "required": false },
-		{ "name": "status", "type": "string", "required": false },
-		{ "name": "keywords", "type": "string", "required": false },
 		{ "name": "accessible", "type": "boolean", "required": false },
 		{ "name": "routeable", "type": "boolean", "required": false }
 	],
@@ -37,7 +33,6 @@
 		"boundEmpty": "render the configured empty state without restoring bundled rows",
 		"invalidRows": "skip rows whose id or name is missing",
 		"ordering": "sort by category and destination name while preserving the SVG id as the routing key",
-		"routeable": "false marks destinations shown on the reference map but outside its walking-route graph",
-		"details": "floor, hours, status, and keywords enrich the selected destination panel without changing SVG geometry"
+		"routeable": "false marks destinations shown on the reference map but outside its walking-route graph"
 	}
 }
