@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js';
 import type { Accessor, JSX } from 'solid-js';
 
 import type { ApiService, IExternalCommandService } from 'wallboard-app-sdk';
@@ -72,6 +72,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [controller, setController] = createSignal<PdfViewerController>();
 	const [sidebarView, setSidebarView] = createSignal<SidebarView>(settings().sidebarDefault);
 	const [sidebarOpen, setSidebarOpen] = createSignal(settings().showSidebar);
+	const [compactSurface, setCompactSurface] = createSignal(false);
 	const [sources, setSources] = createSignal<PdfSource[]>([]);
 	const [sourceError, setSourceError] = createSignal('');
 	const [viewerState, setViewerState] = createSignal<PdfViewerState>(emptyState());
@@ -80,6 +81,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [formNotice, setFormNotice] = createSignal('');
 	let sourceGeneration = 0;
 	let lastPageEvent = '';
+	let rootElement!: HTMLDivElement;
 	const keyboardLayouts = createMemo(() => {
 		const configuredLanguage = settings().keyboardLanguages;
 		const languages: KeyboardLayoutId[] = configuredLanguage === 'hu-en'
@@ -191,10 +193,24 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		setSidebarOpen(settings().showSidebar);
+		setSidebarOpen(compactSurface() ? false : settings().showSidebar);
 		setSidebarView(settings().sidebarDefault);
 
 		if (!settings().onScreenKeyboard) setKeyboardOpen(false);
+	});
+
+	onMount((): void => {
+		const observer = new ResizeObserver((entries: ResizeObserverEntry[]): void => {
+			const width: number = entries[0]?.contentRect.width ?? rootElement.clientWidth;
+
+			setCompactSurface(width <= 800);
+		});
+
+		observer.observe(rootElement);
+		setCompactSurface(rootElement.clientWidth <= 800);
+		onCleanup((): void => {
+			observer.disconnect();
+		});
 	});
 
 	const runSearch = async (): Promise<void> => {
@@ -318,11 +334,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	return (
 		<div
+			ref={rootElement}
 			class={style['wb-app']}
 			data-auto-scroll-speed={settings().autoScrollSpeed}
 			data-current-document={viewerState().currentDocumentIndex + 1}
 			data-current-document-page={viewerState().currentDocumentPage}
 			data-current-page={viewerState().currentPage}
+			data-compact-surface={compactSurface()}
 			data-host-ready={Boolean(props.hostElement)}
 			data-page-padding={settings().pagePadding}
 			data-preview-id="pdf-document-workspace-root"

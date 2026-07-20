@@ -44,6 +44,20 @@ test('loads a folder as two documents while lazily bounding rendered canvases', 
 	expect(canvasCount).toBeLessThanOrEqual(4);
 });
 
+test('compact surfaces collapse a configured sidebar without removing access to it', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.setViewportSize({ width: 800, height: 600 });
+	const root = page.locator('[data-preview-id="pdf-document-workspace-root"]');
+
+	await expect(root).toHaveAttribute('data-compact-surface', 'true');
+	await expect(page.getByRole('button', { name: 'Show document sidebar' })).toHaveText('Show panel');
+	await expect(page.getByRole('complementary')).toHaveCount(0);
+
+	await page.getByRole('button', { name: 'Show document sidebar' }).click();
+	await expect(page.getByRole('button', { name: 'Hide document sidebar' })).toHaveText('Hide panel');
+	await expect(page.getByRole('complementary')).toBeVisible();
+});
+
 test('document and outline navigation select exact PDF destinations', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await page.getByRole('button', { name: /northline shift brief/i }).click();
