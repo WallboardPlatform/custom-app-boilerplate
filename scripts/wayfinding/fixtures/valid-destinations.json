@@ -1,0 +1,17 @@
+{
+  "Destinations": {
+    "header": {
+      "id": "string",
+      "name": "string",
+      "category": "string",
+      "description": "string",
+      "accessible": "boolean",
+      "routeable": "boolean"
+    },
+    "rows": [
+      { "id": "lobby", "name": "Lobby", "category": "Services", "description": "Main entrance", "accessible": true, "routeable": true },
+      { "id": "gallery", "name": "Gallery", "category": "Exhibitions", "description": "Current exhibitions", "accessible": true, "routeable": true }
+    ],
+    "connectors": {}
+  }
+}

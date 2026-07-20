@@ -2,9 +2,6 @@
  * Configuration types for the plugin
  */
 export interface WBPluginMetadata {
-	widgetId?: string;
-	minioBucket?: string;
-	minioHost?: string;
 	buildMode: string;
 
 	// Build progress fields
@@ -12,21 +9,6 @@ export interface WBPluginMetadata {
 	progress?: number;
 	step?: string;
 	startTime?: number;
-}
-
-export interface PluginConfig {
-	id?: string;
-	minio?: MinioConfig;
-	zipOutput?: string;
-}
-
-export interface MinioConfig {
-	host: string;
-	port: number;
-	useSSL: boolean;
-	accessKey: string;
-	secretKey: string;
-	bucket: string;
 }
 
 export interface BuildEnvironment {

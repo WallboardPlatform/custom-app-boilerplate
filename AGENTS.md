@@ -16,9 +16,12 @@ Build production Wallboard widgets, not demo pages. Start with:
 | CSS/layout | `styling.md` |
 | Charts | `charting.md` |
 | Reusable mechanics | `capabilities.md` |
+| Wayfinding/maps | `wayfinding.md`, `datasource-contracts.md` |
 | Packaging/replacement | `app-identity-and-delivery.md` |
 
 `README.md` is the setup and command reference. Do not preload unrelated system docs.
+
+For a wayfinding request based on a PDF, image, SVG, or existing map, follow `.claude/skills/create-wayfinding-app/SKILL.md`.
 
 ## Non-Negotiable
 

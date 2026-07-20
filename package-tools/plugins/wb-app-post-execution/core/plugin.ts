@@ -5,9 +5,8 @@
 import { BasePlugin } from './abstract';
 import { ProgressLogger } from '../../../logger';
 import { ProgressBarFormatter, MetadataFormatter } from '../../../logger/formatters';
-import { AssetsService, Chrome49Service, MinIOService } from '../services';
-import { PluginConfig, BuildEnvironment, WBPluginMetadata } from '../types';
-import { PathConfig } from '../config';
+import { AssetsService, Chrome49Service } from '../services';
+import { BuildEnvironment, WBPluginMetadata } from '../types';
 
 /**
  * Custom progress logger with build progress display
@@ -18,18 +17,6 @@ class WBProgressLogger extends ProgressLogger<WBPluginMetadata> {
 
 		// Prepare display metadata (only fields we want to show)
 		const displayData: Record<string, unknown> = {};
-
-		if (metadata.widgetId) {
-			displayData.widgetId = metadata.widgetId;
-		}
-
-		if (metadata.minioBucket) {
-			displayData.minioBucket = metadata.minioBucket;
-		}
-
-		if (metadata.minioHost) {
-			displayData.minioHost = metadata.minioHost;
-		}
 
 		displayData.buildMode = metadata.buildMode;
 
@@ -76,11 +63,10 @@ class WBProgressLogger extends ProgressLogger<WBPluginMetadata> {
 }
 
 export class WBAppPostExecutionPlugin extends BasePlugin {
-	private config: PluginConfig;
 	private progressLogger: WBProgressLogger;
-	private totalSteps: number = 3;
+	private readonly totalSteps: number = 2;
 
-	constructor(config: PluginConfig, isProduction: boolean) {
+	constructor(isProduction: boolean) {
 		const environment: BuildEnvironment = {
 			isProduction,
 			isDevelopment: !isProduction,
@@ -89,14 +75,9 @@ export class WBAppPostExecutionPlugin extends BasePlugin {
 
 		super({ environment });
 
-		this.config = config;
-
 		// Initialize custom progress logger
 		this.progressLogger = new WBProgressLogger(
 			{
-				widgetId: config.id,
-				minioBucket: config.minio?.bucket,
-				minioHost: config.minio ? `${config.minio.host}:${config.minio.port}` : undefined,
 				buildMode: environment.mode
 			},
 			{
@@ -105,11 +86,6 @@ export class WBAppPostExecutionPlugin extends BasePlugin {
 				useSimpleOutput: process.env.SIMPLE_OUTPUT === 'true' && this.environment.isProduction
 			}
 		);
-
-		// Adjust total steps based on configuration
-		if ((!config.minio || !config.id) || process.env.DISABLE_MINIO_UPLOAD === 'true') {
-			this.totalSteps = 2;
-		}
 	}
 
 	/**
@@ -123,23 +99,7 @@ export class WBAppPostExecutionPlugin extends BasePlugin {
 	 * Validate configuration
 	 */
 	protected validate(): void {
-		if (process.env.DISABLE_MINIO_UPLOAD === 'true') {
-			this.logger.warning(
-				'MinIO upload disabled.'
-			)
-		}
-
-		if (!this.config.id) {
-			this.logger.warning(
-				'Widget ID not found. Build will proceed but MinIO upload will be skipped.'
-			);
-		}
-
-		if (!this.config.minio && process.env.DISABLE_MINIO_UPLOAD !== 'true') {
-			this.logger.warning(
-				'MinIO configuration missing. Build will proceed but upload will be skipped.'
-			);
-		}
+		// No optional external services are required for local builds.
 	}
 
 	/**
@@ -149,7 +109,6 @@ export class WBAppPostExecutionPlugin extends BasePlugin {
 		try {
 			await this.copyEditorAssets();
 			await this.buildChrome49();
-			await this.uploadToMinIO();
 
 			this.showSuccess();
 		} catch (error) {
@@ -192,40 +151,11 @@ export class WBAppPostExecutionPlugin extends BasePlugin {
 	}
 
 	/**
-	 * Step 3: Upload to MinIO (optional)
-	 */
-	private async uploadToMinIO(): Promise<void> {
-		if ((!this.config.minio || !this.config.id) || process.env.DISABLE_MINIO_UPLOAD === 'true') {
-			return;
-		}
-
-		this.progressLogger.setStep(3, this.totalSteps, 'Uploading files to MinIO');
-
-		const minioService = new MinIOService({
-			widgetId: this.config.id,
-			minioConfig: this.config.minio,
-			uploadFolders: [PathConfig.ASSETS_FOLDER, PathConfig.EDITOR_ASSETS_FOLDER],
-			logger: this.logger,
-			progressLogger: this.progressLogger
-		});
-
-		await minioService.execute();
-	}
-
-	/**
 	 * Show success message
 	 */
 	private showSuccess(): void {
 		const message: string = 'All build steps completed successfully!';
-		let details: string | undefined;
-
-		if (this.config.id && this.config.minio?.bucket) {
-			details = `🌐 Files available at: ${this.config.minio.bucket}/apps/widgets/${this.config.id}/`;
-		} else {
-			details = 'ℹ️  Files upload was skipped (MinIO configuration missing)';
-		}
-
-		this.progressLogger.showCompletion(true, message, details);
+		this.progressLogger.showCompletion(true, message);
 	}
 
 	/**

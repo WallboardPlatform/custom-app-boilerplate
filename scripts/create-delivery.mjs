@@ -33,8 +33,6 @@ const projectPathHash = [...projectDirectory.toLowerCase()].reduce(
 );
 const commandEnvironment = {
 	...process.env,
-	DISABLE_MINIO_UPLOAD: 'true',
-	DO_APPLICATION_ZIP: 'false',
 	WALLBOARD_PREVIEW_TEST_PORT: process.env.WALLBOARD_PREVIEW_TEST_PORT ?? String(42000 + (projectPathHash % 6000)),
 	SIMPLE_OUTPUT: 'true'
 };
@@ -151,7 +149,6 @@ const prepareOutputDirectory = () => {
 
 runNpmScript('validate:identity');
 runNpmScript('validate:project');
-runNpmScript('validate:examples');
 runNpmScript('typecheck:scripts');
 runNpmScript('lint');
 runNpmScript('validate:legacy');

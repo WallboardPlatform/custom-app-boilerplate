@@ -1,0 +1,15 @@
+{
+  "contractVersion": 1,
+  "graphId": "fixture-ground-floor",
+  "nodes": [
+    { "id": "lp-lobby", "levelId": "ground", "kind": "location", "locationId": "lobby", "x": 120, "y": 225 },
+    { "id": "rp-west", "levelId": "ground", "kind": "route", "x": 260, "y": 225 },
+    { "id": "rp-east", "levelId": "ground", "kind": "route", "x": 540, "y": 225 },
+    { "id": "gallery-lp", "levelId": "ground", "kind": "location", "locationId": "gallery", "x": 680, "y": 225 }
+  ],
+  "edges": [
+    { "id": "lobby-to-west", "from": "lp-lobby", "to": "rp-west", "kind": "walk", "accessible": true, "bidirectional": true },
+    { "id": "west-to-east", "from": "rp-west", "to": "rp-east", "kind": "walk", "accessible": true, "bidirectional": true },
+    { "id": "east-to-gallery", "from": "rp-east", "to": "gallery-lp", "kind": "walk", "accessible": true, "bidirectional": true }
+  ]
+}

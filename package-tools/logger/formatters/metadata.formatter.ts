@@ -6,7 +6,6 @@ export class MetadataFormatter {
 	 * Convert camelCase to Title Case with spaces
 	 * Examples:
 	 * - 'widgetId' -> 'Widget Id'
-	 * - 'minioBucket' -> 'Minio Bucket'
 	 * - 'buildMode' -> 'Build Mode'
 	 */
 	public static formatKey(key: string): string {
@@ -50,9 +49,7 @@ export class MetadataFormatter {
 			mode: '⚙️',
 			buildMode: '⚙️',
 			bucket: '🪣',
-			minioBucket: '🪣',
 			host: '🌐',
-			minioHost: '🌐',
 			path: '📁',
 			file: '📄',
 			folder: '📂',

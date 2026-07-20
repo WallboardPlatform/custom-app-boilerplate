@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Wayfinding App"
+  short_description: "Build validated Wallboard wayfinding from a PDF, image, or SVG"
+  default_prompt: "Create a Wallboard wayfinding app from the supplied map source, with editable destinations and validated explicit routing."
