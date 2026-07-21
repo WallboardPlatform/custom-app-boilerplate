@@ -3,6 +3,7 @@ import type { ConfigValues, Settings } from '@interfaces/application.interface';
 import { motionPreset } from '@utils/motion';
 import { resolveTheme, themePresetSetting } from '@utils/theme';
 import type { ThemePreset } from '@utils/theme';
+import type { WayfindingGuidanceMode } from '@utils/wayfinding-guidance';
 
 interface WayfindingPalette {
 	accentColor: string;
@@ -25,6 +26,10 @@ const numberSetting = (value: number | undefined, fallback: number, minimum: num
 
 const booleanSetting = (value: boolean | undefined, fallback: boolean): boolean => {
 	return typeof value === 'boolean' ? value : fallback;
+};
+
+const guidanceModeSetting = (value: string | undefined): WayfindingGuidanceMode => {
+	return value === 'directory' || value === 'directional' ? value : 'highlight';
 };
 
 export default function mapSettings(config: ConfigValues): Settings {
@@ -58,13 +63,14 @@ export default function mapSettings(config: ConfigValues): Settings {
 
 	return {
 		...palette,
-		routeColor: textSetting(config.routeColor, palette.routeColor),
 		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
+		guidanceMode: guidanceModeSetting(config.guidanceMode),
 		interfaceLanguages: config.interfaceLanguages === 'en' || config.interfaceLanguages === 'hu' ? config.interfaceLanguages : 'en-hu',
 		keyboardLanguages: config.keyboardLanguages === 'en' || config.keyboardLanguages === 'hu' ? config.keyboardLanguages : 'hu-en',
-		mapRatio: numberSetting(config.mapRatio, 0.8, 0.2, 5),
+		mapNorthOffsetDegrees: numberSetting(config.mapNorthOffsetDegrees, 0, 0, 359),
 		motionPreset: motionPreset(config.motionPreset),
 		onScreenKeyboard: booleanSetting(config.onScreenKeyboard, true),
+		orientationConfirmed: booleanSetting(config.orientationConfirmed, false),
 		routeResetSeconds: numberSetting(config.routeResetSeconds, 45, 10, 180),
 		startLocationId: textSetting(config.startLocationId, 'tourinform-veszprem'),
 		subtitle: textSetting(config.subtitle, 'Choose a landmark or tap its number on the map.'),

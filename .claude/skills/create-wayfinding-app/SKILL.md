@@ -12,15 +12,15 @@ Build an interactive map whose guidance strength matches confirmed evidence. Eve
 1. Read `AGENTS.md`, `docs/system/wayfinding.md`, the supplied source, and only the other task-relevant system docs.
 2. Resolve kiosk surface, current-location policy, floors, languages, required accessibility modes, data ownership, and delivery. Ask only when an unknown changes the map or graph materially.
 3. Copy `templates/wayfinding-project.json` to the project. Choose target guidance (`directory`, `highlight`, `directional`, or `route`), explicit fallback policy, evidence status, and one visual mode:
-   - **Hybrid by default:** retain the supplied artwork under vector hit areas/routes.
+   - **Source overlay by default:** retain useful supplied artwork under vector hit areas; add routes only when separately certified.
    - **Schematic:** simplify geometry when distance readability matters more than fidelity.
    - **Exact vector:** trace when reliable geometry is required and available.
    - **Calibrated isometric:** retain useful 3D artwork over a separately authored and projected 2D spatial model.
 4. Run `npm run wayfinding:assess -- --project wayfinding-project.json`. Do not build route UI unless the assessment permits it. A polished highlight/directional product is the required fallback for uncertain raster topology.
 5. Create the generation brief and pass `npm run validate:brief` before app implementation.
 6. Author the artifacts using [references/artifacts.md](references/artifacts.md). Audit existing SVGs with `npm run wayfinding:audit-source -- --svg <map.svg> --report-dir <directory>` before migration. Treat exported legacy anchors as proposals and legacy point clouds as evidence, never topology.
-7. For raster/PDF or audited SVG route projects, use `npm run wayfinding:workbench`: confirm the independent mask, place routeable destination anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
-8. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; routeable rows require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
+7. Use `npm run wayfinding:workbench` to load/export the project assessment and review map evidence. For raster/PDF or audited SVG route candidates, confirm the independent mask, place graph anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
+8. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; route-eligible destinations require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
 9. For route projects, validate and generate the QA dashboard/overlay:
 
 ```bash
@@ -40,7 +40,7 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable
 - Place a location node at its walkable entrance/approach, not its polygon centroid.
 - Keep location nodes as leaf entrances; never route through an unrelated destination. Name and classify crossings, doors, stairs, elevators, and escalators explicitly.
 - Keep mutable names, descriptions, hours, images, status, localization, and CTA content in the destination TABLE.
-- Mark off-map or intentionally unreachable destinations `routeable: false`; never draw an invented route.
+- Derive map presence from reviewed SVG geometry and route eligibility from the graph. Keep off-map or intentionally unreachable destinations listed-only; never let mutable TABLE data grant routing.
 - Model stairs/elevators/escalators and accessibility on graph edges. Use stable edge IDs for closures and rerouting.
 - Preserve source labels/icons unless replacement is needed for interaction, localization, theming, or readability. Do not mandate inpainting.
 - Do not embed arbitrary HTML, scripts, event handlers, credentials, customer records, or live customer URLs in SVG/metadata.

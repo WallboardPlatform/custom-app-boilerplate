@@ -7,6 +7,5 @@ export interface Destination {
 	id: string;
 	mapNumber: string;
 	name: string;
-	routeable: boolean;
 	status: string;
 }

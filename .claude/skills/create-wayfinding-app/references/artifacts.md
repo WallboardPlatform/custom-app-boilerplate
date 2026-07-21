@@ -40,13 +40,13 @@ Omit this artifact when routing is not assessed. Highlight geometry belongs in `
 
 ## Destination `TABLE`
 
-Minimum: `id`, `name`, `category`, `description`, `accessible`, `routeable`. Leave `accessible` empty/unknown until a source or reviewer verifies it.
+Minimum: `id`, `name`, `category`, `description`, `accessible`. Leave `accessible` empty/unknown until a source or reviewer verifies it. Map presence comes from SVG geometry; route eligibility comes from the graph, never the TABLE.
 
 Add only useful fields: `shortName`, aliases/keywords, `floor`, `hours`, `status`, `statusDetail`, image/file reference, CTA label/target, and localized values. IDs must match SVG location shapes and graph location nodes.
 
 ## Review
 
-- Verify every routeable destination from each installed kiosk start.
+- Verify every graph-linked destination from each installed kiosk start.
 - Verify standard and step-free profiles separately.
 - Inspect long edges, crossings without nodes, high-degree nodes, closed routes, and floor transitions.
 - Compare the visual map to the source at the real kiosk dimensions.

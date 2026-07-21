@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1341" height="947" viewBox="0 0 1341 947" role="img" aria-labelledby="map-title map-description">
   <title id="map-title">Interactive Veszprem downtown map</title>
-  <desc id="map-description">Tourism map with selectable landmarks and an authored walking route overlay.</desc>
+  <desc id="map-description">Tourism map with reviewed selectable landmark geometry.</desc>
   <image id="map-artwork" x="0" y="0" width="1341" height="947" preserveAspectRatio="xMidYMid meet"/>
   <g id="location-hit-targets" fill="#ffffff" fill-opacity="0.001" stroke="none">
     <circle id="hit-tourinform-veszprem" data-wayfinding-location-id="tourinform-veszprem" data-wayfinding-level="downtown" cx="372" cy="416" r="22"/>

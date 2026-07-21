@@ -110,6 +110,17 @@ main {
 .field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .metadata-editor[hidden] { display: none; }
 
+.evidence-list { margin-top: 14px; border-top: 1px solid #d4dcd8; }
+.evidence-row { display: grid; padding: 9px 0; border-bottom: 1px solid #e0e6e3; grid-template-columns: minmax(0, 1fr) 92px 110px; align-items: center; gap: 6px; }
+.evidence-row strong { min-width: 0; font-size: 10px; overflow-wrap: anywhere; }
+.evidence-row select { margin-top: 0; padding: 6px 4px; font-size: 9px; }
+.project-assessment { margin-top: 13px; padding: 11px; border-left: 4px solid #687571; background: #eef2f0; font-size: 10px; line-height: 1.45; }
+.project-assessment[data-allowed="true"] { border-left-color: #18826f; background: #dff5ed; }
+.project-assessment[data-target-satisfied="false"] { border-left-color: #d19021; background: #fff4cf; }
+.project-assessment strong,
+.project-assessment span { display: block; }
+.project-assessment span { margin-top: 4px; color: #44514e; }
+
 .controls input[type="range"] { width: 100%; margin-top: 7px; accent-color: #18826f; }
 
 .controls output { float: right; color: #17201f; }

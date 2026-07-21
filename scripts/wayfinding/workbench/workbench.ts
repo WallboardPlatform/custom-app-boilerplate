@@ -16,6 +16,12 @@ import {
 	retainAnchorNetworkCore,
 	skeletonizeWalkableMask
 } from '../centerline.mts';
+import { assessWayfindingProject } from '../project.mts';
+import type {
+	WayfindingEvidenceItem,
+	WayfindingEvidenceKey,
+	WayfindingProjectDocument
+} from '../project.mts';
 
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph';
 
@@ -36,7 +42,6 @@ interface DestinationRow extends Record<string, unknown> {
 	id: string;
 	mapNumber?: string;
 	name: string;
-	routeable?: boolean;
 	status?: string;
 }
 
@@ -78,6 +83,20 @@ const imageFile = requireElement<HTMLInputElement>('#image-file');
 const graphFile = requireElement<HTMLInputElement>('#graph-file');
 const maskFile = requireElement<HTMLInputElement>('#mask-file');
 const destinationFile = requireElement<HTMLInputElement>('#destination-file');
+const projectFile = requireElement<HTMLInputElement>('#project-file');
+const projectIdInput = requireElement<HTMLInputElement>('#project-id');
+const sourceKindInput = requireElement<HTMLSelectElement>('#source-kind');
+const sourcePresentationInput = requireElement<HTMLSelectElement>('#source-presentation');
+const sourceLevelsInput = requireElement<HTMLInputElement>('#source-levels');
+const targetModeInput = requireElement<HTMLSelectElement>('#target-mode');
+const equivalentRedrawInput = requireElement<HTMLInputElement>('#equivalent-redraw');
+const allowFallbackInput = requireElement<HTMLInputElement>('#allow-fallback');
+const stepFreeRequiredInput = requireElement<HTMLInputElement>('#step-free-required');
+const independentMaskInput = requireElement<HTMLInputElement>('#independent-mask');
+const reviewerIdInput = requireElement<HTMLInputElement>('#reviewer-id');
+const reviewMethodInput = requireElement<HTMLSelectElement>('#review-method');
+const evidenceList = requireElement<HTMLElement>('#evidence-list');
+const projectAssessment = requireElement<HTMLElement>('#project-assessment');
 const cellSizeInput = requireElement<HTMLInputElement>('#cell-size');
 const toleranceInput = requireElement<HTMLInputElement>('#tolerance');
 const brushInput = requireElement<HTMLInputElement>('#brush-size');
@@ -106,7 +125,7 @@ const destinationDescription = requireElement<HTMLTextAreaElement>('#destination
 const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
 const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
 const destinationAccessible = requireElement<HTMLSelectElement>('#destination-accessible');
-const destinationRouteable = requireElement<HTMLSelectElement>('#destination-routeable');
+const destinationRouteStatus = requireElement<HTMLInputElement>('#destination-route-status');
 const levelIdInput = requireElement<HTMLInputElement>('#level-id');
 const edgeDraftHost = requireElement<HTMLElement>('#edge-draft');
 const edgeDraftStatus = requireElement<HTMLElement>('#edge-draft-status');
@@ -137,6 +156,38 @@ let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
 
+const EVIDENCE_KEYS: WayfindingEvidenceKey[] = [
+	'destinationMetadata',
+	'destinationAnchors',
+	'currentLocationAnchors',
+	'orientation',
+	'walkableSpace',
+	'routeTopology',
+	'entranceApproaches',
+	'levelTransitions',
+	'accessibility'
+];
+
+const evidenceItem = (provenance: WayfindingEvidenceItem['provenance']): WayfindingEvidenceItem => ({ provenance, status: 'unavailable' });
+
+let project: WayfindingProjectDocument = {
+	contractVersion: 1,
+	evidence: {
+		accessibility: evidenceItem('customer-provided'),
+		currentLocationAnchors: evidenceItem('customer-provided'),
+		destinationAnchors: evidenceItem('ai-inferred'),
+		destinationMetadata: evidenceItem('customer-provided'),
+		entranceApproaches: evidenceItem('ai-inferred'),
+		levelTransitions: evidenceItem('ai-inferred'),
+		orientation: evidenceItem('customer-provided'),
+		routeTopology: evidenceItem('ai-inferred'),
+		walkableSpace: evidenceItem('image-analysis')
+	},
+	guidance: { allowFallback: true, stepFreeRequired: false, targetMode: 'highlight' },
+	projectId: 'wayfinding-project',
+	source: { equivalentRedrawAllowed: true, kind: 'floor-plan', levels: 1, presentation: 'source-overlay' }
+};
+
 const cellSize = (): number => Number(cellSizeInput.value);
 const tolerance = (): number => Number(toleranceInput.value);
 const brushRadius = (): number => Number(brushInput.value);
@@ -157,6 +208,126 @@ const destinationRows = (): DestinationRow[] => destinationTableName && destinat
 const selectedDestination = (): DestinationRow | undefined => destinationRows().find((row: DestinationRow): boolean => row.id === selectedDestinationId);
 
 const stringValue = (value: unknown): string => typeof value === 'string' ? value : '';
+
+const evidenceLabel = (key: WayfindingEvidenceKey): string => key.replace(/([a-z])([A-Z])/gu, '$1 $2');
+
+const reviewerType = (): NonNullable<WayfindingEvidenceItem['review']>['reviewerType'] => {
+	if (reviewMethodInput.value === 'customer-approval') return 'customer';
+	if (reviewMethodInput.value === 'field-verification') return 'site-operator';
+	if (reviewMethodInput.value === 'source-authority') return 'authoritative-source';
+
+	return 'qualified-reviewer';
+};
+
+const applyProjectControls = (): void => {
+	project.projectId = projectIdInput.value.trim() || 'wayfinding-project';
+	project.source.kind = sourceKindInput.value as WayfindingProjectDocument['source']['kind'];
+	project.source.presentation = sourcePresentationInput.value as WayfindingProjectDocument['source']['presentation'];
+	project.source.levels = Math.max(1, Number.parseInt(sourceLevelsInput.value, 10) || 1);
+	project.source.equivalentRedrawAllowed = equivalentRedrawInput.checked;
+	project.guidance.targetMode = targetModeInput.value as WayfindingProjectDocument['guidance']['targetMode'];
+	project.guidance.allowFallback = allowFallbackInput.checked;
+	project.guidance.stepFreeRequired = stepFreeRequiredInput.checked;
+	project.evidence.walkableSpace.independentFrom = independentMaskInput.checked ? ['routeTopology'] : undefined;
+
+	for (const key of EVIDENCE_KEYS) {
+		const item: WayfindingEvidenceItem = project.evidence[key];
+
+		if (item.status !== 'confirmed') {
+			delete item.review;
+
+			continue;
+		}
+
+		const reviewedBy: string = reviewerIdInput.value.trim();
+
+		if (!reviewedBy) {
+			item.status = 'proposed';
+			delete item.review;
+
+			continue;
+		}
+
+		item.review = {
+			method: reviewMethodInput.value as NonNullable<WayfindingEvidenceItem['review']>['method'],
+			reviewedBy,
+			reviewerType: reviewerType()
+		};
+	}
+};
+
+const syncProjectControls = (): void => {
+	projectIdInput.value = project.projectId;
+	sourceKindInput.value = project.source.kind;
+	sourcePresentationInput.value = project.source.presentation;
+	sourceLevelsInput.value = String(project.source.levels);
+	targetModeInput.value = project.guidance.targetMode;
+	equivalentRedrawInput.checked = project.source.equivalentRedrawAllowed;
+	allowFallbackInput.checked = project.guidance.allowFallback;
+	stepFreeRequiredInput.checked = project.guidance.stepFreeRequired;
+	independentMaskInput.checked = project.evidence.walkableSpace.independentFrom?.includes('routeTopology') === true;
+	const reviewedItem: WayfindingEvidenceItem | undefined = EVIDENCE_KEYS
+		.map((key: WayfindingEvidenceKey): WayfindingEvidenceItem => project.evidence[key])
+		.find((item: WayfindingEvidenceItem): boolean => Boolean(item.review));
+
+	if (reviewedItem?.review) {
+		reviewerIdInput.value = reviewedItem.review.reviewedBy;
+		reviewMethodInput.value = reviewedItem.review.method;
+	}
+};
+
+const renderProjectAssessment = (): void => {
+	applyProjectControls();
+	evidenceList.replaceChildren(...EVIDENCE_KEYS.map((key: WayfindingEvidenceKey): HTMLElement => {
+		const item: WayfindingEvidenceItem = project.evidence[key];
+		const row: HTMLDivElement = document.createElement('div');
+		const label: HTMLElement = document.createElement('strong');
+		const status: HTMLSelectElement = document.createElement('select');
+		const provenance: HTMLSelectElement = document.createElement('select');
+
+		row.className = 'evidence-row';
+		label.textContent = evidenceLabel(key);
+		for (const value of ['unavailable', 'proposed', 'confirmed'] as const) {
+			const option: HTMLOptionElement = document.createElement('option');
+			option.value = value;
+			option.textContent = value;
+			status.append(option);
+		}
+		for (const value of ['customer-provided', 'authoritative-import', 'reviewer-authored', 'vector-extraction', 'image-analysis', 'ai-inferred'] as const) {
+			const option: HTMLOptionElement = document.createElement('option');
+			option.value = value;
+			option.textContent = value.replace('-', ' ');
+			provenance.append(option);
+		}
+		status.value = item.status;
+		provenance.value = item.provenance;
+		status.addEventListener('change', (): void => {
+			item.status = status.value as WayfindingEvidenceItem['status'];
+			renderProjectAssessment();
+		});
+		provenance.addEventListener('change', (): void => {
+			item.provenance = provenance.value as WayfindingEvidenceItem['provenance'];
+			renderProjectAssessment();
+		});
+		row.append(label, status, provenance);
+
+		return row;
+	}));
+
+	const assessment = assessWayfindingProject(project);
+	const heading: HTMLElement = document.createElement('strong');
+	heading.textContent = assessment.deliveryAllowed
+		? `DELIVER ${assessment.deliveryMode.toUpperCase()}`
+		: 'DELIVERY BLOCKED';
+	const summary: HTMLElement = document.createElement('span');
+	const relevantIssues = assessment.issues.filter((issue): boolean => issue.severity !== 'info');
+	summary.textContent = assessment.targetSatisfied
+		? `${assessment.targetMode} target is supported by confirmed evidence.`
+		: relevantIssues.map((issue): string => issue.message).join(' ') || 'Confirm the required evidence before delivery.';
+	projectAssessment.replaceChildren(heading, summary);
+	projectAssessment.dataset.allowed = String(assessment.deliveryAllowed);
+	projectAssessment.dataset.targetSatisfied = String(assessment.targetSatisfied);
+};
 
 const renderMetadataEditor = (): void => {
 	const rows: DestinationRow[] = destinationRows();
@@ -179,8 +350,10 @@ const renderMetadataEditor = (): void => {
 
 	const row: DestinationRow | undefined = selectedDestination();
 	const graphLocationIds = new Set((graph?.nodes ?? []).filter((node: WayfindingNode): boolean => node.kind === 'location').map((node: WayfindingNode): string | undefined => node.locationId));
-	const missingRouteAnchors: number = rows.filter((candidate: DestinationRow): boolean => candidate.routeable !== false && !graphLocationIds.has(candidate.id)).length;
-	metadataSummary.textContent = `${rows.length} destinations - ${missingRouteAnchors === 0 ? 'all routeable rows have graph anchors' : `${missingRouteAnchors} routeable row(s) need graph anchors`}`;
+	const missingRouteAnchors: number = rows.filter((candidate: DestinationRow): boolean => !graphLocationIds.has(candidate.id)).length;
+	metadataSummary.textContent = project.guidance.targetMode === 'route'
+		? `${rows.length} destinations - ${missingRouteAnchors === 0 ? 'all rows have graph anchors' : `${missingRouteAnchors} row(s) have no graph anchor`}`
+		: `${rows.length} destinations - route graph optional for ${project.guidance.targetMode} delivery`;
 
 	if (!row) return;
 
@@ -193,7 +366,7 @@ const renderMetadataEditor = (): void => {
 	destinationHours.value = stringValue(row.hours);
 	destinationStatus.value = stringValue(row.status);
 	destinationAccessible.value = typeof row.accessible === 'boolean' ? String(row.accessible) : '';
-	destinationRouteable.value = String(row.routeable !== false);
+	destinationRouteStatus.value = graphLocationIds.has(row.id) ? 'Graph anchor present' : 'Listed only';
 	draw();
 };
 
@@ -987,6 +1160,22 @@ const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> 
 	return file ? JSON.parse(await file.text()) as T : undefined;
 };
 
+projectFile.addEventListener('change', async (): Promise<void> => {
+	const loaded: WayfindingProjectDocument | undefined = await loadJsonFile<WayfindingProjectDocument>(projectFile);
+
+	if (!loaded) return;
+
+	try {
+		assessWayfindingProject(loaded);
+		project = loaded;
+		syncProjectControls();
+		renderProjectAssessment();
+	} catch (error) {
+		projectAssessment.textContent = error instanceof Error ? error.message : 'The project contract is invalid.';
+		projectAssessment.dataset.allowed = 'false';
+	}
+});
+
 imageFile.addEventListener('change', async (): Promise<void> => {
 	const file: File | undefined = imageFile.files?.[0];
 
@@ -1090,10 +1279,6 @@ for (const [input, field] of [
 destinationAccessible.addEventListener('change', (): void => {
 	updateSelectedDestination('accessible', destinationAccessible.value === '' ? undefined : destinationAccessible.value === 'true');
 });
-destinationRouteable.addEventListener('change', (): void => {
-	updateSelectedDestination('routeable', destinationRouteable.value === 'true');
-	renderMetadataEditor();
-});
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 	button.addEventListener('click', (): void => {
@@ -1136,6 +1321,26 @@ requireElement<HTMLButtonElement>('#export-graph').addEventListener('click', ():
 requireElement<HTMLButtonElement>('#export-destinations').addEventListener('click', (): void => {
 	if (destinationDocument) downloadJson('destinations-datasource.json', destinationDocument);
 });
+requireElement<HTMLButtonElement>('#export-project').addEventListener('click', (): void => {
+	applyProjectControls();
+	downloadJson('wayfinding-project.json', project);
+});
+
+for (const input of [
+	projectIdInput,
+	sourceKindInput,
+	sourcePresentationInput,
+	sourceLevelsInput,
+	targetModeInput,
+	equivalentRedrawInput,
+	allowFallbackInput,
+	stepFreeRequiredInput,
+	independentMaskInput,
+	reviewerIdInput,
+	reviewMethodInput
+]) {
+	input.addEventListener(input === reviewerIdInput || input === projectIdInput ? 'input' : 'change', renderProjectAssessment);
+}
 
 canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	pointerDown = true;
@@ -1224,6 +1429,8 @@ canvas.addEventListener('wheel', (event: WheelEvent): void => {
 }, { passive: false });
 
 window.addEventListener('resize', resizeCanvas);
+syncProjectControls();
+renderProjectAssessment();
 setActiveTool();
 renderEdgeDraft();
 renderReview();

@@ -25,7 +25,7 @@ Confirmed evidence requires a named review method. AI inference and image segmen
 
 | Mode | Use when | Output |
 |------|----------|--------|
-| Hybrid (default) | Supplied map is branded, detailed, or expensive to redraw | Original raster/PDF render under vector hit areas and routes |
+| Source overlay (default) | Supplied map is branded, detailed, or expensive to redraw | Original raster/PDF render under vector hit areas; route overlay only when separately certified |
 | Schematic | Distance readability and simple navigation matter more than exact geometry | Simplified vector landmarks, corridors, zones, and labels |
 | Exact vector | Accurate geometry is required and the source supports reliable tracing | Vector base plus interactive layers |
 | Calibrated isometric | Supplied 3D artwork is valuable but is not a route coordinate plane | Separate 2D topology projected into the visual layer after calibration |
@@ -61,7 +61,7 @@ Graph coordinates are always expressed in the root SVG viewBox coordinate system
 
 - Generated maps require explicit graph edges.
 - Sample centerlines into nodes only as needed for route shape; topology comes from edges, not point density.
-- Connect every routeable location at its entrance. Mark off-map/non-routeable destinations explicitly.
+- Connect every route-eligible location graph node at its entrance. Destinations without reviewed geometry remain listed-only; the editable TABLE cannot grant route eligibility.
 - Keep location nodes as leaf entrances; a route through an unrelated destination is a topology defect.
 - Represent crossings, doors, stairs, elevators, and escalators as named edges. Do not replace them with a visual shortcut.
 - Model cross-floor edges as `stairs`, `elevator`, or `escalator`; set accessibility per edge.
@@ -90,11 +90,11 @@ Classify the source before extraction:
 | CAD/BIM/GIS/vector network | Route candidate | Import authoritative geometry, then review entrances, restrictions, levels, and accessibility |
 | Poor scan/photo or incomplete source | Redrawn equivalent highlight | Ask for missing spatial facts; do not infer a certified path from decoration |
 
-Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image or after auditing an existing SVG.
+Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image or after auditing an existing SVG. Load or complete `wayfinding-project.json` first: the assessment panel must show the permitted delivery mode before app behavior is chosen.
 
 1. AI/OCR proposes destination IDs and metadata; never treat OCR as confirmed copy.
 2. Sample representative walkable colors, extract the connected mask, then paint include/exclude corrections over crossings, doors, and false positives.
-3. Place each routeable destination anchor at its reviewed entrance or walkable approach. Moving an anchor invalidates every connected edge review.
+3. For route candidates, place each destination graph anchor at its reviewed entrance or walkable approach. Moving an anchor invalidates every connected edge review.
 4. Draw explicit edges along visible corridors, or generate centerline proposals from the mask. Add bends where the source changes direction; classify traversal, direction, accessibility, and corridor width.
 5. Review the source overlay, confirm the independent mask, then inspect and confirm each contained edge individually. There is no bulk topology confirmation.
 6. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
@@ -110,10 +110,10 @@ Visual review by the same model that proposed a route is diagnostic, not indepen
 | Change | Workflow |
 |--------|----------|
 | Name, translation, description, category, hours, image, status, keywords, CTA | Quick-edit the destination TABLE; no geometry rebuild |
-| `routeable` or destination visibility | Edit TABLE, then verify graph coverage if enabling routing |
-| Stable ID, entrance/approach point, walkable space, floor, transition, closure topology | Reopen workbench, review/export geometry, rerun validation |
+| Destination visibility/listing | Edit TABLE; this cannot create map or route geometry |
+| Stable ID, map hit area, entrance/approach point, route eligibility, walkable space, floor, transition, closure topology | Reopen workbench, review/export geometry, rerun assessment and validation |
 
-The workbench destination editor highlights the selected graph anchor and exports the native TABLE shape. It never rewrites map artwork from mutable public copy.
+The workbench destination editor highlights the selected graph anchor, reports its graph relationship as read-only, and exports the native TABLE shape. It never rewrites map artwork or grants route eligibility from mutable public copy.
 
 ## Product Baseline
 

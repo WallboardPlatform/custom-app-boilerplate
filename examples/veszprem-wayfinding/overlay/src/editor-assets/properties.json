@@ -21,6 +21,15 @@
 				{ "label": "Title", "type": "text", "property": "title", "default": "Veszprem Downtown Wayfinding" },
 				{ "label": "Instruction", "type": "text", "property": "subtitle", "default": "Choose a landmark or tap its number on the map." },
 				{
+					"label": "Guidance mode", "type": "select", "property": "guidanceMode", "default": "highlight",
+					"tooltip": "Highlight is the honest default for this illustrated map. Directional requires venue-confirmed map orientation and never claims a walkable route.",
+					"options": [
+						{ "label": "Highlight destination", "value": "highlight" },
+						{ "label": "Direction from kiosk", "value": "directional" },
+						{ "label": "Directory only", "value": "directory" }
+					]
+				},
+				{
 					"label": "Interface languages", "type": "select", "property": "interfaceLanguages", "default": "en-hu",
 					"options": [
 						{ "label": "English + Hungarian", "value": "en-hu" },
@@ -79,8 +88,17 @@
 					],
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "onScreenKeyboard" }], "rule": "#1" }
 				},
-				{ "label": "Route reset", "type": "slider", "property": "routeResetSeconds", "default": 45, "min": 10, "max": 180, "step": 5, "tooltip": "Seconds before an active route clears automatically." },
-				{ "label": "Map ratio", "type": "slider", "property": "mapRatio", "default": 0.8, "min": 0.2, "max": 5, "step": 0.1, "tooltip": "SVG units per displayed metre for approximate distance and walking time." }
+				{ "label": "Selection reset", "type": "slider", "property": "routeResetSeconds", "default": 45, "min": 10, "max": 180, "step": 5, "tooltip": "Seconds before the active destination and search clear automatically." },
+				{
+					"label": "Orientation verified by venue", "type": "checkbox", "property": "orientationConfirmed", "default": false,
+					"tooltip": "Enable only after a venue reviewer confirms the current-location anchor and map orientation.",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "directional", "dependsOn": "guidanceMode" }], "rule": "#1" }
+				},
+				{
+					"label": "Map north offset", "type": "slider", "property": "mapNorthOffsetDegrees", "default": 0, "min": 0, "max": 359, "step": 1,
+					"tooltip": "Venue-confirmed clockwise angle between screen-up and north on the supplied map.",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "directional", "dependsOn": "guidanceMode" }], "rule": "#1" }
+				}
 			]
 		},
 		{
@@ -120,7 +138,7 @@
 				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#17312f", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
 				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#5d716d", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
 				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#d08b2e", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
-				{ "label": "Route", "type": "color", "property": "routeColor", "default": "#cf332b", "tooltip": "Route line color for every color scheme." }
+				{ "label": "Destination highlight", "type": "color", "property": "routeColor", "default": "#cf332b", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
 			]
 		}
 	],
