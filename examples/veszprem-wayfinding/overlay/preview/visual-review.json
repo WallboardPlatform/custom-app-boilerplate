@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "b1d91bd02b957e09c0487e45157c89c38cc0a8e95c798295ed4d8a7502f021ba",
-	"reviewedAt": "2026-07-21T07:48:56.4793432Z",
+	"sourceHash": "f81b3849ad02d033cf403c6a4cbf3a2662b718eec70a91911612e4813859b6c4",
+	"reviewedAt": "2026-07-21T09:18:19.3684461Z",
 	"reviewer": "Codex visual review",
 	"criteria": [
 		{
@@ -79,7 +79,17 @@
 		{
 			"file": "scenario-active-route-far-east-1920x1080.png",
 			"status": "pass",
-			"notes": "The Gyarkert route follows Kossuth and Budapest streets around the striped building footprint."
+			"notes": "The Gyarkert route follows the visible eastbound street above the striped building footprint instead of crossing it."
+		},
+		{
+			"file": "scenario-active-route-south-1920x1080.png",
+			"status": "pass",
+			"notes": "The Bakony House route follows Horgos Street, the reviewed crossing, and the visible park path without a direct cross-map shortcut."
+		},
+		{
+			"file": "scenario-active-route-zoomed-1920x1080.png",
+			"status": "pass",
+			"notes": "At the tested zoom level the complete route remains a continuous red line with no exposed white underlay or clipped segment."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",

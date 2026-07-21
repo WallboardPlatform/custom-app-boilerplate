@@ -86,33 +86,32 @@ test('reviewed routes use the correct exits, entrances, crossings, and stairs', 
 
 	await page.locator('[data-wayfinding-location-id="hosok-kapuja"]').click({ force: true });
 	let points: Array<[number, number]> = await routePoints(page);
-	expect(points[2][0]).toBeLessThan(points[0][0]);
-	expect(points[points.length - 2][0]).toBeLessThan(points[points.length - 1][0]);
+	expect(points[points.length - 1]).toEqual([338, 322]);
 	await page.getByRole('button', { name: 'Clear route' }).click();
 
 	await page.locator('[data-wayfinding-location-id="auer-haz"]').click({ force: true });
 	points = await routePoints(page);
-	expect(points[points.length - 2][0]).toBeGreaterThan(points[points.length - 1][0]);
+	expect(points[points.length - 1]).toEqual([480, 365]);
 	await page.getByRole('button', { name: 'Clear route' }).click();
 
 	await page.locator('[data-wayfinding-location-id="posa-haz"]').click({ force: true });
 	points = await routePoints(page);
-	expect(points[points.length - 2][0]).toBeGreaterThan(points[points.length - 1][0]);
+	expect(points[points.length - 1]).toEqual([300, 382]);
 	await page.getByRole('button', { name: 'Clear route' }).click();
 
 	await page.locator('[data-wayfinding-location-id="code-digitalis-elmenykozpont"]').click({ force: true });
 	points = await routePoints(page);
-	expect(points.some(([x, y]): boolean => Math.abs(x - 250) < 1 && y >= 525 && y <= 558)).toBe(true);
+	expect(points[points.length - 1]).toEqual([255, 545]);
 	await page.getByRole('button', { name: 'Clear route' }).click();
 
 	await page.locator('[data-wayfinding-location-id="petofi-szinhaz"]').click({ force: true });
 	points = await routePoints(page);
-	expect(points.some(([x, y]): boolean => Math.abs(x - 350) < 1 && y >= 520 && y <= 560)).toBe(true);
+	expect(points.some(([x, y]): boolean => x >= 370 && x <= 375 && y >= 520 && y <= 550)).toBe(true);
 	await page.getByRole('button', { name: 'Clear route' }).click();
 
 	await page.locator('[data-wayfinding-location-id="benedek-hegy"]').click({ force: true });
 	points = await routePoints(page);
-	expect(points.some(([x, y]): boolean => x >= 141 && x <= 160 && y >= 131 && y <= 175)).toBe(true);
+	expect(points.some(([x, y]): boolean => x >= 108 && x <= 120 && y >= 128 && y <= 165)).toBe(true);
 });
 
 test('map hit targets stay visually quiet until hover or selection', async ({ page }): Promise<void> => {
@@ -139,6 +138,10 @@ test('fit route restores the complete active path after manual zoom without chan
 	await page.locator('[data-wayfinding-location-id="auer-haz"]').click({ force: true });
 	const path = page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']");
 	const beforePath: string | null = await path.getAttribute('d');
+	const beforePaint = await path.evaluate((element: Element): { dasharray: string; dashoffset: string } => ({
+		dasharray: getComputedStyle(element).strokeDasharray,
+		dashoffset: getComputedStyle(element).strokeDashoffset
+	}));
 	await page.getByRole('button', { name: 'Zoom in' }).click();
 	await page.getByRole('button', { name: 'Zoom in' }).click();
 	const zoomedViewBox: string | null = await page.locator('#map-artwork').evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
@@ -147,6 +150,46 @@ test('fit route restores the complete active path after manual zoom without chan
 
 	expect(fittedViewBox).not.toBe(zoomedViewBox);
 	expect(await path.getAttribute('d')).toBe(beforePath);
+	expect(beforePaint.dasharray).toBe('none');
+	expect(beforePaint.dashoffset).toBe('0px');
+	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCSS('opacity', '1');
+});
+
+test('every mapped destination keeps one complete solid route while zoomed', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	const targetIds: string[] = await page.locator('[data-destination-id][data-routeable="true"]').evaluateAll((elements: Element[]): string[] => {
+		return elements
+			.map((element: Element): string => element.getAttribute('data-destination-id') ?? '')
+			.filter((id: string): boolean => id.length > 0 && id !== 'tourinform-veszprem');
+	});
+
+	expect(targetIds.length).toBeGreaterThan(30);
+
+	for (const targetId of targetIds) {
+		await page.locator(`[data-destination-id="${targetId}"]`).evaluate((element: HTMLElement): void => {
+			element.click();
+		});
+		await page.getByRole('button', { name: 'Zoom in' }).click();
+		await page.getByRole('button', { name: 'Zoom in' }).click();
+		const group = page.locator('#wb-veszprem-wayfinding-route');
+		const foreground = group.locator("[data-route-layer='foreground']");
+		const underlay = group.locator("[data-route-layer='underlay']");
+
+		await expect(group, `${targetId} route group`).toHaveCSS('opacity', '1');
+		await expect(foreground, `${targetId} foreground`).toHaveCount(1);
+		await expect(underlay, `${targetId} underlay`).toHaveCount(1);
+		expect(await foreground.getAttribute('d'), `${targetId} foreground and underlay geometry`).toBe(await underlay.getAttribute('d'));
+		const paint = await foreground.evaluate((element: SVGPathElement): { dasharray: string; dashoffset: string; length: number } => ({
+			dasharray: getComputedStyle(element).strokeDasharray,
+			dashoffset: getComputedStyle(element).strokeDashoffset,
+			length: element.getTotalLength()
+		}));
+
+		expect(paint.dasharray, `${targetId} dash array`).toBe('none');
+		expect(paint.dashoffset, `${targetId} dash offset`).toBe('0px');
+		expect(paint.length, `${targetId} route length`).toBeGreaterThan(0);
+		await page.getByRole('button', { name: 'Clear route' }).click();
+	}
 });
 
 test('the language selector switches all app-owned interface labels', async ({ page }): Promise<void> => {
