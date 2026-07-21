@@ -1,4158 +1,2551 @@
 {
-  "contractVersion": 2,
-  "graphId": "veszprem-downtown-source-proof",
-  "nodes": [
-    {
-      "id": "loc-tourinform-veszprem",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "tourinform-veszprem",
-      "x": 386,
-      "y": 430
-    },
-    {
-      "id": "loc-hosok-kapuja",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "hosok-kapuja",
-      "x": 374,
-      "y": 306
-    },
-    {
-      "id": "loc-modern-keptar-vass-gyujtemeny",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "modern-keptar-vass-gyujtemeny",
-      "x": 270,
-      "y": 378
-    },
-    {
-      "id": "loc-tuztorony",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "tuztorony",
-      "x": 258,
-      "y": 374
-    },
-    {
-      "id": "loc-foton-audiovizualis-kozpont",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "foton-audiovizualis-kozpont",
-      "x": 206,
-      "y": 354
-    },
-    {
-      "id": "loc-csikasz-galeria",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "csikasz-galeria",
-      "x": 174,
-      "y": 334
-    },
-    {
-      "id": "loc-dubniczay-palota",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "dubniczay-palota",
-      "x": 134,
-      "y": 302
-    },
-    {
-      "id": "loc-biro-giczey-haz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "biro-giczey-haz",
-      "x": 122,
-      "y": 298
-    },
-    {
-      "id": "loc-szent-istvan-templom",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-istvan-templom",
-      "x": 118,
-      "y": 298
-    },
-    {
-      "id": "loc-kormendy-haz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "kormendy-haz",
-      "x": 182,
-      "y": 70
-    },
-    {
-      "id": "loc-szent-istvan-es-gizella-szobor",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-istvan-es-gizella-szobor",
-      "x": 162,
-      "y": 50
-    },
-    {
-      "id": "loc-benedek-hegy",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "benedek-hegy",
-      "x": 146,
-      "y": 30
-    },
-    {
-      "id": "loc-szent-gyorgy-kapolna",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-gyorgy-kapolna",
-      "x": 186,
-      "y": 74
-    },
-    {
-      "id": "loc-szent-mihaly-foszekesegyhaz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-mihaly-foszekesegyhaz",
-      "x": 222,
-      "y": 110
-    },
-    {
-      "id": "loc-szentharomsag-szobor",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szentharomsag-szobor",
-      "x": 242,
-      "y": 130
-    },
-    {
-      "id": "loc-varkut",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "varkut",
-      "x": 250,
-      "y": 138
-    },
-    {
-      "id": "loc-gizella-kapolna",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "gizella-kapolna",
-      "x": 262,
-      "y": 150
-    },
-    {
-      "id": "loc-erseki-palota",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "erseki-palota",
-      "x": 278,
-      "y": 170
-    },
-    {
-      "id": "loc-szent-imre-templom",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-imre-templom",
-      "x": 318,
-      "y": 202
-    },
-    {
-      "id": "loc-deak-ferenc-rendezvenykozpont",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "deak-ferenc-rendezvenykozpont",
-      "x": 322,
-      "y": 202
-    },
-    {
-      "id": "loc-auer-haz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "auer-haz",
-      "x": 450,
-      "y": 362
-    },
-    {
-      "id": "loc-posa-haz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "posa-haz",
-      "x": 294,
-      "y": 398
-    },
-    {
-      "id": "loc-ruttner-haz-varborton",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "ruttner-haz-varborton",
-      "x": 146,
-      "y": 314
-    },
-    {
-      "id": "loc-code-digitalis-elmenykozpont",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "code-digitalis-elmenykozpont",
-      "x": 286,
-      "y": 550
-    },
-    {
-      "id": "loc-petofi-szinhaz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "petofi-szinhaz",
-      "x": 394,
-      "y": 530
-    },
-    {
-      "id": "loc-hangvilla",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "hangvilla",
-      "x": 482,
-      "y": 502
-    },
-    {
-      "id": "loc-eotvos-karoly-megyei-konyvtar",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "eotvos-karoly-megyei-konyvtar",
-      "x": 382,
-      "y": 634
-    },
-    {
-      "id": "loc-szent-miklos-szeg",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "szent-miklos-szeg",
-      "x": 406,
-      "y": 622
-    },
-    {
-      "id": "loc-laczko-dezso-muzeum",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "laczko-dezso-muzeum",
-      "x": 474,
-      "y": 618
-    },
-    {
-      "id": "loc-bakonyi-haz",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "bakonyi-haz",
-      "x": 618,
-      "y": 662
-    },
-    {
-      "id": "loc-egyetemi-rekortan-sportpalyak",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "egyetemi-rekortan-sportpalyak",
-      "x": 538,
-      "y": 734
-    },
-    {
-      "id": "loc-acticity",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "acticity",
-      "x": 538,
-      "y": 898
-    },
-    {
-      "id": "loc-digitalis-tudaskozpont",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "digitalis-tudaskozpont",
-      "x": 498,
-      "y": 426
-    },
-    {
-      "id": "loc-gyarkert-kulturpark",
-      "levelId": "downtown",
-      "kind": "location",
-      "locationId": "gyarkert-kulturpark",
-      "x": 818,
-      "y": 414
-    },
-    {
-      "id": "route-auto-0038",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 178,
-      "y": 54
-    },
-    {
-      "id": "route-auto-0039",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 338,
-      "y": 90
-    },
-    {
-      "id": "route-auto-0040",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 522,
-      "y": 138
-    },
-    {
-      "id": "route-auto-0041",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 490,
-      "y": 166
-    },
-    {
-      "id": "route-auto-0042",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 514,
-      "y": 166
-    },
-    {
-      "id": "route-auto-0043",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 302,
-      "y": 178
-    },
-    {
-      "id": "route-auto-0044",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 522,
-      "y": 214
-    },
-    {
-      "id": "route-auto-0045",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 366,
-      "y": 218
-    },
-    {
-      "id": "route-auto-0046",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 690,
-      "y": 250
-    },
-    {
-      "id": "route-auto-0048",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 410,
-      "y": 278
-    },
-    {
-      "id": "route-auto-0049",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 458,
-      "y": 294
-    },
-    {
-      "id": "route-auto-0051",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 574,
-      "y": 298
-    },
-    {
-      "id": "route-auto-0053",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 602,
-      "y": 302
-    },
-    {
-      "id": "route-auto-0054",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 702,
-      "y": 306
-    },
-    {
-      "id": "route-auto-0055",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 554,
-      "y": 322
-    },
-    {
-      "id": "route-auto-0056",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 150,
-      "y": 326
-    },
-    {
-      "id": "route-auto-0059",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 622,
-      "y": 354
-    },
-    {
-      "id": "route-auto-0060",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 670,
-      "y": 358
-    },
-    {
-      "id": "route-auto-0062",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 138,
-      "y": 370
-    },
-    {
-      "id": "route-auto-0063",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 566,
-      "y": 370
-    },
-    {
-      "id": "route-auto-0065",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 242,
-      "y": 378
-    },
-    {
-      "id": "route-auto-0067",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 462,
-      "y": 390
-    },
-    {
-      "id": "route-auto-0070",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 290,
-      "y": 398
-    },
-    {
-      "id": "route-auto-0071",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 314,
-      "y": 398
-    },
-    {
-      "id": "route-auto-0072",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 398,
-      "y": 398
-    },
-    {
-      "id": "route-auto-0075",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 510,
-      "y": 418
-    },
-    {
-      "id": "route-auto-0077",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 278,
-      "y": 422
-    },
-    {
-      "id": "route-auto-0078",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 398,
-      "y": 422
-    },
-    {
-      "id": "route-auto-0080",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 674,
-      "y": 426
-    },
-    {
-      "id": "route-auto-0082",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 330,
-      "y": 442
-    },
-    {
-      "id": "route-auto-0083",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 354,
-      "y": 446
-    },
-    {
-      "id": "route-auto-0084",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 430,
-      "y": 450
-    },
-    {
-      "id": "route-auto-0085",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 294,
-      "y": 454
-    },
-    {
-      "id": "route-auto-0086",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 310,
-      "y": 454
-    },
-    {
-      "id": "route-auto-0087",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 678,
-      "y": 454
-    },
-    {
-      "id": "route-auto-0088",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 286,
-      "y": 470
-    },
-    {
-      "id": "route-auto-0090",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 430,
-      "y": 478
-    },
-    {
-      "id": "route-auto-0091",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 358,
-      "y": 482
-    },
-    {
-      "id": "route-auto-0092",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 346,
-      "y": 486
-    },
-    {
-      "id": "route-auto-0094",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 718,
-      "y": 486
-    },
-    {
-      "id": "route-auto-0095",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 154,
-      "y": 494
-    },
-    {
-      "id": "route-auto-0096",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 718,
-      "y": 494
-    },
-    {
-      "id": "route-auto-0097",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 474,
-      "y": 502
-    },
-    {
-      "id": "route-auto-0098",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 506,
-      "y": 502
-    },
-    {
-      "id": "route-auto-0099",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 438,
-      "y": 506
-    },
-    {
-      "id": "route-auto-0100",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 134,
-      "y": 510
-    },
-    {
-      "id": "route-auto-0101",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 698,
-      "y": 510
-    },
-    {
-      "id": "route-auto-0102",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 430,
-      "y": 530
-    },
-    {
-      "id": "route-auto-0103",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 366,
-      "y": 538
-    },
-    {
-      "id": "route-auto-0104",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 554,
-      "y": 558
-    },
-    {
-      "id": "route-auto-0105",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 606,
-      "y": 570
-    },
-    {
-      "id": "route-auto-0106",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 286,
-      "y": 574
-    },
-    {
-      "id": "route-auto-0107",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 306,
-      "y": 578
-    },
-    {
-      "id": "route-auto-0108",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 450,
-      "y": 578
-    },
-    {
-      "id": "route-auto-0109",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 458,
-      "y": 578
-    },
-    {
-      "id": "route-auto-0110",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 622,
-      "y": 606
-    },
-    {
-      "id": "route-auto-0112",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 694,
-      "y": 634
-    },
-    {
-      "id": "route-auto-0113",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 374,
-      "y": 650
-    },
-    {
-      "id": "route-auto-0114",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 790,
-      "y": 650
-    },
-    {
-      "id": "route-auto-0115",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 698,
-      "y": 662
-    },
-    {
-      "id": "route-auto-0116",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 634,
-      "y": 714
-    },
-    {
-      "id": "route-auto-0119",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 802,
-      "y": 722
-    },
-    {
-      "id": "route-auto-0120",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 398,
-      "y": 746
-    },
-    {
-      "id": "route-auto-0125",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 570,
-      "y": 894
-    },
-    {
-      "id": "route-auto-0127",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 458,
-      "y": 914
-    },
-    {
-      "id": "route-auto-0128",
-      "kind": "route",
-      "levelId": "downtown",
-      "x": 466,
-      "y": 914
-    }
-  ],
-  "edges": [
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-tourinform-veszprem",
-      "geometry": [
-        {
-          "x": 386,
-          "y": 430
-        },
-        {
-          "x": 398,
-          "y": 422
-        }
-      ],
-      "id": "centerline-0001",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0078",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-tourinform-veszprem",
-      "geometry": [
-        {
-          "x": 386,
-          "y": 430
-        },
-        {
-          "x": 386,
-          "y": 434
-        },
-        {
-          "x": 354,
-          "y": 446
-        }
-      ],
-      "id": "centerline-0002",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0083",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-hosok-kapuja",
-      "geometry": [
-        {
-          "x": 374,
-          "y": 306
-        },
-        {
-          "x": 406,
-          "y": 290
-        },
-        {
-          "x": 410,
-          "y": 278
-        }
-      ],
-      "id": "centerline-0003",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0048",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-modern-keptar-vass-gyujtemeny",
-      "geometry": [
-        {
-          "x": 270,
-          "y": 378
-        },
-        {
-          "x": 258,
-          "y": 374
-        }
-      ],
-      "id": "centerline-0004",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-tuztorony",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-modern-keptar-vass-gyujtemeny",
-      "geometry": [
-        {
-          "x": 270,
-          "y": 378
-        },
-        {
-          "x": 290,
-          "y": 398
-        }
-      ],
-      "id": "centerline-0005",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0070",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-tuztorony",
-      "geometry": [
-        {
-          "x": 258,
-          "y": 374
-        },
-        {
-          "x": 242,
-          "y": 378
-        }
-      ],
-      "id": "centerline-0006",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0065",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-foton-audiovizualis-kozpont",
-      "geometry": [
-        {
-          "x": 206,
-          "y": 354
-        },
-        {
-          "x": 174,
-          "y": 334
-        }
-      ],
-      "id": "centerline-0007",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-csikasz-galeria",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-foton-audiovizualis-kozpont",
-      "geometry": [
-        {
-          "x": 206,
-          "y": 354
-        },
-        {
-          "x": 230,
-          "y": 374
-        },
-        {
-          "x": 242,
-          "y": 378
-        }
-      ],
-      "id": "centerline-0008",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0065",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-csikasz-galeria",
-      "geometry": [
-        {
-          "x": 174,
-          "y": 334
-        },
-        {
-          "x": 150,
-          "y": 326
-        }
-      ],
-      "id": "centerline-0009",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0056",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-dubniczay-palota",
-      "geometry": [
-        {
-          "x": 134,
-          "y": 302
-        },
-        {
-          "x": 122,
-          "y": 298
-        }
-      ],
-      "id": "centerline-0010",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-biro-giczey-haz",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-dubniczay-palota",
-      "geometry": [
-        {
-          "x": 134,
-          "y": 302
-        },
-        {
-          "x": 146,
-          "y": 314
-        }
-      ],
-      "id": "centerline-0011",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-ruttner-haz-varborton",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-biro-giczey-haz",
-      "geometry": [
-        {
-          "x": 122,
-          "y": 298
-        },
-        {
-          "x": 118,
-          "y": 298
-        }
-      ],
-      "id": "centerline-0012",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-szent-istvan-templom",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-kormendy-haz",
-      "geometry": [
-        {
-          "x": 182,
-          "y": 70
-        },
-        {
-          "x": 178,
-          "y": 54
-        }
-      ],
-      "id": "centerline-0014",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0038",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-kormendy-haz",
-      "geometry": [
-        {
-          "x": 182,
-          "y": 70
-        },
-        {
-          "x": 186,
-          "y": 74
-        }
-      ],
-      "id": "centerline-0015",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-szent-gyorgy-kapolna",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-istvan-es-gizella-szobor",
-      "geometry": [
-        {
-          "x": 162,
-          "y": 50
-        },
-        {
-          "x": 154,
-          "y": 34
-        },
-        {
-          "x": 146,
-          "y": 30
-        }
-      ],
-      "id": "centerline-0016",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-benedek-hegy",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-istvan-es-gizella-szobor",
-      "geometry": [
-        {
-          "x": 162,
-          "y": 50
-        },
-        {
-          "x": 178,
-          "y": 54
-        }
-      ],
-      "id": "centerline-0017",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0038",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-gyorgy-kapolna",
-      "geometry": [
-        {
-          "x": 186,
-          "y": 74
-        },
-        {
-          "x": 222,
-          "y": 110
-        }
-      ],
-      "id": "centerline-0019",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-szent-mihaly-foszekesegyhaz",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-mihaly-foszekesegyhaz",
-      "geometry": [
-        {
-          "x": 222,
-          "y": 110
-        },
-        {
-          "x": 242,
-          "y": 130
-        }
-      ],
-      "id": "centerline-0020",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-szentharomsag-szobor",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szentharomsag-szobor",
-      "geometry": [
-        {
-          "x": 242,
-          "y": 130
-        },
-        {
-          "x": 250,
-          "y": 138
-        }
-      ],
-      "id": "centerline-0021",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-varkut",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-varkut",
-      "geometry": [
-        {
-          "x": 250,
-          "y": 138
-        },
-        {
-          "x": 262,
-          "y": 150
-        }
-      ],
-      "id": "centerline-0022",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-gizella-kapolna",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-gizella-kapolna",
-      "geometry": [
-        {
-          "x": 262,
-          "y": 150
-        },
-        {
-          "x": 278,
-          "y": 170
-        }
-      ],
-      "id": "centerline-0023",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-erseki-palota",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-erseki-palota",
-      "geometry": [
-        {
-          "x": 278,
-          "y": 170
-        },
-        {
-          "x": 302,
-          "y": 178
-        }
-      ],
-      "id": "centerline-0024",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0043",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-imre-templom",
-      "geometry": [
-        {
-          "x": 318,
-          "y": 202
-        },
-        {
-          "x": 306,
-          "y": 190
-        },
-        {
-          "x": 302,
-          "y": 178
-        }
-      ],
-      "id": "centerline-0025",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0043",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-imre-templom",
-      "geometry": [
-        {
-          "x": 318,
-          "y": 202
-        },
-        {
-          "x": 322,
-          "y": 202
-        }
-      ],
-      "id": "centerline-0026",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-deak-ferenc-rendezvenykozpont",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-deak-ferenc-rendezvenykozpont",
-      "geometry": [
-        {
-          "x": 322,
-          "y": 202
-        },
-        {
-          "x": 350,
-          "y": 206
-        },
-        {
-          "x": 358,
-          "y": 214
-        },
-        {
-          "x": 366,
-          "y": 214
-        },
-        {
-          "x": 366,
-          "y": 218
-        }
-      ],
-      "id": "centerline-0027",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0045",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-auer-haz",
-      "geometry": [
-        {
-          "x": 450,
-          "y": 362
-        },
-        {
-          "x": 454,
-          "y": 302
-        },
-        {
-          "x": 458,
-          "y": 294
-        }
-      ],
-      "id": "centerline-0028",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0049",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-auer-haz",
-      "geometry": [
-        {
-          "x": 450,
-          "y": 362
-        },
-        {
-          "x": 450,
-          "y": 378
-        },
-        {
-          "x": 462,
-          "y": 390
-        }
-      ],
-      "id": "centerline-0029",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0067",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-posa-haz",
-      "geometry": [
-        {
-          "x": 294,
-          "y": 398
-        },
-        {
-          "x": 290,
-          "y": 398
-        }
-      ],
-      "id": "centerline-0030",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0070",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-posa-haz",
-      "geometry": [
-        {
-          "x": 294,
-          "y": 398
-        },
-        {
-          "x": 314,
-          "y": 398
-        }
-      ],
-      "id": "centerline-0031",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0071",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-ruttner-haz-varborton",
-      "geometry": [
-        {
-          "x": 146,
-          "y": 314
-        },
-        {
-          "x": 150,
-          "y": 326
-        }
-      ],
-      "id": "centerline-0032",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0056",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-code-digitalis-elmenykozpont",
-      "geometry": [
-        {
-          "x": 286,
-          "y": 550
-        },
-        {
-          "x": 286,
-          "y": 470
-        }
-      ],
-      "id": "centerline-0033",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0088",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-code-digitalis-elmenykozpont",
-      "geometry": [
-        {
-          "x": 286,
-          "y": 550
-        },
-        {
-          "x": 286,
-          "y": 574
-        }
-      ],
-      "id": "centerline-0034",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0106",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-petofi-szinhaz",
-      "geometry": [
-        {
-          "x": 394,
-          "y": 530
-        },
-        {
-          "x": 366,
-          "y": 538
-        }
-      ],
-      "id": "centerline-0035",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0103",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-petofi-szinhaz",
-      "geometry": [
-        {
-          "x": 394,
-          "y": 530
-        },
-        {
-          "x": 402,
-          "y": 526
-        },
-        {
-          "x": 430,
-          "y": 530
-        }
-      ],
-      "id": "centerline-0036",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0102",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-hangvilla",
-      "geometry": [
-        {
-          "x": 482,
-          "y": 502
-        },
-        {
-          "x": 474,
-          "y": 502
-        }
-      ],
-      "id": "centerline-0037",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0097",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-hangvilla",
-      "geometry": [
-        {
-          "x": 482,
-          "y": 502
-        },
-        {
-          "x": 506,
-          "y": 502
-        }
-      ],
-      "id": "centerline-0038",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0098",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-eotvos-karoly-megyei-konyvtar",
-      "geometry": [
-        {
-          "x": 382,
-          "y": 634
-        },
-        {
-          "x": 398,
-          "y": 630
-        },
-        {
-          "x": 406,
-          "y": 622
-        }
-      ],
-      "id": "centerline-0039",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "loc-szent-miklos-szeg",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-eotvos-karoly-megyei-konyvtar",
-      "geometry": [
-        {
-          "x": 382,
-          "y": 634
-        },
-        {
-          "x": 374,
-          "y": 650
-        }
-      ],
-      "id": "centerline-0040",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0113",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-szent-miklos-szeg",
-      "geometry": [
-        {
-          "x": 406,
-          "y": 622
-        },
-        {
-          "x": 410,
-          "y": 606
-        },
-        {
-          "x": 450,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0041",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0108",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-laczko-dezso-muzeum",
-      "geometry": [
-        {
-          "x": 474,
-          "y": 618
-        },
-        {
-          "x": 474,
-          "y": 610
-        },
-        {
-          "x": 470,
-          "y": 610
-        },
-        {
-          "x": 458,
-          "y": 590
-        },
-        {
-          "x": 458,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0042",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0109",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-bakonyi-haz",
-      "geometry": [
-        {
-          "x": 618,
-          "y": 662
-        },
-        {
-          "x": 622,
-          "y": 606
-        }
-      ],
-      "id": "centerline-0043",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0110",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-bakonyi-haz",
-      "geometry": [
-        {
-          "x": 618,
-          "y": 662
-        },
-        {
-          "x": 622,
-          "y": 698
-        },
-        {
-          "x": 630,
-          "y": 714
-        },
-        {
-          "x": 634,
-          "y": 714
-        }
-      ],
-      "id": "centerline-0044",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0116",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-egyetemi-rekortan-sportpalyak",
-      "geometry": [
-        {
-          "x": 538,
-          "y": 734
-        },
-        {
-          "x": 542,
-          "y": 734
-        },
-        {
-          "x": 542,
-          "y": 742
-        },
-        {
-          "x": 546,
-          "y": 742
-        },
-        {
-          "x": 546,
-          "y": 750
-        },
-        {
-          "x": 550,
-          "y": 750
-        },
-        {
-          "x": 558,
-          "y": 766
-        },
-        {
-          "x": 558,
-          "y": 778
-        },
-        {
-          "x": 566,
-          "y": 786
-        },
-        {
-          "x": 582,
-          "y": 838
-        },
-        {
-          "x": 582,
-          "y": 882
-        },
-        {
-          "x": 570,
-          "y": 894
-        }
-      ],
-      "id": "centerline-0046",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0125",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-acticity",
-      "geometry": [
-        {
-          "x": 538,
-          "y": 898
-        },
-        {
-          "x": 558,
-          "y": 898
-        },
-        {
-          "x": 562,
-          "y": 894
-        },
-        {
-          "x": 570,
-          "y": 894
-        }
-      ],
-      "id": "centerline-0047",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0125",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-acticity",
-      "geometry": [
-        {
-          "x": 538,
-          "y": 898
-        },
-        {
-          "x": 538,
-          "y": 902
-        },
-        {
-          "x": 518,
-          "y": 902
-        },
-        {
-          "x": 518,
-          "y": 906
-        },
-        {
-          "x": 498,
-          "y": 906
-        },
-        {
-          "x": 498,
-          "y": 910
-        },
-        {
-          "x": 466,
-          "y": 914
-        }
-      ],
-      "id": "centerline-0048",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0128",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-digitalis-tudaskozpont",
-      "geometry": [
-        {
-          "x": 498,
-          "y": 426
-        },
-        {
-          "x": 502,
-          "y": 418
-        },
-        {
-          "x": 510,
-          "y": 418
-        }
-      ],
-      "id": "centerline-0049",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0075",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-digitalis-tudaskozpont",
-      "geometry": [
-        {
-          "x": 498,
-          "y": 426
-        },
-        {
-          "x": 490,
-          "y": 430
-        },
-        {
-          "x": 482,
-          "y": 450
-        },
-        {
-          "x": 482,
-          "y": 466
-        },
-        {
-          "x": 474,
-          "y": 474
-        },
-        {
-          "x": 474,
-          "y": 502
-        }
-      ],
-      "id": "centerline-0050",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0097",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "loc-gyarkert-kulturpark",
-      "geometry": [
-        {
-          "x": 818,
-          "y": 414
-        },
-        {
-          "x": 810,
-          "y": 422
-        },
-        {
-          "x": 786,
-          "y": 430
-        },
-        {
-          "x": 774,
-          "y": 442
-        },
-        {
-          "x": 750,
-          "y": 450
-        },
-        {
-          "x": 734,
-          "y": 466
-        },
-        {
-          "x": 730,
-          "y": 478
-        },
-        {
-          "x": 718,
-          "y": 486
-        }
-      ],
-      "id": "centerline-0052",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0094",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0038",
-      "geometry": [
-        {
-          "x": 178,
-          "y": 54
-        },
-        {
-          "x": 178,
-          "y": 50
-        },
-        {
-          "x": 182,
-          "y": 50
-        },
-        {
-          "x": 182,
-          "y": 46
-        },
-        {
-          "x": 186,
-          "y": 46
-        },
-        {
-          "x": 190,
-          "y": 38
-        },
-        {
-          "x": 210,
-          "y": 30
-        },
-        {
-          "x": 210,
-          "y": 26
-        },
-        {
-          "x": 230,
-          "y": 18
-        },
-        {
-          "x": 230,
-          "y": 14
-        },
-        {
-          "x": 238,
-          "y": 10
-        },
-        {
-          "x": 262,
-          "y": 10
-        },
-        {
-          "x": 270,
-          "y": 14
-        },
-        {
-          "x": 270,
-          "y": 18
-        },
-        {
-          "x": 274,
-          "y": 18
-        },
-        {
-          "x": 274,
-          "y": 22
-        },
-        {
-          "x": 278,
-          "y": 22
-        },
-        {
-          "x": 278,
-          "y": 26
-        },
-        {
-          "x": 286,
-          "y": 30
-        },
-        {
-          "x": 286,
-          "y": 34
-        },
-        {
-          "x": 294,
-          "y": 34
-        },
-        {
-          "x": 294,
-          "y": 38
-        },
-        {
-          "x": 298,
-          "y": 38
-        },
-        {
-          "x": 298,
-          "y": 42
-        },
-        {
-          "x": 302,
-          "y": 42
-        },
-        {
-          "x": 302,
-          "y": 46
-        },
-        {
-          "x": 306,
-          "y": 46
-        },
-        {
-          "x": 310,
-          "y": 54
-        },
-        {
-          "x": 318,
-          "y": 58
-        },
-        {
-          "x": 318,
-          "y": 62
-        },
-        {
-          "x": 322,
-          "y": 62
-        },
-        {
-          "x": 326,
-          "y": 74
-        },
-        {
-          "x": 334,
-          "y": 78
-        },
-        {
-          "x": 334,
-          "y": 86
-        },
-        {
-          "x": 338,
-          "y": 90
-        }
-      ],
-      "id": "centerline-0055",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0039",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0039",
-      "geometry": [
-        {
-          "x": 338,
-          "y": 90
-        },
-        {
-          "x": 398,
-          "y": 90
-        },
-        {
-          "x": 418,
-          "y": 98
-        },
-        {
-          "x": 434,
-          "y": 114
-        },
-        {
-          "x": 446,
-          "y": 118
-        },
-        {
-          "x": 466,
-          "y": 142
-        },
-        {
-          "x": 478,
-          "y": 146
-        },
-        {
-          "x": 490,
-          "y": 166
-        }
-      ],
-      "id": "centerline-0056",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0041",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0039",
-      "geometry": [
-        {
-          "x": 338,
-          "y": 90
-        },
-        {
-          "x": 334,
-          "y": 110
-        },
-        {
-          "x": 322,
-          "y": 118
-        },
-        {
-          "x": 322,
-          "y": 126
-        },
-        {
-          "x": 310,
-          "y": 138
-        },
-        {
-          "x": 310,
-          "y": 154
-        },
-        {
-          "x": 302,
-          "y": 178
-        }
-      ],
-      "id": "centerline-0057",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0043",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0040",
-      "geometry": [
-        {
-          "x": 522,
-          "y": 138
-        },
-        {
-          "x": 554,
-          "y": 142
-        },
-        {
-          "x": 562,
-          "y": 150
-        },
-        {
-          "x": 574,
-          "y": 150
-        },
-        {
-          "x": 582,
-          "y": 158
-        },
-        {
-          "x": 598,
-          "y": 162
-        },
-        {
-          "x": 666,
-          "y": 242
-        },
-        {
-          "x": 690,
-          "y": 250
-        }
-      ],
-      "id": "centerline-0058",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0046",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0040",
-      "geometry": [
-        {
-          "x": 522,
-          "y": 138
-        },
-        {
-          "x": 514,
-          "y": 166
-        }
-      ],
-      "id": "centerline-0059",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0042",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0041",
-      "geometry": [
-        {
-          "x": 490,
-          "y": 166
-        },
-        {
-          "x": 514,
-          "y": 166
-        }
-      ],
-      "id": "centerline-0060",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0042",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0041",
-      "geometry": [
-        {
-          "x": 490,
-          "y": 166
-        },
-        {
-          "x": 486,
-          "y": 182
-        },
-        {
-          "x": 458,
-          "y": 210
-        },
-        {
-          "x": 438,
-          "y": 222
-        },
-        {
-          "x": 426,
-          "y": 238
-        },
-        {
-          "x": 390,
-          "y": 222
-        },
-        {
-          "x": 366,
-          "y": 218
-        }
-      ],
-      "id": "centerline-0061",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0045",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0042",
-      "geometry": [
-        {
-          "x": 514,
-          "y": 166
-        },
-        {
-          "x": 522,
-          "y": 214
-        }
-      ],
-      "id": "centerline-0062",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0044",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0044",
-      "geometry": [
-        {
-          "x": 522,
-          "y": 214
-        },
-        {
-          "x": 538,
-          "y": 222
-        },
-        {
-          "x": 542,
-          "y": 238
-        },
-        {
-          "x": 570,
-          "y": 266
-        },
-        {
-          "x": 574,
-          "y": 298
-        }
-      ],
-      "id": "centerline-0063",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0051",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0044",
-      "geometry": [
-        {
-          "x": 522,
-          "y": 214
-        },
-        {
-          "x": 486,
-          "y": 266
-        },
-        {
-          "x": 482,
-          "y": 266
-        },
-        {
-          "x": 478,
-          "y": 282
-        },
-        {
-          "x": 466,
-          "y": 294
-        },
-        {
-          "x": 458,
-          "y": 294
-        }
-      ],
-      "id": "centerline-0064",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0049",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0045",
-      "geometry": [
-        {
-          "x": 366,
-          "y": 218
-        },
-        {
-          "x": 358,
-          "y": 242
-        },
-        {
-          "x": 366,
-          "y": 250
-        },
-        {
-          "x": 374,
-          "y": 250
-        },
-        {
-          "x": 378,
-          "y": 258
-        },
-        {
-          "x": 398,
-          "y": 262
-        },
-        {
-          "x": 410,
-          "y": 278
-        }
-      ],
-      "id": "centerline-0065",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0048",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0046",
-      "geometry": [
-        {
-          "x": 690,
-          "y": 250
-        },
-        {
-          "x": 690,
-          "y": 266
-        },
-        {
-          "x": 698,
-          "y": 274
-        },
-        {
-          "x": 702,
-          "y": 306
-        }
-      ],
-      "id": "centerline-0066",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0054",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0048",
-      "geometry": [
-        {
-          "x": 410,
-          "y": 278
-        },
-        {
-          "x": 434,
-          "y": 282
-        },
-        {
-          "x": 446,
-          "y": 286
-        },
-        {
-          "x": 450,
-          "y": 294
-        },
-        {
-          "x": 458,
-          "y": 294
-        }
-      ],
-      "id": "centerline-0068",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0049",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0051",
-      "geometry": [
-        {
-          "x": 574,
-          "y": 298
-        },
-        {
-          "x": 570,
-          "y": 298
-        },
-        {
-          "x": 570,
-          "y": 306
-        },
-        {
-          "x": 554,
-          "y": 322
-        }
-      ],
-      "id": "centerline-0069",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0055",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0051",
-      "geometry": [
-        {
-          "x": 574,
-          "y": 298
-        },
-        {
-          "x": 602,
-          "y": 302
-        }
-      ],
-      "id": "centerline-0070",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0053",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0053",
-      "geometry": [
-        {
-          "x": 602,
-          "y": 302
-        },
-        {
-          "x": 606,
-          "y": 318
-        },
-        {
-          "x": 622,
-          "y": 342
-        },
-        {
-          "x": 622,
-          "y": 354
-        }
-      ],
-      "id": "centerline-0072",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0059",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0054",
-      "geometry": [
-        {
-          "x": 702,
-          "y": 306
-        },
-        {
-          "x": 682,
-          "y": 318
-        },
-        {
-          "x": 670,
-          "y": 358
-        }
-      ],
-      "id": "centerline-0073",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0060",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0055",
-      "geometry": [
-        {
-          "x": 554,
-          "y": 322
-        },
-        {
-          "x": 558,
-          "y": 358
-        },
-        {
-          "x": 562,
-          "y": 358
-        },
-        {
-          "x": 566,
-          "y": 370
-        }
-      ],
-      "id": "centerline-0075",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0063",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0056",
-      "geometry": [
-        {
-          "x": 150,
-          "y": 326
-        },
-        {
-          "x": 142,
-          "y": 338
-        },
-        {
-          "x": 138,
-          "y": 370
-        }
-      ],
-      "id": "centerline-0076",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0062",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0059",
-      "geometry": [
-        {
-          "x": 622,
-          "y": 354
-        },
-        {
-          "x": 670,
-          "y": 358
-        }
-      ],
-      "id": "centerline-0078",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0060",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0059",
-      "geometry": [
-        {
-          "x": 622,
-          "y": 354
-        },
-        {
-          "x": 602,
-          "y": 366
-        },
-        {
-          "x": 566,
-          "y": 370
-        }
-      ],
-      "id": "centerline-0079",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0063",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0060",
-      "geometry": [
-        {
-          "x": 670,
-          "y": 358
-        },
-        {
-          "x": 674,
-          "y": 426
-        }
-      ],
-      "id": "centerline-0080",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0080",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0062",
-      "geometry": [
-        {
-          "x": 138,
-          "y": 370
-        },
-        {
-          "x": 150,
-          "y": 402
-        },
-        {
-          "x": 154,
-          "y": 446
-        },
-        {
-          "x": 158,
-          "y": 446
-        },
-        {
-          "x": 154,
-          "y": 494
-        }
-      ],
-      "id": "centerline-0082",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0095",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0063",
-      "geometry": [
-        {
-          "x": 566,
-          "y": 370
-        },
-        {
-          "x": 562,
-          "y": 378
-        },
-        {
-          "x": 534,
-          "y": 390
-        },
-        {
-          "x": 534,
-          "y": 394
-        },
-        {
-          "x": 526,
-          "y": 394
-        },
-        {
-          "x": 510,
-          "y": 410
-        },
-        {
-          "x": 510,
-          "y": 418
-        }
-      ],
-      "id": "centerline-0083",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0075",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0065",
-      "geometry": [
-        {
-          "x": 242,
-          "y": 378
-        },
-        {
-          "x": 242,
-          "y": 398
-        },
-        {
-          "x": 250,
-          "y": 414
-        },
-        {
-          "x": 266,
-          "y": 422
-        },
-        {
-          "x": 278,
-          "y": 422
-        }
-      ],
-      "id": "centerline-0085",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0077",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0067",
-      "geometry": [
-        {
-          "x": 462,
-          "y": 390
-        },
-        {
-          "x": 458,
-          "y": 410
-        },
-        {
-          "x": 446,
-          "y": 422
-        },
-        {
-          "x": 446,
-          "y": 438
-        },
-        {
-          "x": 430,
-          "y": 450
-        }
-      ],
-      "id": "centerline-0088",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0084",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0070",
-      "geometry": [
-        {
-          "x": 290,
-          "y": 398
-        },
-        {
-          "x": 278,
-          "y": 422
-        }
-      ],
-      "id": "centerline-0090",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0077",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0071",
-      "geometry": [
-        {
-          "x": 314,
-          "y": 398
-        },
-        {
-          "x": 342,
-          "y": 390
-        },
-        {
-          "x": 354,
-          "y": 394
-        },
-        {
-          "x": 354,
-          "y": 398
-        },
-        {
-          "x": 370,
-          "y": 398
-        },
-        {
-          "x": 374,
-          "y": 394
-        },
-        {
-          "x": 398,
-          "y": 398
-        }
-      ],
-      "id": "centerline-0091",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0072",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0071",
-      "geometry": [
-        {
-          "x": 314,
-          "y": 398
-        },
-        {
-          "x": 314,
-          "y": 410
-        },
-        {
-          "x": 326,
-          "y": 426
-        },
-        {
-          "x": 330,
-          "y": 442
-        }
-      ],
-      "id": "centerline-0092",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0082",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0072",
-      "geometry": [
-        {
-          "x": 398,
-          "y": 398
-        },
-        {
-          "x": 398,
-          "y": 422
-        }
-      ],
-      "id": "centerline-0093",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0078",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0077",
-      "geometry": [
-        {
-          "x": 278,
-          "y": 422
-        },
-        {
-          "x": 294,
-          "y": 454
-        }
-      ],
-      "id": "centerline-0096",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0085",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0078",
-      "geometry": [
-        {
-          "x": 398,
-          "y": 422
-        },
-        {
-          "x": 406,
-          "y": 422
-        },
-        {
-          "x": 414,
-          "y": 438
-        },
-        {
-          "x": 430,
-          "y": 450
-        }
-      ],
-      "id": "centerline-0097",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0084",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0080",
-      "geometry": [
-        {
-          "x": 674,
-          "y": 426
-        },
-        {
-          "x": 678,
-          "y": 426
-        },
-        {
-          "x": 678,
-          "y": 454
-        }
-      ],
-      "id": "centerline-0100",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0087",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0082",
-      "geometry": [
-        {
-          "x": 330,
-          "y": 442
-        },
-        {
-          "x": 354,
-          "y": 446
-        }
-      ],
-      "id": "centerline-0101",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0083",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0082",
-      "geometry": [
-        {
-          "x": 330,
-          "y": 442
-        },
-        {
-          "x": 310,
-          "y": 450
-        },
-        {
-          "x": 310,
-          "y": 454
-        }
-      ],
-      "id": "centerline-0102",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0086",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0083",
-      "geometry": [
-        {
-          "x": 354,
-          "y": 446
-        },
-        {
-          "x": 354,
-          "y": 474
-        },
-        {
-          "x": 358,
-          "y": 482
-        }
-      ],
-      "id": "centerline-0103",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0091",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0084",
-      "geometry": [
-        {
-          "x": 430,
-          "y": 450
-        },
-        {
-          "x": 430,
-          "y": 478
-        }
-      ],
-      "id": "centerline-0104",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0090",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0085",
-      "geometry": [
-        {
-          "x": 294,
-          "y": 454
-        },
-        {
-          "x": 310,
-          "y": 454
-        }
-      ],
-      "id": "centerline-0105",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0086",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0085",
-      "geometry": [
-        {
-          "x": 294,
-          "y": 454
-        },
-        {
-          "x": 286,
-          "y": 470
-        }
-      ],
-      "id": "centerline-0106",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0088",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0086",
-      "geometry": [
-        {
-          "x": 310,
-          "y": 454
-        },
-        {
-          "x": 330,
-          "y": 482
-        },
-        {
-          "x": 346,
-          "y": 486
-        }
-      ],
-      "id": "centerline-0107",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0092",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0087",
-      "geometry": [
-        {
-          "x": 678,
-          "y": 454
-        },
-        {
-          "x": 690,
-          "y": 458
-        },
-        {
-          "x": 718,
-          "y": 486
-        }
-      ],
-      "id": "centerline-0108",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0094",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0088",
-      "geometry": [
-        {
-          "x": 286,
-          "y": 470
-        },
-        {
-          "x": 262,
-          "y": 470
-        },
-        {
-          "x": 258,
-          "y": 474
-        },
-        {
-          "x": 246,
-          "y": 474
-        },
-        {
-          "x": 242,
-          "y": 478
-        },
-        {
-          "x": 226,
-          "y": 474
-        },
-        {
-          "x": 222,
-          "y": 478
-        },
-        {
-          "x": 214,
-          "y": 478
-        },
-        {
-          "x": 214,
-          "y": 482
-        },
-        {
-          "x": 206,
-          "y": 486
-        },
-        {
-          "x": 198,
-          "y": 486
-        },
-        {
-          "x": 182,
-          "y": 494
-        },
-        {
-          "x": 154,
-          "y": 494
-        }
-      ],
-      "id": "centerline-0110",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0095",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0090",
-      "geometry": [
-        {
-          "x": 430,
-          "y": 478
-        },
-        {
-          "x": 378,
-          "y": 482
-        },
-        {
-          "x": 374,
-          "y": 486
-        },
-        {
-          "x": 358,
-          "y": 482
-        }
-      ],
-      "id": "centerline-0111",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0091",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0090",
-      "geometry": [
-        {
-          "x": 430,
-          "y": 478
-        },
-        {
-          "x": 438,
-          "y": 506
-        }
-      ],
-      "id": "centerline-0112",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0099",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0091",
-      "geometry": [
-        {
-          "x": 358,
-          "y": 482
-        },
-        {
-          "x": 346,
-          "y": 486
-        }
-      ],
-      "id": "centerline-0113",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0092",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0092",
-      "geometry": [
-        {
-          "x": 346,
-          "y": 486
-        },
-        {
-          "x": 350,
-          "y": 514
-        },
-        {
-          "x": 366,
-          "y": 538
-        }
-      ],
-      "id": "centerline-0114",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0103",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0094",
-      "geometry": [
-        {
-          "x": 718,
-          "y": 486
-        },
-        {
-          "x": 718,
-          "y": 494
-        }
-      ],
-      "id": "centerline-0116",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0096",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0095",
-      "geometry": [
-        {
-          "x": 154,
-          "y": 494
-        },
-        {
-          "x": 134,
-          "y": 510
-        }
-      ],
-      "id": "centerline-0117",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0100",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0096",
-      "geometry": [
-        {
-          "x": 718,
-          "y": 494
-        },
-        {
-          "x": 698,
-          "y": 510
-        }
-      ],
-      "id": "centerline-0118",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0101",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0096",
-      "geometry": [
-        {
-          "x": 718,
-          "y": 494
-        },
-        {
-          "x": 742,
-          "y": 506
-        },
-        {
-          "x": 754,
-          "y": 522
-        },
-        {
-          "x": 790,
-          "y": 650
-        }
-      ],
-      "id": "centerline-0119",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0114",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0097",
-      "geometry": [
-        {
-          "x": 474,
-          "y": 502
-        },
-        {
-          "x": 438,
-          "y": 506
-        }
-      ],
-      "id": "centerline-0120",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0099",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0098",
-      "geometry": [
-        {
-          "x": 506,
-          "y": 502
-        },
-        {
-          "x": 522,
-          "y": 522
-        },
-        {
-          "x": 534,
-          "y": 526
-        },
-        {
-          "x": 550,
-          "y": 542
-        },
-        {
-          "x": 554,
-          "y": 558
-        }
-      ],
-      "id": "centerline-0121",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0104",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0099",
-      "geometry": [
-        {
-          "x": 438,
-          "y": 506
-        },
-        {
-          "x": 430,
-          "y": 530
-        }
-      ],
-      "id": "centerline-0122",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0102",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0100",
-      "geometry": [
-        {
-          "x": 134,
-          "y": 510
-        },
-        {
-          "x": 138,
-          "y": 530
-        },
-        {
-          "x": 158,
-          "y": 550
-        },
-        {
-          "x": 166,
-          "y": 550
-        },
-        {
-          "x": 178,
-          "y": 566
-        },
-        {
-          "x": 202,
-          "y": 574
-        },
-        {
-          "x": 286,
-          "y": 574
-        }
-      ],
-      "id": "centerline-0123",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0106",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0101",
-      "geometry": [
-        {
-          "x": 698,
-          "y": 510
-        },
-        {
-          "x": 666,
-          "y": 518
-        },
-        {
-          "x": 638,
-          "y": 546
-        },
-        {
-          "x": 622,
-          "y": 550
-        },
-        {
-          "x": 614,
-          "y": 558
-        },
-        {
-          "x": 614,
-          "y": 566
-        },
-        {
-          "x": 606,
-          "y": 570
-        }
-      ],
-      "id": "centerline-0124",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0105",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0101",
-      "geometry": [
-        {
-          "x": 698,
-          "y": 510
-        },
-        {
-          "x": 702,
-          "y": 530
-        },
-        {
-          "x": 714,
-          "y": 546
-        },
-        {
-          "x": 746,
-          "y": 642
-        },
-        {
-          "x": 766,
-          "y": 654
-        },
-        {
-          "x": 790,
-          "y": 650
-        }
-      ],
-      "id": "centerline-0125",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0114",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0102",
-      "geometry": [
-        {
-          "x": 430,
-          "y": 530
-        },
-        {
-          "x": 446,
-          "y": 550
-        },
-        {
-          "x": 450,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0126",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0108",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0103",
-      "geometry": [
-        {
-          "x": 366,
-          "y": 538
-        },
-        {
-          "x": 366,
-          "y": 542
-        },
-        {
-          "x": 342,
-          "y": 550
-        },
-        {
-          "x": 338,
-          "y": 558
-        },
-        {
-          "x": 326,
-          "y": 562
-        },
-        {
-          "x": 314,
-          "y": 574
-        },
-        {
-          "x": 306,
-          "y": 574
-        },
-        {
-          "x": 306,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0127",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0107",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0104",
-      "geometry": [
-        {
-          "x": 554,
-          "y": 558
-        },
-        {
-          "x": 562,
-          "y": 558
-        },
-        {
-          "x": 570,
-          "y": 566
-        },
-        {
-          "x": 606,
-          "y": 570
-        }
-      ],
-      "id": "centerline-0128",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0105",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0104",
-      "geometry": [
-        {
-          "x": 554,
-          "y": 558
-        },
-        {
-          "x": 554,
-          "y": 562
-        },
-        {
-          "x": 538,
-          "y": 566
-        },
-        {
-          "x": 514,
-          "y": 566
-        },
-        {
-          "x": 510,
-          "y": 570
-        },
-        {
-          "x": 462,
-          "y": 574
-        },
-        {
-          "x": 458,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0129",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0109",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0105",
-      "geometry": [
-        {
-          "x": 606,
-          "y": 570
-        },
-        {
-          "x": 622,
-          "y": 606
-        }
-      ],
-      "id": "centerline-0130",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0110",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0106",
-      "geometry": [
-        {
-          "x": 286,
-          "y": 574
-        },
-        {
-          "x": 306,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0131",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0107",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0107",
-      "geometry": [
-        {
-          "x": 306,
-          "y": 578
-        },
-        {
-          "x": 310,
-          "y": 598
-        },
-        {
-          "x": 322,
-          "y": 610
-        },
-        {
-          "x": 330,
-          "y": 630
-        },
-        {
-          "x": 362,
-          "y": 650
-        },
-        {
-          "x": 374,
-          "y": 650
-        }
-      ],
-      "id": "centerline-0132",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0113",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0108",
-      "geometry": [
-        {
-          "x": 450,
-          "y": 578
-        },
-        {
-          "x": 458,
-          "y": 578
-        }
-      ],
-      "id": "centerline-0133",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0109",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0110",
-      "geometry": [
-        {
-          "x": 622,
-          "y": 606
-        },
-        {
-          "x": 650,
-          "y": 614
-        },
-        {
-          "x": 666,
-          "y": 630
-        },
-        {
-          "x": 694,
-          "y": 634
-        }
-      ],
-      "id": "centerline-0134",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0112",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0112",
-      "geometry": [
-        {
-          "x": 694,
-          "y": 634
-        },
-        {
-          "x": 698,
-          "y": 662
-        }
-      ],
-      "id": "centerline-0136",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0115",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0113",
-      "geometry": [
-        {
-          "x": 374,
-          "y": 650
-        },
-        {
-          "x": 398,
-          "y": 710
-        },
-        {
-          "x": 398,
-          "y": 746
-        }
-      ],
-      "id": "centerline-0137",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0120",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0114",
-      "geometry": [
-        {
-          "x": 790,
-          "y": 650
-        },
-        {
-          "x": 806,
-          "y": 710
-        },
-        {
-          "x": 802,
-          "y": 722
-        }
-      ],
-      "id": "centerline-0138",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0119",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0115",
-      "geometry": [
-        {
-          "x": 698,
-          "y": 662
-        },
-        {
-          "x": 650,
-          "y": 710
-        },
-        {
-          "x": 634,
-          "y": 714
-        }
-      ],
-      "id": "centerline-0139",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0116",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0115",
-      "geometry": [
-        {
-          "x": 698,
-          "y": 662
-        },
-        {
-          "x": 710,
-          "y": 662
-        },
-        {
-          "x": 722,
-          "y": 670
-        },
-        {
-          "x": 778,
-          "y": 718
-        },
-        {
-          "x": 802,
-          "y": 722
-        }
-      ],
-      "id": "centerline-0140",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0119",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0120",
-      "geometry": [
-        {
-          "x": 398,
-          "y": 746
-        },
-        {
-          "x": 414,
-          "y": 762
-        },
-        {
-          "x": 414,
-          "y": 774
-        },
-        {
-          "x": 418,
-          "y": 774
-        },
-        {
-          "x": 418,
-          "y": 786
-        },
-        {
-          "x": 422,
-          "y": 798
-        },
-        {
-          "x": 426,
-          "y": 798
-        },
-        {
-          "x": 426,
-          "y": 810
-        },
-        {
-          "x": 442,
-          "y": 850
-        },
-        {
-          "x": 442,
-          "y": 862
-        },
-        {
-          "x": 446,
-          "y": 862
-        },
-        {
-          "x": 458,
-          "y": 914
-        }
-      ],
-      "id": "centerline-0144",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0127",
-      "traversal": "outdoor-path"
-    },
-    {
-      "accessible": true,
-      "bidirectional": true,
-      "corridorWidth": 1,
-      "from": "route-auto-0127",
-      "geometry": [
-        {
-          "x": 458,
-          "y": 914
-        },
-        {
-          "x": 466,
-          "y": 914
-        }
-      ],
-      "id": "centerline-0151",
-      "kind": "outdoor",
-      "reviewStatus": "confirmed",
-      "to": "route-auto-0128",
-      "traversal": "outdoor-path"
-    }
-  ]
+	"contractVersion": 2,
+	"edges": [
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 9,
+			"from": "loc-tourinform-veszprem",
+			"geometry": [
+				{
+					"x": 384,
+					"y": 430
+				},
+				{
+					"x": 379,
+					"y": 426
+				},
+				{
+					"x": 374,
+					"y": 423
+				}
+			],
+			"id": "route-tourinform-egress",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-tourinform-center",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-tourinform-center",
+			"geometry": [
+				{
+					"x": 374,
+					"y": 423
+				},
+				{
+					"x": 365,
+					"y": 413
+				},
+				{
+					"x": 355,
+					"y": 410
+				},
+				{
+					"x": 348,
+					"y": 399
+				},
+				{
+					"x": 342,
+					"y": 388
+				}
+			],
+			"id": "route-old-town-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-square-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 9,
+			"from": "j-square-west",
+			"geometry": [
+				{
+					"x": 342,
+					"y": 388
+				},
+				{
+					"x": 346,
+					"y": 375
+				},
+				{
+					"x": 350,
+					"y": 355
+				},
+				{
+					"x": 354,
+					"y": 340
+				}
+			],
+			"id": "route-heroes-approach",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-heroes-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-heroes-south",
+			"geometry": [
+				{
+					"x": 354,
+					"y": 340
+				},
+				{
+					"x": 350,
+					"y": 330
+				},
+				{
+					"x": 335,
+					"y": 320
+				}
+			],
+			"id": "route-heroes-gate",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-heroes-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-heroes-west",
+			"geometry": [
+				{
+					"x": 335,
+					"y": 320
+				},
+				{
+					"x": 324,
+					"y": 316
+				},
+				{
+					"x": 312,
+					"y": 308
+				},
+				{
+					"x": 300,
+					"y": 300
+				}
+			],
+			"id": "route-castle-lower-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-castle-lower-east",
+			"geometry": [
+				{
+					"x": 300,
+					"y": 300
+				},
+				{
+					"x": 283,
+					"y": 297
+				},
+				{
+					"x": 266,
+					"y": 291
+				},
+				{
+					"x": 250,
+					"y": 285
+				}
+			],
+			"id": "route-castle-lower-mid",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-castle-lower-mid",
+			"geometry": [
+				{
+					"x": 250,
+					"y": 285
+				},
+				{
+					"x": 234,
+					"y": 280
+				},
+				{
+					"x": 216,
+					"y": 269
+				},
+				{
+					"x": 200,
+					"y": 260
+				}
+			],
+			"id": "route-castle-lower-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-castle-lower-west",
+			"geometry": [
+				{
+					"x": 200,
+					"y": 260
+				},
+				{
+					"x": 184,
+					"y": 253
+				},
+				{
+					"x": 168,
+					"y": 245
+				},
+				{
+					"x": 155,
+					"y": 235
+				}
+			],
+			"id": "route-castle-upper-south",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-upper-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-castle-upper-south",
+			"geometry": [
+				{
+					"x": 155,
+					"y": 235
+				},
+				{
+					"x": 146,
+					"y": 222
+				},
+				{
+					"x": 139,
+					"y": 208
+				},
+				{
+					"x": 135,
+					"y": 200
+				}
+			],
+			"id": "route-castle-upper-mid",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-upper-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-castle-upper-mid",
+			"geometry": [
+				{
+					"x": 135,
+					"y": 200
+				},
+				{
+					"x": 144,
+					"y": 189
+				},
+				{
+					"x": 151,
+					"y": 181
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "route-castle-plaza",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 5,
+			"from": "j-castle-plaza",
+			"geometry": [
+				{
+					"x": 160,
+					"y": 175
+				},
+				{
+					"x": 156,
+					"y": 160
+				},
+				{
+					"x": 149,
+					"y": 145
+				},
+				{
+					"x": 141,
+					"y": 131
+				},
+				{
+					"x": 135,
+					"y": 120
+				}
+			],
+			"id": "stairs-castle-north",
+			"kind": "stairs",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-north",
+			"traversal": "transition"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 7,
+			"from": "j-castle-north",
+			"geometry": [
+				{
+					"x": 135,
+					"y": 120
+				},
+				{
+					"x": 130,
+					"y": 105
+				},
+				{
+					"x": 126,
+					"y": 90
+				},
+				{
+					"x": 130,
+					"y": 75
+				}
+			],
+			"id": "route-benedek-approach",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-benedek",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 7,
+			"from": "j-castle-lower-west",
+			"geometry": [
+				{
+					"x": 200,
+					"y": 260
+				},
+				{
+					"x": 188,
+					"y": 274
+				},
+				{
+					"x": 180,
+					"y": 284
+				},
+				{
+					"x": 175,
+					"y": 290
+				}
+			],
+			"id": "route-lower-stairs-entry",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-lower-stairs-top",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 5,
+			"from": "j-lower-stairs-top",
+			"geometry": [
+				{
+					"x": 175,
+					"y": 290
+				},
+				{
+					"x": 188,
+					"y": 310
+				},
+				{
+					"x": 207,
+					"y": 329
+				},
+				{
+					"x": 232,
+					"y": 350
+				},
+				{
+					"x": 260,
+					"y": 365
+				}
+			],
+			"id": "stairs-jokai-ovaros",
+			"kind": "stairs",
+			"reviewStatus": "confirmed",
+			"to": "j-lower-stairs-bottom",
+			"traversal": "transition"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-lower-stairs-bottom",
+			"geometry": [
+				{
+					"x": 260,
+					"y": 365
+				},
+				{
+					"x": 282,
+					"y": 373
+				},
+				{
+					"x": 310,
+					"y": 381
+				},
+				{
+					"x": 342,
+					"y": 388
+				}
+			],
+			"id": "route-lower-stairs-exit",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-square-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-tourinform-center",
+			"geometry": [
+				{
+					"x": 374,
+					"y": 423
+				},
+				{
+					"x": 386,
+					"y": 425
+				},
+				{
+					"x": 396,
+					"y": 424
+				}
+			],
+			"id": "route-tourinform-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-tourinform-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-tourinform-east",
+			"geometry": [
+				{
+					"x": 396,
+					"y": 424
+				},
+				{
+					"x": 406,
+					"y": 416
+				},
+				{
+					"x": 420,
+					"y": 405
+				}
+			],
+			"id": "route-old-town-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-square-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-square-east",
+			"geometry": [
+				{
+					"x": 420,
+					"y": 405
+				},
+				{
+					"x": 438,
+					"y": 401
+				},
+				{
+					"x": 455,
+					"y": 398
+				},
+				{
+					"x": 470,
+					"y": 395
+				}
+			],
+			"id": "route-boglyavari-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-boglyavari-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-boglyavari-west",
+			"geometry": [
+				{
+					"x": 470,
+					"y": 395
+				},
+				{
+					"x": 488,
+					"y": 392
+				},
+				{
+					"x": 505,
+					"y": 390
+				},
+				{
+					"x": 520,
+					"y": 390
+				}
+			],
+			"id": "route-boglyavari-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-boglyavari-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-boglyavari-east",
+			"geometry": [
+				{
+					"x": 520,
+					"y": 390
+				},
+				{
+					"x": 526,
+					"y": 410
+				},
+				{
+					"x": 532,
+					"y": 432
+				},
+				{
+					"x": 540,
+					"y": 450
+				}
+			],
+			"id": "route-buhim-kossuth",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-kossuth-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-kossuth-west",
+			"geometry": [
+				{
+					"x": 540,
+					"y": 450
+				},
+				{
+					"x": 564,
+					"y": 454
+				},
+				{
+					"x": 588,
+					"y": 458
+				},
+				{
+					"x": 610,
+					"y": 455
+				}
+			],
+			"id": "route-kossuth-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-kossuth-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-kossuth-mid",
+			"geometry": [
+				{
+					"x": 610,
+					"y": 455
+				},
+				{
+					"x": 635,
+					"y": 451
+				},
+				{
+					"x": 660,
+					"y": 442
+				},
+				{
+					"x": 680,
+					"y": 435
+				}
+			],
+			"id": "route-kossuth-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-budapest-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-budapest-west",
+			"geometry": [
+				{
+					"x": 680,
+					"y": 435
+				},
+				{
+					"x": 702,
+					"y": 424
+				},
+				{
+					"x": 724,
+					"y": 414
+				},
+				{
+					"x": 745,
+					"y": 405
+				}
+			],
+			"id": "route-budapest-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-budapest-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-budapest-east",
+			"geometry": [
+				{
+					"x": 745,
+					"y": 405
+				},
+				{
+					"x": 762,
+					"y": 399
+				},
+				{
+					"x": 780,
+					"y": 394
+				},
+				{
+					"x": 795,
+					"y": 390
+				}
+			],
+			"id": "route-budapest-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-gyarkert",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-tourinform-center",
+			"geometry": [
+				{
+					"x": 374,
+					"y": 423
+				},
+				{
+					"x": 370,
+					"y": 435
+				},
+				{
+					"x": 365,
+					"y": 445
+				},
+				{
+					"x": 360,
+					"y": 455
+				}
+			],
+			"id": "route-horgos-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-horgos-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 9,
+			"from": "j-horgos-east",
+			"geometry": [
+				{
+					"x": 360,
+					"y": 455
+				},
+				{
+					"x": 346,
+					"y": 465
+				},
+				{
+					"x": 332,
+					"y": 475
+				},
+				{
+					"x": 320,
+					"y": 480
+				}
+			],
+			"id": "route-horgos-mid",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-horgos-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 9,
+			"from": "j-horgos-mid",
+			"geometry": [
+				{
+					"x": 320,
+					"y": 480
+				},
+				{
+					"x": 306,
+					"y": 491
+				},
+				{
+					"x": 292,
+					"y": 501
+				},
+				{
+					"x": 280,
+					"y": 510
+				}
+			],
+			"id": "route-horgos-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-horgos-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-horgos-west",
+			"geometry": [
+				{
+					"x": 280,
+					"y": 510
+				},
+				{
+					"x": 266,
+					"y": 518
+				},
+				{
+					"x": 250,
+					"y": 525
+				}
+			],
+			"id": "route-crossing-west-entry",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-west-north",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 5,
+			"from": "j-crossing-west-north",
+			"geometry": [
+				{
+					"x": 250,
+					"y": 525
+				},
+				{
+					"x": 250,
+					"y": 537
+				},
+				{
+					"x": 250,
+					"y": 548
+				},
+				{
+					"x": 250,
+					"y": 558
+				}
+			],
+			"id": "crossing-ovari-west",
+			"kind": "walk",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-west-south",
+			"traversal": "crossing"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-horgos-east",
+			"geometry": [
+				{
+					"x": 360,
+					"y": 455
+				},
+				{
+					"x": 370,
+					"y": 470
+				}
+			],
+			"id": "route-virag-entry",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-virag-north",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-virag-north",
+			"geometry": [
+				{
+					"x": 370,
+					"y": 470
+				},
+				{
+					"x": 365,
+					"y": 486
+				},
+				{
+					"x": 358,
+					"y": 503
+				},
+				{
+					"x": 350,
+					"y": 520
+				}
+			],
+			"id": "route-virag-benedek",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-east-north",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 5,
+			"from": "j-crossing-east-north",
+			"geometry": [
+				{
+					"x": 350,
+					"y": 520
+				},
+				{
+					"x": 350,
+					"y": 535
+				},
+				{
+					"x": 350,
+					"y": 548
+				},
+				{
+					"x": 350,
+					"y": 560
+				}
+			],
+			"id": "crossing-ovari-east",
+			"kind": "walk",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-east-south",
+			"traversal": "crossing"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-crossing-west-south",
+			"geometry": [
+				{
+					"x": 250,
+					"y": 558
+				},
+				{
+					"x": 282,
+					"y": 560
+				},
+				{
+					"x": 316,
+					"y": 560
+				},
+				{
+					"x": 350,
+					"y": 560
+				}
+			],
+			"id": "route-ovari-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-east-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-crossing-east-south",
+			"geometry": [
+				{
+					"x": 350,
+					"y": 560
+				},
+				{
+					"x": 366,
+					"y": 560
+				},
+				{
+					"x": 383,
+					"y": 560
+				},
+				{
+					"x": 400,
+					"y": 560
+				}
+			],
+			"id": "route-ovari-mid",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-ovari-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-ovari-mid",
+			"geometry": [
+				{
+					"x": 400,
+					"y": 560
+				},
+				{
+					"x": 424,
+					"y": 560
+				},
+				{
+					"x": 448,
+					"y": 558
+				},
+				{
+					"x": 470,
+					"y": 555
+				}
+			],
+			"id": "route-ovari-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-ovari-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 10,
+			"from": "j-ovari-east",
+			"geometry": [
+				{
+					"x": 470,
+					"y": 555
+				},
+				{
+					"x": 494,
+					"y": 556
+				},
+				{
+					"x": 518,
+					"y": 560
+				},
+				{
+					"x": 540,
+					"y": 565
+				}
+			],
+			"id": "route-ovari-far-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-ovari-far-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-ovari-mid",
+			"geometry": [
+				{
+					"x": 400,
+					"y": 560
+				},
+				{
+					"x": 398,
+					"y": 575
+				},
+				{
+					"x": 400,
+					"y": 595
+				}
+			],
+			"id": "route-park-entry",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-park-west",
+			"geometry": [
+				{
+					"x": 400,
+					"y": 595
+				},
+				{
+					"x": 416,
+					"y": 607
+				},
+				{
+					"x": 433,
+					"y": 618
+				},
+				{
+					"x": 450,
+					"y": 625
+				}
+			],
+			"id": "route-park-west",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-center",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-park-center",
+			"geometry": [
+				{
+					"x": 450,
+					"y": 625
+				},
+				{
+					"x": 472,
+					"y": 630
+				},
+				{
+					"x": 495,
+					"y": 633
+				},
+				{
+					"x": 520,
+					"y": 635
+				}
+			],
+			"id": "route-park-east",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-park-east",
+			"geometry": [
+				{
+					"x": 520,
+					"y": 635
+				},
+				{
+					"x": 522,
+					"y": 656
+				},
+				{
+					"x": 524,
+					"y": 678
+				},
+				{
+					"x": 525,
+					"y": 700
+				}
+			],
+			"id": "route-park-south",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-park-south",
+			"geometry": [
+				{
+					"x": 525,
+					"y": 700
+				},
+				{
+					"x": 527,
+					"y": 716
+				},
+				{
+					"x": 530,
+					"y": 745
+				}
+			],
+			"id": "route-fields",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-fields",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 8,
+			"from": "j-fields",
+			"geometry": [
+				{
+					"x": 530,
+					"y": 745
+				},
+				{
+					"x": 532,
+					"y": 774
+				},
+				{
+					"x": 534,
+					"y": 802
+				},
+				{
+					"x": 535,
+					"y": 830
+				}
+			],
+			"id": "route-acticity",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-acticity",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-hosok-kapuja",
+			"geometry": [
+				{
+					"x": 344,
+					"y": 322
+				},
+				{
+					"x": 335,
+					"y": 320
+				}
+			],
+			"id": "approach-hosok-kapuja",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-heroes-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-modern-keptar-vass-gyujtemeny",
+			"geometry": [
+				{
+					"x": 292,
+					"y": 322
+				},
+				{
+					"x": 294,
+					"y": 312
+				},
+				{
+					"x": 300,
+					"y": 300
+				}
+			],
+			"id": "approach-modern-keptar-vass-gyujtemeny",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-tuztorony",
+			"geometry": [
+				{
+					"x": 275,
+					"y": 320
+				},
+				{
+					"x": 284,
+					"y": 312
+				},
+				{
+					"x": 300,
+					"y": 300
+				}
+			],
+			"id": "approach-tuztorony",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-foton-audiovizualis-kozpont",
+			"geometry": [
+				{
+					"x": 240,
+					"y": 305
+				},
+				{
+					"x": 244,
+					"y": 296
+				},
+				{
+					"x": 250,
+					"y": 285
+				}
+			],
+			"id": "approach-foton-audiovizualis-kozpont",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-csikasz-galeria",
+			"geometry": [
+				{
+					"x": 210,
+					"y": 285
+				},
+				{
+					"x": 204,
+					"y": 274
+				},
+				{
+					"x": 200,
+					"y": 260
+				}
+			],
+			"id": "approach-csikasz-galeria",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-dubniczay-palota",
+			"geometry": [
+				{
+					"x": 185,
+					"y": 270
+				},
+				{
+					"x": 200,
+					"y": 260
+				}
+			],
+			"id": "approach-dubniczay-palota",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-biro-giczey-haz",
+			"geometry": [
+				{
+					"x": 155,
+					"y": 238
+				},
+				{
+					"x": 155,
+					"y": 235
+				}
+			],
+			"id": "approach-biro-giczey-haz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-upper-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-istvan-templom",
+			"geometry": [
+				{
+					"x": 136,
+					"y": 215
+				},
+				{
+					"x": 135,
+					"y": 200
+				}
+			],
+			"id": "approach-szent-istvan-templom",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-upper-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-kormendy-haz",
+			"geometry": [
+				{
+					"x": 115,
+					"y": 170
+				},
+				{
+					"x": 128,
+					"y": 174
+				},
+				{
+					"x": 145,
+					"y": 174
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "approach-kormendy-haz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-istvan-es-gizella-szobor",
+			"geometry": [
+				{
+					"x": 130,
+					"y": 130
+				},
+				{
+					"x": 135,
+					"y": 120
+				}
+			],
+			"id": "approach-szent-istvan-es-gizella-szobor",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-north",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-benedek-hegy",
+			"geometry": [
+				{
+					"x": 130,
+					"y": 60
+				},
+				{
+					"x": 130,
+					"y": 75
+				}
+			],
+			"id": "approach-benedek-hegy",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-benedek",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-gyorgy-kapolna",
+			"geometry": [
+				{
+					"x": 142,
+					"y": 145
+				},
+				{
+					"x": 135,
+					"y": 120
+				}
+			],
+			"id": "approach-szent-gyorgy-kapolna",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-north",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-mihaly-foszekesegyhaz",
+			"geometry": [
+				{
+					"x": 175,
+					"y": 170
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "approach-szent-mihaly-foszekesegyhaz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szentharomsag-szobor",
+			"geometry": [
+				{
+					"x": 185,
+					"y": 190
+				},
+				{
+					"x": 174,
+					"y": 184
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "approach-szentharomsag-szobor",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-varkut",
+			"geometry": [
+				{
+					"x": 210,
+					"y": 190
+				},
+				{
+					"x": 192,
+					"y": 184
+				},
+				{
+					"x": 176,
+					"y": 178
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "approach-varkut",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-gizella-kapolna",
+			"geometry": [
+				{
+					"x": 235,
+					"y": 200
+				},
+				{
+					"x": 214,
+					"y": 194
+				},
+				{
+					"x": 190,
+					"y": 184
+				},
+				{
+					"x": 160,
+					"y": 175
+				}
+			],
+			"id": "approach-gizella-kapolna",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-plaza",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-erseki-palota",
+			"geometry": [
+				{
+					"x": 225,
+					"y": 240
+				},
+				{
+					"x": 216,
+					"y": 248
+				},
+				{
+					"x": 200,
+					"y": 260
+				}
+			],
+			"id": "approach-erseki-palota",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-imre-templom",
+			"geometry": [
+				{
+					"x": 275,
+					"y": 265
+				},
+				{
+					"x": 264,
+					"y": 276
+				},
+				{
+					"x": 250,
+					"y": 285
+				}
+			],
+			"id": "approach-szent-imre-templom",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-deak-ferenc-rendezvenykozpont",
+			"geometry": [
+				{
+					"x": 310,
+					"y": 250
+				},
+				{
+					"x": 304,
+					"y": 270
+				},
+				{
+					"x": 302,
+					"y": 285
+				},
+				{
+					"x": 300,
+					"y": 300
+				}
+			],
+			"id": "approach-deak-ferenc-rendezvenykozpont",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-castle-lower-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-auer-haz",
+			"geometry": [
+				{
+					"x": 488,
+					"y": 365
+				},
+				{
+					"x": 500,
+					"y": 370
+				},
+				{
+					"x": 513,
+					"y": 380
+				},
+				{
+					"x": 520,
+					"y": 390
+				}
+			],
+			"id": "approach-auer-haz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-boglyavari-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-posa-haz",
+			"geometry": [
+				{
+					"x": 300,
+					"y": 385
+				},
+				{
+					"x": 315,
+					"y": 385
+				},
+				{
+					"x": 342,
+					"y": 388
+				}
+			],
+			"id": "approach-posa-haz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-square-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-ruttner-haz-varborton",
+			"geometry": [
+				{
+					"x": 170,
+					"y": 300
+				},
+				{
+					"x": 172,
+					"y": 295
+				},
+				{
+					"x": 175,
+					"y": 290
+				}
+			],
+			"id": "approach-ruttner-haz-varborton",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-lower-stairs-top",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-code-digitalis-elmenykozpont",
+			"geometry": [
+				{
+					"x": 262,
+					"y": 549
+				},
+				{
+					"x": 256,
+					"y": 554
+				},
+				{
+					"x": 250,
+					"y": 558
+				}
+			],
+			"id": "approach-code-digitalis-elmenykozpont",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-crossing-west-south",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-petofi-szinhaz",
+			"geometry": [
+				{
+					"x": 395,
+					"y": 535
+				},
+				{
+					"x": 398,
+					"y": 548
+				},
+				{
+					"x": 400,
+					"y": 560
+				}
+			],
+			"id": "approach-petofi-szinhaz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-ovari-mid",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-hangvilla",
+			"geometry": [
+				{
+					"x": 485,
+					"y": 535
+				},
+				{
+					"x": 480,
+					"y": 544
+				},
+				{
+					"x": 470,
+					"y": 555
+				}
+			],
+			"id": "approach-hangvilla",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-ovari-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-eotvos-karoly-megyei-konyvtar",
+			"geometry": [
+				{
+					"x": 370,
+					"y": 590
+				},
+				{
+					"x": 382,
+					"y": 591
+				},
+				{
+					"x": 400,
+					"y": 595
+				}
+			],
+			"id": "approach-eotvos-karoly-megyei-konyvtar",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-szent-miklos-szeg",
+			"geometry": [
+				{
+					"x": 420,
+					"y": 620
+				},
+				{
+					"x": 433,
+					"y": 622
+				},
+				{
+					"x": 450,
+					"y": 625
+				}
+			],
+			"id": "approach-szent-miklos-szeg",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-center",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-laczko-dezso-muzeum",
+			"geometry": [
+				{
+					"x": 520,
+					"y": 620
+				},
+				{
+					"x": 520,
+					"y": 635
+				}
+			],
+			"id": "approach-laczko-dezso-muzeum",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-bakonyi-haz",
+			"geometry": [
+				{
+					"x": 560,
+					"y": 650
+				},
+				{
+					"x": 548,
+					"y": 646
+				},
+				{
+					"x": 520,
+					"y": 635
+				}
+			],
+			"id": "approach-bakonyi-haz",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-park-east",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-egyetemi-rekortan-sportpalyak",
+			"geometry": [
+				{
+					"x": 530,
+					"y": 735
+				},
+				{
+					"x": 530,
+					"y": 745
+				}
+			],
+			"id": "approach-egyetemi-rekortan-sportpalyak",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-fields",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-acticity",
+			"geometry": [
+				{
+					"x": 535,
+					"y": 852
+				},
+				{
+					"x": 535,
+					"y": 830
+				}
+			],
+			"id": "approach-acticity",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-acticity",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-digitalis-tudaskozpont",
+			"geometry": [
+				{
+					"x": 500,
+					"y": 455
+				},
+				{
+					"x": 518,
+					"y": 453
+				},
+				{
+					"x": 540,
+					"y": 450
+				}
+			],
+			"id": "approach-digitalis-tudaskozpont",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-kossuth-west",
+			"traversal": "outdoor-path"
+		},
+		{
+			"accessible": false,
+			"bidirectional": true,
+			"corridorWidth": 6,
+			"from": "loc-gyarkert-kulturpark",
+			"geometry": [
+				{
+					"x": 800,
+					"y": 365
+				},
+				{
+					"x": 795,
+					"y": 390
+				}
+			],
+			"id": "approach-gyarkert-kulturpark",
+			"kind": "outdoor",
+			"reviewStatus": "confirmed",
+			"to": "j-gyarkert",
+			"traversal": "outdoor-path"
+		}
+	],
+	"graphId": "veszprem-downtown-reviewed-routes",
+	"nodes": [
+		{
+			"id": "j-tourinform-center",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 374,
+			"y": 423
+		},
+		{
+			"id": "j-tourinform-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 396,
+			"y": 424
+		},
+		{
+			"id": "j-square-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 342,
+			"y": 388
+		},
+		{
+			"id": "j-heroes-south",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 354,
+			"y": 340
+		},
+		{
+			"id": "j-heroes-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 335,
+			"y": 320
+		},
+		{
+			"id": "j-castle-lower-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 300,
+			"y": 300
+		},
+		{
+			"id": "j-castle-lower-mid",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 250,
+			"y": 285
+		},
+		{
+			"id": "j-castle-lower-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 200,
+			"y": 260
+		},
+		{
+			"id": "j-castle-upper-south",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 155,
+			"y": 235
+		},
+		{
+			"id": "j-castle-upper-mid",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 135,
+			"y": 200
+		},
+		{
+			"id": "j-castle-plaza",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 160,
+			"y": 175
+		},
+		{
+			"id": "j-castle-north",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 135,
+			"y": 120
+		},
+		{
+			"id": "j-benedek",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 130,
+			"y": 75
+		},
+		{
+			"id": "j-lower-stairs-top",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 175,
+			"y": 290
+		},
+		{
+			"id": "j-lower-stairs-bottom",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 260,
+			"y": 365
+		},
+		{
+			"id": "j-square-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 420,
+			"y": 405
+		},
+		{
+			"id": "j-boglyavari-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 470,
+			"y": 395
+		},
+		{
+			"id": "j-boglyavari-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 520,
+			"y": 390
+		},
+		{
+			"id": "j-kossuth-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 540,
+			"y": 450
+		},
+		{
+			"id": "j-kossuth-mid",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 610,
+			"y": 455
+		},
+		{
+			"id": "j-budapest-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 680,
+			"y": 435
+		},
+		{
+			"id": "j-budapest-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 745,
+			"y": 405
+		},
+		{
+			"id": "j-gyarkert",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 795,
+			"y": 390
+		},
+		{
+			"id": "j-horgos-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 360,
+			"y": 455
+		},
+		{
+			"id": "j-horgos-mid",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 320,
+			"y": 480
+		},
+		{
+			"id": "j-horgos-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 280,
+			"y": 510
+		},
+		{
+			"id": "j-crossing-west-north",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 250,
+			"y": 525
+		},
+		{
+			"id": "j-crossing-west-south",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 250,
+			"y": 558
+		},
+		{
+			"id": "j-virag-north",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 370,
+			"y": 470
+		},
+		{
+			"id": "j-crossing-east-north",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 350,
+			"y": 520
+		},
+		{
+			"id": "j-crossing-east-south",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 350,
+			"y": 560
+		},
+		{
+			"id": "j-ovari-mid",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 400,
+			"y": 560
+		},
+		{
+			"id": "j-ovari-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 470,
+			"y": 555
+		},
+		{
+			"id": "j-ovari-far-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 540,
+			"y": 565
+		},
+		{
+			"id": "j-park-west",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 400,
+			"y": 595
+		},
+		{
+			"id": "j-park-center",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 450,
+			"y": 625
+		},
+		{
+			"id": "j-park-east",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 520,
+			"y": 635
+		},
+		{
+			"id": "j-park-south",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 525,
+			"y": 700
+		},
+		{
+			"id": "j-fields",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 530,
+			"y": 745
+		},
+		{
+			"id": "j-acticity",
+			"kind": "route",
+			"levelId": "downtown",
+			"x": 535,
+			"y": 830
+		},
+		{
+			"id": "loc-tourinform-veszprem",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 384,
+			"y": 430,
+			"locationId": "tourinform-veszprem"
+		},
+		{
+			"id": "loc-hosok-kapuja",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 344,
+			"y": 322,
+			"locationId": "hosok-kapuja"
+		},
+		{
+			"id": "loc-modern-keptar-vass-gyujtemeny",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 292,
+			"y": 322,
+			"locationId": "modern-keptar-vass-gyujtemeny"
+		},
+		{
+			"id": "loc-tuztorony",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 275,
+			"y": 320,
+			"locationId": "tuztorony"
+		},
+		{
+			"id": "loc-foton-audiovizualis-kozpont",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 240,
+			"y": 305,
+			"locationId": "foton-audiovizualis-kozpont"
+		},
+		{
+			"id": "loc-csikasz-galeria",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 210,
+			"y": 285,
+			"locationId": "csikasz-galeria"
+		},
+		{
+			"id": "loc-dubniczay-palota",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 185,
+			"y": 270,
+			"locationId": "dubniczay-palota"
+		},
+		{
+			"id": "loc-biro-giczey-haz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 155,
+			"y": 238,
+			"locationId": "biro-giczey-haz"
+		},
+		{
+			"id": "loc-szent-istvan-templom",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 136,
+			"y": 215,
+			"locationId": "szent-istvan-templom"
+		},
+		{
+			"id": "loc-kormendy-haz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 115,
+			"y": 170,
+			"locationId": "kormendy-haz"
+		},
+		{
+			"id": "loc-szent-istvan-es-gizella-szobor",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 130,
+			"y": 130,
+			"locationId": "szent-istvan-es-gizella-szobor"
+		},
+		{
+			"id": "loc-benedek-hegy",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 130,
+			"y": 60,
+			"locationId": "benedek-hegy"
+		},
+		{
+			"id": "loc-szent-gyorgy-kapolna",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 142,
+			"y": 145,
+			"locationId": "szent-gyorgy-kapolna"
+		},
+		{
+			"id": "loc-szent-mihaly-foszekesegyhaz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 175,
+			"y": 170,
+			"locationId": "szent-mihaly-foszekesegyhaz"
+		},
+		{
+			"id": "loc-szentharomsag-szobor",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 185,
+			"y": 190,
+			"locationId": "szentharomsag-szobor"
+		},
+		{
+			"id": "loc-varkut",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 210,
+			"y": 190,
+			"locationId": "varkut"
+		},
+		{
+			"id": "loc-gizella-kapolna",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 235,
+			"y": 200,
+			"locationId": "gizella-kapolna"
+		},
+		{
+			"id": "loc-erseki-palota",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 225,
+			"y": 240,
+			"locationId": "erseki-palota"
+		},
+		{
+			"id": "loc-szent-imre-templom",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 275,
+			"y": 265,
+			"locationId": "szent-imre-templom"
+		},
+		{
+			"id": "loc-deak-ferenc-rendezvenykozpont",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 310,
+			"y": 250,
+			"locationId": "deak-ferenc-rendezvenykozpont"
+		},
+		{
+			"id": "loc-auer-haz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 488,
+			"y": 365,
+			"locationId": "auer-haz"
+		},
+		{
+			"id": "loc-posa-haz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 300,
+			"y": 385,
+			"locationId": "posa-haz"
+		},
+		{
+			"id": "loc-ruttner-haz-varborton",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 170,
+			"y": 300,
+			"locationId": "ruttner-haz-varborton"
+		},
+		{
+			"id": "loc-code-digitalis-elmenykozpont",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 262,
+			"y": 549,
+			"locationId": "code-digitalis-elmenykozpont"
+		},
+		{
+			"id": "loc-petofi-szinhaz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 395,
+			"y": 535,
+			"locationId": "petofi-szinhaz"
+		},
+		{
+			"id": "loc-hangvilla",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 485,
+			"y": 535,
+			"locationId": "hangvilla"
+		},
+		{
+			"id": "loc-eotvos-karoly-megyei-konyvtar",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 370,
+			"y": 590,
+			"locationId": "eotvos-karoly-megyei-konyvtar"
+		},
+		{
+			"id": "loc-szent-miklos-szeg",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 420,
+			"y": 620,
+			"locationId": "szent-miklos-szeg"
+		},
+		{
+			"id": "loc-laczko-dezso-muzeum",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 520,
+			"y": 620,
+			"locationId": "laczko-dezso-muzeum"
+		},
+		{
+			"id": "loc-bakonyi-haz",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 560,
+			"y": 650,
+			"locationId": "bakonyi-haz"
+		},
+		{
+			"id": "loc-egyetemi-rekortan-sportpalyak",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 530,
+			"y": 735,
+			"locationId": "egyetemi-rekortan-sportpalyak"
+		},
+		{
+			"id": "loc-acticity",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 535,
+			"y": 852,
+			"locationId": "acticity"
+		},
+		{
+			"id": "loc-digitalis-tudaskozpont",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 500,
+			"y": 455,
+			"locationId": "digitalis-tudaskozpont"
+		},
+		{
+			"id": "loc-gyarkert-kulturpark",
+			"kind": "location",
+			"levelId": "downtown",
+			"x": 800,
+			"y": 365,
+			"locationId": "gyarkert-kulturpark"
+		}
+	]
 }

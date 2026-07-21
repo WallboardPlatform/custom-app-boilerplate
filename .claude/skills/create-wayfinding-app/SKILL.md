@@ -17,7 +17,7 @@ Build four independent artifacts: visual `map.svg`, confirmed `walkable-mask.jso
    - **Exact vector:** trace when reliable geometry is required and available.
 4. Create the generation brief and pass `npm run validate:brief` before app implementation.
 5. Author the artifacts using [references/artifacts.md](references/artifacts.md). Audit existing SVGs with `npm run wayfinding:audit-source -- --svg <map.svg> --report-dir <directory>` before migration. Treat exported legacy anchors as proposals and legacy point clouds as evidence, never topology.
-6. For raster/PDF or audited SVG sources, use `npm run wayfinding:workbench`: confirm the independent mask, place routeable destination anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centerlines stay proposed; inspect and confirm every edge individually. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
+6. For raster/PDF or audited SVG sources, use `npm run wayfinding:workbench`: confirm the independent mask, place routeable destination anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
 7. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; routeable rows require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
 8. Validate and generate the QA dashboard/overlay:
 
@@ -35,12 +35,13 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable
 - Require an independently confirmed walkable mask for generated v2 centerlines. AI/OCR proposals are not confirmation.
 - Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
 - Place a location node at its walkable entrance/approach, not its polygon centroid.
+- Keep location nodes as leaf entrances; never route through an unrelated destination. Name and classify crossings, doors, stairs, elevators, and escalators explicitly.
 - Keep mutable names, descriptions, hours, images, status, localization, and CTA content in the destination TABLE.
 - Mark off-map or intentionally unreachable destinations `routeable: false`; never draw an invented route.
 - Model stairs/elevators/escalators and accessibility on graph edges. Use stable edge IDs for closures and rerouting.
 - Preserve source labels/icons unless replacement is needed for interaction, localization, theming, or readability. Do not mandate inpainting.
 - Do not embed arbitrary HTML, scripts, event handlers, credentials, customer records, or live customer URLs in SVG/metadata.
-- Do not ship unresolved disconnected destinations, unexplained edge crossings, high-degree shortcuts, or unreviewed graph warnings.
+- Do not ship unresolved disconnected destinations, unexplained edge crossings, backtracking/detour warnings, high-degree shortcuts, or unreviewed graph warnings. Connectivity alone is not route proof.
 
 ## Deliver
 

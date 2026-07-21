@@ -39,6 +39,8 @@ Graph coordinates are always expressed in the root SVG viewBox coordinate system
 - Generated maps require explicit graph edges.
 - Sample centerlines into nodes only as needed for route shape; topology comes from edges, not point density.
 - Connect every routeable location at its entrance. Mark off-map/non-routeable destinations explicitly.
+- Keep location nodes as leaf entrances; a route through an unrelated destination is a topology defect.
+- Represent crossings, doors, stairs, elevators, and escalators as named edges. Do not replace them with a visual shortcut.
 - Model cross-floor edges as `stairs`, `elevator`, or `escalator`; set accessibility per edge.
 - Keep stable edge IDs so live closures and external commands can disable edges and reroute.
 - Prefer authored `distanceMeters`; otherwise calibrate `mapRatio` and label distances approximate.
@@ -64,7 +66,9 @@ Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a s
 5. Review the source overlay, confirm the independent mask, then inspect and confirm each contained edge individually. There is no bulk topology confirmation.
 6. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
 
-Mask extraction and skeletons may propose topology but never certify it. Indoor, outdoor, and mixed maps require different walkability semantics; entrances, junctions, edges, and accessibility remain reviewer decisions.
+Mask extraction and skeletons may propose topology but never certify it. Color extraction can miss valid paths hidden by labels, buildings, crossings, or other artwork; complete those semantics during overlay review. Indoor, outdoor, and mixed maps require different walkability semantics; entrances, junctions, edges, and accessibility remain reviewer decisions.
+
+For a hand-authored graph, a graph-derived corridor envelope is useful only as a regression check. It is not an independent walkable mask and cannot certify the same graph that generated it; review every representative route over the source map.
 
 ## Metadata Updates
 
@@ -94,7 +98,7 @@ The AI may propose visuals and extract OCR metadata, but ambiguous names, entran
 npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start lobby --route-to auditorium --report-dir wayfinding-report
 ```
 
-The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size. Review warnings for long edges, high-degree nodes, edge crossings without junctions, missing metadata, and destinations whose accessibility is intentionally unknown. Use `--strict` only when the project requires a warning-free report; never invent facts to silence warnings. Do not accept a map from XML/render success alone.
+The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size and multiple zoom centres. Cover every entrance side plus each crossing and transition class. Review warnings for backtracking, detours, long edges, high-degree nodes, edge crossings without junctions, missing metadata, and destinations whose accessibility is intentionally unknown. Use `--strict` only when the project requires a warning-free report; never invent facts to silence warnings. Do not accept connectivity or XML/render success alone.
 
 ## Delivery
 

@@ -16,6 +16,16 @@ const openScenario = async (page: Page, scenario = 'app-default'): Promise<void>
 	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toBeVisible();
 };
 
+const routePoints = async (page: Page): Promise<Array<[number, number]>> => {
+	const pathData: string = await page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']").getAttribute('d') ?? '';
+	const values: number[] = (pathData.match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
+	const points: Array<[number, number]> = [];
+
+	for (let index = 0; index < values.length; index += 2) points.push([values[index], values[index + 1]]);
+
+	return points;
+};
+
 test('the supplied source map is packaged and reaches the ready state', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-state', 'ready');
@@ -26,7 +36,7 @@ test('selecting a destination draws the explicit graph route and details', async
 	await openScenario(page);
 	await page.getByRole('button', { name: /Hősök Kapuja/ }).click();
 
-	await expect(page.locator('#wb-veszprem-wayfinding-route path')).toHaveCount(1);
+	await expect(page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']")).toHaveCount(1);
 	await expect(page.getByText('APPROX. DISTANCE')).toBeVisible();
 	await expect(page.getByText('WALKING TIME')).toBeVisible();
 	await expect(page.locator('[data-wayfinding-location-id="hosok-kapuja"]')).toHaveAttribute('data-wb-wayfinding-selected', 'true');
@@ -50,7 +60,7 @@ test('tapping an SVG hit target uses the same routing and metadata path', async 
 	await page.locator('[data-wayfinding-location-id="petofi-szinhaz"]').click({ force: true });
 
 	await expect(page.getByRole('heading', { name: 'Veszprémi Petőfi Színház' })).toBeVisible();
-	await expect(page.locator('#wb-veszprem-wayfinding-route path')).toHaveCount(1);
+	await expect(page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']")).toHaveCount(1);
 });
 
 test('representative destinations render multi-segment routes from the certified graph', async ({ page }): Promise<void> => {
@@ -59,7 +69,7 @@ test('representative destinations render multi-segment routes from the certified
 
 	for (const destinationName of destinationNames) {
 		await page.getByRole('button', { name: destinationName }).click();
-		const route = page.locator('#wb-veszprem-wayfinding-route path');
+		const route = page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']");
 		const pathData: string = await route.getAttribute('d') ?? '';
 
 		const values: number[] = (pathData.match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
@@ -69,6 +79,74 @@ test('representative destinations render multi-segment routes from the certified
 		expect(points.length).toBeGreaterThan(2);
 		await page.getByRole('button', { name: 'Clear route' }).click();
 	}
+});
+
+test('reviewed routes use the correct exits, entrances, crossings, and stairs', async ({ page }): Promise<void> => {
+	await openScenario(page);
+
+	await page.locator('[data-wayfinding-location-id="hosok-kapuja"]').click({ force: true });
+	let points: Array<[number, number]> = await routePoints(page);
+	expect(points[2][0]).toBeLessThan(points[0][0]);
+	expect(points[points.length - 2][0]).toBeLessThan(points[points.length - 1][0]);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.locator('[data-wayfinding-location-id="auer-haz"]').click({ force: true });
+	points = await routePoints(page);
+	expect(points[points.length - 2][0]).toBeGreaterThan(points[points.length - 1][0]);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.locator('[data-wayfinding-location-id="posa-haz"]').click({ force: true });
+	points = await routePoints(page);
+	expect(points[points.length - 2][0]).toBeGreaterThan(points[points.length - 1][0]);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.locator('[data-wayfinding-location-id="code-digitalis-elmenykozpont"]').click({ force: true });
+	points = await routePoints(page);
+	expect(points.some(([x, y]): boolean => Math.abs(x - 250) < 1 && y >= 525 && y <= 558)).toBe(true);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.locator('[data-wayfinding-location-id="petofi-szinhaz"]').click({ force: true });
+	points = await routePoints(page);
+	expect(points.some(([x, y]): boolean => Math.abs(x - 350) < 1 && y >= 520 && y <= 560)).toBe(true);
+	await page.getByRole('button', { name: 'Clear route' }).click();
+
+	await page.locator('[data-wayfinding-location-id="benedek-hegy"]').click({ force: true });
+	points = await routePoints(page);
+	expect(points.some(([x, y]): boolean => x >= 141 && x <= 160 && y >= 131 && y <= 175)).toBe(true);
+});
+
+test('map hit targets stay visually quiet until hover or selection', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	const target = page.locator('[data-wayfinding-location-id="hosok-kapuja"]');
+	const idleStyle = await target.evaluate((element: Element): { fillOpacity: string; strokeWidth: string } => ({
+		fillOpacity: getComputedStyle(element).fillOpacity,
+		strokeWidth: getComputedStyle(element).strokeWidth
+	}));
+
+	expect(idleStyle.fillOpacity).toBe('0');
+	expect(idleStyle.strokeWidth).toBe('0px');
+	await target.click({ force: true });
+	const selectedStyle = await target.evaluate((element: Element): { fillOpacity: string; strokeWidth: string } => ({
+		fillOpacity: getComputedStyle(element).fillOpacity,
+		strokeWidth: getComputedStyle(element).strokeWidth
+	}));
+	expect(Number(selectedStyle.fillOpacity)).toBeGreaterThan(0);
+	expect(Number.parseFloat(selectedStyle.strokeWidth)).toBeGreaterThan(0);
+});
+
+test('fit route restores the complete active path after manual zoom without changing geometry', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.locator('[data-wayfinding-location-id="auer-haz"]').click({ force: true });
+	const path = page.locator("#wb-veszprem-wayfinding-route [data-route-layer='foreground']");
+	const beforePath: string | null = await path.getAttribute('d');
+	await page.getByRole('button', { name: 'Zoom in' }).click();
+	await page.getByRole('button', { name: 'Zoom in' }).click();
+	const zoomedViewBox: string | null = await page.locator('#map-artwork').evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
+	await page.getByRole('button', { name: 'Fit route' }).click();
+	const fittedViewBox: string | null = await page.locator('#map-artwork').evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
+
+	expect(fittedViewBox).not.toBe(zoomedViewBox);
+	expect(await path.getAttribute('d')).toBe(beforePath);
 });
 
 test('the language selector switches all app-owned interface labels', async ({ page }): Promise<void> => {

@@ -58,6 +58,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 
 	return {
 		...palette,
+		routeColor: textSetting(config.routeColor, palette.routeColor),
 		emptyStateText: textSetting(config.emptyStateText, 'No destinations are available.'),
 		interfaceLanguages: config.interfaceLanguages === 'en' || config.interfaceLanguages === 'hu' ? config.interfaceLanguages : 'en-hu',
 		keyboardLanguages: config.keyboardLanguages === 'en' || config.keyboardLanguages === 'hu' ? config.keyboardLanguages : 'hu-en',

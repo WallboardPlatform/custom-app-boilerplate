@@ -148,6 +148,18 @@ const polylineLength = (points: WayfindingPoint[]): number => {
 	}, 0);
 };
 
+const turnAngle = (left: WayfindingPoint, center: WayfindingPoint, right: WayfindingPoint): number => {
+	const incoming = { x: center.x - left.x, y: center.y - left.y };
+	const outgoing = { x: right.x - center.x, y: right.y - center.y };
+	const denominator = Math.hypot(incoming.x, incoming.y) * Math.hypot(outgoing.x, outgoing.y);
+
+	if (denominator === 0) return 0;
+
+	const cosine = Math.max(-1, Math.min(1, (incoming.x * outgoing.x + incoming.y * outgoing.y) / denominator));
+
+	return Math.acos(cosine) * 180 / Math.PI;
+};
+
 const orientation = (a: WayfindingPoint, b: WayfindingPoint, c: WayfindingPoint): number => {
 	return (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 };
@@ -290,6 +302,14 @@ const validateGraph = (
 			}
 		}
 
+		if (edge.kind !== 'stairs' && edge.kind !== 'escalator') {
+			for (let index = 1; index < points.length - 1; index += 1) {
+				if (turnAngle(points[index - 1], points[index], points[index + 1]) > 145) {
+					addIssue(issues, 'warning', 'edge-backtracking-review', `Edge '${edge.id}' reverses direction near geometry point ${index}; review it for an AI-generated zigzag.`, [edge.id, String(index)]);
+				}
+			}
+		}
+
 		if (walkableMask && from.levelId === to.levelId && edge.geometry && edge.corridorWidth !== undefined) {
 			const outside = walkableMask.outsideCorridor(points, edge.corridorWidth);
 
@@ -318,6 +338,14 @@ const validateGraph = (
 		addIssue(issues, 'warning', 'long-edge-review', `Edge '${item.edge.id}' is ${Math.round(item.pixels)} SVG units long and should be reviewed for a shortcut.`, [item.edge.id]);
 	}
 
+	for (const item of validEdges) {
+		const directDistance: number = pointDistance(item.points[0], item.points[item.points.length - 1]);
+
+		if (directDistance > 12 && item.pixels / directDistance > 2.25) {
+			addIssue(issues, 'warning', 'edge-excessive-detour-review', `Edge '${item.edge.id}' is more than 2.25x its endpoint distance; split or simplify it if this is not an intentional switchback.`, [item.edge.id]);
+		}
+	}
+
 	for (let leftIndex = 0; leftIndex < validEdges.length; leftIndex += 1) {
 		for (let rightIndex = leftIndex + 1; rightIndex < validEdges.length; rightIndex += 1) {
 			const left = validEdges[leftIndex];
@@ -341,6 +369,12 @@ const validateGraph = (
 
 	const maxDegree: number = Math.max(0, ...degree.values());
 	const highDegreeNodes: Array<[string, number]> = [...degree.entries()].filter(([, value]): boolean => value > 8);
+
+	for (const node of graph.nodes.filter((candidate: WayfindingNode): boolean => candidate.kind === 'location')) {
+		if ((degree.get(node.id) ?? 0) > 1) {
+			addIssue(issues, 'error', 'location-node-used-as-transit', `Location node '${node.id}' has more than one edge and can become an unrelated route shortcut. Attach it as a leaf entrance node.`, [node.id]);
+		}
+	}
 
 	for (const [nodeId, value] of highDegreeNodes.slice(0, 25)) {
 		addIssue(issues, 'warning', 'high-node-degree', `Node '${nodeId}' has degree ${value}; inspect for unintended shortcuts.`, [nodeId]);
@@ -417,6 +451,7 @@ const routeChecks = (
 	}
 
 	const graph = new WayfindingGraph(graphDocument);
+	const nodeById = new Map(graphDocument.nodes.map((node: WayfindingNode): [string, WayfindingNode] => [node.id, node]));
 	const locationNodeById = new Map(graphDocument.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location')
 		.map((node: WayfindingNode): [string, WayfindingNode] => [node.locationId!, node]));
 	const startNode: WayfindingNode | undefined = locationNodeById.get(startLocationId);
@@ -436,6 +471,14 @@ const routeChecks = (
 
 		if (!standard) {
 			addIssue(issues, 'error', 'destination-unreachable', `Destination '${destination.id}' is marked routeable but cannot be reached from '${startLocationId}'.`, [startLocationId, destination.id]);
+		}
+
+		for (const intermediateNodeId of standard?.nodeIds.slice(1, -1) ?? []) {
+			const intermediateNode: WayfindingNode | undefined = nodeById.get(intermediateNodeId);
+
+			if (intermediateNode?.kind === 'location') {
+				addIssue(issues, 'error', 'route-uses-unrelated-location', `Route to '${destination.id}' passes through location '${intermediateNode.locationId ?? intermediateNode.id}'. Destination entrances must not be graph shortcuts.`, [destination.id, intermediateNode.id]);
+			}
 		}
 
 		if (destination.accessible === true && standard && !stepFree) {

@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "35da5407c7cdfc34109c8cb7d5af7f93ebafd23ef83afcce2c1ce99ced06bbb1",
-	"reviewedAt": "2026-07-20T15:11:39.0540379Z",
+	"sourceHash": "b1d91bd02b957e09c0487e45157c89c38cc0a8e95c798295ed4d8a7502f021ba",
+	"reviewedAt": "2026-07-21T07:48:56.4793432Z",
 	"reviewer": "Codex visual review",
 	"criteria": [
 		{
@@ -17,7 +17,7 @@
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The visitor-map composition, numbered controls, restrained tourism palette, and source-led details are distinct from generic dashboard examples."
+			"notes": "The visitor-map composition, quiet map hit areas, restrained tourism palette, and source-led details are distinct from generic dashboard examples."
 		},
 		{
 			"id": "distanceReadability",
@@ -69,12 +69,12 @@
 		{
 			"file": "scenario-active-route-castle-1920x1080.png",
 			"status": "pass",
-			"notes": "The Heroes Gate route remains on the visible northbound street corridor through the castle quarter."
+			"notes": "The Heroes Gate route leaves the current marker north-west, stays on the visible street corridor, and reaches the reviewed west-side entrance."
 		},
 		{
 			"file": "scenario-active-route-east-1920x1080.png",
 			"status": "pass",
-			"notes": "The Auer House route follows the curved Boglyavari street corridor instead of cutting across the intervening block."
+			"notes": "The Auer House route follows Boglyavari Street and reaches the reviewed east-side entrance without the previous start hairpin."
 		},
 		{
 			"file": "scenario-active-route-far-east-1920x1080.png",
