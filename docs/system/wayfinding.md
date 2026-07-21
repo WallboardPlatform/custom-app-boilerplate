@@ -47,15 +47,24 @@ The shared `WayfindingGraph` supports standard and step-free shortest paths plus
 
 ## Image/PDF Extraction
 
-Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image.
+For an existing SVG, audit it before trusting or migrating any embedded points:
+
+```bash
+npm run wayfinding:audit-source -- --svg legacy-map.svg --report-dir wayfinding-source-audit
+```
+
+The audit reports duplicate IDs and executable content, migrates location geometry to native annotations, and exports proposed legacy location anchors. Legacy route-point clouds are evidence only: the audit never infers graph edges.
+
+Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image or after auditing an existing SVG.
 
 1. AI/OCR proposes destination IDs and metadata; never treat OCR as confirmed copy.
 2. Sample representative walkable colors, extract the connected mask, then paint include/exclude corrections over crossings, doors, and false positives.
-3. Generate the centerline graph. The extractor closes small crossing gaps, skeletonizes traversable space, collapses junction clusters, snaps destination entrances, and removes branches that do not terminate at destinations.
-4. Review the source overlay, confirm the mask, then confirm only contained edges.
-5. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
+3. Place each routeable destination anchor at its reviewed entrance or walkable approach. Moving an anchor invalidates every connected edge review.
+4. Draw explicit edges along visible corridors, or generate centerline proposals from the mask. Add bends where the source changes direction; classify traversal, direction, accessibility, and corridor width.
+5. Review the source overlay, confirm the independent mask, then inspect and confirm each contained edge individually. There is no bulk topology confirmation.
+6. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
 
-Automatic extraction is a proposal. Indoor, outdoor, and mixed maps require different walkability semantics, and entrances/topology remain reviewer decisions.
+Mask extraction and skeletons may propose topology but never certify it. Indoor, outdoor, and mixed maps require different walkability semantics; entrances, junctions, edges, and accessibility remain reviewer decisions.
 
 ## Metadata Updates
 

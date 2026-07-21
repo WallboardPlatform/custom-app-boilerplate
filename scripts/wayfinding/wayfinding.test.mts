@@ -40,6 +40,26 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.deepEqual(report.routes.find((route): boolean => route.destinationId === 'gallery')?.nodeIds, ['lp-lobby', 'rp-west', 'rp-east', 'gallery-lp']);
 	});
 
+	void it('allows listed-only destinations without invented map geometry', (): void => {
+		const report = validateWayfinding({
+			destinations: [...destinations, {
+				accessible: null,
+				category: 'External',
+				description: '',
+				hours: '',
+				id: 'off-site-museum',
+				name: 'Off-site museum',
+				routeable: false,
+				status: ''
+			}],
+			graph,
+			map: parseWayfindingSvg(sourceSvg),
+			startLocationId: 'lobby'
+		});
+
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'destination-location-missing' && issue.references?.includes('off-site-museum')));
+	});
+
 	void it('routes and measures version 2 edges through their reviewed centerline geometry', (): void => {
 		const curvedGraph: WayfindingGraphDocument = {
 			contractVersion: 2,
