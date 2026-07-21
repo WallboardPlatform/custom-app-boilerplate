@@ -271,26 +271,77 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		scheduleReset();
 	};
 
-	const setWrappedLabel = (element: SVGTextElement, value: string): void => {
+	const fitMapLabel = (group: SVGGElement, value: string): void => {
+		const element: SVGTextElement | null = group.querySelector('text:not(.wb-civic-zone-kicker)');
+
+		if (!element) return;
 		const words: string[] = value.toLocaleUpperCase().split(/\s+/).filter(Boolean);
-		const lines: string[] = [];
+		const maximumWidth: number = Number(group.dataset.labelWidth ?? 140);
+		const maximumLines: number = Number(group.dataset.labelLines ?? 3);
+		const minimumFontSize: number = Number(group.dataset.labelMinSize ?? 11);
+		let fontSize: number = group.classList.contains('wb-civic-compact') ? 13 : 16;
+		const measure = (text: string): number => {
+			element.style.fontSize = `${fontSize}px`;
+			element.textContent = text;
 
-		for (const word of words) {
-			const last: string | undefined = lines[lines.length - 1];
+			return element.getComputedTextLength();
+		};
+		const wrap = (): string[] => {
+			const lines: string[] = [];
 
-			if (!last || `${last} ${word}`.length > 18) lines.push(word);
-			else lines[lines.length - 1] = `${last} ${word}`;
+			for (const word of words) {
+				const last: string | undefined = lines[lines.length - 1];
+				const candidate: string = last ? `${last} ${word}` : word;
+
+				if (!last) lines.push(word);
+				else if (measure(candidate) <= maximumWidth) lines[lines.length - 1] = candidate;
+				else lines.push(word);
+			}
+
+			return lines;
+		};
+		let lines: string[] = wrap();
+
+		while (fontSize > minimumFontSize && (lines.length > maximumLines || lines.some((line: string): boolean => measure(line) > maximumWidth))) {
+			fontSize -= 1;
+			lines = wrap();
 		}
-		element.replaceChildren();
 
-		for (const [index, line] of lines.slice(0, 3).entries()) {
+		if (lines.length > maximumLines) {
+			const visible: string[] = lines.slice(0, maximumLines);
+			let lastLine: string = `${lines.slice(maximumLines - 1).join(' ')}...`;
+
+			while (lastLine.length > 4 && measure(lastLine) > maximumWidth) lastLine = `${lastLine.slice(0, -4).trimEnd()}...`;
+			visible[maximumLines - 1] = lastLine;
+			lines = visible;
+		}
+
+		element.replaceChildren();
+		element.style.fontSize = `${fontSize}px`;
+		const lineHeight: number = Math.max(14, Math.round(fontSize * 1.15));
+		const firstLineY: number = -((lines.length - 1) * lineHeight) / 2;
+
+		for (const [index, line] of lines.entries()) {
 			const tspan: SVGTSpanElement = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
 			tspan.setAttribute('x', '0');
-
-			if (index > 0) tspan.setAttribute('dy', '18');
+			tspan.setAttribute('y', String(firstLineY + index * lineHeight));
 			tspan.textContent = line;
 			element.append(tspan);
 		}
+
+		const kicker: SVGTextElement | null = group.querySelector('.wb-civic-zone-kicker');
+
+		if (kicker) {
+			let kickerSize = 8;
+			kicker.style.fontSize = `${kickerSize}px`;
+
+			while (kickerSize > 6 && kicker.getComputedTextLength() > maximumWidth) {
+				kickerSize -= 1;
+				kicker.style.fontSize = `${kickerSize}px`;
+			}
+			kicker.setAttribute('y', String(((lines.length - 1) * lineHeight) / 2 + 27));
+		}
+		group.dataset.wbLabelFitted = 'true';
 	};
 
 	const destinationCenter = (id: string): MapPoint | undefined => {
@@ -314,10 +365,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		}
 
 		for (const labelGroup of Array.from(svg.querySelectorAll<SVGGElement>('[data-wayfinding-label-for]'))) {
+			if (labelGroup.closest('[data-wayfinding-level]')?.getAttribute('data-wayfinding-level') !== activeFloor()) continue;
 			const destination: Destination | undefined = destinationById().get(labelGroup.getAttribute('data-wayfinding-label-for') ?? '');
-			const text: SVGTextElement | null = labelGroup.querySelector('text:not(.wb-civic-zone-kicker)');
 
-			if (destination && text) setWrappedLabel(text, destination.mapLabel);
+			if (destination) fitMapLabel(labelGroup, destination.mapLabel);
 		}
 		svg.querySelector(`#${GUIDANCE_ID}`)?.remove();
 		const selected: Destination | undefined = selectedDestination();
@@ -345,7 +396,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		}
 
 		if (selected.floor === activeFloor()) {
-			const center: MapPoint | undefined = destinationCenter(selected.id);
+			const activeRoutePoints: WayfindingRoutePoint[] = settings().guidanceMode === 'route'
+				? (routeResult()?.path ?? []).filter((point: WayfindingRoutePoint): boolean => point.levelId === activeFloor())
+				: [];
+			const routeEntrance: WayfindingRoutePoint | undefined = activeRoutePoints[activeRoutePoints.length - 1];
+			const center: MapPoint | undefined = routeEntrance ?? destinationCenter(selected.id);
 
 			if (center) {
 				const ring: SVGCircleElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');

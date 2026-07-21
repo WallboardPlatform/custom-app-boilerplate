@@ -355,6 +355,10 @@ const validateGraph = (
 		for (let rightIndex = leftIndex + 1; rightIndex < validEdges.length; rightIndex += 1) {
 			const left = validEdges[leftIndex];
 			const right = validEdges[rightIndex];
+			const leftIsSingleLevel: boolean = left.from.levelId === left.to.levelId;
+			const rightIsSingleLevel: boolean = right.from.levelId === right.to.levelId;
+
+			if (!leftIsSingleLevel || !rightIsSingleLevel || left.from.levelId !== right.from.levelId) continue;
 
 			if ([right.from.id, right.to.id].includes(left.from.id) || [right.from.id, right.to.id].includes(left.to.id)) continue;
 

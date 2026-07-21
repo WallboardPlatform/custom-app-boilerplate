@@ -43,6 +43,64 @@ test('reviewed same-floor guidance draws a route on the authored circulation spi
 	await expect(page.locator('[data-route-summary]')).toContainText('Approx. distance');
 });
 
+test('routes use orthogonal segments and terminate at the pulsing entrance marker', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByRole('button', { name: /Utility Billing/ }).click();
+	const route = page.locator('polyline.wb-civic-route-line[data-route="1"]');
+	const points = (await route.getAttribute('points'))?.split(/\s+/).map((point: string): number[] => point.split(',').map(Number)) ?? [];
+
+	expect(points.length).toBeGreaterThan(1);
+	for (let index = 1; index < points.length; index += 1) {
+		expect(points[index][0] === points[index - 1][0] || points[index][1] === points[index - 1][1]).toBe(true);
+	}
+	const marker = page.locator('#wb-civic-directory-guidance .wb-civic-target-pulse');
+	const last = points[points.length - 1];
+	expect(Number(await marker.getAttribute('cx'))).toBe(last[0]);
+	expect(Number(await marker.getAttribute('cy'))).toBe(last[1]);
+	expect(await route.evaluate((element: SVGPolylineElement): string => getComputedStyle(element).strokeLinejoin)).toBe('miter');
+});
+
+test('every visible map label stays inside its room and clear of amenities', async ({ page }): Promise<void> => {
+	await openScenario(page);
+
+	for (const floor of ['1', '2', '3']) {
+		if (floor !== '1') await page.getByRole('tab', { name: `Level ${floor}` }).click();
+		const floorMap = page.locator(`[data-wayfinding-level="${floor}"]`);
+		await expect(floorMap.locator('[data-wayfinding-label-for][data-wb-label-fitted="true"]')).toHaveCount(
+			await floorMap.locator('[data-wayfinding-label-for]').count()
+		);
+		const defects = await floorMap.evaluate((element: SVGGElement): string[] => {
+			const overlaps = (left: DOMRect, right: DOMRect): boolean => (
+				left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top
+			);
+			const issues: string[] = [];
+			const amenities: DOMRect[] = Array.from(element.querySelectorAll<SVGGElement>('.wb-civic-amenity'))
+				.map((amenity: SVGGElement): DOMRect => amenity.getBoundingClientRect());
+
+			for (const label of Array.from(element.querySelectorAll<SVGGElement>('[data-wayfinding-label-for]'))) {
+				const id: string = label.dataset.wayfindingLabelFor ?? '';
+				const zone: SVGGraphicsElement | null = element.querySelector<SVGGraphicsElement>(`[data-wayfinding-location-id="${id}"]`);
+				if (!zone) {
+					issues.push(`${id}: missing zone`);
+					continue;
+				}
+				const labelBounds: DOMRect = label.getBoundingClientRect();
+				const zoneBounds: DOMRect = zone.getBoundingClientRect();
+				const tolerance = 1;
+
+				if (labelBounds.left < zoneBounds.left - tolerance || labelBounds.right > zoneBounds.right + tolerance || labelBounds.top < zoneBounds.top - tolerance || labelBounds.bottom > zoneBounds.bottom + tolerance) {
+					issues.push(`${id}: label leaves room`);
+				}
+				if (amenities.some((amenity: DOMRect): boolean => overlaps(labelBounds, amenity))) issues.push(`${id}: label overlaps amenity`);
+			}
+
+			return issues;
+		});
+
+		expect(defects).toEqual([]);
+	}
+});
+
 test('cross-floor selection does not move the visitor and requires an explicit floor change', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await page.getByRole('button', { name: /Council Office/ }).click();

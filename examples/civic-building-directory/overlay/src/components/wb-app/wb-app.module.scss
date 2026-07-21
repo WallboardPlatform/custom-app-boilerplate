@@ -259,7 +259,7 @@
   fill: var(--wb-civic-panel);
   stroke: var(--wb-civic-primary);
   stroke-width: 8;
-  stroke-linejoin: round;
+  stroke-linejoin: miter;
   vector-effect: non-scaling-stroke;
 }
 
@@ -280,8 +280,8 @@
 .mapMarkup :global(.wb-civic-route-corridor) {
   fill: none;
   stroke: var(--wb-civic-panel);
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
   stroke-width: 34;
 }
 
@@ -428,8 +428,8 @@
 .mapMarkup :global(.wb-civic-route-line-underlay),
 .mapMarkup :global(.wb-civic-route-line) {
   fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
   vector-effect: non-scaling-stroke;
 }
 
