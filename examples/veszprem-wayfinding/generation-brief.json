@@ -200,6 +200,8 @@
 		{ "scenario": "active-route-castle", "expectation": "The castle route approaches Heroes' Gate through the visible northbound street corridor." },
 		{ "scenario": "active-route-east", "expectation": "The Auer House route follows Boglyavari Street instead of a direct cross-block shortcut." },
 		{ "scenario": "active-route-far-east", "expectation": "The Gyarkert route follows Kossuth and Budapest streets around the large building footprint." },
+		{ "scenario": "active-route-south", "expectation": "The Bakony House route follows the reviewed crossing and park paths without cutting across landmark artwork." },
+		{ "scenario": "active-route-zoomed", "expectation": "A zoomed southern route remains a complete solid line with synchronized foreground and underlay paint." },
 		{ "scenario": "external-destination", "expectation": "An off-map landmark remains selectable without an invented route." },
 		{ "scenario": "keyboard-open", "expectation": "The on-screen keyboard fits without covering search results or the close action." },
 		{ "scenario": "custom-theme", "expectation": "The complete custom palette applies to the interface, route, and selection states." },
@@ -221,6 +223,7 @@
 		{ "id": "touch-map-navigation", "expectation": "Pointer drag and pinch gestures move and zoom the map without accidentally selecting a destination.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "quiet-hit-targets", "expectation": "Map hit areas remain visually quiet until hover, focus, or selection so the supplied map stays legible.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "route-fit", "expectation": "The route-fit control restores the complete active route after map navigation without changing route geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "solid-route-zoom", "expectation": "Every routeable destination keeps identical solid foreground and underlay geometry after zooming.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "live-destination-update", "expectation": "A live destination table update replaces content without rebuilding map geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
 	],
 	"assets": [

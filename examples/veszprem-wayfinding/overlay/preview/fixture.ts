@@ -133,6 +133,25 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{
+		id: 'active-route-south',
+		fixture: createFixture('veszprem-wayfinding-active-route-south', withRows(rowsById('tourinform-veszprem', 'bakonyi-haz'))),
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Bakony House' }],
+		minimumContentCoverage: { width: 96, height: 94 }
+	},
+	{
+		id: 'active-route-zoomed',
+		fixture: createFixture('veszprem-wayfinding-active-route-zoomed', withRows(rowsById('tourinform-veszprem', 'bakonyi-haz'))),
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: 'Bakony House' },
+			{ type: 'click', role: 'button', name: 'Fit route' },
+			{ type: 'click', role: 'button', name: 'Zoom in' },
+			{ type: 'click', role: 'button', name: 'Zoom in' }
+		],
+		minimumContentCoverage: { width: 96, height: 94 }
+	},
+	{
 		id: 'keyboard-open',
 		fixture: createFixture('veszprem-wayfinding-keyboard'),
 		viewport: { width: 1366, height: 768, background: 'light' },

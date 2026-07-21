@@ -176,6 +176,37 @@ const formatWalkTime = (seconds: number): string => `${Math.max(1, Math.ceil(sec
 
 const clamp = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, value));
 
+const roundedRoutePath = (points: WayfindingRoutePoint[], radius = 6): string => {
+	if (points.length === 0) return '';
+
+	if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+	let path = `M ${points[0].x} ${points[0].y}`;
+
+	for (let index = 1; index < points.length - 1; index += 1) {
+		const previous: WayfindingRoutePoint = points[index - 1];
+		const current: WayfindingRoutePoint = points[index];
+		const next: WayfindingRoutePoint = points[index + 1];
+		const incomingLength: number = Math.hypot(current.x - previous.x, current.y - previous.y);
+		const outgoingLength: number = Math.hypot(next.x - current.x, next.y - current.y);
+		const cornerRadius: number = Math.min(radius, incomingLength / 3, outgoingLength / 3);
+		const before = {
+			x: current.x - (current.x - previous.x) / incomingLength * cornerRadius,
+			y: current.y - (current.y - previous.y) / incomingLength * cornerRadius
+		};
+		const after = {
+			x: current.x + (next.x - current.x) / outgoingLength * cornerRadius,
+			y: current.y + (next.y - current.y) / outgoingLength * cornerRadius
+		};
+
+		path += ` L ${before.x} ${before.y} Q ${current.x} ${current.y} ${after.x} ${after.y}`;
+	}
+
+	const last: WayfindingRoutePoint = points[points.length - 1];
+
+	return `${path} L ${last.x} ${last.y}`;
+};
+
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
@@ -368,7 +399,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			const group: SVGGElement = document.createElementNS(namespace, 'g');
 			const underlay: SVGPathElement = document.createElementNS(namespace, 'path');
 			const route: SVGPathElement = document.createElementNS(namespace, 'path');
-			const pathData: string = path.map((point: WayfindingRoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+			const pathData: string = roundedRoutePath(path);
 			group.id = ROUTE_GROUP_ID;
 			group.setAttribute('pointer-events', 'none');
 			underlay.setAttribute('d', pathData);
@@ -410,12 +441,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			}
 
 			if (settings().motionPreset !== 'off') {
-				const routeLength: number = route.getTotalLength();
-				route.style.strokeDasharray = String(routeLength);
-				route.style.strokeDashoffset = String(routeLength);
-				route.getBoundingClientRect();
-				route.style.transition = 'stroke-dashoffset 650ms ease-out';
-				route.style.strokeDashoffset = '0';
+				group.style.opacity = '0';
+				group.getBoundingClientRect();
+				group.style.transition = 'opacity 180ms ease-out';
+				group.style.opacity = '1';
 			}
 		}
 
@@ -658,7 +687,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 			<main class={style['content']}>
 				<section class={style['map-panel']} aria-label={copy().map}>
-					<div ref={mapHost} class={style['map-canvas']}>
+					<div ref={mapHost} class={style['map-canvas']} data-preview-allow-overflow>
 						<div class={style['map-markup']} innerHTML={mapMarkup} />
 						<Show when={mapState() !== 'ready'}>
 							<div class={style['map-status']}>{mapState() === 'error' ? copy().mapUnavailable : copy().loadingMap}</div>
@@ -711,7 +740,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<div class={style['destination-list']} data-destination-count={filteredDestinations().length} data-preview-allow-overflow>
 								<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
 									<For each={filteredDestinations()}>{(destination: Destination): JSX.Element => (
-										<button type="button" data-routeable={destination.routeable} onClick={(): void => { drawRoute(destination); }}>
+										<button type="button" data-destination-id={destination.id} data-routeable={destination.routeable} onClick={(): void => { drawRoute(destination); }}>
 											<small data-wide={destination.mapNumber.length > 2}>{destination.mapNumber || '•'}</small>
 											<span>
 												<strong class="wb-veszprem-destination-name">{destinationName(destination)}</strong>
