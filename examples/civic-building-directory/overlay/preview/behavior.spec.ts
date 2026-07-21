@@ -13,6 +13,48 @@ const openScenario = async (page: Page, scenario = 'app-default'): Promise<void>
 	await expect(page.locator('[data-preview-id="civic-building-directory-root"]')).toBeVisible();
 };
 
+const hasImmediateAxisReversal = (points: number[][]): boolean => {
+	for (let index = 2; index < points.length; index += 1) {
+		const [beforeX, beforeY] = points[index - 2];
+		const [previousX, previousY] = points[index - 1];
+		const [currentX, currentY] = points[index];
+		const reversesHorizontally: boolean = beforeY === previousY && previousY === currentY
+			&& Math.sign(previousX - beforeX) * Math.sign(currentX - previousX) < 0;
+		const reversesVertically: boolean = beforeX === previousX && previousX === currentX
+			&& Math.sign(previousY - beforeY) * Math.sign(currentY - previousY) < 0;
+
+		if (reversesHorizontally || reversesVertically) return true;
+	}
+
+	return false;
+};
+
+const routePoints = async (page: Page, floor: string): Promise<number[][]> => {
+	const route = page.locator(`polyline.wb-civic-route-line[data-route="${floor}"]`);
+	await expect(route).toHaveCount(1);
+
+	return (await route.getAttribute('points'))
+		?.trim()
+		.split(/\s+/)
+		.map((point: string): number[] => point.split(',').map(Number)) ?? [];
+};
+
+const expectCleanRoute = async (page: Page, floor: string): Promise<void> => {
+	const points: number[][] = await routePoints(page, floor);
+
+	expect(points.length).toBeGreaterThan(1);
+	for (let index = 1; index < points.length; index += 1) {
+		expect(points[index][0] === points[index - 1][0] || points[index][1] === points[index - 1][1]).toBe(true);
+	}
+	expect(hasImmediateAxisReversal(points)).toBe(false);
+
+	const marker = page.locator('#wb-civic-directory-guidance .wb-civic-target-pulse');
+	await expect(marker).toHaveCount(1);
+	const last: number[] = points[points.length - 1];
+	expect(Number(await marker.getAttribute('cx'))).toBe(last[0]);
+	expect(Number(await marker.getAttribute('cy'))).toBe(last[1]);
+};
+
 test('all three semantic floor maps are available and floor controls switch without changing selection', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	const root = page.locator('[data-preview-id="civic-building-directory-root"]');
@@ -47,17 +89,29 @@ test('routes use orthogonal segments and terminate at the pulsing entrance marke
 	await openScenario(page);
 	await page.getByRole('button', { name: /Utility Billing/ }).click();
 	const route = page.locator('polyline.wb-civic-route-line[data-route="1"]');
-	const points = (await route.getAttribute('points'))?.split(/\s+/).map((point: string): number[] => point.split(',').map(Number)) ?? [];
-
-	expect(points.length).toBeGreaterThan(1);
-	for (let index = 1; index < points.length; index += 1) {
-		expect(points[index][0] === points[index - 1][0] || points[index][1] === points[index - 1][1]).toBe(true);
-	}
-	const marker = page.locator('#wb-civic-directory-guidance .wb-civic-target-pulse');
-	const last = points[points.length - 1];
-	expect(Number(await marker.getAttribute('cx'))).toBe(last[0]);
-	expect(Number(await marker.getAttribute('cy'))).toBe(last[1]);
+	await expectCleanRoute(page, '1');
 	expect(await route.evaluate((element: SVGPolylineElement): string => getComputedStyle(element).strokeLinejoin)).toBe('miter');
+});
+
+test('every routed destination renders a clean path that ends at its authored entrance', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	const destinations = await page.locator('[data-destination-id]').evaluateAll((buttons: Element[]): Array<{ floor: string; id: string }> => (
+		buttons.map((button: Element): { floor: string; id: string } => ({
+			floor: button.querySelector('small')?.textContent?.trim() ?? '',
+			id: button.getAttribute('data-destination-id') ?? ''
+		}))
+	));
+	const routedDestinations = destinations.filter(({ id }: { id: string }): boolean => id !== 'main-lobby');
+
+	expect(routedDestinations.length).toBeGreaterThan(0);
+	for (const destination of routedDestinations) {
+		await page.getByRole('button', { name: 'Reset' }).click();
+		await page.locator(`[data-destination-id="${destination.id}"]`).click();
+		if (destination.floor !== '1') {
+			await page.getByRole('button', { name: `View Level ${destination.floor}` }).click();
+		}
+		await expectCleanRoute(page, destination.floor);
+	}
 });
 
 test('every visible map label stays inside its room and clear of amenities', async ({ page }): Promise<void> => {
@@ -112,6 +166,7 @@ test('cross-floor selection does not move the visitor and requires an explicit f
 	await expect(root).toHaveAttribute('data-active-floor', '3');
 	await expect(page.locator('polyline[data-route="3"]')).toHaveCount(2);
 	await expect(page.locator('#wb-civic-directory-guidance .wb-civic-target-pulse')).toHaveCount(1);
+	await expectCleanRoute(page, '3');
 });
 
 test('selection never changes a manually zoomed viewport', async ({ page }): Promise<void> => {

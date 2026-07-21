@@ -89,13 +89,13 @@
   </g>
 
   <g id="level-3" data-wayfinding-level="3" style="display:none">
-    <path class="wb-civic-building-shell" d="M95 130H350V82H650V130H905V493H650V548H350V493H95Z" />
-    <path class="wb-civic-public-circulation" d="M432 82H568V548H432Z M95 311H905V359H95Z" />
+    <path class="wb-civic-building-shell" d="M95 130H350V82H650V130H905V493H95Z" />
+    <path class="wb-civic-public-circulation" d="M432 82H568V493H432Z M95 311H905V359H95Z" />
     <path id="location-council-office" class="wb-civic-zone wb-civic-zone-council" data-wayfinding-location-id="council-office" d="M95 130H432V311H95Z" />
     <path id="location-communications" class="wb-civic-zone wb-civic-zone-communications" data-wayfinding-location-id="communications" d="M568 130H905V311H568Z" />
     <path id="location-information-technology" class="wb-civic-zone wb-civic-zone-it" data-wayfinding-location-id="information-technology" d="M95 359H280V493H95Z" />
-    <path id="location-finance-purchasing" class="wb-civic-zone wb-civic-zone-finance" data-wayfinding-location-id="finance-purchasing" d="M280 359H432V548H350V493H280Z" />
-    <path id="location-human-resources" class="wb-civic-zone wb-civic-zone-hr" data-wayfinding-location-id="human-resources" d="M568 359H720V548H650V493H568Z" />
+    <path id="location-finance-purchasing" class="wb-civic-zone wb-civic-zone-finance" data-wayfinding-location-id="finance-purchasing" d="M280 359H432V493H280Z" />
+    <path id="location-human-resources" class="wb-civic-zone wb-civic-zone-hr" data-wayfinding-location-id="human-resources" d="M568 359H720V493H568Z" />
     <path id="location-town-administration" class="wb-civic-zone wb-civic-zone-administration" data-wayfinding-location-id="town-administration" d="M720 359H905V493H720Z" />
 
     <g class="wb-civic-zone-label" data-wayfinding-label-for="council-office" data-label-width="285" data-label-lines="3" transform="translate(264 220)">

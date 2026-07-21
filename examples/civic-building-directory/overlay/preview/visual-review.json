@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "c8afcd32c5fabf2529c5063254057e009b0f1379449c9e7c3e1890ab8bd0a42e",
-	"reviewedAt": "2026-07-21T20:01:10.2124339+02:00",
+	"sourceHash": "91454ac4cd9e0ee9f513f3b59419333f8473fb3129de3e4d38016df6722e8efe",
+	"reviewedAt": "2026-07-21T22:40:00+02:00",
 	"reviewer": "Codex",
 	"criteria": [
 		{
@@ -79,7 +79,7 @@
 		{
 			"file": "scenario-cross-floor-destination-level-1920x1080.png",
 			"status": "pass",
-			"notes": "Destination-level route leaves the elevator and terminates at the reviewed room entrance."
+			"notes": "Destination-level route leaves the elevator, has no reversal or overhang, and terminates at the reviewed room entrance."
 		},
 		{
 			"file": "scenario-cross-floor-selection-1920x1080.png",
@@ -104,7 +104,7 @@
 		{
 			"file": "scenario-level-three-1920x1080.png",
 			"status": "pass",
-			"notes": "Level 3 labels wrap within non-overlapping room zones and remain clear of amenities."
+			"notes": "Level 3 labels wrap within non-overlapping flat room zones and remain clear of amenities."
 		},
 		{
 			"file": "scenario-level-two-1920x1080.png",

@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "a91d04201b904a3bebaa7d7f95fb32166be2f2b38159e37b42d99992e6767311",
-	"reviewedAt": "2026-07-20T15:27:59.837Z",
-	"reviewer": "Codex compact-layout regression review",
+	"sourceHash": "f96cde3fa85fef3b74802ad2423c50cca36c1afafe62b309a0b503ebabd6e7b7",
+	"reviewedAt": "2026-07-21T22:55:00+02:00",
+	"reviewer": "Codex baseline review refresh",
 	"criteria": [
 		{
 			"id": "promptFidelity",

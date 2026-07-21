@@ -152,6 +152,24 @@ const normalizeSearch = (value: string): string => value
 
 const clamp = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, value));
 
+const simplifyRoutePoints = (points: WayfindingRoutePoint[]): WayfindingRoutePoint[] => {
+	const simplified: WayfindingRoutePoint[] = [];
+
+	for (const point of points) {
+		if (simplified.length >= 2) {
+			const beforePrevious: WayfindingRoutePoint = simplified[simplified.length - 2];
+			const previous: WayfindingRoutePoint = simplified[simplified.length - 1];
+			const sharesHorizontalAxis: boolean = beforePrevious.y === previous.y && previous.y === point.y;
+			const sharesVerticalAxis: boolean = beforePrevious.x === previous.x && previous.x === point.x;
+
+			if (sharesHorizontalAxis || sharesVerticalAxis) simplified.pop();
+		}
+		simplified.push(point);
+	}
+
+	return simplified;
+};
+
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
 	const settings: Accessor<Settings> = useSettings();
@@ -379,7 +397,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		group.setAttribute('pointer-events', 'none');
 
 		if (settings().guidanceMode === 'route') {
-			const routePoints: WayfindingRoutePoint[] = (routeResult()?.path ?? []).filter((point: WayfindingRoutePoint): boolean => point.levelId === activeFloor());
+			const routePoints: WayfindingRoutePoint[] = simplifyRoutePoints(
+				(routeResult()?.path ?? []).filter((point: WayfindingRoutePoint): boolean => point.levelId === activeFloor())
+			);
 
 			if (routePoints.length >= 2) {
 				const points: string = routePoints.map((point: WayfindingRoutePoint): string => `${point.x},${point.y}`).join(' ');
@@ -397,7 +417,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		if (selected.floor === activeFloor()) {
 			const activeRoutePoints: WayfindingRoutePoint[] = settings().guidanceMode === 'route'
-				? (routeResult()?.path ?? []).filter((point: WayfindingRoutePoint): boolean => point.levelId === activeFloor())
+				? simplifyRoutePoints((routeResult()?.path ?? []).filter((point: WayfindingRoutePoint): boolean => point.levelId === activeFloor()))
 				: [];
 			const routeEntrance: WayfindingRoutePoint | undefined = activeRoutePoints[activeRoutePoints.length - 1];
 			const center: MapPoint | undefined = routeEntrance ?? destinationCenter(selected.id);
