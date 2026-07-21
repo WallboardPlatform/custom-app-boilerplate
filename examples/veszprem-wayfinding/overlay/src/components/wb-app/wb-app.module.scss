@@ -453,7 +453,7 @@
   font-weight: 800;
 }
 
-.destination-list button[data-routeable='false'] > i {
+.destination-list button[data-mapped='false'] > i {
   opacity: 0.35;
 }
 

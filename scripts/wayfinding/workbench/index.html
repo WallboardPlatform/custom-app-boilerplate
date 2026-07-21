@@ -8,7 +8,7 @@
 </head>
 <body>
 	<header class="topbar">
-		<div><span>WALLBOARD / WAYFINDING</span><h1>Walkable-space workbench</h1></div>
+		<div><span>WALLBOARD / WAYFINDING</span><h1>Map evidence workbench</h1></div>
 		<div class="status"><span id="mask-status">NO MASK</span><strong id="coverage-status">Load an image and graph</strong></div>
 	</header>
 	<main>
@@ -16,9 +16,33 @@
 			<section>
 				<h2>Source files</h2>
 				<label>Map image<input id="image-file" type="file" accept="image/*"></label>
+				<label>Wayfinding project<input id="project-file" type="file" accept="application/json,.json"></label>
 				<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
 				<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
 				<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
+			</section>
+			<section>
+				<h2>Delivery capability</h2>
+				<label>Project id<input id="project-id" type="text" value="wayfinding-project"></label>
+				<div class="field-pair">
+					<label>Source kind<select id="source-kind"><option value="floor-plan">Floor plan</option><option value="directory-map">Directory map</option><option value="illustrated-map">Illustrated map</option><option value="isometric-map">Isometric / 3D map</option><option value="vector-map">Vector map</option><option value="cad-bim">CAD / BIM</option><option value="gis">GIS</option><option value="mixed">Mixed</option></select></label>
+					<label>Presentation<select id="source-presentation"><option value="source-overlay">Source overlay</option><option value="redrawn-equivalent">Redrawn equivalent</option><option value="schematic">Schematic</option><option value="calibrated-isometric">Calibrated isometric</option></select></label>
+				</div>
+				<div class="field-pair">
+					<label>Levels<input id="source-levels" type="number" min="1" max="100" value="1"></label>
+					<label>Target mode<select id="target-mode"><option value="directory">Directory</option><option value="highlight" selected>Highlight</option><option value="directional">Directional</option><option value="route">Route</option></select></label>
+				</div>
+				<label class="check"><input id="equivalent-redraw" type="checkbox" checked> Equivalent redraw permitted</label>
+				<label class="check"><input id="allow-fallback" type="checkbox" checked> Fall back to the strongest evidenced mode</label>
+				<label class="check"><input id="step-free-required" type="checkbox"> Require verified step-free routing</label>
+				<label class="check"><input id="independent-mask" type="checkbox"> Walkable mask reviewed independently of topology</label>
+				<div class="field-pair">
+					<label>Reviewer<input id="reviewer-id" type="text" placeholder="Name or role"></label>
+					<label>Review method<select id="review-method"><option value="overlay-review">Overlay review</option><option value="customer-approval">Customer approval</option><option value="field-verification">Field verification</option><option value="source-authority">Source authority</option></select></label>
+				</div>
+				<div id="evidence-list" class="evidence-list"></div>
+				<div id="project-assessment" class="project-assessment"></div>
+				<div class="commands"><button id="export-project" type="button">Export project JSON</button></div>
 			</section>
 			<section>
 				<h2>Walkable extraction</h2>
@@ -86,12 +110,12 @@
 				</div>
 				<div class="field-pair">
 					<label>Accessibility<select id="destination-accessible"><option value="">Unverified</option><option value="true">Step-free verified</option><option value="false">Not step-free</option></select></label>
-					<label>Routing<select id="destination-routeable"><option value="true">Routeable</option><option value="false">Listed only</option></select></label>
+					<label>Route graph relation<input id="destination-route-status" type="text" readonly></label>
 				</div>
 			</section>
 		</aside>
 		<section class="stage-shell" aria-label="Map authoring stage">
-			<div id="stage-empty" class="stage-empty"><strong>Load the original map image</strong><span>The source image remains visible under every extracted mask and route.</span></div>
+			<div id="stage-empty" class="stage-empty"><strong>Load the original map image</strong><span>The source remains visible under authored hit areas, evidence, and optional route proposals.</span></div>
 			<canvas id="stage" width="1341" height="947"></canvas>
 			<footer><span>Wheel: zoom</span><span>Pan: drag map</span><span>Draw: nodes and corridor bends</span><span>Edit: drag route vertices</span></footer>
 		</section>

@@ -1,5 +1,6 @@
 import type { MotionPreset } from '@utils/motion';
 import type { ThemePreset } from '@utils/theme';
+import type { WayfindingGuidanceMode } from '@utils/wayfinding-guidance';
 
 export interface Config {
 	configValues: ConfigValues;
@@ -16,11 +17,13 @@ export interface Settings extends Record<string, unknown> {
 	accentColor: string;
 	backgroundColor: string;
 	emptyStateText: string;
+	guidanceMode: WayfindingGuidanceMode;
 	interfaceLanguages: 'en' | 'hu' | 'en-hu';
 	keyboardLanguages: 'en' | 'hu' | 'hu-en';
-	mapRatio: number;
+	mapNorthOffsetDegrees: number;
 	motionPreset: MotionPreset;
 	onScreenKeyboard: boolean;
+	orientationConfirmed: boolean;
 	panelColor: string;
 	primaryTextColor: string;
 	routeColor: string;
@@ -30,17 +33,20 @@ export interface Settings extends Record<string, unknown> {
 	subtitle: string;
 	themePreset: ThemePreset;
 	title: string;
+	viewerFacingDegrees: number;
 }
 
 export interface ConfigValues {
 	accentColor?: string;
 	backgroundColor?: string;
 	emptyStateText?: string;
+	guidanceMode?: string;
 	interfaceLanguages?: string;
 	keyboardLanguages?: string;
-	mapRatio?: number;
+	mapNorthOffsetDegrees?: number;
 	motionPreset?: string;
 	onScreenKeyboard?: boolean;
+	orientationConfirmed?: boolean;
 	panelColor?: string;
 	primaryTextColor?: string;
 	routeColor?: string;
@@ -50,4 +56,5 @@ export interface ConfigValues {
 	subtitle?: string;
 	themePreset?: string;
 	title?: string;
+	viewerFacingDegrees?: number;
 }

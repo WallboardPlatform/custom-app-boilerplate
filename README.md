@@ -78,11 +78,14 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
 | Validate wayfinding | `npm run wayfinding:validate -- ...` |
+| Assess wayfinding evidence/mode | `npm run wayfinding:assess -- --project wayfinding-project.json` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |
 | Lint / fix | `npm run lint` / `npm run lint:fix` |
 | Format TypeScript | `npm run prettify` |
+
+The tracked-image review threshold is 10 MiB, not an absolute ceiling. A justified repository-level exception must raise `approvedBudgetMiB` in `image-budget-policy.json` and record why the additional visual evidence or source fidelity is worth the clone cost.
 
 `deliver` creates an upload ZIP and a separate sanitized source ZIP plus manifest, brief, and datasource sidecars. Upload only the app ZIP. `_UNVERIFIED` packages have `uploadReady: false` and require normal delivery elsewhere.
 

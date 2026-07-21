@@ -1,15 +1,15 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Rebuild the Veszprem downtown wayfinding kiosk directly from the supplied VeszpremTerkep.png reference with authored hit targets, explicit routes, and editable destination metadata.",
+		"summary": "Rebuild the Veszprem downtown visitor kiosk from the supplied VeszpremTerkep.png reference with authored hit targets, evidence-bounded guidance, and editable destination metadata.",
 		"audience": "Visitors choosing a downtown landmark on a shared landscape touch display in Veszprem.",
-		"primaryGoal": "Let a visitor search or tap a landmark, see its public details, and receive a trustworthy walking route from the configured current location."
+		"primaryGoal": "Let a visitor search or tap a landmark, see its public details, and locate it immediately without presenting unverified raster-derived topology as a walking route."
 	},
 	"assumptions": [
-		"The supplied 1341x947 PNG is the sole visual and geometric reference for this proof.",
+		"The supplied 1341x947 PNG is the visual reference; reviewed SVG hit geometry supplies destination anchors but does not certify walking topology.",
 		"The visible red location pin is the representative current position and is exposed as the configurable start id tourinform-veszprem.",
 		"The 35 numbered public landmark names are transcribed from the supplied map legend; descriptions, hours, live status, and accessibility are not invented.",
-		"Veszprem Arena and Veszprem Sports Swimming Pool are listed by the source but have no downtown route position, so they remain selectable and explicitly off-map.",
+		"A datasource row without matching reviewed SVG geometry remains selectable and is explicitly labelled as not shown on the map.",
 		"The accepted surfaces are 1920x1080 and 1366x768 landscape touch displays."
 	],
 	"app": { "mode": "replacement", "name": "Veszprem Downtown Wayfinding", "version": "1" },
@@ -43,25 +43,18 @@
 			"rationale": "The accepted reference artwork and calibrated interaction geometry must remain synchronized."
 		},
 		{
-			"id": "route-regression-envelope",
+			"id": "guidance-evidence",
 			"area": "behavior",
 			"owner": "locked",
-			"targets": ["walkable-mask.json", "reviewed-route-corridors"],
-			"rationale": "The generated corridor envelope catches later route drift. It is not independent proof of walkability; source-map overlay review owns physical correctness."
-		},
-		{
-			"id": "route-topology",
-			"area": "behavior",
-			"owner": "locked",
-			"targets": ["route-graph.source.mts", "route-graph.json", "route-selection", "off-map-policy"],
-			"rationale": "The tracked source records named streets, crossings, stairs, destination entrances, and explicit reviewed adjacency; editable content cannot infer topology."
+			"targets": ["off-map-policy"],
+			"rationale": "The packaged map owns reviewed destination hit geometry. Veszprem exposes directory, highlight, and directional modes only; route artifacts are not part of the runtime."
 		},
 		{
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "startLocationId", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds", "mapRatio"],
-			"rationale": "Operators can adapt the public kiosk copy, start location, touch keyboard, reset timing, and distance calibration."
+			"targets": ["title", "subtitle", "guidanceMode", "startLocationId", "orientationConfirmed", "mapNorthOffsetDegrees", "viewerFacingDegrees", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds"],
+			"rationale": "Operators can adapt public copy, evidenced guidance strength, current position, orientation, touch keyboard, and reset timing."
 		},
 		{
 			"id": "presentation-settings",
@@ -74,15 +67,15 @@
 			"id": "visitor-session",
 			"area": "state",
 			"owner": "interaction",
-			"targets": ["query", "category", "selected-destination", "active-route", "keyboard-state"],
-			"rationale": "Search and route selection are private to the active kiosk session and clear on reset."
+			"targets": ["query", "category", "selected-destination", "active-guidance", "keyboard-state"],
+			"rationale": "Search and destination focus are private to the active kiosk session and clear on reset."
 		}
 	],
 	"experience": {
 		"mode": "interactive",
 		"views": [
 			{ "id": "directory", "purpose": "Browse, filter, search, or tap a destination." },
-			{ "id": "details", "purpose": "Show destination information and the selected route state." },
+			{ "id": "details", "purpose": "Show destination information and the selected evidence-bounded guidance state." },
 			{ "id": "keyboard", "purpose": "Provide an app-owned multilingual touch keyboard for search." }
 		],
 		"inputs": [
@@ -94,7 +87,7 @@
 		"session": {
 			"reset": "timeout",
 			"timeoutSeconds": 45,
-			"expectation": "An active route and search state clear after the configured idle interval or an explicit reset."
+			"expectation": "An active destination, map focus, and search state clear after the configured idle interval or an explicit reset."
 		}
 	},
 	"outputs": [],
@@ -108,7 +101,7 @@
 		"presetProperty": "motionPreset",
 		"transition": "custom",
 		"techniques": ["progress", "fade"],
-		"rationale": "A short route draw and detail fade clarify selection; Off shows the final route immediately."
+		"rationale": "A short focus transition clarifies selection; Off shows the final highlight immediately."
 	},
 	"media": [
 		{
@@ -142,21 +135,24 @@
 	"settings": [
 		{ "property": "title", "purpose": "Public kiosk title." },
 		{ "property": "subtitle", "purpose": "Directory instruction." },
-		{ "property": "startLocationId", "purpose": "Selects the current position from routeable graph locations." },
+		{ "property": "guidanceMode", "purpose": "Selects directory, destination highlight, or directional guidance; route is deliberately unavailable for this source.", "effect": "guidance-mode" },
+		{ "property": "startLocationId", "purpose": "Selects the kiosk current-position anchor for directional guidance." },
+		{ "property": "orientationConfirmed", "purpose": "Records explicit venue confirmation before directional guidance can activate.", "effect": "orientation-confirmation" },
+		{ "property": "mapNorthOffsetDegrees", "purpose": "Aligns compass copy with the supplied map orientation.", "effect": "map-orientation" },
+		{ "property": "viewerFacingDegrees", "purpose": "Rotates the venue-confirmed current-position heading marker in displayed map coordinates.", "effect": "viewer-facing" },
 		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
 		{ "property": "interfaceLanguages", "purpose": "Selects English, Hungarian, or an on-screen language selector." },
 		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
 		{ "property": "keyboardLanguages", "purpose": "Selects Hungarian, English, or both keyboard layouts." },
-		{ "property": "routeResetSeconds", "purpose": "Idle interval before route and search reset.", "effect": "route-reset" },
-		{ "property": "mapRatio", "purpose": "SVG units per displayed metre for approximate distance.", "effect": "map-ratio" },
-		{ "property": "motionPreset", "purpose": "Selects Off or Subtle route feedback.", "effect": "motion-preset" },
+		{ "property": "routeResetSeconds", "purpose": "Idle interval before selection and search reset.", "effect": "route-reset" },
+		{ "property": "motionPreset", "purpose": "Selects Off or Subtle focus feedback.", "effect": "motion-preset" },
 		{ "property": "themePreset", "purpose": "Selects the complete Light, Dark, or Custom interface palette.", "effect": "theme-preset" },
 		{ "property": "backgroundColor", "purpose": "Custom outer background." },
 		{ "property": "panelColor", "purpose": "Custom directory panel." },
 		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
 		{ "property": "secondaryTextColor", "purpose": "Custom secondary text." },
 		{ "property": "accentColor", "purpose": "Custom actions and selected states." },
-		{ "property": "routeColor", "purpose": "Route line and destination marker color in every theme." }
+		{ "property": "routeColor", "purpose": "Custom destination spotlight color." }
 	],
 	"dynamicText": [
 		{
@@ -196,15 +192,11 @@
 	"states": [
 		{ "scenario": "app-default", "expectation": "The complete source map, current-location marker, and directory fill the Full-HD kiosk." },
 		{ "scenario": "compact", "expectation": "The same map and complete touch workflow remain usable at 1366x768." },
-		{ "scenario": "active-route", "expectation": "The museum route follows the reviewed street and park corridor without crossing building footprints." },
-		{ "scenario": "active-route-castle", "expectation": "The castle route approaches Heroes' Gate through the visible northbound street corridor." },
-		{ "scenario": "active-route-east", "expectation": "The Auer House route follows Boglyavari Street instead of a direct cross-block shortcut." },
-		{ "scenario": "active-route-far-east", "expectation": "The Gyarkert route follows Kossuth and Budapest streets around the large building footprint." },
-		{ "scenario": "active-route-south", "expectation": "The Bakony House route follows the reviewed crossing and park paths without cutting across landmark artwork." },
-		{ "scenario": "active-route-zoomed", "expectation": "A zoomed southern route remains a complete solid line with synchronized foreground and underlay paint." },
+		{ "scenario": "active-highlight", "expectation": "Selecting a mapped landmark zooms to one strong spotlight without drawing or implying a walking path." },
+		{ "scenario": "directional-guidance", "expectation": "After explicit venue orientation confirmation, directional mode identifies the configured origin and destination and gives a compass cue labelled as visual direction, not a walking route." },
 		{ "scenario": "external-destination", "expectation": "An off-map landmark remains selectable without an invented route." },
 		{ "scenario": "keyboard-open", "expectation": "The on-screen keyboard fits without covering search results or the close action." },
-		{ "scenario": "custom-theme", "expectation": "The complete custom palette applies to the interface, route, and selection states." },
+		{ "scenario": "custom-theme", "expectation": "The complete custom palette applies to the interface and destination spotlight." },
 		{ "scenario": "long-title", "expectation": "A long title remains complete at the readable floor." },
 		{ "scenario": "long-destination-list", "expectation": "Long landmark names wrap without clipped glyphs or broken touch targets." },
 		{ "scenario": "long-destination-selected", "expectation": "Long selected names remain complete in the detail panel." },
@@ -213,26 +205,22 @@
 		{ "scenario": "live-datasource-update", "expectation": "A live table update replaces destination metadata without changing authored map geometry." }
 	],
 	"behaviors": [
-		{ "id": "explicit-route-selection", "expectation": "Directory and map selection use the same explicit graph and render the same connected route.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "semantic-route-topology", "expectation": "Reviewed destination entrances, pedestrian crossings, and stair transitions are used instead of visual shortcuts.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "default-highlight", "expectation": "The default product zooms to and spotlights the selected landmark without rendering a path.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "directional-honesty", "expectation": "Directional mode renders separate origin and destination anchors with compass copy and never connects them with route geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "off-map-selection", "expectation": "Off-map destinations show details without drawing a route.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "session-reset", "expectation": "The configured timeout clears route, selection, query, category, and keyboard state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "session-reset", "expectation": "The configured timeout clears map focus, selection, query, category, and keyboard state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "touch-keyboard", "expectation": "The app-owned keyboard enters Hungarian and Latin search text and can be dismissed without losing the query.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "multilingual-interface", "expectation": "The language selector switches all app-owned labels while destination content follows its TABLE translations.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "continuous-directory", "expectation": "The full filtered destination list is continuously scrollable without ambiguous pagination controls.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "touch-map-navigation", "expectation": "Pointer drag and pinch gestures move and zoom the map without accidentally selecting a destination.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "quiet-hit-targets", "expectation": "Map hit areas remain visually quiet until hover, focus, or selection so the supplied map stays legible.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "route-fit", "expectation": "The route-fit control restores the complete active route after map navigation without changing route geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "solid-route-zoom", "expectation": "Every routeable destination keeps identical solid foreground and underlay geometry after zooming.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
 		{ "id": "live-destination-update", "expectation": "A live destination table update replaces content without rebuilding map geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
 	],
 	"assets": [
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
 		{ "id": "reference-map", "source": "packaged", "path": "src/assets/veszprem-map.webp", "required": true },
-		{ "id": "annotated-map", "source": "packaged", "path": "src/assets/map.svg", "required": true },
-		{ "id": "walkable-mask", "source": "packaged", "path": "src/assets/walkable-mask.json", "required": true },
-		{ "id": "route-graph", "source": "packaged", "path": "src/assets/route-graph.json", "required": true }
+		{ "id": "annotated-map", "source": "packaged", "path": "src/assets/map.svg", "required": true }
 	],
 	"visualDirection": {
 		"source": "reference-led",
@@ -240,16 +228,16 @@
 		"references": ["C:/Users/Admin/Downloads/VeszpremTerkep.png"],
 		"signatureChoices": [
 			"The original map stays fully inspectable rather than becoming a dark dashboard background.",
-			"Numbered destination controls and the route line echo the source map's existing visual language."
+			"One restrained spotlight identifies the selected landmark while all inactive hit areas remain invisible."
 		],
-		"avoid": ["Generic KPI cards", "Recreating the source illustration", "Unverified accessibility claims", "Routes that cross buildings or leave the mapped street network"]
+		"avoid": ["Generic KPI cards", "Recreating the source illustration", "Unverified accessibility claims", "Any path inferred from the raster artwork"]
 	},
 	"visualReview": {
-		"intent": "A credible visitor-centre map where the source artwork remains legible, landmark selection is immediate, and the route never obscures destination identity.",
+		"intent": "A credible visitor-centre map where the source artwork remains legible, landmark selection is immediate, and guidance never overstates the available evidence.",
 		"focus": [
 			"Verify the packaged source map is sharp and fully visible at both accepted surfaces.",
-			"Verify representative north, east, west, crossing, and stair routes against the visible source map; the generated corridor envelope is regression evidence only.",
-			"Verify destination entrances are approached from the physically reachable side, location nodes are never transit shortcuts, and route lines remain complete at multiple zoom levels.",
+			"Verify one selected destination is unmistakable without covering map labels or displaying all hit areas.",
+			"Verify directional mode shows distinct origin and destination anchors, explicit compass copy, and no connecting path.",
 			"Verify the touch keyboard, long names, detail panel, and Light/Dark/Custom palettes remain coherent without clipping."
 		]
 	}

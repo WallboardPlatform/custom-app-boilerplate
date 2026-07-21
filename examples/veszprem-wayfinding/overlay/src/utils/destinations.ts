@@ -18,18 +18,6 @@ const text = (value: unknown): string => {
 	return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
 };
 
-const boolean = (value: unknown, fallback: boolean): boolean => {
-	if (typeof value === 'boolean') return value;
-
-	if (typeof value === 'string') {
-		if (value.toLowerCase() === 'true') return true;
-
-		if (value.toLowerCase() === 'false') return false;
-	}
-
-	return fallback;
-};
-
 const optionalBoolean = (value: unknown): boolean | null => {
 	if (typeof value === 'boolean') return value;
 
@@ -80,7 +68,6 @@ export const normalizeDestinations = (rawValue: unknown): Destination[] => {
 			id,
 			mapNumber: text(row.mapNumber),
 			name,
-			routeable: boolean(row.routeable, true),
 			status: text(row.status)
 		}];
 	}).sort((left: Destination, right: Destination): number => {

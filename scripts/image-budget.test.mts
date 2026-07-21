@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { summarizeImages } from './image-budget.mts';
+import { resolveImageBudgetBytes, summarizeImages } from './image-budget.mts';
 
 void describe('tracked image budget', () => {
 	void it('counts supported image files and ignores other assets', () => {
@@ -22,5 +22,21 @@ void describe('tracked image budget', () => {
 		} finally {
 			fs.rmSync(directory, { recursive: true, force: true });
 		}
+	});
+
+	void it('allows an explicitly justified budget above the review threshold', () => {
+		assert.equal(resolveImageBudgetBytes({
+			approvedBudgetMiB: 14,
+			justification: 'Retains reviewed map sources required for visual evidence.',
+			reviewThresholdMiB: 10
+		}), 14 * 1024 * 1024);
+	});
+
+	void it('rejects an unexplained budget increase', () => {
+		assert.throws(() => resolveImageBudgetBytes({
+			approvedBudgetMiB: 14,
+			justification: 'Needed.',
+			reviewThresholdMiB: 10
+		}), /meaningful tracked justification/);
 	});
 });

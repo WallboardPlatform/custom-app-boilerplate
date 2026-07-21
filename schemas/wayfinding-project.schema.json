@@ -1,0 +1,121 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://wallboard.info/schemas/wayfinding-project.schema.json",
+	"title": "Wallboard Adaptive Wayfinding Project",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["contractVersion", "projectId", "source", "guidance", "evidence"],
+	"properties": {
+		"contractVersion": { "const": 1 },
+		"projectId": { "$ref": "#/$defs/nonEmptyString" },
+		"source": { "$ref": "#/$defs/source" },
+		"guidance": { "$ref": "#/$defs/guidance" },
+		"evidence": { "$ref": "#/$defs/evidence" }
+	},
+	"$defs": {
+		"nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+		"source": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["kind", "presentation", "levels", "equivalentRedrawAllowed"],
+			"properties": {
+				"kind": {
+					"enum": ["floor-plan", "directory-map", "illustrated-map", "isometric-map", "vector-map", "cad-bim", "gis", "mixed"]
+				},
+				"presentation": {
+					"enum": ["source-overlay", "redrawn-equivalent", "schematic", "calibrated-isometric"]
+				},
+				"levels": { "type": "integer", "minimum": 1 },
+				"equivalentRedrawAllowed": { "type": "boolean" }
+			}
+		},
+		"guidance": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["targetMode", "allowFallback", "stepFreeRequired"],
+			"properties": {
+				"targetMode": { "$ref": "#/$defs/guidanceMode" },
+				"allowFallback": { "type": "boolean" },
+				"stepFreeRequired": { "type": "boolean" }
+			}
+		},
+		"guidanceMode": { "enum": ["directory", "highlight", "directional", "route"] },
+		"evidenceKey": {
+			"enum": [
+				"destinationMetadata",
+				"destinationAnchors",
+				"currentLocationAnchors",
+				"orientation",
+				"walkableSpace",
+				"routeTopology",
+				"entranceApproaches",
+				"levelTransitions",
+				"accessibility"
+			]
+		},
+		"evidence": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"destinationMetadata",
+				"destinationAnchors",
+				"currentLocationAnchors",
+				"orientation",
+				"walkableSpace",
+				"routeTopology",
+				"entranceApproaches",
+				"levelTransitions",
+				"accessibility"
+			],
+			"properties": {
+				"destinationMetadata": { "$ref": "#/$defs/evidenceItem" },
+				"destinationAnchors": { "$ref": "#/$defs/evidenceItem" },
+				"currentLocationAnchors": { "$ref": "#/$defs/evidenceItem" },
+				"orientation": { "$ref": "#/$defs/evidenceItem" },
+				"walkableSpace": { "$ref": "#/$defs/evidenceItem" },
+				"routeTopology": { "$ref": "#/$defs/evidenceItem" },
+				"entranceApproaches": { "$ref": "#/$defs/evidenceItem" },
+				"levelTransitions": { "$ref": "#/$defs/evidenceItem" },
+				"accessibility": { "$ref": "#/$defs/evidenceItem" }
+			}
+		},
+		"evidenceItem": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["status", "provenance"],
+			"properties": {
+				"status": { "enum": ["unavailable", "proposed", "confirmed"] },
+				"provenance": {
+					"enum": ["customer-provided", "ai-inferred", "image-analysis", "vector-extraction", "authoritative-import", "reviewer-authored"]
+				},
+				"artifact": { "$ref": "#/$defs/nonEmptyString" },
+				"independentFrom": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "$ref": "#/$defs/evidenceKey" }
+				},
+				"review": { "$ref": "#/$defs/review" }
+			},
+			"allOf": [
+				{
+					"if": { "properties": { "status": { "const": "confirmed" } } },
+					"then": {
+						"required": ["review"],
+						"properties": { "review": { "$ref": "#/$defs/review" } }
+					}
+				}
+			]
+		},
+		"review": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["method", "reviewerType", "reviewedBy"],
+			"properties": {
+				"method": { "enum": ["source-authority", "overlay-review", "field-verification", "customer-approval"] },
+				"reviewerType": { "enum": ["authoritative-source", "customer", "site-operator", "qualified-reviewer"] },
+				"reviewedBy": { "$ref": "#/$defs/nonEmptyString" },
+				"note": { "type": "string" }
+			}
+		}
+	}
+}

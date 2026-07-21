@@ -11,7 +11,6 @@ interface PreviewDestinationRow extends Record<string, unknown> {
 	id: string;
 	mapNumber: string;
 	name: string;
-	routeable: boolean;
 	status: string;
 }
 
@@ -27,13 +26,16 @@ const sampleDatasource: PreviewDestinationDatasource = sampleDestinationData as 
 const baseConfig: Record<string, unknown> = {
 	title: 'Veszprem Downtown Wayfinding',
 	subtitle: 'Select a landmark or use the search.',
+	guidanceMode: 'highlight',
 	startLocationId: 'tourinform-veszprem',
 	emptyStateText: 'No destinations are available.',
 	interfaceLanguages: 'en-hu',
 	keyboardLanguages: 'hu-en',
 	onScreenKeyboard: true,
+	orientationConfirmed: false,
 	routeResetSeconds: 45,
-	mapRatio: 0.8,
+	mapNorthOffsetDegrees: 0,
+	viewerFacingDegrees: 0,
 	motionPreset: 'subtle',
 	themePreset: 'light',
 	backgroundColor: '#ead9c8',
@@ -105,50 +107,17 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{
-		id: 'active-route',
-		fixture: createFixture('veszprem-wayfinding-active-route', withRows(rowsById('tourinform-veszprem', 'laczko-dezso-muzeum'))),
+		id: 'active-highlight',
+		fixture: createFixture('veszprem-wayfinding-active-highlight', withRows(rowsById('tourinform-veszprem', 'laczko-dezso-muzeum'))),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		interactionSteps: [{ type: 'click', role: 'button', name: 'Laczkó Dezső Múzeum' }],
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{
-		id: 'active-route-castle',
-		fixture: createFixture('veszprem-wayfinding-active-route-castle', withRows(rowsById('tourinform-veszprem', 'hosok-kapuja'))),
+		id: 'directional-guidance',
+		fixture: createFixture('veszprem-wayfinding-directional', withRows(rowsById('tourinform-veszprem', 'hosok-kapuja')), { ...baseConfig, guidanceMode: 'directional', orientationConfirmed: true, viewerFacingDegrees: 35 }),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		interactionSteps: [{ type: 'click', role: 'button', name: 'Hősök Kapuja' }],
-		minimumContentCoverage: { width: 96, height: 94 }
-	},
-	{
-		id: 'active-route-east',
-		fixture: createFixture('veszprem-wayfinding-active-route-east', withRows(rowsById('tourinform-veszprem', 'auer-haz'))),
-		viewport: { width: 1920, height: 1080, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Auer-ház' }],
-		minimumContentCoverage: { width: 96, height: 94 }
-	},
-	{
-		id: 'active-route-far-east',
-		fixture: createFixture('veszprem-wayfinding-active-route-far-east', withRows(rowsById('tourinform-veszprem', 'gyarkert-kulturpark'))),
-		viewport: { width: 1920, height: 1080, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Gyárkert KultúrPark' }],
-		minimumContentCoverage: { width: 96, height: 94 }
-	},
-	{
-		id: 'active-route-south',
-		fixture: createFixture('veszprem-wayfinding-active-route-south', withRows(rowsById('tourinform-veszprem', 'bakonyi-haz'))),
-		viewport: { width: 1920, height: 1080, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Bakony House' }],
-		minimumContentCoverage: { width: 96, height: 94 }
-	},
-	{
-		id: 'active-route-zoomed',
-		fixture: createFixture('veszprem-wayfinding-active-route-zoomed', withRows(rowsById('tourinform-veszprem', 'bakonyi-haz'))),
-		viewport: { width: 1920, height: 1080, background: 'light' },
-		interactionSteps: [
-			{ type: 'click', role: 'button', name: 'Bakony House' },
-			{ type: 'click', role: 'button', name: 'Fit route' },
-			{ type: 'click', role: 'button', name: 'Zoom in' },
-			{ type: 'click', role: 'button', name: 'Zoom in' }
-		],
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{
@@ -160,9 +129,12 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'external-destination',
-		fixture: createFixture('veszprem-wayfinding-external', withRows(rowsById('tourinform-veszprem', 'veszprem-arena'))),
+		fixture: createFixture('veszprem-wayfinding-external', withRows([
+			...rowsById('tourinform-veszprem'),
+			{ ...sampleDatasource.Destinations.rows[1], id: 'future-visitor-centre', mapNumber: 'INFO', name: 'Future Visitor Centre', englishName: 'Future Visitor Centre' }
+		])),
 		viewport: { width: 1366, height: 768, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Veszprém Aréna Sport- és Rendezvénycsarnok' }],
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Future Visitor Centre' }],
 		minimumContentCoverage: { width: 96, height: 94 }
 	},
 	{
@@ -253,11 +225,35 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		expectation: { type: 'change' }
 	},
 	{
-		id: 'map-ratio',
-		property: 'mapRatio',
-		changedValue: 2,
+		id: 'guidance-mode',
+		property: 'guidanceMode',
+		changedValue: 'directory',
 		selector: '[data-preview-id="veszprem-wayfinding-root"]',
-		measurement: { type: 'attribute', name: 'data-map-ratio' },
+		measurement: { type: 'attribute', name: 'data-guidance-mode' },
+		expectation: { type: 'change' }
+	},
+	{
+		id: 'orientation-confirmation',
+		property: 'orientationConfirmed',
+		changedValue: true,
+		selector: '[data-preview-id="veszprem-wayfinding-root"]',
+		measurement: { type: 'attribute', name: 'data-orientation-confirmed' },
+		expectation: { type: 'change' }
+	},
+	{
+		id: 'map-orientation',
+		property: 'mapNorthOffsetDegrees',
+		changedValue: 45,
+		selector: '[data-preview-id="veszprem-wayfinding-root"]',
+		measurement: { type: 'attribute', name: 'data-map-north' },
+		expectation: { type: 'change' }
+	},
+	{
+		id: 'viewer-facing',
+		property: 'viewerFacingDegrees',
+		changedValue: 90,
+		selector: '[data-preview-id="veszprem-wayfinding-root"]',
+		measurement: { type: 'attribute', name: 'data-viewer-facing' },
 		expectation: { type: 'change' }
 	}
 ];

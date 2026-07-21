@@ -7,9 +7,9 @@ import { useSettings } from '@hooks/system/useSettings';
 
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Destination } from '@interfaces/wayfinding.interface';
-import type { WayfindingRoutePoint, WayfindingRouteResult } from '@utils/wayfinding';
+import { directionBetweenPoints, resolveWayfindingGuidanceMode } from '@utils/wayfinding-guidance';
+import type { WayfindingDirection, WayfindingGuidanceMode } from '@utils/wayfinding-guidance';
 import { normalizeDestinations } from '@utils/destinations';
-import { routeBetweenLocations } from '@utils/route-graph';
 
 import style from '@components/wb-app/wb-app.module.scss';
 import { keyboardLayoutsFor, OnScreenKeyboard } from '../../capabilities/keyboard';
@@ -19,7 +19,7 @@ import mapArtwork from '../../assets/veszprem-map.webp';
 import sampleDestinationData from '../../../sample-destinations-datasource.json';
 
 type MapState = 'loading' | 'ready' | 'error';
-type RouteState = 'idle' | 'active' | 'external' | 'unavailable';
+type GuidanceState = 'idle' | 'directory' | 'highlight' | 'directional' | 'external';
 
 interface MapPoint {
 	x: number;
@@ -40,21 +40,19 @@ interface UiCopy {
 	accessibilityNo: string;
 	accessibilityUnknown: string;
 	accessibilityYes: string;
-	alreadyHere: string;
 	allDestinations: string;
-	approximateDistance: string;
 	back: string;
 	clear: string;
-	clearRoute: string;
+	clearSelection: string;
 	close: string;
 	categoryLabel: string;
 	delete: string;
 	destinationPrompt: string;
-	distanceUnavailable: string;
+	direction: string;
+	directionalDisclaimer: string;
 	externalMap: string;
 	findLandmark: string;
 	fitMap: string;
-	fitRoute: string;
 	hours: string;
 	keyboardLabel: string;
 	languageSelector: string;
@@ -63,16 +61,16 @@ interface UiCopy {
 	mapControls: string;
 	mapInstruction: string;
 	mapUnavailable: string;
+	highlightedOnMap: string;
 	openKeyboard: string;
 	reset: string;
-	routeApproximate: string;
+	guidanceHonesty: string;
 	searchPlaceholder: string;
 	shift: string;
 	showResults: string;
 	space: string;
 	status: string;
 	youAreHere: string;
-	walkingTime: string;
 	zoomIn: string;
 	zoomOut: string;
 }
@@ -83,21 +81,19 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		accessibilityNo: 'STEP-FREE ACCESS NOT CONFIRMED',
 		accessibilityUnknown: 'ACCESSIBILITY NOT VERIFIED',
 		accessibilityYes: 'STEP-FREE DESTINATION',
-		alreadyHere: 'You are already at this destination',
 		allDestinations: 'All destinations',
-		approximateDistance: 'APPROX. DISTANCE',
 		back: 'Back to directory',
 		clear: 'Clear',
-		clearRoute: 'Clear route',
+		clearSelection: 'Clear selection',
 		close: 'Close',
 		categoryLabel: 'Destination category',
 		delete: 'Delete',
 		destinationPrompt: 'Where would you like to go?',
-		distanceUnavailable: 'No route is available from the configured start',
-		externalMap: 'Listed outside the downtown route map',
+		direction: 'DIRECTION FROM HERE',
+		directionalDisclaimer: 'Visual direction only - not a walking path',
+		externalMap: 'Not shown on this map',
 		findLandmark: 'FIND A LANDMARK',
 		fitMap: 'Fit map',
-		fitRoute: 'Fit route',
 		hours: 'Hours',
 		keyboardLabel: 'Search destinations',
 		languageSelector: 'Interface language',
@@ -106,16 +102,16 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		mapControls: 'Map zoom controls',
 		mapInstruction: 'Tap a highlighted landmark',
 		mapUnavailable: 'Map artwork unavailable',
+		highlightedOnMap: 'Highlighted on the map',
 		openKeyboard: 'Open touch keyboard',
 		reset: 'Reset',
-		routeApproximate: 'Routes are approximate',
+		guidanceHonesty: 'Guidance matches the available reviewed evidence',
 		searchPlaceholder: 'Search destinations',
 		shift: 'Shift',
 		showResults: 'Show results',
 		space: 'Space',
 		status: 'Status',
 		youAreHere: 'YOU ARE HERE',
-		walkingTime: 'WALKING TIME',
 		zoomIn: 'Zoom in',
 		zoomOut: 'Zoom out'
 	},
@@ -124,21 +120,19 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		accessibilityNo: 'AKADÁLYMENTES ÚTVONAL NINCS MEGERŐSÍTVE',
 		accessibilityUnknown: 'AKADÁLYMENTESSÉG NINCS ELLENŐRIZVE',
 		accessibilityYes: 'AKADÁLYMENTES CÉLPONT',
-		alreadyHere: 'Már ennél a helyszínnél áll',
 		allDestinations: 'Minden helyszín',
-		approximateDistance: 'BECSÜLT TÁVOLSÁG',
 		back: 'Vissza a listához',
 		clear: 'Törlés',
-		clearRoute: 'Útvonal törlése',
+		clearSelection: 'Kijelölés törlése',
 		close: 'Bezárás',
 		categoryLabel: 'Helyszínkategória',
 		delete: 'Visszatörlés',
 		destinationPrompt: 'Hová szeretne menni?',
-		distanceUnavailable: 'A beállított kiindulóponttól nincs elérhető útvonal',
-		externalMap: 'A helyszín a belvárosi útvonaltérképen kívül található',
+		direction: 'IRÁNY INNEN',
+		directionalDisclaimer: 'Vizuális irány, nem gyalogos útvonal',
+		externalMap: 'A helyszín nem látható ezen a térképen',
 		findLandmark: 'HELYSZÍN KERESÉSE',
 		fitMap: 'Térkép illesztése',
-		fitRoute: 'Útvonal illesztése',
 		hours: 'Nyitvatartás',
 		keyboardLabel: 'Helyszín keresése',
 		languageSelector: 'Felület nyelve',
@@ -147,16 +141,16 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		mapControls: 'Térkép nagyítása',
 		mapInstruction: 'Érintsen meg egy kiemelt helyszínt',
 		mapUnavailable: 'A térkép nem érhető el',
+		highlightedOnMap: 'Kiemelve a térképen',
 		openKeyboard: 'Érintőbillentyűzet megnyitása',
 		reset: 'Alaphelyzet',
-		routeApproximate: 'Az útvonal tájékoztató jellegű',
+		guidanceHonesty: 'Az útmutatás az ellenőrzött adatokhoz igazodik',
 		searchPlaceholder: 'Helyszín keresése',
 		shift: 'Nagybetű',
 		showResults: 'Találatok',
 		space: 'Szóköz',
 		status: 'Állapot',
 		youAreHere: 'ÖN ITT ÁLL',
-		walkingTime: 'SÉTAIDŐ',
 		zoomIn: 'Nagyítás',
 		zoomOut: 'Kicsinyítés'
 	}
@@ -165,47 +159,18 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 const MAP_WIDTH = 1341;
 const MAP_HEIGHT = 947;
 const ALL_CATEGORIES = '__all__';
-const ROUTE_GROUP_ID = 'wb-veszprem-wayfinding-route';
+const GUIDANCE_GROUP_ID = 'wb-veszprem-wayfinding-guidance';
+const CARDINAL_COPY: Record<UiLanguage, Record<WayfindingDirection['cardinal'], string>> = {
+	en: { E: 'EAST', N: 'NORTH', NE: 'NORTHEAST', NW: 'NORTHWEST', S: 'SOUTH', SE: 'SOUTHEAST', SW: 'SOUTHWEST', W: 'WEST' },
+	hu: { E: 'KELET', N: 'ÉSZAK', NE: 'ÉSZAKKELET', NW: 'ÉSZAKNYUGAT', S: 'DÉL', SE: 'DÉLKELET', SW: 'DÉLNYUGAT', W: 'NYUGAT' }
+};
 
 const normalizeSearch = (value: string): string => value
 	.normalize('NFD')
 	.replace(/[\u0300-\u036f]/g, '')
 	.toLocaleLowerCase();
 
-const formatWalkTime = (seconds: number): string => `${Math.max(1, Math.ceil(seconds / 60))} min`;
-
 const clamp = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, value));
-
-const roundedRoutePath = (points: WayfindingRoutePoint[], radius = 6): string => {
-	if (points.length === 0) return '';
-
-	if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-
-	let path = `M ${points[0].x} ${points[0].y}`;
-
-	for (let index = 1; index < points.length - 1; index += 1) {
-		const previous: WayfindingRoutePoint = points[index - 1];
-		const current: WayfindingRoutePoint = points[index];
-		const next: WayfindingRoutePoint = points[index + 1];
-		const incomingLength: number = Math.hypot(current.x - previous.x, current.y - previous.y);
-		const outgoingLength: number = Math.hypot(next.x - current.x, next.y - current.y);
-		const cornerRadius: number = Math.min(radius, incomingLength / 3, outgoingLength / 3);
-		const before = {
-			x: current.x - (current.x - previous.x) / incomingLength * cornerRadius,
-			y: current.y - (current.y - previous.y) / incomingLength * cornerRadius
-		};
-		const after = {
-			x: current.x + (next.x - current.x) / outgoingLength * cornerRadius,
-			y: current.y + (next.y - current.y) / outgoingLength * cornerRadius
-		};
-
-		path += ` L ${before.x} ${before.y} Q ${current.x} ${current.y} ${after.x} ${after.y}`;
-	}
-
-	const last: WayfindingRoutePoint = points[points.length - 1];
-
-	return `${path} L ${last.x} ${last.y}`;
-};
 
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources: Accessor<DataSources> = useDataSources();
@@ -216,8 +181,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [mapState, setMapState] = createSignal<MapState>('loading');
 	const [mapZoom, setMapZoom] = createSignal(1);
 	const [query, setQuery] = createSignal('');
-	const [routeResult, setRouteResult] = createSignal<WayfindingRouteResult>();
-	const [routeState, setRouteState] = createSignal<RouteState>('idle');
+	const [guidanceState, setGuidanceState] = createSignal<GuidanceState>('idle');
 	const [selectedId, setSelectedId] = createSignal<string>();
 	const [uiLanguage, setUiLanguage] = createSignal<UiLanguage>('en');
 	const activePointers = new Map<number, ActivePointer>();
@@ -291,6 +255,34 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const startDestination: Accessor<Destination | undefined> = createMemo((): Destination | undefined => {
 		return destinationById().get(settings().startLocationId);
 	});
+	const locationCenter = (locationId: string): MapPoint | undefined => {
+		const target: SVGGraphicsElement | undefined = Array.from(svg?.querySelectorAll<SVGGraphicsElement>('[data-wayfinding-location-id]') ?? [])
+			.find((element: SVGGraphicsElement): boolean => element.getAttribute('data-wayfinding-location-id') === locationId);
+
+		if (!target) return undefined;
+
+		const bounds: DOMRect = target.getBBox();
+
+		return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+	};
+	const activeGuidanceMode: Accessor<WayfindingGuidanceMode> = createMemo((): WayfindingGuidanceMode => {
+		const mapReady: boolean = mapState() === 'ready';
+
+		return resolveWayfindingGuidanceMode(settings().guidanceMode, {
+			directory: true,
+			directional: settings().orientationConfirmed && mapReady && Boolean(locationCenter(settings().startLocationId)),
+			highlight: true,
+			route: false
+		}) ?? 'directory';
+	});
+	const directionCue: Accessor<WayfindingDirection | undefined> = createMemo((): WayfindingDirection | undefined => {
+		const start: MapPoint | undefined = locationCenter(settings().startLocationId);
+		const destination: MapPoint | undefined = selectedDestination() ? locationCenter(selectedDestination()!.id) : undefined;
+
+		return start && destination
+			? directionBetweenPoints(start, destination, settings().mapNorthOffsetDegrees)
+			: undefined;
+	});
 	const fitTitle = useAutoFitText({
 		minFontSize: 20,
 		maxFontSize: 36,
@@ -308,25 +300,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		setMapZoom(1);
 	};
 
-	const fitRouteView = (path = routeResult()?.path): void => {
-		if (!path || path.length < 2) return;
-
-		const xValues = path.map((point: WayfindingRoutePoint): number => point.x);
-		const yValues = path.map((point: WayfindingRoutePoint): number => point.y);
-		const padding = 70;
-		const width = Math.max(1, Math.max(...xValues) - Math.min(...xValues) + padding * 2);
-		const height = Math.max(1, Math.max(...yValues) - Math.min(...yValues) + padding * 2);
-		setMapCenter({
-			x: (Math.min(...xValues) + Math.max(...xValues)) / 2,
-			y: (Math.min(...yValues) + Math.max(...yValues)) / 2
-		});
-		setMapZoom(clamp(Math.min(MAP_WIDTH / width, MAP_HEIGHT / height), 1, 2.5));
-	};
-
-	const removeRouteMarkup = (): void => {
+	const removeGuidanceMarkup = (): void => {
 		if (!svg) return;
 
-		for (const route of Array.from(svg.querySelectorAll(`[id='${ROUTE_GROUP_ID}']`))) route.remove();
+		for (const markup of Array.from(svg.querySelectorAll(`[id='${GUIDANCE_GROUP_ID}']`))) markup.remove();
 
 		for (const target of Array.from(svg.querySelectorAll('[data-wb-wayfinding-selected]'))) {
 			target.removeAttribute('data-wb-wayfinding-selected');
@@ -340,12 +317,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	const resetSession = (): void => {
 		clearResetTimer();
-		removeRouteMarkup();
 		setCategory(ALL_CATEGORIES);
 		setKeyboardOpen(false);
 		setQuery('');
-		setRouteResult(undefined);
-		setRouteState('idle');
+		setGuidanceState('idle');
 		setSelectedId(undefined);
 		resetMapView();
 	};
@@ -355,106 +330,158 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		resetTimer = setTimeout(resetSession, settings().routeResetSeconds * 1000);
 	};
 
-	const drawRoute = (
-		destination: Destination,
-		restartTimer = true,
-		startLocationId = settings().startLocationId,
-		mapRatio = settings().mapRatio
+	const appendPulse = (
+		parent: SVGElement,
+		point: MapPoint,
+		color: string,
+		layer: string,
+		baseRadius: number,
+		pulseRadius: number
 	): void => {
+		const namespace = 'http://www.w3.org/2000/svg';
+		const ring: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+		ring.setAttribute('cx', String(point.x));
+		ring.setAttribute('cy', String(point.y));
+		ring.setAttribute('data-guidance-layer', layer);
+		ring.setAttribute('fill', 'none');
+		ring.setAttribute('opacity', '0.72');
+		ring.setAttribute('r', String(baseRadius));
+		ring.setAttribute('stroke', color);
+		ring.setAttribute('stroke-width', '5');
+		ring.setAttribute('vector-effect', 'non-scaling-stroke');
+
+		if (settings().motionPreset !== 'off') {
+			const radiusAnimation: SVGElement = document.createElementNS(namespace, 'animate');
+			const opacityAnimation: SVGElement = document.createElementNS(namespace, 'animate');
+
+			radiusAnimation.setAttribute('attributeName', 'r');
+			radiusAnimation.setAttribute('dur', '1.8s');
+			radiusAnimation.setAttribute('repeatCount', 'indefinite');
+			radiusAnimation.setAttribute('values', `${baseRadius};${pulseRadius};${baseRadius}`);
+			opacityAnimation.setAttribute('attributeName', 'opacity');
+			opacityAnimation.setAttribute('dur', '1.8s');
+			opacityAnimation.setAttribute('repeatCount', 'indefinite');
+			opacityAnimation.setAttribute('values', '0.82;0.08;0.82');
+			ring.append(radiusAnimation, opacityAnimation);
+		}
+
+		parent.append(ring);
+	};
+
+	const appendCurrentLocation = (group: SVGGElement, start: MapPoint): void => {
+		const namespace = 'http://www.w3.org/2000/svg';
+		const origin: SVGGElement = document.createElementNS(namespace, 'g');
+		const core: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+		origin.setAttribute('data-facing-degrees', String(settings().viewerFacingDegrees));
+		origin.setAttribute('data-guidance-layer', 'origin');
+		appendPulse(origin, start, settings().accentColor, 'origin-pulse', 19, 34);
+		core.setAttribute('cx', String(start.x));
+		core.setAttribute('cy', String(start.y));
+		core.setAttribute('data-guidance-layer', 'origin-core');
+		core.setAttribute('fill', settings().primaryTextColor);
+		core.setAttribute('r', '9');
+		core.setAttribute('stroke', settings().panelColor);
+		core.setAttribute('stroke-width', '4');
+		core.setAttribute('vector-effect', 'non-scaling-stroke');
+		origin.append(core);
+
+		if (settings().orientationConfirmed) {
+			const heading: SVGPolygonElement = document.createElementNS(namespace, 'polygon');
+			heading.setAttribute('data-guidance-layer', 'origin-heading');
+			heading.setAttribute('fill', settings().accentColor);
+			heading.setAttribute('points', `${start.x},${start.y - 37} ${start.x - 9},${start.y - 17} ${start.x + 9},${start.y - 17}`);
+			heading.setAttribute('stroke', settings().panelColor);
+			heading.setAttribute('stroke-width', '3');
+			heading.setAttribute('transform', `rotate(${settings().viewerFacingDegrees} ${start.x} ${start.y})`);
+			heading.setAttribute('vector-effect', 'non-scaling-stroke');
+			origin.append(heading);
+		}
+
+		group.append(origin);
+	};
+
+	const drawGuidanceMarkup = (destination?: MapPoint, mode?: 'highlight' | 'directional'): void => {
 		if (!svg) return;
 
-		removeRouteMarkup();
+		removeGuidanceMarkup();
+		const namespace = 'http://www.w3.org/2000/svg';
+		const group: SVGGElement = document.createElementNS(namespace, 'g');
+		const start: MapPoint | undefined = locationCenter(settings().startLocationId);
+
+		if (!start && !destination) return;
+
+		group.id = GUIDANCE_GROUP_ID;
+		group.setAttribute('pointer-events', 'none');
+
+		if (destination && mode) {
+			const definitions: SVGDefsElement = document.createElementNS(namespace, 'defs');
+			const mask: SVGMaskElement = document.createElementNS(namespace, 'mask');
+			const maskId = `${GUIDANCE_GROUP_ID}-mask`;
+			const maskBase: SVGRectElement = document.createElementNS(namespace, 'rect');
+			const maskOpening: SVGCircleElement = document.createElementNS(namespace, 'circle');
+			const shade: SVGRectElement = document.createElementNS(namespace, 'rect');
+			const target: SVGGElement = document.createElementNS(namespace, 'g');
+			const targetCore: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+			mask.id = maskId;
+			maskBase.setAttribute('fill', '#ffffff');
+			maskBase.setAttribute('height', String(MAP_HEIGHT));
+			maskBase.setAttribute('width', String(MAP_WIDTH));
+			maskOpening.setAttribute('cx', String(destination.x));
+			maskOpening.setAttribute('cy', String(destination.y));
+			maskOpening.setAttribute('fill', '#000000');
+			maskOpening.setAttribute('r', '58');
+			mask.append(maskBase, maskOpening);
+			definitions.append(mask);
+			shade.setAttribute('data-guidance-layer', 'shade');
+			shade.setAttribute('fill', settings().panelColor);
+			shade.setAttribute('height', String(MAP_HEIGHT));
+			shade.setAttribute('mask', `url(#${maskId})`);
+			shade.setAttribute('opacity', '0.34');
+			shade.setAttribute('width', String(MAP_WIDTH));
+			target.setAttribute('data-guidance-layer', 'target');
+			appendPulse(target, destination, settings().routeColor, 'target-pulse', 25, 43);
+			targetCore.setAttribute('cx', String(destination.x));
+			targetCore.setAttribute('cy', String(destination.y));
+			targetCore.setAttribute('data-guidance-layer', 'target-core');
+			targetCore.setAttribute('fill', settings().routeColor);
+			targetCore.setAttribute('r', '8');
+			targetCore.setAttribute('stroke', settings().panelColor);
+			targetCore.setAttribute('stroke-width', '3');
+			targetCore.setAttribute('vector-effect', 'non-scaling-stroke');
+			target.append(targetCore);
+			group.append(definitions, shade);
+
+			if (start) appendCurrentLocation(group, start);
+			group.append(target);
+		} else if (start) {
+			appendCurrentLocation(group, start);
+		}
+
+		const hitTargets: Element | null = svg.querySelector('#location-hit-targets');
+
+		if (hitTargets?.parentNode) hitTargets.parentNode.insertBefore(group, hitTargets);
+		else svg.append(group);
+	};
+
+	const selectDestination = (destination: Destination, restartTimer = true): void => {
+		if (!svg) return;
+
 		setSelectedId(destination.id);
 		setKeyboardOpen(false);
+		const mode: WayfindingGuidanceMode = activeGuidanceMode();
+		const destinationNode: MapPoint | undefined = locationCenter(destination.id);
 
-		if (!destination.routeable) {
-			setRouteResult(undefined);
-			setRouteState('external');
-			resetMapView();
-
-			if (restartTimer) scheduleReset();
-
-			return;
+		if (!destinationNode) {
+			setGuidanceState('external');
+		} else if (mode === 'directory') {
+			setGuidanceState('directory');
+		} else {
+			const resolvedMode: 'highlight' | 'directional' = mode === 'directional' ? 'directional' : 'highlight';
+			setGuidanceState(resolvedMode);
 		}
-
-		const result: WayfindingRouteResult | undefined = routeBetweenLocations(
-			startLocationId,
-			destination.id,
-			mapRatio
-		);
-
-		if (!result) {
-			setRouteResult(undefined);
-			setRouteState('unavailable');
-
-			if (restartTimer) scheduleReset();
-
-			return;
-		}
-
-		const path: WayfindingRoutePoint[] = result.path;
-
-		if (path.length > 1) {
-			const namespace = 'http://www.w3.org/2000/svg';
-			const group: SVGGElement = document.createElementNS(namespace, 'g');
-			const underlay: SVGPathElement = document.createElementNS(namespace, 'path');
-			const route: SVGPathElement = document.createElementNS(namespace, 'path');
-			const pathData: string = roundedRoutePath(path);
-			group.id = ROUTE_GROUP_ID;
-			group.setAttribute('pointer-events', 'none');
-			underlay.setAttribute('d', pathData);
-			underlay.setAttribute('data-route-layer', 'underlay');
-			underlay.setAttribute('fill', 'none');
-			underlay.setAttribute('stroke', settings().panelColor);
-			underlay.setAttribute('stroke-linecap', 'round');
-			underlay.setAttribute('stroke-linejoin', 'round');
-			underlay.setAttribute('stroke-width', '11');
-			underlay.setAttribute('vector-effect', 'non-scaling-stroke');
-			route.setAttribute('d', pathData);
-			route.setAttribute('data-route-layer', 'foreground');
-			route.setAttribute('fill', 'none');
-			route.setAttribute('stroke', settings().routeColor);
-			route.setAttribute('stroke-linecap', 'round');
-			route.setAttribute('stroke-linejoin', 'round');
-			route.setAttribute('stroke-width', '6');
-			route.setAttribute('vector-effect', 'non-scaling-stroke');
-			group.append(underlay, route);
-
-			const destinationPoint: WayfindingRoutePoint = path[path.length - 1];
-			const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
-			marker.setAttribute('cx', String(destinationPoint.x));
-			marker.setAttribute('cy', String(destinationPoint.y));
-			marker.setAttribute('data-route-layer', 'destination');
-			marker.setAttribute('fill', settings().routeColor);
-			marker.setAttribute('r', '5');
-			marker.setAttribute('stroke', settings().panelColor);
-			marker.setAttribute('stroke-width', '3');
-			marker.setAttribute('vector-effect', 'non-scaling-stroke');
-			group.append(marker);
-
-			const hitTargets: Element | null = svg.querySelector('#location-hit-targets');
-
-			if (hitTargets?.parentNode) {
-				hitTargets.parentNode.insertBefore(group, hitTargets);
-			} else {
-				svg.append(group);
-			}
-
-			if (settings().motionPreset !== 'off') {
-				group.style.opacity = '0';
-				group.getBoundingClientRect();
-				group.style.transition = 'opacity 180ms ease-out';
-				group.style.opacity = '1';
-			}
-		}
-
-		const target: Element | undefined = Array.from(svg.querySelectorAll('[data-wayfinding-location-id]')).find((element: Element): boolean => {
-			return element.getAttribute('data-wayfinding-location-id') === destination.id;
-		});
-
-		target?.setAttribute('data-wb-wayfinding-selected', 'true');
-		setRouteResult(result);
-		setRouteState('active');
 
 		if (restartTimer) scheduleReset();
 	};
@@ -547,7 +574,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (isTap && pointer?.locationId) {
 			const destination: Destination | undefined = destinationById().get(pointer.locationId);
 
-			if (destination) drawRoute(destination);
+			if (destination) selectDestination(destination);
 		}
 	};
 
@@ -610,36 +637,47 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	createEffect((): void => {
 		const startLocationId: string = settings().startLocationId;
-		const mapRatio: number = settings().mapRatio;
+		const guidanceMode: WayfindingGuidanceMode = settings().guidanceMode;
+		const mapNorthOffsetDegrees: number = settings().mapNorthOffsetDegrees;
+		const orientationConfirmed: boolean = settings().orientationConfirmed;
 		const selected: Destination | undefined = untrack(selectedDestination);
 
-		if (selected && untrack(routeState) === 'active') {
-			untrack((): void => { drawRoute(selected, false, startLocationId, mapRatio); });
+		if (selected) {
+			untrack((): void => {
+				void startLocationId;
+				void guidanceMode;
+				void mapNorthOffsetDegrees;
+				void orientationConfirmed;
+				selectDestination(selected, false);
+			});
 		}
 	});
 
 	createEffect((): void => {
-		const color: string = settings().routeColor;
-		const panelColor: string = settings().panelColor;
+		const state: MapState = mapState();
+		const selected: Destination | undefined = selectedDestination();
+		const mode: WayfindingGuidanceMode = activeGuidanceMode();
+		const destination: MapPoint | undefined = selected ? locationCenter(selected.id) : undefined;
 
-		if (!svg) return;
+		void settings().accentColor;
+		void settings().motionPreset;
+		void settings().orientationConfirmed;
+		void settings().panelColor;
+		void settings().primaryTextColor;
+		void settings().routeColor;
+		void settings().startLocationId;
+		void settings().viewerFacingDegrees;
 
-		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='foreground']`))) {
-			element.setAttribute('stroke', color);
-		}
+		if (state !== 'ready' || !svg) return;
 
-		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='destination']`))) {
-			element.setAttribute('fill', color);
-			element.setAttribute('stroke', panelColor);
-		}
-
-		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='underlay']`))) {
-			element.setAttribute('stroke', panelColor);
-		}
+		drawGuidanceMarkup(destination, selected && destination && mode !== 'directory'
+			? mode === 'directional' ? 'directional' : 'highlight'
+			: undefined);
 	});
 
 	onCleanup((): void => {
 		clearResetTimer();
+		removeGuidanceMarkup();
 		mapHost?.removeEventListener('pointerdown', handleMapPointerDown);
 		mapHost?.removeEventListener('pointermove', handleMapPointerMove);
 		mapHost?.removeEventListener('pointerup', handleMapPointerEnd);
@@ -660,8 +698,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			}}
 			data-host-ready={Boolean(props.hostElement)}
 			data-map-state={mapState()}
-			data-map-ratio={settings().mapRatio}
+			data-map-north={settings().mapNorthOffsetDegrees}
 			data-map-zoom={mapZoom()}
+			data-orientation-confirmed={settings().orientationConfirmed}
+			data-viewer-facing={settings().viewerFacingDegrees}
+			data-guidance-mode={activeGuidanceMode()}
+			data-guidance-state={guidanceState()}
 			data-motion={settings().motionPreset}
 			data-preview-id="veszprem-wayfinding-root"
 			data-route-reset={settings().routeResetSeconds}
@@ -695,16 +737,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<div class={style['map-controls']} aria-label={copy().mapControls}>
 							<button type="button" title={copy().zoomIn} aria-label={copy().zoomIn} onClick={(): void => { setMapZoom((value: number): number => clamp(value + 0.25, 1, 2.5)); scheduleReset(); }}>+</button>
 							<button type="button" title={copy().zoomOut} aria-label={copy().zoomOut} onClick={(): void => { setMapZoom((value: number): number => clamp(value - 0.25, 1, 2.5)); scheduleReset(); }}>−</button>
-							<Show when={routeState() === 'active'}>
-								<button type="button" title={copy().fitRoute} aria-label={copy().fitRoute} onClick={(): void => { fitRouteView(); scheduleReset(); }}>⌖</button>
-							</Show>
 							<button type="button" title={copy().fitMap} aria-label={copy().fitMap} onClick={(): void => { resetMapView(); scheduleReset(); }}>⛶</button>
 						</div>
 					</div>
 					<div class={style['map-instruction']}>
 						<span>{copy().mapInstruction}</span>
 						<i aria-hidden="true" />
-						<span>{copy().routeApproximate}</span>
+						<span>{copy().guidanceHonesty}</span>
 						<i aria-hidden="true" />
 						<span>{copy().accessibilityConfirmation}</span>
 					</div>
@@ -740,7 +779,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<div class={style['destination-list']} data-destination-count={filteredDestinations().length} data-preview-allow-overflow>
 								<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
 									<For each={filteredDestinations()}>{(destination: Destination): JSX.Element => (
-										<button type="button" data-destination-id={destination.id} data-routeable={destination.routeable} onClick={(): void => { drawRoute(destination); }}>
+										<button type="button" data-destination-id={destination.id} data-mapped={Boolean(locationCenter(destination.id))} onClick={(): void => { selectDestination(destination); }}>
 											<small data-wide={destination.mapNumber.length > 2}>{destination.mapNumber || '•'}</small>
 											<span>
 												<strong class="wb-veszprem-destination-name">{destinationName(destination)}</strong>
@@ -768,22 +807,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 									{destination.accessible === null ? copy().accessibilityUnknown : destination.accessible ? copy().accessibilityYes : copy().accessibilityNo}
 								</span>
 								<div class={style['route-summary']}>
-									<Show when={routeState() === 'active' && routeResult()} keyed fallback={
-										<strong>{routeState() === 'external'
-										? copy().externalMap
-											: routeState() === 'unavailable'
-																? copy().distanceUnavailable
-												: copy().alreadyHere}</strong>
-									}>
-										{(result: WayfindingRouteResult): JSX.Element => (
-											<>
-													<div><span>{copy().approximateDistance}</span><strong>{result.walkingDistance} m</strong></div>
-													<div><span>{copy().walkingTime}</span><strong>{formatWalkTime(result.walkingSeconds)}</strong></div>
-											</>
-										)}
-									</Show>
+									<strong>{guidanceState() === 'external'
+									? copy().externalMap
+										: guidanceState() === 'directional' && directionCue()
+											? `${copy().direction}: ${CARDINAL_COPY[uiLanguage()][directionCue()!.cardinal]}. ${copy().directionalDisclaimer}`
+											: copy().highlightedOnMap}</strong>
 								</div>
-								<button class={style['clear-button']} type="button" onClick={resetSession}>{copy().clearRoute}</button>
+								<button class={style['clear-button']} type="button" onClick={resetSession}>{copy().clearSelection}</button>
 							</section>
 						)}
 					</Show>
