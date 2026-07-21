@@ -54,6 +54,7 @@ interface UiCopy {
 	externalMap: string;
 	findLandmark: string;
 	fitMap: string;
+	fitRoute: string;
 	hours: string;
 	keyboardLabel: string;
 	languageSelector: string;
@@ -96,6 +97,7 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		externalMap: 'Listed outside the downtown route map',
 		findLandmark: 'FIND A LANDMARK',
 		fitMap: 'Fit map',
+		fitRoute: 'Fit route',
 		hours: 'Hours',
 		keyboardLabel: 'Search destinations',
 		languageSelector: 'Interface language',
@@ -136,6 +138,7 @@ const UI_COPY: Record<UiLanguage, UiCopy> = {
 		externalMap: 'A helyszín a belvárosi útvonaltérképen kívül található',
 		findLandmark: 'HELYSZÍN KERESÉSE',
 		fitMap: 'Térkép illesztése',
+		fitRoute: 'Útvonal illesztése',
 		hours: 'Nyitvatartás',
 		keyboardLabel: 'Helyszín keresése',
 		languageSelector: 'Felület nyelve',
@@ -274,6 +277,21 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		setMapZoom(1);
 	};
 
+	const fitRouteView = (path = routeResult()?.path): void => {
+		if (!path || path.length < 2) return;
+
+		const xValues = path.map((point: WayfindingRoutePoint): number => point.x);
+		const yValues = path.map((point: WayfindingRoutePoint): number => point.y);
+		const padding = 70;
+		const width = Math.max(1, Math.max(...xValues) - Math.min(...xValues) + padding * 2);
+		const height = Math.max(1, Math.max(...yValues) - Math.min(...yValues) + padding * 2);
+		setMapCenter({
+			x: (Math.min(...xValues) + Math.max(...xValues)) / 2,
+			y: (Math.min(...yValues) + Math.max(...yValues)) / 2
+		});
+		setMapZoom(clamp(Math.min(MAP_WIDTH / width, MAP_HEIGHT / height), 1, 2.5));
+	};
+
 	const removeRouteMarkup = (): void => {
 		if (!svg) return;
 
@@ -348,31 +366,48 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (path.length > 1) {
 			const namespace = 'http://www.w3.org/2000/svg';
 			const group: SVGGElement = document.createElementNS(namespace, 'g');
+			const underlay: SVGPathElement = document.createElementNS(namespace, 'path');
 			const route: SVGPathElement = document.createElementNS(namespace, 'path');
+			const pathData: string = path.map((point: WayfindingRoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
 			group.id = ROUTE_GROUP_ID;
 			group.setAttribute('pointer-events', 'none');
-			route.setAttribute('d', path.map((point: WayfindingRoutePoint, index: number): string => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '));
+			underlay.setAttribute('d', pathData);
+			underlay.setAttribute('data-route-layer', 'underlay');
+			underlay.setAttribute('fill', 'none');
+			underlay.setAttribute('stroke', settings().panelColor);
+			underlay.setAttribute('stroke-linecap', 'round');
+			underlay.setAttribute('stroke-linejoin', 'round');
+			underlay.setAttribute('stroke-width', '11');
+			underlay.setAttribute('vector-effect', 'non-scaling-stroke');
+			route.setAttribute('d', pathData);
+			route.setAttribute('data-route-layer', 'foreground');
 			route.setAttribute('fill', 'none');
 			route.setAttribute('stroke', settings().routeColor);
 			route.setAttribute('stroke-linecap', 'round');
 			route.setAttribute('stroke-linejoin', 'round');
-			route.setAttribute('stroke-width', '7');
+			route.setAttribute('stroke-width', '6');
 			route.setAttribute('vector-effect', 'non-scaling-stroke');
-			group.append(route);
+			group.append(underlay, route);
 
-			for (const point of [path[0], path[path.length - 1]]) {
-				const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
-				marker.setAttribute('cx', String(point.x));
-				marker.setAttribute('cy', String(point.y));
-				marker.setAttribute('fill', settings().panelColor);
-				marker.setAttribute('r', '10');
-				marker.setAttribute('stroke', settings().routeColor);
-				marker.setAttribute('stroke-width', '5');
-				marker.setAttribute('vector-effect', 'non-scaling-stroke');
-				group.append(marker);
+			const destinationPoint: WayfindingRoutePoint = path[path.length - 1];
+			const marker: SVGCircleElement = document.createElementNS(namespace, 'circle');
+			marker.setAttribute('cx', String(destinationPoint.x));
+			marker.setAttribute('cy', String(destinationPoint.y));
+			marker.setAttribute('data-route-layer', 'destination');
+			marker.setAttribute('fill', settings().routeColor);
+			marker.setAttribute('r', '5');
+			marker.setAttribute('stroke', settings().panelColor);
+			marker.setAttribute('stroke-width', '3');
+			marker.setAttribute('vector-effect', 'non-scaling-stroke');
+			group.append(marker);
+
+			const hitTargets: Element | null = svg.querySelector('#location-hit-targets');
+
+			if (hitTargets?.parentNode) {
+				hitTargets.parentNode.insertBefore(group, hitTargets);
+			} else {
+				svg.append(group);
 			}
-
-			svg.append(group);
 
 			if (settings().motionPreset !== 'off') {
 				const routeLength: number = route.getTotalLength();
@@ -556,11 +591,21 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	createEffect((): void => {
 		const color: string = settings().routeColor;
+		const panelColor: string = settings().panelColor;
 
 		if (!svg) return;
 
-		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} path, #${ROUTE_GROUP_ID} circle`))) {
+		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='foreground']`))) {
 			element.setAttribute('stroke', color);
+		}
+
+		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='destination']`))) {
+			element.setAttribute('fill', color);
+			element.setAttribute('stroke', panelColor);
+		}
+
+		for (const element of Array.from(svg.querySelectorAll(`#${ROUTE_GROUP_ID} [data-route-layer='underlay']`))) {
+			element.setAttribute('stroke', panelColor);
 		}
 	});
 
@@ -621,6 +666,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<div class={style['map-controls']} aria-label={copy().mapControls}>
 							<button type="button" title={copy().zoomIn} aria-label={copy().zoomIn} onClick={(): void => { setMapZoom((value: number): number => clamp(value + 0.25, 1, 2.5)); scheduleReset(); }}>+</button>
 							<button type="button" title={copy().zoomOut} aria-label={copy().zoomOut} onClick={(): void => { setMapZoom((value: number): number => clamp(value - 0.25, 1, 2.5)); scheduleReset(); }}>−</button>
+							<Show when={routeState() === 'active'}>
+								<button type="button" title={copy().fitRoute} aria-label={copy().fitRoute} onClick={(): void => { fitRouteView(); scheduleReset(); }}>⌖</button>
+							</Show>
 							<button type="button" title={copy().fitMap} aria-label={copy().fitMap} onClick={(): void => { resetMapView(); scheduleReset(); }}>⛶</button>
 						</div>
 					</div>

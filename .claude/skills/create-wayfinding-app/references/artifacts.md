@@ -16,12 +16,14 @@ Validate against `schemas/wayfinding-route-graph.schema.json`.
 - Node coordinates use the root SVG viewBox coordinate system even when artwork is nested or transformed.
 - Edges own explicit adjacency, direction, route kind, accessibility, and optional measured metres.
 - Cross-floor edges use transition nodes and `stairs`, `elevator`, or `escalator` kinds.
+- Location nodes are leaf entrances. Crossings, doors, stairs, elevators, and escalators use named edges rather than visual shortcuts.
 - Prefer a small intentional graph over an unnecessarily dense mesh. Add a node at every real junction and bend required for route shape.
 
 ## `walkable-mask.json`
 
 - Generate in the same root coordinate system as `map.svg`; bounds must match the SVG viewBox.
 - Review connected traversable space against the visible source. Correct crossings, doors, false-positive background regions, and route margins explicitly.
+- Color extraction can omit traversable paths obscured by labels or artwork; add reviewed semantic corrections before confirmation.
 - Keep `reviewStatus: "proposed"` until a reviewer confirms the overlay. Only confirmed masks can certify generated centerlines.
 - Derive centerlines from the mask, collapse junction clusters, and remove dangling branches not used by destination anchors.
 
@@ -38,4 +40,5 @@ Add only useful fields: `shortName`, aliases/keywords, `floor`, `hours`, `status
 - Inspect long edges, crossings without nodes, high-degree nodes, closed routes, and floor transitions.
 - Compare the visual map to the source at the real kiosk dimensions.
 - Require every reviewed edge corridor to remain inside the independently confirmed walkable mask.
+- Treat a graph-derived corridor envelope as regression evidence only; it cannot independently certify its source graph.
 - Record uncertain OCR, entrances, route topology, and missing operational metadata as review items instead of guessing.

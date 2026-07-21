@@ -60,6 +60,49 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(!report.issues.some((issue): boolean => issue.code === 'destination-location-missing' && issue.references?.includes('off-site-museum')));
 	});
 
+	void it('rejects location nodes used as transit shortcuts', (): void => {
+		const transitGraph: WayfindingGraphDocument = {
+			...graph,
+			edges: [
+				...graph.edges,
+				{ id: 'gallery-to-finish', from: 'gallery-lp', to: 'finish-lp', kind: 'walk', accessible: true, bidirectional: true, distanceMeters: 10 }
+			],
+			nodes: [...graph.nodes, { id: 'finish-lp', kind: 'location', levelId: 'ground', locationId: 'finish', x: 720, y: 225 }]
+		};
+		const report = validateWayfinding({
+			destinations: [...destinations, { accessible: null, category: '', description: '', hours: '', id: 'finish', name: 'Finish', routeable: true, status: '' }],
+			graph: transitGraph,
+			map: parseWayfindingSvg(sourceSvg),
+			startLocationId: 'lobby'
+		});
+
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'location-node-used-as-transit' && issue.references.includes('gallery-lp')));
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'route-uses-unrelated-location'));
+	});
+
+	void it('flags backtracking geometry produced by noisy route tracing', (): void => {
+		const zigzagGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				corridorWidth: 18,
+				from: 'lp-lobby',
+				geometry: [{ x: 120, y: 225 }, { x: 260, y: 225 }, { x: 150, y: 230 }, { x: 680, y: 225 }],
+				id: 'noisy-trace',
+				kind: 'walk',
+				reviewStatus: 'confirmed',
+				to: 'gallery-lp',
+				traversal: 'indoor-corridor'
+			}],
+			graphId: 'noisy-trace',
+			nodes: graph.nodes
+		};
+		const report = validateWayfinding({ destinations, graph: zigzagGraph, map: parseWayfindingSvg(sourceSvg), startLocationId: 'lobby' });
+
+		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-backtracking-review'));
+	});
+
 	void it('routes and measures version 2 edges through their reviewed centerline geometry', (): void => {
 		const curvedGraph: WayfindingGraphDocument = {
 			contractVersion: 2,

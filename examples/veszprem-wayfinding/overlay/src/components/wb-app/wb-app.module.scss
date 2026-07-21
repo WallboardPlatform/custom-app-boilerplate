@@ -197,24 +197,26 @@
 .map-markup :global([data-wayfinding-location-id]) {
   pointer-events: all;
   cursor: pointer;
-  fill: var(--wb-veszprem-panel);
-  fill-opacity: 0.42;
-  stroke: var(--wb-veszprem-accent);
-  stroke-width: 2;
+  fill: transparent;
+  fill-opacity: 0;
+  stroke: transparent;
+  stroke-width: 0;
   vector-effect: non-scaling-stroke;
 }
 
 .map-markup :global([data-wayfinding-location-id]:hover),
 .map-markup :global([data-wayfinding-location-id]:focus) {
-  fill-opacity: 0.78;
-  stroke-width: 4;
+  fill: var(--wb-veszprem-accent);
+  fill-opacity: 0.12;
+  stroke: var(--wb-veszprem-accent);
+  stroke-width: 3;
 }
 
 .map-markup :global([data-wb-wayfinding-selected]) {
   fill: var(--wb-veszprem-route);
-  fill-opacity: 0.22;
+  fill-opacity: 0.12;
   stroke: var(--wb-veszprem-route);
-  stroke-width: 5;
+  stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
 

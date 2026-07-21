@@ -28,7 +28,46 @@
 						{ "label": "Hungarian", "value": "hu" }
 					]
 				},
-				{ "label": "Start location ID", "type": "text", "property": "startLocationId", "default": "tourinform-veszprem", "tooltip": "Use a routeable id from the destination table and route graph." },
+				{
+					"label": "Start location", "type": "select", "property": "startLocationId", "default": "tourinform-veszprem",
+					"tooltip": "Choose the kiosk's physical map position.",
+					"options": [
+						{ "label": "Tourist Information Centre", "value": "tourinform-veszprem" },
+						{ "label": "Heroes' Gate", "value": "hosok-kapuja" },
+						{ "label": "Modern Art Gallery", "value": "modern-keptar-vass-gyujtemeny" },
+						{ "label": "Fire Lookout Tower", "value": "tuztorony" },
+						{ "label": "FOTON Audiovisual Centre", "value": "foton-audiovizualis-kozpont" },
+						{ "label": "Csikász Gallery", "value": "csikasz-galeria" },
+						{ "label": "Dubniczay Palace", "value": "dubniczay-palota" },
+						{ "label": "Bíró-Giczey House", "value": "biro-giczey-haz" },
+						{ "label": "St. Stephen's Church", "value": "szent-istvan-templom" },
+						{ "label": "Körmendy House", "value": "kormendy-haz" },
+						{ "label": "Statue of King St. Stephen and Queen Gizella", "value": "szent-istvan-es-gizella-szobor" },
+						{ "label": "Benedict Hill", "value": "benedek-hegy" },
+						{ "label": "St. George Chapel", "value": "szent-gyorgy-kapolna" },
+						{ "label": "St. Michael's Basilica", "value": "szent-mihaly-foszekesegyhaz" },
+						{ "label": "Holy Trinity Statue", "value": "szentharomsag-szobor" },
+						{ "label": "Castle Well", "value": "varkut" },
+						{ "label": "Gisela Chapel", "value": "gizella-kapolna" },
+						{ "label": "Archbishop's Palace", "value": "erseki-palota" },
+						{ "label": "Saint Emeric Church", "value": "szent-imre-templom" },
+						{ "label": "Deák Ferenc Street Events Centre", "value": "deak-ferenc-rendezvenykozpont" },
+						{ "label": "Auer House", "value": "auer-haz" },
+						{ "label": "Pósa House", "value": "posa-haz" },
+						{ "label": "Ruttner House - Castle Prison Exhibition", "value": "ruttner-haz-varborton" },
+						{ "label": "CODE Digital Experience Centre", "value": "code-digitalis-elmenykozpont" },
+						{ "label": "Petőfi Theatre of Veszprém", "value": "petofi-szinhaz" },
+						{ "label": "Hangvilla Cultural Centre", "value": "hangvilla" },
+						{ "label": "Eötvös Károly County Library", "value": "eotvos-karoly-megyei-konyvtar" },
+						{ "label": "Ruins of Saint Nicholas Church", "value": "szent-miklos-szeg" },
+						{ "label": "Laczkó Dezső Museum", "value": "laczko-dezso-muzeum" },
+						{ "label": "Bakony House", "value": "bakonyi-haz" },
+						{ "label": "University Sports Courts", "value": "egyetemi-rekortan-sportpalyak" },
+						{ "label": "ActiCity Dance and Movement Centre", "value": "acticity" },
+						{ "label": "Digital Knowledge Centre", "value": "digitalis-tudaskozpont" },
+						{ "label": "Gyárkert Culture Park", "value": "gyarkert-kulturpark" }
+					]
+				},
 				{ "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No destinations are available." },
 				{ "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true, "tooltip": "Opens an app-owned touch keyboard when destination search receives focus." },
 				{
@@ -81,7 +120,7 @@
 				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#17312f", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
 				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#5d716d", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
 				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#d08b2e", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
-				{ "label": "Route", "type": "color", "property": "routeColor", "default": "#cf332b", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
+				{ "label": "Route", "type": "color", "property": "routeColor", "default": "#cf332b", "tooltip": "Route line color for every color scheme." }
 			]
 		}
 	],
