@@ -17,6 +17,8 @@ const openScenario = async (page: Page, scenario = 'app-default'): Promise<void>
 test('the supplied map loads and default selection highlights one destination without inventing a route', async ({ page }): Promise<void> => {
 	await openScenario(page);
 	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-state', 'ready');
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
+	const viewBoxBeforeSelection = await page.locator('#map-artwork').evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
 	await page.locator('[data-destination-id="hosok-kapuja"]').click();
 
 	const root = page.locator('[data-preview-id="veszprem-wayfinding-root"]');
@@ -24,8 +26,11 @@ test('the supplied map loads and default selection highlights one destination wi
 	await expect(root).toHaveAttribute('data-guidance-state', 'highlight');
 	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(1);
 	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target']")).toHaveCount(1);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target-pulse'] animate")).toHaveCount(2);
 	await expect(page.locator('#wb-veszprem-wayfinding-route')).toHaveCount(0);
 	await expect(page.getByText('Highlighted on the map')).toBeVisible();
+	const viewBoxAfterSelection = await page.locator('#map-artwork').evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
+	expect(viewBoxAfterSelection).toBe(viewBoxBeforeSelection);
 });
 
 test('directional mode shows two anchors and a compass cue but no path line', async ({ page }): Promise<void> => {
@@ -35,8 +40,22 @@ test('directional mode shows two anchors and a compass cue but no path line', as
 	const root = page.locator('[data-preview-id="veszprem-wayfinding-root"]');
 	await expect(root).toHaveAttribute('data-guidance-state', 'directional');
 	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin-pulse'] animate")).toHaveCount(2);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin-heading']")).toHaveAttribute('transform', 'rotate(35 372 416)');
 	await expect(page.locator("#wb-veszprem-wayfinding-guidance path")).toHaveCount(0);
 	await expect(page.getByText(/Visual direction only - not a walking path/)).toBeVisible();
+});
+
+test('selecting a destination preserves a manually chosen map viewport', async ({ page }): Promise<void> => {
+	await openScenario(page);
+	await page.getByRole('button', { name: 'Zoom in' }).click();
+	const artwork = page.locator('#map-artwork');
+	const before = await artwork.evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
+	await page.locator('[data-destination-id="hosok-kapuja"]').click();
+	const after = await artwork.evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
+
+	expect(after).toBe(before);
+	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-zoom', '1.25');
 });
 
 test('map hit areas remain invisible while the selected target gets a dedicated spotlight', async ({ page }): Promise<void> => {
@@ -104,7 +123,8 @@ test('dragging a zoomed map pans without selecting a destination', async ({ page
 	const after: string | null = await artwork.evaluate((element: Element): string | null => (element as SVGElement).ownerSVGElement?.getAttribute('viewBox') ?? null);
 
 	expect(after).not.toBe(before);
-	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target']")).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
 });
 
 test('off-map destinations remain selectable without map geometry', async ({ page }): Promise<void> => {
@@ -112,7 +132,8 @@ test('off-map destinations remain selectable without map geometry', async ({ pag
 	await page.getByRole('button', { name: /Future Visitor Centre/ }).click();
 
 	await expect(page.getByText('Not shown on this map')).toBeVisible();
-	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target']")).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
 });
 
 test('bound empty data stays empty and live table updates replace it', async ({ page }): Promise<void> => {
@@ -149,7 +170,8 @@ test('reset clears guidance, filters, keyboard, and map zoom', async ({ page }):
 	await keyboard.getByRole('button', { name: 'Close', exact: true }).click();
 	await page.getByRole('button', { name: 'Reset' }).click();
 
-	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target']")).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
 	await expect(page.getByLabel('Search destinations')).toHaveValue('');
 	await expect(page.getByRole('dialog', { name: 'Search destinations' })).toHaveCount(0);
 	await expect(page.locator('[data-preview-id="veszprem-wayfinding-root"]')).toHaveAttribute('data-map-zoom', '1');
@@ -162,6 +184,7 @@ test('selection reset returns the kiosk to the destination list', async ({ page 
 	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(1);
 
 	await page.clock.fastForward(45_000);
-	await expect(page.locator('#wb-veszprem-wayfinding-guidance')).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='target']")).toHaveCount(0);
+	await expect(page.locator("#wb-veszprem-wayfinding-guidance [data-guidance-layer='origin']")).toHaveCount(1);
 	await expect(page.locator('[data-destination-id="hosok-kapuja"]')).toBeVisible();
 });

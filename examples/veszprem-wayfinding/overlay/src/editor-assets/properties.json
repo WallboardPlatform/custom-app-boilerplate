@@ -98,6 +98,11 @@
 					"label": "Map north offset", "type": "slider", "property": "mapNorthOffsetDegrees", "default": 0, "min": 0, "max": 359, "step": 1,
 					"tooltip": "Venue-confirmed clockwise angle between screen-up and north on the supplied map.",
 					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "directional", "dependsOn": "guidanceMode" }], "rule": "#1" }
+				},
+				{
+					"label": "Kiosk facing on map", "type": "slider", "property": "viewerFacingDegrees", "default": 0, "min": 0, "max": 359, "step": 1,
+					"tooltip": "Clockwise direction the visitor faces on the displayed map: 0 is up, 90 right, 180 down, and 270 left.",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "directional", "dependsOn": "guidanceMode" }], "rule": "#1" }
 				}
 			]
 		},

@@ -28,7 +28,7 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable
 ```
 
 10. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Use `--strict` only when warnings must also fail delivery; never invent accessibility or operational facts to obtain a warning-free report. Rendering alone is not route proof.
-11. Build the assessed mode. Every mode provides search/filter, strong target highlighting, selected-location details, reset, and an app-owned keyboard when text input is used. Add `You are here` and relative direction only with confirmed origin/orientation; add `WayfindingGraph`, unreachable states, and step-free routing only when assessed.
+11. Build the assessed mode. Every mode provides search/filter, strong target highlighting, selected-location details, reset, and an app-owned keyboard when text input is used. Keep a confirmed `You are here` marker visible at rest, pulse current and selected target markers, preserve the visitor-controlled viewport on selection, and add a facing arrow/relative direction only with confirmed origin/orientation. Add `WayfindingGraph`, unreachable states, and step-free routing only when assessed.
 12. Test default, target highlight, long metadata, empty, reset, and live datasource update states. Add route, step-free, floor transition, and closure scenarios only when those capabilities exist. Complete normal visual review and delivery.
 
 ## Non-Negotiable
@@ -45,6 +45,7 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable
 - Preserve source labels/icons unless replacement is needed for interaction, localization, theming, or readability. Do not mandate inpainting.
 - Do not embed arbitrary HTML, scripts, event handlers, credentials, customer records, or live customer URLs in SVG/metadata.
 - Do not ship unresolved disconnected destinations, unexplained edge crossings, backtracking/detour warnings, high-degree shortcuts, or unreviewed graph warnings. Connectivity alone is not route proof.
+- Treat print-first artwork as a classic highlight source. When trustworthy routing is required and `equivalentRedrawAllowed` is true, create a standardized route-first 2D signage redraw with explicit corridors, crossings, entrances, transitions, and a documented geometry tolerance; preserve the accepted brand and authoritative spatial relationships. Project any future 3D view from the same reviewed 2D topology.
 
 ## Deliver
 

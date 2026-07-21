@@ -13,7 +13,7 @@ npm run wayfinding:assess -- --project wayfinding-project.json
 | Mode | Visitor experience | Required confirmed evidence |
 |------|--------------------|-----------------------------|
 | Directory | Search, categories, destination details | Destination metadata |
-| Highlight | Directory plus strong target spotlight and viewport focus | Metadata + destination anchors |
+| Highlight | Directory plus strong target spotlight while preserving the visitor's map context | Metadata + destination anchors |
 | Directional | Highlight target and `You are here`; show relative direction without implying a walkable path | Highlight + current-location anchors + orientation |
 | Route | Draw a traversable path from the installed kiosk/start | Metadata, destination/current anchors, entrance approaches, graph topology, independent walkable space; transitions for multi-level maps |
 
@@ -25,14 +25,18 @@ Confirmed evidence requires a named review method. AI inference and image segmen
 
 | Mode | Use when | Output |
 |------|----------|--------|
-| Source overlay (default) | Supplied map is branded, detailed, or expensive to redraw | Original raster/PDF render under vector hit areas; route overlay only when separately certified |
+| Source overlay (classic) | Supplied map is branded, detailed, or expensive to redraw; highlight is the primary job | Original raster/PDF render under vector hit areas; route overlay only when separately certified |
+| Redrawn equivalent (route-first) | A print-oriented source obscures corridors, crossings, entrances, or touch targets | Standardized signage map with explicit walkable geometry, entrances, zones, landmarks, and interactive layers |
 | Schematic | Distance readability and simple navigation matter more than exact geometry | Simplified vector landmarks, corridors, zones, and labels |
-| Exact vector | Accurate geometry is required and the source supports reliable tracing | Vector base plus interactive layers |
 | Calibrated isometric | Supplied 3D artwork is valuable but is not a route coordinate plane | Separate 2D topology projected into the visual layer after calibration |
 
 Do not inpaint source labels/icons by default. Remove them only when they must become dynamic, localized, themeable, or independently interactive.
 
 `equivalentRedrawAllowed` means the supplied image is a semantic reference, not a mandatory rendering. Prefer a clean equivalent or schematic map when it improves legibility, localization, maintainability, or spatial clarity. Preserve authoritative geometry and customer identity; do not preserve raster defects merely for pixel fidelity.
+
+Print maps are normally highlight sources, not route models. For route-first delivery, redraw into a standardized 2D signage profile while carrying forward the accepted brand, landmark language, and authoritative spatial relationships. Preserve measured proportions within a project-defined tolerance; target at most 1% deviation only when the source itself provides survey-grade geometry. If it does not, record the uncertainty instead of claiming false precision.
+
+The redraw must expose walkable corridors, legal crossings, doors, stairs, elevators, level transitions, destination entrances, and current-position orientation as separate reviewable semantics. The original remains a comparison reference. A future 3D or isometric presentation should consume the same canonical 2D topology and a calibrated visual projection; never route directly in perspective screen coordinates.
 
 ## Ownership
 
@@ -118,13 +122,14 @@ The workbench destination editor highlights the selected graph anchor, reports i
 ## Product Baseline
 
 - Search, category filters, aliases, app-owned multilingual keyboard.
-- Fixed or selectable "you are here", route reset, idle timeout, privacy-safe session state.
+- Fixed or selectable "you are here", venue-confirmed facing direction, route reset, idle timeout, privacy-safe session state.
 - Destination detail panel/modal with description, image, hours, accessibility, live status, and optional CTA.
 - Pan/zoom, floor switch, transition indicators, legend, standard/step-free route modes.
 - Dynamic closures, off-map state, unreachable state, and designed empty/loading failures.
 - Optional sensor events and external commands for search, selection, route, reset, start, and target.
 - Near-view touch targets and complete essential directions; do not sacrifice legibility to fit more destinations.
-- Highlight mode dims unselected regions, preserves map context, pulses or outlines the target, fits `You are here` and the destination together, and shows a readable callout.
+- Keep the current-position marker visible and pulsing at rest; add a facing arrow only after venue orientation is confirmed.
+- Highlight mode dims unselected regions, preserves the current viewport, pulses the target, fits `You are here` and the destination together, and shows a readable callout. Selecting a destination must not auto-pan or auto-zoom; movement is visitor-controlled.
 - Directional mode uses relative orientation and semantic cues such as floor, zone, or wing. Show distance only when calibrated; do not draw a line that resembles a verified walking route.
 
 ## Authoring And QA

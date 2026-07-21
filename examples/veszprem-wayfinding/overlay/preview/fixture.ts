@@ -35,6 +35,7 @@ const baseConfig: Record<string, unknown> = {
 	orientationConfirmed: false,
 	routeResetSeconds: 45,
 	mapNorthOffsetDegrees: 0,
+	viewerFacingDegrees: 0,
 	motionPreset: 'subtle',
 	themePreset: 'light',
 	backgroundColor: '#ead9c8',
@@ -114,7 +115,7 @@ export const previewScenarios: PreviewScenario[] = [
 	},
 	{
 		id: 'directional-guidance',
-		fixture: createFixture('veszprem-wayfinding-directional', withRows(rowsById('tourinform-veszprem', 'hosok-kapuja')), { ...baseConfig, guidanceMode: 'directional', orientationConfirmed: true }),
+		fixture: createFixture('veszprem-wayfinding-directional', withRows(rowsById('tourinform-veszprem', 'hosok-kapuja')), { ...baseConfig, guidanceMode: 'directional', orientationConfirmed: true, viewerFacingDegrees: 35 }),
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		interactionSteps: [{ type: 'click', role: 'button', name: 'Hősök Kapuja' }],
 		minimumContentCoverage: { width: 96, height: 94 }
@@ -245,6 +246,14 @@ export const previewSettingEffects: PreviewSettingEffect[] = [
 		changedValue: 45,
 		selector: '[data-preview-id="veszprem-wayfinding-root"]',
 		measurement: { type: 'attribute', name: 'data-map-north' },
+		expectation: { type: 'change' }
+	},
+	{
+		id: 'viewer-facing',
+		property: 'viewerFacingDegrees',
+		changedValue: 90,
+		selector: '[data-preview-id="veszprem-wayfinding-root"]',
+		measurement: { type: 'attribute', name: 'data-viewer-facing' },
 		expectation: { type: 'change' }
 	}
 ];

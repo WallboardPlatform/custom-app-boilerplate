@@ -300,22 +300,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		setMapZoom(1);
 	};
 
-	const fitGuidanceView = (points: Array<Pick<MapPoint, 'x' | 'y'>>, maximumZoom = 2.5): void => {
-		if (points.length === 0) return;
-
-		const xValues = points.map((point): number => point.x);
-		const yValues = points.map((point): number => point.y);
-		const padding = 70;
-		const width = Math.max(1, Math.max(...xValues) - Math.min(...xValues) + padding * 2);
-		const height = Math.max(1, Math.max(...yValues) - Math.min(...yValues) + padding * 2);
-		setMapCenter({
-			x: (Math.min(...xValues) + Math.max(...xValues)) / 2,
-			y: (Math.min(...yValues) + Math.max(...yValues)) / 2
-		});
-		setMapZoom(clamp(Math.min(MAP_WIDTH / width, MAP_HEIGHT / height), 1, maximumZoom));
-	};
-
-	const removeRouteMarkup = (): void => {
+	const removeGuidanceMarkup = (): void => {
 		if (!svg) return;
 
 		for (const markup of Array.from(svg.querySelectorAll(`[id='${GUIDANCE_GROUP_ID}']`))) markup.remove();
@@ -332,7 +317,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	const resetSession = (): void => {
 		clearResetTimer();
-		removeRouteMarkup();
 		setCategory(ALL_CATEGORIES);
 		setKeyboardOpen(false);
 		setQuery('');
@@ -346,68 +330,134 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		resetTimer = setTimeout(resetSession, settings().routeResetSeconds * 1000);
 	};
 
-	const drawFocusMarkup = (destination: MapPoint, mode: 'highlight' | 'directional'): void => {
+	const appendPulse = (
+		parent: SVGElement,
+		point: MapPoint,
+		color: string,
+		layer: string,
+		baseRadius: number,
+		pulseRadius: number
+	): void => {
+		const namespace = 'http://www.w3.org/2000/svg';
+		const ring: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+		ring.setAttribute('cx', String(point.x));
+		ring.setAttribute('cy', String(point.y));
+		ring.setAttribute('data-guidance-layer', layer);
+		ring.setAttribute('fill', 'none');
+		ring.setAttribute('opacity', '0.72');
+		ring.setAttribute('r', String(baseRadius));
+		ring.setAttribute('stroke', color);
+		ring.setAttribute('stroke-width', '5');
+		ring.setAttribute('vector-effect', 'non-scaling-stroke');
+
+		if (settings().motionPreset !== 'off') {
+			const radiusAnimation: SVGElement = document.createElementNS(namespace, 'animate');
+			const opacityAnimation: SVGElement = document.createElementNS(namespace, 'animate');
+
+			radiusAnimation.setAttribute('attributeName', 'r');
+			radiusAnimation.setAttribute('dur', '1.8s');
+			radiusAnimation.setAttribute('repeatCount', 'indefinite');
+			radiusAnimation.setAttribute('values', `${baseRadius};${pulseRadius};${baseRadius}`);
+			opacityAnimation.setAttribute('attributeName', 'opacity');
+			opacityAnimation.setAttribute('dur', '1.8s');
+			opacityAnimation.setAttribute('repeatCount', 'indefinite');
+			opacityAnimation.setAttribute('values', '0.82;0.08;0.82');
+			ring.append(radiusAnimation, opacityAnimation);
+		}
+
+		parent.append(ring);
+	};
+
+	const appendCurrentLocation = (group: SVGGElement, start: MapPoint): void => {
+		const namespace = 'http://www.w3.org/2000/svg';
+		const origin: SVGGElement = document.createElementNS(namespace, 'g');
+		const core: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+		origin.setAttribute('data-facing-degrees', String(settings().viewerFacingDegrees));
+		origin.setAttribute('data-guidance-layer', 'origin');
+		appendPulse(origin, start, settings().accentColor, 'origin-pulse', 19, 34);
+		core.setAttribute('cx', String(start.x));
+		core.setAttribute('cy', String(start.y));
+		core.setAttribute('data-guidance-layer', 'origin-core');
+		core.setAttribute('fill', settings().primaryTextColor);
+		core.setAttribute('r', '9');
+		core.setAttribute('stroke', settings().panelColor);
+		core.setAttribute('stroke-width', '4');
+		core.setAttribute('vector-effect', 'non-scaling-stroke');
+		origin.append(core);
+
+		if (settings().orientationConfirmed) {
+			const heading: SVGPolygonElement = document.createElementNS(namespace, 'polygon');
+			heading.setAttribute('data-guidance-layer', 'origin-heading');
+			heading.setAttribute('fill', settings().accentColor);
+			heading.setAttribute('points', `${start.x},${start.y - 37} ${start.x - 9},${start.y - 17} ${start.x + 9},${start.y - 17}`);
+			heading.setAttribute('stroke', settings().panelColor);
+			heading.setAttribute('stroke-width', '3');
+			heading.setAttribute('transform', `rotate(${settings().viewerFacingDegrees} ${start.x} ${start.y})`);
+			heading.setAttribute('vector-effect', 'non-scaling-stroke');
+			origin.append(heading);
+		}
+
+		group.append(origin);
+	};
+
+	const drawGuidanceMarkup = (destination?: MapPoint, mode?: 'highlight' | 'directional'): void => {
 		if (!svg) return;
 
+		removeGuidanceMarkup();
 		const namespace = 'http://www.w3.org/2000/svg';
 		const group: SVGGElement = document.createElementNS(namespace, 'g');
-		const definitions: SVGDefsElement = document.createElementNS(namespace, 'defs');
-		const mask: SVGMaskElement = document.createElementNS(namespace, 'mask');
-		const maskId = `${GUIDANCE_GROUP_ID}-mask`;
-		const maskBase: SVGRectElement = document.createElementNS(namespace, 'rect');
-		const maskOpening: SVGCircleElement = document.createElementNS(namespace, 'circle');
-		const shade: SVGRectElement = document.createElementNS(namespace, 'rect');
-		const targetHalo: SVGCircleElement = document.createElementNS(namespace, 'circle');
-		const targetCore: SVGCircleElement = document.createElementNS(namespace, 'circle');
 		const start: MapPoint | undefined = locationCenter(settings().startLocationId);
+
+		if (!start && !destination) return;
 
 		group.id = GUIDANCE_GROUP_ID;
 		group.setAttribute('pointer-events', 'none');
-		mask.id = maskId;
-		maskBase.setAttribute('fill', '#ffffff');
-		maskBase.setAttribute('height', String(MAP_HEIGHT));
-		maskBase.setAttribute('width', String(MAP_WIDTH));
-		maskOpening.setAttribute('cx', String(destination.x));
-		maskOpening.setAttribute('cy', String(destination.y));
-		maskOpening.setAttribute('fill', '#000000');
-		maskOpening.setAttribute('r', '54');
-		mask.append(maskBase, maskOpening);
-		definitions.append(mask);
-		shade.setAttribute('data-guidance-layer', 'shade');
-		shade.setAttribute('fill', settings().panelColor);
-		shade.setAttribute('height', String(MAP_HEIGHT));
-		shade.setAttribute('mask', `url(#${maskId})`);
-		shade.setAttribute('opacity', '0.34');
-		shade.setAttribute('width', String(MAP_WIDTH));
-		targetHalo.setAttribute('cx', String(destination.x));
-		targetHalo.setAttribute('cy', String(destination.y));
-		targetHalo.setAttribute('data-guidance-layer', 'target');
-		targetHalo.setAttribute('fill', 'none');
-		targetHalo.setAttribute('r', '24');
-		targetHalo.setAttribute('stroke', settings().routeColor);
-		targetHalo.setAttribute('stroke-width', '6');
-		targetHalo.setAttribute('vector-effect', 'non-scaling-stroke');
-		targetCore.setAttribute('cx', String(destination.x));
-		targetCore.setAttribute('cy', String(destination.y));
-		targetCore.setAttribute('data-guidance-layer', 'target-core');
-		targetCore.setAttribute('fill', settings().routeColor);
-		targetCore.setAttribute('r', '7');
-		targetCore.setAttribute('stroke', settings().panelColor);
-		targetCore.setAttribute('stroke-width', '3');
-		targetCore.setAttribute('vector-effect', 'non-scaling-stroke');
-		group.append(definitions, shade, targetHalo, targetCore);
 
-		if (mode === 'directional' && start && (start.x !== destination.x || start.y !== destination.y)) {
-			const origin: SVGCircleElement = document.createElementNS(namespace, 'circle');
-			origin.setAttribute('cx', String(start.x));
-			origin.setAttribute('cy', String(start.y));
-			origin.setAttribute('data-guidance-layer', 'origin');
-			origin.setAttribute('fill', settings().primaryTextColor);
-			origin.setAttribute('r', '9');
-			origin.setAttribute('stroke', settings().panelColor);
-			origin.setAttribute('stroke-width', '4');
-			origin.setAttribute('vector-effect', 'non-scaling-stroke');
-			group.append(origin);
+		if (destination && mode) {
+			const definitions: SVGDefsElement = document.createElementNS(namespace, 'defs');
+			const mask: SVGMaskElement = document.createElementNS(namespace, 'mask');
+			const maskId = `${GUIDANCE_GROUP_ID}-mask`;
+			const maskBase: SVGRectElement = document.createElementNS(namespace, 'rect');
+			const maskOpening: SVGCircleElement = document.createElementNS(namespace, 'circle');
+			const shade: SVGRectElement = document.createElementNS(namespace, 'rect');
+			const target: SVGGElement = document.createElementNS(namespace, 'g');
+			const targetCore: SVGCircleElement = document.createElementNS(namespace, 'circle');
+
+			mask.id = maskId;
+			maskBase.setAttribute('fill', '#ffffff');
+			maskBase.setAttribute('height', String(MAP_HEIGHT));
+			maskBase.setAttribute('width', String(MAP_WIDTH));
+			maskOpening.setAttribute('cx', String(destination.x));
+			maskOpening.setAttribute('cy', String(destination.y));
+			maskOpening.setAttribute('fill', '#000000');
+			maskOpening.setAttribute('r', '58');
+			mask.append(maskBase, maskOpening);
+			definitions.append(mask);
+			shade.setAttribute('data-guidance-layer', 'shade');
+			shade.setAttribute('fill', settings().panelColor);
+			shade.setAttribute('height', String(MAP_HEIGHT));
+			shade.setAttribute('mask', `url(#${maskId})`);
+			shade.setAttribute('opacity', '0.34');
+			shade.setAttribute('width', String(MAP_WIDTH));
+			target.setAttribute('data-guidance-layer', 'target');
+			appendPulse(target, destination, settings().routeColor, 'target-pulse', 25, 43);
+			targetCore.setAttribute('cx', String(destination.x));
+			targetCore.setAttribute('cy', String(destination.y));
+			targetCore.setAttribute('data-guidance-layer', 'target-core');
+			targetCore.setAttribute('fill', settings().routeColor);
+			targetCore.setAttribute('r', '8');
+			targetCore.setAttribute('stroke', settings().panelColor);
+			targetCore.setAttribute('stroke-width', '3');
+			targetCore.setAttribute('vector-effect', 'non-scaling-stroke');
+			target.append(targetCore);
+			group.append(definitions, shade);
+
+			if (start) appendCurrentLocation(group, start);
+			group.append(target);
+		} else if (start) {
+			appendCurrentLocation(group, start);
 		}
 
 		const hitTargets: Element | null = svg.querySelector('#location-hit-targets');
@@ -419,7 +469,6 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const selectDestination = (destination: Destination, restartTimer = true): void => {
 		if (!svg) return;
 
-		removeRouteMarkup();
 		setSelectedId(destination.id);
 		setKeyboardOpen(false);
 		const mode: WayfindingGuidanceMode = activeGuidanceMode();
@@ -427,16 +476,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		if (!destinationNode) {
 			setGuidanceState('external');
-			resetMapView();
 		} else if (mode === 'directory') {
 			setGuidanceState('directory');
-			resetMapView();
 		} else {
 			const resolvedMode: 'highlight' | 'directional' = mode === 'directional' ? 'directional' : 'highlight';
-			const start: MapPoint | undefined = locationCenter(settings().startLocationId);
-			drawFocusMarkup(destinationNode, resolvedMode);
 			setGuidanceState(resolvedMode);
-			fitGuidanceView(resolvedMode === 'directional' && start ? [start, destinationNode] : [destinationNode], resolvedMode === 'highlight' ? 2.2 : 2.5);
 		}
 
 		if (restartTimer) scheduleReset();
@@ -595,6 +639,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const startLocationId: string = settings().startLocationId;
 		const guidanceMode: WayfindingGuidanceMode = settings().guidanceMode;
 		const mapNorthOffsetDegrees: number = settings().mapNorthOffsetDegrees;
+		const orientationConfirmed: boolean = settings().orientationConfirmed;
 		const selected: Destination | undefined = untrack(selectedDestination);
 
 		if (selected) {
@@ -602,33 +647,37 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				void startLocationId;
 				void guidanceMode;
 				void mapNorthOffsetDegrees;
+				void orientationConfirmed;
 				selectDestination(selected, false);
 			});
 		}
 	});
 
 	createEffect((): void => {
-		const color: string = settings().routeColor;
-		const panelColor: string = settings().panelColor;
+		const state: MapState = mapState();
+		const selected: Destination | undefined = selectedDestination();
+		const mode: WayfindingGuidanceMode = activeGuidanceMode();
+		const destination: MapPoint | undefined = selected ? locationCenter(selected.id) : undefined;
 
-		if (!svg) return;
+		void settings().accentColor;
+		void settings().motionPreset;
+		void settings().orientationConfirmed;
+		void settings().panelColor;
+		void settings().primaryTextColor;
+		void settings().routeColor;
+		void settings().startLocationId;
+		void settings().viewerFacingDegrees;
 
-		for (const element of Array.from(svg.querySelectorAll(`#${GUIDANCE_GROUP_ID} [data-guidance-layer='target']`))) {
-			element.setAttribute('stroke', color);
-		}
+		if (state !== 'ready' || !svg) return;
 
-		for (const element of Array.from(svg.querySelectorAll(`#${GUIDANCE_GROUP_ID} [data-guidance-layer='target-core']`))) {
-			element.setAttribute('fill', color);
-			element.setAttribute('stroke', panelColor);
-		}
-
-		for (const element of Array.from(svg.querySelectorAll(`#${GUIDANCE_GROUP_ID} [data-guidance-layer='shade']`))) {
-			element.setAttribute('fill', panelColor);
-		}
+		drawGuidanceMarkup(destination, selected && destination && mode !== 'directory'
+			? mode === 'directional' ? 'directional' : 'highlight'
+			: undefined);
 	});
 
 	onCleanup((): void => {
 		clearResetTimer();
+		removeGuidanceMarkup();
 		mapHost?.removeEventListener('pointerdown', handleMapPointerDown);
 		mapHost?.removeEventListener('pointermove', handleMapPointerMove);
 		mapHost?.removeEventListener('pointerup', handleMapPointerEnd);
@@ -652,6 +701,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-map-north={settings().mapNorthOffsetDegrees}
 			data-map-zoom={mapZoom()}
 			data-orientation-confirmed={settings().orientationConfirmed}
+			data-viewer-facing={settings().viewerFacingDegrees}
 			data-guidance-mode={activeGuidanceMode()}
 			data-guidance-state={guidanceState()}
 			data-motion={settings().motionPreset}

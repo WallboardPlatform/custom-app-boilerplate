@@ -1,13 +1,13 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "97c78f660b5773a9bd7d9774fb8faf2d3498241f9c501e543e46e516db5b4224",
-	"reviewedAt": "2026-07-21",
+	"sourceHash": "b4588d8c52639ef1d191dcff61dcbe357749ea4fb97fc29ffcb6afd900aad4d8",
+	"reviewedAt": "2026-07-21T15:22:25+02:00",
 	"reviewer": "Codex visual review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The experience is a multilingual touch directory with search, pan and zoom, map highlighting, optional evidence-bounded directional guidance, and no invented walking route."
+			"notes": "The experience is a multilingual touch directory with search, visitor-controlled pan and zoom, persistent current-position and target pulses, optional evidence-bounded directional guidance, and no invented walking route."
 		},
 		{
 			"id": "referenceFidelity",
@@ -42,7 +42,7 @@
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "The source map renders sharply, custom colors propagate, selected markers are restrained, and directional mode uses separate origin and destination markers."
+			"notes": "The source map renders sharply, custom colors propagate, current and selected markers pulse distinctly, and the venue-confirmed facing arrow remains separate from destination guidance."
 		},
 		{
 			"id": "exampleSameness",
@@ -54,7 +54,7 @@
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full-HD directory is complete and uncluttered."
+			"notes": "Full-HD directory is complete and uncluttered, with the current-position marker visible before interaction."
 		},
 		{
 			"file": "compact-1366x768.png",
@@ -64,7 +64,7 @@
 		{
 			"file": "scenario-active-highlight-1920x1080.png",
 			"status": "pass",
-			"notes": "One destination is isolated with a strong spotlight and no false route line."
+			"notes": "One destination is isolated with a strong pulsing spotlight and no false route line or automatic viewport change."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
@@ -84,7 +84,7 @@
 		{
 			"file": "scenario-directional-guidance-1920x1080.png",
 			"status": "pass",
-			"notes": "Origin and destination remain distinct, the compass direction is readable, and the UI explicitly states that it is not a walking path."
+			"notes": "Pulsing origin and target remain distinct, the map-relative facing arrow and compass direction are readable, and the UI explicitly states that it is not a walking path."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",

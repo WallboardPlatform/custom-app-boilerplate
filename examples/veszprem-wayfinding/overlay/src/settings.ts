@@ -75,6 +75,7 @@ export default function mapSettings(config: ConfigValues): Settings {
 		startLocationId: textSetting(config.startLocationId, 'tourinform-veszprem'),
 		subtitle: textSetting(config.subtitle, 'Choose a landmark or tap its number on the map.'),
 		themePreset,
-		title: textSetting(config.title, 'Veszprem Downtown Wayfinding')
+		title: textSetting(config.title, 'Veszprem Downtown Wayfinding'),
+		viewerFacingDegrees: numberSetting(config.viewerFacingDegrees, 0, 0, 359)
 	};
 }

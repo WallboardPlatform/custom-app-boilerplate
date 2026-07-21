@@ -33,6 +33,7 @@ export interface Settings extends Record<string, unknown> {
 	subtitle: string;
 	themePreset: ThemePreset;
 	title: string;
+	viewerFacingDegrees: number;
 }
 
 export interface ConfigValues {
@@ -55,4 +56,5 @@ export interface ConfigValues {
 	subtitle?: string;
 	themePreset?: string;
 	title?: string;
+	viewerFacingDegrees?: number;
 }

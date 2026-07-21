@@ -53,7 +53,7 @@
 			"id": "kiosk-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["title", "subtitle", "guidanceMode", "startLocationId", "orientationConfirmed", "mapNorthOffsetDegrees", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds"],
+			"targets": ["title", "subtitle", "guidanceMode", "startLocationId", "orientationConfirmed", "mapNorthOffsetDegrees", "viewerFacingDegrees", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "routeResetSeconds"],
 			"rationale": "Operators can adapt public copy, evidenced guidance strength, current position, orientation, touch keyboard, and reset timing."
 		},
 		{
@@ -139,6 +139,7 @@
 		{ "property": "startLocationId", "purpose": "Selects the kiosk current-position anchor for directional guidance." },
 		{ "property": "orientationConfirmed", "purpose": "Records explicit venue confirmation before directional guidance can activate.", "effect": "orientation-confirmation" },
 		{ "property": "mapNorthOffsetDegrees", "purpose": "Aligns compass copy with the supplied map orientation.", "effect": "map-orientation" },
+		{ "property": "viewerFacingDegrees", "purpose": "Rotates the venue-confirmed current-position heading marker in displayed map coordinates.", "effect": "viewer-facing" },
 		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
 		{ "property": "interfaceLanguages", "purpose": "Selects English, Hungarian, or an on-screen language selector." },
 		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
