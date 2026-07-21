@@ -78,6 +78,7 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
 | Validate wayfinding | `npm run wayfinding:validate -- ...` |
+| Assess wayfinding evidence/mode | `npm run wayfinding:assess -- --project wayfinding-project.json` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |

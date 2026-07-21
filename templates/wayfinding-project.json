@@ -1,0 +1,26 @@
+{
+	"contractVersion": 1,
+	"projectId": "replace-me",
+	"source": {
+		"kind": "floor-plan",
+		"presentation": "source-overlay",
+		"levels": 1,
+		"equivalentRedrawAllowed": true
+	},
+	"guidance": {
+		"targetMode": "highlight",
+		"allowFallback": true,
+		"stepFreeRequired": false
+	},
+	"evidence": {
+		"destinationMetadata": { "status": "unavailable", "provenance": "customer-provided" },
+		"destinationAnchors": { "status": "unavailable", "provenance": "ai-inferred" },
+		"currentLocationAnchors": { "status": "unavailable", "provenance": "customer-provided" },
+		"orientation": { "status": "unavailable", "provenance": "customer-provided" },
+		"walkableSpace": { "status": "unavailable", "provenance": "image-analysis" },
+		"routeTopology": { "status": "unavailable", "provenance": "ai-inferred" },
+		"entranceApproaches": { "status": "unavailable", "provenance": "ai-inferred" },
+		"levelTransitions": { "status": "unavailable", "provenance": "ai-inferred" },
+		"accessibility": { "status": "unavailable", "provenance": "customer-provided" }
+	}
+}

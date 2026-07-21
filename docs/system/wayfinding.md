@@ -1,6 +1,25 @@
 # Wayfinding
 
-Generate wayfinding as visual map geometry, a confirmed walkable mask, an explicit route graph, and an editable destination table. A structurally valid SVG is not proof of usable routing.
+Generate the strongest guidance justified by available evidence. Every project needs an interactive visual map and editable destination data; walkable space and a route graph are optional artifacts used only when routing is independently certifiable. A plausible line, connected graph, or structurally valid SVG is not proof of usable routing.
+
+## Guidance Decision
+
+Copy `templates/wayfinding-project.json`, record only known/reviewed facts, validate it against `schemas/wayfinding-project.schema.json`, then run:
+
+```bash
+npm run wayfinding:assess -- --project wayfinding-project.json
+```
+
+| Mode | Visitor experience | Required confirmed evidence |
+|------|--------------------|-----------------------------|
+| Directory | Search, categories, destination details | Destination metadata |
+| Highlight | Directory plus strong target spotlight and viewport focus | Metadata + destination anchors |
+| Directional | Highlight target and `You are here`; show relative direction without implying a walkable path | Highlight + current-location anchors + orientation |
+| Route | Draw a traversable path from the installed kiosk/start | Metadata, destination/current anchors, entrance approaches, graph topology, independent walkable space; transitions for multi-level maps |
+
+If the target mode is not certified, deliver the highest allowed fallback only when `allowFallback` is explicit. Never represent a straight line, arrow, or animated trail as a walking route. A strong highlight experience is a valid product mode, not a failed route.
+
+Confirmed evidence requires a named review method. AI inference and image segmentation remain `proposed` until overlay, source-authority, field, or customer review. Confirmed walkable space must declare independence from route topology; a graph-derived corridor envelope cannot certify the graph.
 
 ## Source Decision
 
@@ -9,8 +28,11 @@ Generate wayfinding as visual map geometry, a confirmed walkable mask, an explic
 | Hybrid (default) | Supplied map is branded, detailed, or expensive to redraw | Original raster/PDF render under vector hit areas and routes |
 | Schematic | Distance readability and simple navigation matter more than exact geometry | Simplified vector landmarks, corridors, zones, and labels |
 | Exact vector | Accurate geometry is required and the source supports reliable tracing | Vector base plus interactive layers |
+| Calibrated isometric | Supplied 3D artwork is valuable but is not a route coordinate plane | Separate 2D topology projected into the visual layer after calibration |
 
 Do not inpaint source labels/icons by default. Remove them only when they must become dynamic, localized, themeable, or independently interactive.
+
+`equivalentRedrawAllowed` means the supplied image is a semantic reference, not a mandatory rendering. Prefer a clean equivalent or schematic map when it improves legibility, localization, maintainability, or spatial clarity. Preserve authoritative geometry and customer identity; do not preserve raster defects merely for pixel fidelity.
 
 ## Ownership
 
@@ -20,6 +42,7 @@ Do not inpaint source labels/icons by default. Remove them only when they must b
 | `walkable-mask.json` | Independently reviewed traversable space in map coordinates | Route topology, destination copy, or inferred accessibility |
 | `route-graph.json` | Nodes, explicit edges, floor transitions, accessibility, optional measured distances | Destination descriptions or presentation |
 | destination `TABLE` | Name, aliases, description, category, floor, hours, image, status, accessibility, keywords, CTA | SVG geometry or graph edges |
+| `wayfinding-project.json` | Source class, presentation strategy, target/fallback mode, evidence status and review provenance | Geometry, destination copy, or unreviewed claims |
 
 Graph location nodes represent walkable entrances/approach points, not polygon centroids. Keep `locationId` explicit in graph nodes. Annotate the corresponding SVG hit target with `data-wayfinding-location-id`; the table is authoritative for public copy.
 
@@ -57,6 +80,16 @@ npm run wayfinding:audit-source -- --svg legacy-map.svg --report-dir wayfinding-
 
 The audit reports duplicate IDs and executable content, migrates location geometry to native annotations, and exports proposed legacy location anchors. Legacy route-point clouds are evidence only: the audit never infers graph edges.
 
+Classify the source before extraction:
+
+| Source class | Typical first delivery | Route path |
+|--------------|------------------------|------------|
+| Clean 2D floor plan or mall directory | Highlight or reviewed route | Trace corridors, entrances, doors, and transitions |
+| Illustrated tourist/campus map | Highlight or directional | Route only after a separate street/path model is confirmed; artwork colors are not topology |
+| 3D/isometric directory | Highlight | Build a separate 2D topology and calibrate projection before any route overlay |
+| CAD/BIM/GIS/vector network | Route candidate | Import authoritative geometry, then review entrances, restrictions, levels, and accessibility |
+| Poor scan/photo or incomplete source | Redrawn equivalent highlight | Ask for missing spatial facts; do not infer a certified path from decoration |
+
 Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image or after auditing an existing SVG.
 
 1. AI/OCR proposes destination IDs and metadata; never treat OCR as confirmed copy.
@@ -69,6 +102,8 @@ Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a s
 Mask extraction and skeletons may propose topology but never certify it. Color extraction can miss valid paths hidden by labels, buildings, crossings, or other artwork; complete those semantics during overlay review. Indoor, outdoor, and mixed maps require different walkability semantics; entrances, junctions, edges, and accessibility remain reviewer decisions.
 
 For a hand-authored graph, a graph-derived corridor envelope is useful only as a regression check. It is not an independent walkable mask and cannot certify the same graph that generated it; review every representative route over the source map.
+
+Visual review by the same model that proposed a route is diagnostic, not independent evidence. Automated image checks may reject obvious crossings and mask violations, but must not promote uncertain raster inference to `confirmed`.
 
 ## Metadata Updates
 
@@ -89,6 +124,8 @@ The workbench destination editor highlights the selected graph anchor and export
 - Dynamic closures, off-map state, unreachable state, and designed empty/loading failures.
 - Optional sensor events and external commands for search, selection, route, reset, start, and target.
 - Near-view touch targets and complete essential directions; do not sacrifice legibility to fit more destinations.
+- Highlight mode dims unselected regions, preserves map context, pulses or outlines the target, fits `You are here` and the destination together, and shows a readable callout.
+- Directional mode uses relative orientation and semantic cues such as floor, zone, or wing. Show distance only when calibrated; do not draw a line that resembles a verified walking route.
 
 ## Authoring And QA
 
@@ -104,9 +141,9 @@ The report must show zero errors. Inspect `wayfinding-debug.svg` and representat
 
 Deliver the app ZIP plus:
 
+- assessed `wayfinding-project.json`;
 - native annotated `map.svg`;
-- confirmed `walkable-mask.json`;
-- canonical `route-graph.json`;
 - destination datasource contract and synthetic template;
-- validation report and graph overlay;
-- screenshots of the default, selected route, long metadata, unreachable, step-free, and reset states.
+- screenshots of default, highlighted destination, long metadata, empty, and reset states.
+
+Route projects also deliver confirmed `walkable-mask.json`, canonical `route-graph.json`, validation report, graph overlay, and selected/unreachable/step-free evidence that applies.

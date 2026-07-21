@@ -1,5 +1,12 @@
 # Wayfinding Artifacts
 
+## `wayfinding-project.json`
+
+- Validate with `schemas/wayfinding-project.schema.json` and `npm run wayfinding:assess` before implementation.
+- Record source class, presentation mode, target/fallback guidance, evidence provenance, and review method.
+- `confirmed` always names a non-AI review method. Keep uncertain extraction `proposed`.
+- A route-capable project declares confirmed walkable space independent from route topology.
+
 ## `map.svg`
 
 - Root: positive stable viewBox; dimensions and internal structure follow the accepted design.
@@ -12,6 +19,8 @@
 
 Validate against `schemas/wayfinding-route-graph.schema.json`.
 
+Omit this artifact for directory, highlight, and directional projects. Do not add a decorative straight line as a substitute.
+
 - Nodes own coordinates, level, kind, and location mapping.
 - Node coordinates use the root SVG viewBox coordinate system even when artwork is nested or transformed.
 - Edges own explicit adjacency, direction, route kind, accessibility, and optional measured metres.
@@ -20,6 +29,8 @@ Validate against `schemas/wayfinding-route-graph.schema.json`.
 - Prefer a small intentional graph over an unnecessarily dense mesh. Add a node at every real junction and bend required for route shape.
 
 ## `walkable-mask.json`
+
+Omit this artifact when routing is not assessed. Highlight geometry belongs in `map.svg`, not in a fake walkable mask.
 
 - Generate in the same root coordinate system as `map.svg`; bounds must match the SVG viewBox.
 - Review connected traversable space against the visible source. Correct crossings, doors, false-positive background regions, and route margins explicitly.

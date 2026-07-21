@@ -5,34 +5,37 @@ description: Create or repair a Wallboard interactive wayfinding custom app from
 
 # Create Wayfinding App
 
-Build four independent artifacts: visual `map.svg`, confirmed `walkable-mask.json`, canonical `route-graph.json`, and editable destination `TABLE`. Treat the supplied reference and accepted use case as art direction; examples provide mechanics only.
+Build an interactive map whose guidance strength matches confirmed evidence. Every project needs visual `map.svg` plus an editable destination `TABLE`; add `walkable-mask.json` and `route-graph.json` only for independently certifiable routing. Treat the supplied reference and accepted use case as art direction; an equivalent redraw is allowed when it serves the visitor better.
 
 ## Workflow
 
 1. Read `AGENTS.md`, `docs/system/wayfinding.md`, the supplied source, and only the other task-relevant system docs.
 2. Resolve kiosk surface, current-location policy, floors, languages, required accessibility modes, data ownership, and delivery. Ask only when an unknown changes the map or graph materially.
-3. Choose and record one visual mode:
+3. Copy `templates/wayfinding-project.json` to the project. Choose target guidance (`directory`, `highlight`, `directional`, or `route`), explicit fallback policy, evidence status, and one visual mode:
    - **Hybrid by default:** retain the supplied artwork under vector hit areas/routes.
    - **Schematic:** simplify geometry when distance readability matters more than fidelity.
    - **Exact vector:** trace when reliable geometry is required and available.
-4. Create the generation brief and pass `npm run validate:brief` before app implementation.
-5. Author the artifacts using [references/artifacts.md](references/artifacts.md). Audit existing SVGs with `npm run wayfinding:audit-source -- --svg <map.svg> --report-dir <directory>` before migration. Treat exported legacy anchors as proposals and legacy point clouds as evidence, never topology.
-6. For raster/PDF or audited SVG sources, use `npm run wayfinding:workbench`: confirm the independent mask, place routeable destination anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
-7. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; routeable rows require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
-8. Validate and generate the QA dashboard/overlay:
+   - **Calibrated isometric:** retain useful 3D artwork over a separately authored and projected 2D spatial model.
+4. Run `npm run wayfinding:assess -- --project wayfinding-project.json`. Do not build route UI unless the assessment permits it. A polished highlight/directional product is the required fallback for uncertain raster topology.
+5. Create the generation brief and pass `npm run validate:brief` before app implementation.
+6. Author the artifacts using [references/artifacts.md](references/artifacts.md). Audit existing SVGs with `npm run wayfinding:audit-source -- --svg <map.svg> --report-dir <directory>` before migration. Treat exported legacy anchors as proposals and legacy point clouds as evidence, never topology.
+7. For raster/PDF or audited SVG route projects, use `npm run wayfinding:workbench`: confirm the independent mask, place routeable destination anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
+8. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; routeable rows require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
+9. For route projects, validate and generate the QA dashboard/overlay:
 
 ```bash
 npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start <location-id> --route-to <representative-location-id> --report-dir wayfinding-report
 ```
 
-9. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Use `--strict` only when warnings must also fail delivery; never invent accessibility or operational facts to obtain a warning-free report. Rendering alone is not route proof.
-10. Build the app with `WayfindingGraph`. Provide search/filter, an app-owned keyboard when text input is used, selected-location details, route reset, unreachable/off-map states, and step-free routing when requested.
-11. Test default, selected route, long metadata, empty, unreachable, step-free, floor transition, reset, and live datasource update states that apply. Complete normal visual review and delivery.
+10. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Use `--strict` only when warnings must also fail delivery; never invent accessibility or operational facts to obtain a warning-free report. Rendering alone is not route proof.
+11. Build the assessed mode. Every mode provides search/filter, strong target highlighting, selected-location details, reset, and an app-owned keyboard when text input is used. Add `You are here` and relative direction only with confirmed origin/orientation; add `WayfindingGraph`, unreachable states, and step-free routing only when assessed.
+12. Test default, target highlight, long metadata, empty, reset, and live datasource update states. Add route, step-free, floor transition, and closure scenarios only when those capabilities exist. Complete normal visual review and delivery.
 
 ## Non-Negotiable
 
-- Use native location annotations and explicit edges. The SVG structure and coordinate space follow the accepted source and design.
-- Require an independently confirmed walkable mask for generated v2 centerlines. AI/OCR proposals are not confirmation.
+- Use native location annotations. Use explicit edges only for assessed route projects; the SVG structure and coordinate space follow the accepted source and design.
+- Never use route as the universal default. Directory, highlight, and directional guidance are first-class sellable modes.
+- Require an independently confirmed walkable mask for generated v2 centerlines. AI/OCR/image-analysis proposals and self-review are not confirmation.
 - Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
 - Place a location node at its walkable entrance/approach, not its polygon centroid.
 - Keep location nodes as leaf entrances; never route through an unrelated destination. Name and classify crossings, doors, stairs, elevators, and escalators explicitly.
@@ -45,4 +48,4 @@ npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable
 
 ## Deliver
 
-Return the uploadable app ZIP and separate source ZIP, plus `map.svg`, `walkable-mask.json`, `route-graph.json`, destination contract/template, validation report, graph overlay, and installation/binding notes.
+Return the uploadable app ZIP and separate source ZIP, plus `wayfinding-project.json`, `map.svg`, destination contract/template, and installation/binding notes. Route projects also include the confirmed walkable mask, graph, validation report, and graph overlay.
