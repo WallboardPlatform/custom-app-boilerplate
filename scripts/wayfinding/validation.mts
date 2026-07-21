@@ -297,7 +297,12 @@ const validateGraph = (
 		}
 
 		for (let index = 1; index < points.length; index += 1) {
-			if (pointDistance(points[index - 1], points[index]) <= 0.01) {
+			const isAlignedLevelTransition = from.levelId !== to.levelId
+				&& points.length === 2
+				&& index === 1
+				&& ['elevator', 'escalator', 'stairs'].includes(edge.kind);
+
+			if (pointDistance(points[index - 1], points[index]) <= 0.01 && !isAlignedLevelTransition) {
 				addIssue(issues, 'error', 'edge-geometry-zero-segment', `Edge '${edge.id}' contains a zero-length centerline segment.`, [edge.id, String(index - 1)]);
 			}
 		}

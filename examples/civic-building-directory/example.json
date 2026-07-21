@@ -1,0 +1,25 @@
+{
+	"title": "Civic Building Directory",
+	"description": "Redrawn-equivalent three-level touch directory with an independently reviewed walkable mask, leaf destination entrances, aligned elevator transitions, and step-free route guidance.",
+	"capabilities": ["keyboard"],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"wayfinding-project.json",
+		"datasource-contract.json",
+		"sample-destinations-datasource.json",
+		"overlay/src/assets/map.svg",
+		"overlay/src/editor-assets/route-graph.json",
+		"overlay/src/editor-assets/walkable-mask.json"
+	],
+	"referenceScreenshots": [
+		"scenario-same-floor-route-1920x1080.png",
+		"scenario-cross-floor-destination-level-1920x1080.png"
+	]
+}

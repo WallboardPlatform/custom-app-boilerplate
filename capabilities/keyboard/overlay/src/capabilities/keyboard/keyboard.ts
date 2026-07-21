@@ -1,4 +1,4 @@
-export type KeyboardLayoutId = 'en' | 'hu';
+export type KeyboardLayoutId = 'en' | 'es' | 'hu';
 
 export interface KeyboardLayout {
 	id: string;
@@ -28,8 +28,20 @@ export const HUNGARIAN_KEYBOARD_LAYOUT: KeyboardLayout = {
 	]
 };
 
+export const SPANISH_KEYBOARD_LAYOUT: KeyboardLayout = {
+	id: 'es',
+	label: 'ES',
+	rows: [
+		['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+		['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+		['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '\u00f1'],
+		['z', 'x', 'c', 'v', 'b', 'n', 'm']
+	]
+};
+
 const BUILT_IN_LAYOUTS: Record<KeyboardLayoutId, KeyboardLayout> = {
 	en: ENGLISH_KEYBOARD_LAYOUT,
+	es: SPANISH_KEYBOARD_LAYOUT,
 	hu: HUNGARIAN_KEYBOARD_LAYOUT
 };
 

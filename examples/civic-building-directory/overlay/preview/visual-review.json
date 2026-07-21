@@ -1,0 +1,75 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "54ab6a235eb0df80ca711bbdf87d585e79703ed894d6ba97b03291945a5df289",
+	"reviewedAt": "2026-07-21T18:45:00+02:00",
+	"reviewer": "Codex visual inspection",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The reviewed matrix proves a searchable three-level directory, highlight fallback, same-floor routing, and both cross-floor route segments."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "The redraw preserves the source building proportions, public spine, department adjacency, and aligned vertical core without exposing construction-sheet clutter."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "The civic plan language, continuous corridor, restrained department zoning, floor controls, and route details form a specific wayfinding product rather than a generic dashboard."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary labels, route actions, current position, destination marker, and route summary remain legible at both accepted near-view kiosk surfaces."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light, dark, and custom palettes keep text, controls, route lines, corridor surfaces, and destination feedback distinct."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long titles and destination names retain complete text, the level badge remains a stable single-line pill, and the directory stays scrollable."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Full-HD and compact compositions preserve the map-directory hierarchy, usable touch targets, explicit floor controls, and stable details without overlap."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "The semantic SVG, civic icon, route-focused placeholder, editor palette, and selected-state treatments are coherent and production-ready."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The floor-plan composition and explicit circulation model are structurally distinct from card, feed, poster, and raster-map examples."
+		}
+	],
+	"screenshots": [
+		{ "file": "app-default-1920x1080.png", "status": "pass", "notes": "Full-HD default presents the complete map and continuously scrollable directory." },
+		{ "file": "compact-1366x768.png", "status": "pass", "notes": "Compact dark composition preserves hierarchy and touch target sizing." },
+		{ "file": "scenario-active-highlight-1920x1080.png", "status": "pass", "notes": "Highlight fallback isolates one destination without route geometry or marker clutter." },
+		{ "file": "scenario-app-default-1920x1080.png", "status": "pass", "notes": "Bound default data matches the unbound representative composition." },
+		{ "file": "scenario-compact-1366x768.png", "status": "pass", "notes": "Named compact scenario remains complete and readable." },
+		{ "file": "scenario-cross-floor-destination-level-1920x1080.png", "status": "pass", "notes": "Level 3 continuation begins at the aligned elevator and ends at the selected entrance." },
+		{ "file": "scenario-cross-floor-selection-1920x1080.png", "status": "pass", "notes": "Level 1 route stops at the elevator and provides an explicit level-change action." },
+		{ "file": "scenario-custom-theme-1366x768.png", "status": "pass", "notes": "Custom semantic colors update all surrounding interface roles coherently." },
+		{ "file": "scenario-empty-1366x768.png", "status": "pass", "notes": "Empty data keeps the map usable and presents a clear stable message." },
+		{ "file": "scenario-keyboard-open-1366x768.png", "status": "pass", "notes": "The app-owned keyboard fits above the kiosk UI with visible input and language controls." },
+		{ "file": "scenario-level-three-1920x1080.png", "status": "pass", "notes": "Level 3 zones and central transition remain balanced and legible." },
+		{ "file": "scenario-level-two-1920x1080.png", "status": "pass", "notes": "Level 2 open lobby and department zones retain clear circulation." },
+		{ "file": "scenario-live-datasource-update-1366x768.png", "status": "pass", "notes": "Live metadata replacement updates the directory without moving geometry." },
+		{ "file": "scenario-long-destination-list-1366x768.png", "status": "pass", "notes": "Long directory identity wraps safely without clipped glyphs or broken rows." },
+		{ "file": "scenario-long-destination-selected-1366x768.png", "status": "pass", "notes": "Long selected copy remains complete and the level badge stays on one line." },
+		{ "file": "scenario-long-title-1366x768.png", "status": "pass", "notes": "Long kiosk title fits at the readable floor without displacing controls." },
+		{ "file": "scenario-row-array-1366x768.png", "status": "pass", "notes": "Direct row-array normalization preserves the normal directory composition." },
+		{ "file": "scenario-same-floor-route-1920x1080.png", "status": "pass", "notes": "Same-floor route stays centered in the authored corridor and reaches the leaf entrance." },
+		{ "file": "scenario-zoomed-route-1920x1080.png", "status": "pass", "notes": "Two-step manual zoom keeps route and markers registered in the SVG coordinate system." }
+	],
+	"unresolvedFindings": []
+}

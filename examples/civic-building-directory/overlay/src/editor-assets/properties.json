@@ -1,0 +1,132 @@
+{
+  "version": "1",
+  "name": "Civic Building Directory",
+  "description": "Touch-first multi-floor civic directory with searchable TABLE content, reviewed routes, floor navigation, destination highlighting, and app-owned keyboard.",
+  "interactive": true,
+  "size": {
+    "width": "1920px",
+    "height": "1080px"
+  },
+  "properties": [
+    {
+      "label": "Destinations table",
+      "type": "dataPicker",
+      "property": "destinationData",
+      "dataPickerType": "any",
+      "tooltip": "Select the Civic Building Directory Destinations table. Leave unbound to use the packaged representative data."
+    },
+    {
+      "label": "Directory",
+      "type": "group",
+      "properties": [
+        { "label": "Title", "type": "text", "property": "title", "default": "Civic Building Directory" },
+        { "label": "Instruction", "type": "text", "property": "subtitle", "default": "Find departments and public services across three levels." },
+        {
+          "label": "Guidance mode",
+          "type": "select",
+          "property": "guidanceMode",
+          "default": "route",
+          "tooltip": "Route draws the reviewed path from the configured kiosk anchor. Highlight shows only the destination zone. Directory only removes map guidance.",
+          "options": [
+            { "label": "Reviewed route", "value": "route" },
+            { "label": "Highlight destination", "value": "highlight" },
+            { "label": "Directory only", "value": "directory" }
+          ]
+        },
+        {
+          "label": "Initial floor",
+          "type": "select",
+          "property": "initialFloor",
+          "default": "1",
+          "options": [
+            { "label": "Level 1", "value": "1" },
+            { "label": "Level 2", "value": "2" },
+            { "label": "Level 3", "value": "3" }
+          ]
+        },
+        {
+          "label": "Kiosk location",
+          "type": "select",
+          "property": "startLocationId",
+          "default": "main-lobby",
+          "tooltip": "Current reviewed kiosk anchor. Add another option only after its SVG anchor is reviewed.",
+          "options": [
+            { "label": "Level 1 - Main Lobby", "value": "main-lobby" }
+          ]
+        },
+        { "label": "Empty state", "type": "text", "property": "emptyStateText", "default": "No destinations are available." },
+        {
+          "label": "Interface languages",
+          "type": "select",
+          "property": "interfaceLanguages",
+          "default": "en-es",
+          "options": [
+            { "label": "English + Spanish", "value": "en-es" },
+            { "label": "English", "value": "en" },
+            { "label": "Spanish", "value": "es" }
+          ]
+        },
+        { "label": "On-screen keyboard", "type": "checkbox", "property": "onScreenKeyboard", "default": true },
+        {
+          "label": "Keyboard languages",
+          "type": "select",
+          "property": "keyboardLanguages",
+          "default": "en-es",
+          "options": [
+            { "label": "English + Spanish", "value": "en-es" },
+            { "label": "English", "value": "en" },
+            { "label": "Spanish", "value": "es" }
+          ],
+          "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "onScreenKeyboard" }], "rule": "#1" }
+        },
+        { "label": "Idle reset", "type": "slider", "property": "selectionResetSeconds", "default": 60, "min": 15, "max": 300, "step": 5, "tooltip": "Seconds before search, selection, floor, and map viewport reset." }
+      ]
+    },
+    {
+      "label": "Experience",
+      "type": "group",
+      "properties": [
+        {
+          "label": "Motion",
+          "type": "select",
+          "property": "motionPreset",
+          "default": "subtle",
+          "options": [
+            { "label": "Off", "value": "off" },
+            { "label": "Subtle", "value": "subtle" }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Appearance",
+      "type": "group",
+      "properties": [
+        {
+          "label": "Color scheme",
+          "type": "select",
+          "property": "themePreset",
+          "default": "light",
+          "options": [
+            { "label": "Light", "value": "light" },
+            { "label": "Dark", "value": "dark" },
+            { "label": "Custom", "value": "custom" }
+          ]
+        },
+        { "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e7e0d4", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Panel", "type": "color", "property": "panelColor", "default": "#fffdf8", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Map surface", "type": "color", "property": "mapSurfaceColor", "default": "#f5f0e7", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#173039", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#5b6e72", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Accent", "type": "color", "property": "accentColor", "default": "#b96734", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Destination highlight", "type": "color", "property": "destinationColor", "default": "#217f79", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+        { "label": "Route line", "type": "color", "property": "routeColor", "default": "#c83f32", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
+      ]
+    }
+  ],
+  "resourceList": [
+    "assets/app.js",
+    "assets/app-chrome-49.js"
+  ],
+  "externalCommands": []
+}

@@ -1,0 +1,982 @@
+.wb-app {
+  --wb-civic-accent: #b96734;
+  --wb-civic-background: #e7e0d4;
+  --wb-civic-destination: #217f79;
+  --wb-civic-map: #f5f0e7;
+  --wb-civic-panel: #fffdf8;
+  --wb-civic-primary: #173039;
+  --wb-civic-secondary: #5b6e72;
+
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--wb-civic-background);
+  color: var(--wb-civic-primary);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.wb-app,
+.wb-app * {
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  height: 104px;
+  min-height: 104px;
+  align-items: center;
+  padding: 0 30px;
+  border-bottom: 1px solid rgba(23, 48, 57, 0.16);
+  background: var(--wb-civic-panel);
+}
+
+.identity {
+  display: flex;
+  width: 220px;
+  min-width: 220px;
+  align-items: center;
+  margin-right: 25px;
+}
+
+.identity > span {
+  display: flex;
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--wb-civic-accent);
+  color: var(--wb-civic-primary);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.identity strong {
+  margin-left: 12px;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.08;
+}
+
+.heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.heading p,
+.directoryIntro p,
+.eyebrow {
+  margin: 0;
+  overflow: hidden;
+  color: var(--wb-civic-accent);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heading h1 {
+  height: 42px;
+  margin: 4px 0 0;
+  padding-bottom: 0.14em;
+  overflow: hidden;
+  font-size: 36px;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.floorTabs {
+  display: flex;
+  min-width: 274px;
+  margin-left: 22px;
+  border: 1px solid rgba(23, 48, 57, 0.2);
+}
+
+.floorTabs button,
+.languages button,
+.reset,
+.mapControls button,
+.searchField button,
+.back,
+.clearSelection,
+.levelChange button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.floorTabs button {
+  display: flex;
+  width: 91px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.floorTabs button + button {
+  border-left: 1px solid rgba(23, 48, 57, 0.2);
+}
+
+.floorTabs span {
+  color: var(--wb-civic-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.floorTabs strong {
+  margin-left: 6px;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.floorTabs button[aria-selected='true'] {
+  background: var(--wb-civic-primary);
+  color: var(--wb-civic-panel);
+}
+
+.floorTabs button[aria-selected='true'] span {
+  color: var(--wb-civic-panel);
+}
+
+.languages {
+  display: flex;
+  min-width: 92px;
+  margin-left: 14px;
+  border: 1px solid var(--wb-civic-accent);
+}
+
+.languages button {
+  width: 46px;
+  height: 42px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.languages button + button {
+  border-left: 1px solid var(--wb-civic-accent);
+}
+
+.languages button[aria-pressed='true'] {
+  background: var(--wb-civic-accent);
+  color: #fff;
+}
+
+.reset {
+  min-width: 78px;
+  height: 42px;
+  margin-left: 14px;
+  border: 1px solid var(--wb-civic-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.content {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 16px;
+}
+
+.mapPanel {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(23, 48, 57, 0.18);
+  background: var(--wb-civic-map);
+}
+
+.mapHeader {
+  display: flex;
+  height: 64px;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  border-bottom: 1px solid rgba(23, 48, 57, 0.13);
+  background: var(--wb-civic-panel);
+}
+
+.mapHeader > div {
+  display: flex;
+  align-items: baseline;
+}
+
+.mapHeader span {
+  color: var(--wb-civic-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mapHeader strong {
+  margin-left: 10px;
+  font-size: 23px;
+}
+
+.mapHeader p {
+  margin: 0 0 0 20px;
+  overflow: hidden;
+  color: var(--wb-civic-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapCanvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mapMarkup,
+.mapMarkup :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mapMarkup :global(.wb-civic-building-shell) {
+  fill: var(--wb-civic-panel);
+  stroke: var(--wb-civic-primary);
+  stroke-width: 8;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-public-circulation) {
+  fill: var(--wb-civic-map);
+  stroke: rgba(23, 48, 57, 0.28);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-open-below) {
+  fill: url('#open-pattern');
+  stroke: rgba(23, 48, 57, 0.32);
+  stroke-dasharray: 8 7;
+  stroke-width: 2;
+}
+
+.mapMarkup :global(.wb-civic-route-corridor) {
+  fill: none;
+  stroke: var(--wb-civic-panel);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 34;
+}
+
+.mapMarkup :global(.wb-civic-zone) {
+  cursor: pointer;
+  filter: url('#zone-shadow');
+  stroke: var(--wb-civic-primary);
+  stroke-opacity: 0.72;
+  stroke-width: 2.5;
+  transition: opacity 180ms ease, stroke-width 180ms ease;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-zone:hover),
+.mapMarkup :global(.wb-civic-zone:focus),
+.mapMarkup :global(.wb-civic-zone[data-wb-selected]) {
+  stroke: var(--wb-civic-accent);
+  stroke-width: 7;
+}
+
+.mapMarkup :global(.wb-civic-zone-service),
+.mapMarkup :global(.wb-civic-zone-planning),
+.mapMarkup :global(.wb-civic-zone-engineering) {
+  fill: #c7dceb;
+}
+
+.mapMarkup :global(.wb-civic-zone-utility),
+.mapMarkup :global(.wb-civic-zone-inspection),
+.mapMarkup :global(.wb-civic-zone-administration) {
+  fill: #badfd8;
+}
+
+.mapMarkup :global(.wb-civic-zone-council) {
+  fill: #b9d3ef;
+}
+
+.mapMarkup :global(.wb-civic-zone-emergency),
+.mapMarkup :global(.wb-civic-zone-hr) {
+  fill: #f4c39c;
+}
+
+.mapMarkup :global(.wb-civic-zone-library),
+.mapMarkup :global(.wb-civic-zone-it) {
+  fill: #d7c8e5;
+}
+
+.mapMarkup :global(.wb-civic-zone-lobby),
+.mapMarkup :global(.wb-civic-zone-finance) {
+  fill: #c6dab2;
+}
+
+.mapMarkup :global(.wb-civic-zone-code),
+.mapMarkup :global(.wb-civic-zone-communications) {
+  fill: #edb2aa;
+}
+
+.mapMarkup :global(.wb-civic-zone-label) {
+  pointer-events: none;
+  fill: #173039;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.mapMarkup :global(.wb-civic-zone-label.wb-civic-compact) {
+  font-size: 13px;
+}
+
+.mapMarkup :global(.wb-civic-zone-kicker) {
+  fill: #4f696d;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.mapMarkup :global(.wb-civic-open-label) {
+  fill: #6c7e80;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mapMarkup :global(.wb-civic-amenity rect) {
+  fill: #fffdf8;
+  stroke: #173039;
+  stroke-width: 2;
+}
+
+.mapMarkup :global(.wb-civic-amenity path) {
+  fill: none;
+  stroke: #173039;
+  stroke-width: 2;
+}
+
+.mapMarkup :global(.wb-civic-amenity text),
+.mapMarkup :global(.wb-civic-entrance text) {
+  fill: #173039;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.mapMarkup :global(.wb-civic-entrance path) {
+  fill: none;
+  stroke: #173039;
+  stroke-width: 2;
+}
+
+.mapMarkup :global(.wb-civic-current-pulse),
+.mapMarkup :global(.wb-civic-target-pulse) {
+  fill: none;
+  stroke: var(--wb-civic-accent);
+  stroke-width: 5;
+  transform-box: fill-box;
+  transform-origin: center;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-current-core) {
+  fill: var(--wb-civic-primary);
+  stroke: var(--wb-civic-panel);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-current-heading) {
+  fill: var(--wb-civic-accent);
+  stroke: var(--wb-civic-panel);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-target-pulse) {
+  stroke: var(--wb-civic-destination);
+}
+
+.mapMarkup :global(.wb-civic-target-core) {
+  fill: var(--wb-civic-destination);
+  stroke: var(--wb-civic-panel);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-route-line-underlay),
+.mapMarkup :global(.wb-civic-route-line) {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.mapMarkup :global(.wb-civic-route-line-underlay) {
+  stroke: var(--wb-civic-panel);
+  stroke-width: 13;
+}
+
+.mapMarkup :global(.wb-civic-route-line) {
+  stroke: var(--wb-civic-route);
+  stroke-width: 7;
+}
+
+.wb-app[data-motion='subtle'] .mapMarkup :global(.wb-civic-current-pulse),
+.wb-app[data-motion='subtle'] .mapMarkup :global(.wb-civic-target-pulse) {
+  animation: wb-civic-pulse 1.8s ease-in-out infinite;
+}
+
+.mapControls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  border: 1px solid rgba(23, 48, 57, 0.22);
+  background: var(--wb-civic-panel);
+  box-shadow: 0 5px 18px rgba(23, 48, 57, 0.14);
+}
+
+.mapControls button {
+  width: 48px;
+  height: 48px;
+  color: var(--wb-civic-primary);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.mapControls button + button {
+  border-left: 1px solid rgba(23, 48, 57, 0.18);
+}
+
+.mapFooter {
+  display: flex;
+  height: 42px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-top: 1px solid rgba(23, 48, 57, 0.14);
+  background: var(--wb-civic-panel);
+  color: var(--wb-civic-secondary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pulseKey {
+  width: 10px;
+  height: 10px;
+  margin-right: 9px;
+  border: 3px solid var(--wb-civic-accent);
+  border-radius: 50%;
+}
+
+.directory {
+  display: flex;
+  width: 440px;
+  min-width: 440px;
+  min-height: 0;
+  flex-direction: column;
+  margin-left: 16px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(23, 48, 57, 0.18);
+  background: var(--wb-civic-panel);
+}
+
+.directoryIntro h2 {
+  margin: 6px 0 0;
+  padding-bottom: 0.13em;
+  font-size: 26px;
+  line-height: 1.15;
+}
+
+.filters {
+  margin-top: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 48, 57, 0.15);
+}
+
+.searchField,
+.selectRow {
+  display: flex;
+  min-width: 0;
+}
+
+.filters input,
+.filters select {
+  height: 43px;
+  min-width: 0;
+  border: 1px solid rgba(23, 48, 57, 0.24);
+  border-radius: 0;
+  outline: none;
+  background: var(--wb-civic-background);
+  color: var(--wb-civic-primary);
+  font: inherit;
+  font-size: 13px;
+}
+
+.filters input {
+  flex: 1 1 auto;
+  padding: 0 12px;
+}
+
+.searchField button {
+  width: 58px;
+  min-width: 58px;
+  border: 1px solid var(--wb-civic-accent);
+  border-left: 0;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.selectRow {
+  margin-top: 8px;
+}
+
+.selectRow select {
+  width: 50%;
+  padding: 0 9px;
+}
+
+.selectRow select + select {
+  margin-left: 8px;
+}
+
+.destinationList {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--wb-civic-accent) transparent;
+  scrollbar-width: thin;
+}
+
+.destinationList > button {
+  display: flex;
+  width: 100%;
+  min-height: 68px;
+  align-items: center;
+  padding: 9px 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(23, 48, 57, 0.13);
+  background: transparent;
+  color: var(--wb-civic-primary);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.destinationList button > small,
+.levelBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--wb-civic-accent);
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.destinationList button > small {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  font-size: 13px;
+}
+
+.destinationList button > span {
+  min-width: 0;
+  flex: 1 1 auto;
+  margin-left: 12px;
+}
+
+.destinationList strong,
+.destinationList em {
+  display: block;
+  overflow: hidden;
+}
+
+.destinationList strong {
+  max-height: 40px;
+  font-size: 15px;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.destinationList em {
+  margin-top: 3px;
+  color: var(--wb-civic-secondary);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.destinationList i {
+  margin-left: 8px;
+  color: var(--wb-civic-accent);
+  font-size: 25px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.destinationList > button:hover,
+.destinationList > button:focus,
+.floorTabs button:focus,
+.languages button:focus,
+.reset:focus,
+.mapControls button:focus,
+.searchField button:focus,
+.back:focus,
+.clearSelection:focus,
+.levelChange button:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--wb-civic-accent);
+}
+
+.empty {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  color: var(--wb-civic-secondary);
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.detail {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.back {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-bottom: 20px;
+  color: var(--wb-civic-accent);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.levelBadge {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 76px;
+  height: 52px;
+  padding: 0 12px;
+  margin-bottom: 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.detail h2 {
+  max-height: 142px;
+  margin: 7px 0 0;
+  padding-bottom: 0.15em;
+  overflow: hidden;
+  font-size: 42px;
+  line-height: 1.08;
+  overflow-wrap: break-word;
+}
+
+.detail h3 {
+  margin: 8px 0 0;
+  color: var(--wb-civic-secondary);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.description {
+  margin: 22px 0 0;
+  color: var(--wb-civic-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.detailFacts {
+  display: flex;
+  margin-top: 20px;
+}
+
+.detailFacts > div {
+  width: 50%;
+  padding: 10px 0;
+  border-top: 1px solid rgba(23, 48, 57, 0.15);
+}
+
+.detailFacts > div + div {
+  padding-left: 18px;
+  border-left: 1px solid rgba(23, 48, 57, 0.15);
+}
+
+.detailFacts span {
+  display: block;
+  color: var(--wb-civic-secondary);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.detailFacts strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.highlightStatus,
+.levelChange,
+.routeSummary {
+  margin-top: auto;
+}
+
+.routeSummary {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: 1px solid rgba(23, 48, 57, 0.15);
+  border-bottom: 1px solid rgba(23, 48, 57, 0.15);
+  color: var(--wb-civic-secondary);
+  font-size: 13px;
+}
+
+.routeSummary strong {
+  width: 100%;
+  margin-bottom: 8px;
+  color: var(--wb-civic-route);
+  font-size: 15px;
+}
+
+.routeSummary span + span {
+  margin-left: 18px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(23, 48, 57, 0.15);
+}
+
+.highlightStatus {
+  padding: 18px 0;
+  border-top: 1px solid rgba(23, 48, 57, 0.15);
+  border-bottom: 1px solid rgba(23, 48, 57, 0.15);
+  color: var(--wb-civic-destination);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.levelChange {
+  padding: 18px;
+  border-left: 5px solid var(--wb-civic-accent);
+  background: var(--wb-civic-background);
+}
+
+.levelChange p {
+  margin: 0;
+  color: var(--wb-civic-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.levelChange button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  background: var(--wb-civic-primary);
+  color: var(--wb-civic-panel);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.clearSelection {
+  min-height: 46px;
+  margin-top: 14px;
+  border: 1px solid var(--wb-civic-accent);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@keyframes wb-civic-pulse {
+  0%, 100% { opacity: 0.9; transform: scale(0.82); }
+  50% { opacity: 0.14; transform: scale(1.22); }
+}
+
+@media (max-width: 1500px), (max-height: 850px) {
+  .header {
+    height: 82px;
+    min-height: 82px;
+    padding: 0 20px;
+  }
+
+  .identity {
+    width: 180px;
+    min-width: 180px;
+    margin-right: 18px;
+  }
+
+  .identity > span {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 22px;
+  }
+
+  .identity strong {
+    margin-left: 9px;
+    font-size: 14px;
+  }
+
+  .heading h1 {
+    height: 34px;
+    font-size: 28px;
+  }
+
+  .floorTabs {
+    min-width: 228px;
+    margin-left: 14px;
+  }
+
+  .floorTabs button {
+    width: 76px;
+    height: 44px;
+    padding: 0 6px;
+  }
+
+  .languages {
+    min-width: 76px;
+    margin-left: 10px;
+  }
+
+  .languages button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .reset {
+    min-width: 64px;
+    height: 38px;
+    margin-left: 10px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .mapHeader {
+    height: 52px;
+    min-height: 52px;
+    padding: 0 16px;
+  }
+
+  .mapHeader strong {
+    font-size: 19px;
+  }
+
+  .mapFooter {
+    height: 36px;
+    min-height: 36px;
+    font-size: 9px;
+  }
+
+  .directory {
+    width: 370px;
+    min-width: 370px;
+    margin-left: 12px;
+    padding: 16px;
+  }
+
+  .directoryIntro h2 {
+    font-size: 22px;
+  }
+
+  .filters {
+    margin-top: 11px;
+    padding-bottom: 9px;
+  }
+
+  .filters input,
+  .filters select {
+    height: 37px;
+    font-size: 12px;
+  }
+
+  .destinationList > button {
+    min-height: 56px;
+    padding: 6px 3px;
+  }
+
+  .destinationList button > small {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+
+  .destinationList strong {
+    max-height: 35px;
+    font-size: 14px;
+  }
+
+  .levelBadge {
+    min-width: 68px;
+    height: 44px;
+    padding: 0 10px;
+    margin-bottom: 14px;
+  }
+
+  .back {
+    margin-bottom: 12px;
+  }
+
+  .detail h2 {
+    max-height: 112px;
+    font-size: 31px;
+  }
+
+  .detail h3 {
+    font-size: 14px;
+  }
+
+  .description {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  .detailFacts {
+    margin-top: 12px;
+  }
+
+  .highlightStatus,
+  .levelChange {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}

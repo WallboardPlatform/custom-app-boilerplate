@@ -320,6 +320,31 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'cross-level-edge-kind-invalid'));
 	});
 
+	void it('accepts aligned transition points on adjacent levels', (): void => {
+		const alignedTransitionGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				distanceMeters: 4,
+				from: 'lift-ground',
+				id: 'lift-ground-level-one',
+				kind: 'elevator',
+				reviewStatus: 'confirmed',
+				to: 'lift-level-one',
+				traversal: 'transition'
+			}],
+			graphId: 'aligned-transition',
+			nodes: [
+				{ id: 'lift-ground', kind: 'transition', levelId: 'ground', x: 400, y: 225 },
+				{ id: 'lift-level-one', kind: 'transition', levelId: 'Level1', x: 400, y: 225 }
+			]
+		};
+		const report = validateWayfinding({ destinations: [], graph: alignedTransitionGraph, map: parseWayfindingSvg(sourceSvg) });
+
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'edge-geometry-zero-segment'));
+	});
+
 	void it('writes a self-contained report with the graph overlay', (): void => {
 		const directory: string = fs.mkdtempSync(path.join(os.tmpdir(), 'wb-wayfinding-'));
 		const report = validateWayfinding({ destinations, graph, map: parseWayfindingSvg(sourceSvg), startLocationId: 'lobby' });

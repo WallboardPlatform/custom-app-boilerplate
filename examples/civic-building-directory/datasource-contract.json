@@ -1,0 +1,44 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "destinationData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"table": "Destinations",
+		"sampleData": "sample-destinations-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Civic Building Directory Destinations",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{ "name": "id", "type": "string", "required": true },
+		{ "name": "name", "type": "string", "required": true },
+		{ "name": "alternateName", "type": "string", "required": false },
+		{ "name": "mapLabel", "type": "string", "required": false },
+		{ "name": "floor", "type": "string", "required": true },
+		{ "name": "category", "type": "string", "required": true },
+		{ "name": "description", "type": "string", "required": false },
+		{ "name": "hours", "type": "string", "required": false },
+		{ "name": "status", "type": "string", "required": false },
+		{ "name": "keywords", "type": "string", "required": false },
+		{ "name": "accessible", "type": "boolean", "required": false }
+	],
+	"acceptedValueShapes": [
+		"native datasource object containing Destinations",
+		"selected Destinations table object",
+		"processed Destinations row array"
+	],
+	"behavior": {
+		"unbound": "render bundled synthetic civic-directory rows",
+		"boundEmpty": "render the configured empty state without restoring bundled rows",
+		"invalidRows": "skip rows whose id or name is missing",
+		"ordering": "sort by floor, category, and destination name",
+		"mapPresence": "match the immutable SVG zone by id; datasource rows cannot create geometry or routing evidence",
+		"floor": "normalize floor labels to 1, 2, or 3; unknown values fall back to Level 1",
+		"accessibility": "preserve unknown values and never infer accessibility from map geometry"
+	}
+}
