@@ -9,13 +9,19 @@
 <body>
 	<header class="topbar">
 		<div><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1></div>
+		<div class="edit-actions" role="group" aria-label="Edit history">
+			<button id="undo" type="button" title="Undo the last map edit (Ctrl+Z)" disabled>Undo <kbd>Ctrl+Z</kbd></button>
+			<button id="redo" type="button" title="Redo the last undone edit (Ctrl+Shift+Z)" disabled>Redo</button>
+			<button id="delete-selection" type="button" class="danger" title="Delete the selected map item (Delete)" disabled>Delete selected</button>
+		</div>
 		<div class="status"><span id="mask-status">NO MASK</span><strong id="coverage-status">Project ready</strong></div>
 	</header>
 	<main>
 		<aside class="controls" aria-label="Authoring controls">
-			<section>
-				<h2>Studio project</h2>
+			<section class="workflow-step">
+				<span class="step-number">1</span><h2>Project and floor</h2>
 				<label>Open .wbwayfinding project<input id="studio-project-file" type="file" accept="application/json,.json,.wbwayfinding"></label>
+				<label>Floor background image<input id="image-file" type="file" accept="image/*"></label>
 				<label>Project name<input id="studio-project-name" type="text" value="Wayfinding project"></label>
 				<div class="field-pair">
 					<label>Floor<select id="studio-floor"></select></label>
@@ -29,27 +35,20 @@
 				</div>
 				<div id="studio-validation" class="project-assessment"></div>
 			</section>
-			<section>
-				<h2>Migration and source files</h2>
-				<label>Current floor background<input id="image-file" type="file" accept="image/*"></label>
-				<label>Wayfinding project<input id="project-file" type="file" accept="application/json,.json"></label>
-				<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
-				<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
-				<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
-			</section>
-			<section>
-				<h2>Semantic map layers</h2>
-				<p>Draw verified semantics over the optional background. AI imports stay proposed until a reviewer confirms them.</p>
+			<section class="workflow-step">
+				<span class="step-number">2</span><h2>Draw and edit the map</h2>
+				<p>Choose what you want to add, then click the map. Use <strong>Select & move</strong> to reposition or delete anything.</p>
+				<div class="tool-help" aria-live="polite"><strong id="tool-title">Select & move</strong><span id="tool-help">Click an item to edit it. Drag the item or one of its corners to reposition it.</span></div>
 				<div class="tool-grid" role="group" aria-label="Semantic authoring tool">
-					<button type="button" data-tool="select">Select</button>
-					<button type="button" data-tool="location">Location</button>
-					<button type="button" data-tool="walkable">Walkable</button>
-					<button type="button" data-tool="obstacle">Obstacle</button>
+					<button type="button" data-tool="select" class="active">Select & move</button>
+					<button type="button" data-tool="location">Room / area</button>
+					<button type="button" data-tool="walkable">Walkable area</button>
+					<button type="button" data-tool="obstacle">Blocked area</button>
 					<button type="button" data-tool="door">Door</button>
-					<button type="button" data-tool="poi">POI</button>
+					<button type="button" data-tool="poi">Point of interest</button>
 					<button type="button" data-tool="origin">You are here</button>
-					<button type="button" data-tool="transition">Transition</button>
-					<button type="button" data-tool="label">Label</button>
+					<button type="button" data-tool="transition">Floor connection</button>
+					<button type="button" data-tool="label">Text label</button>
 					<button type="button" data-tool="icon">Icon</button>
 					<button type="button" data-tool="logo">Logo</button>
 				</div>
@@ -58,6 +57,8 @@
 					<strong>POLYGON DRAFT</strong><span>Tap each corner. Finish after at least three points.</span>
 					<div class="commands horizontal"><button id="semantic-finish" type="button">Finish</button><button id="semantic-cancel" type="button" class="secondary">Cancel</button></div>
 				</div>
+				<details class="inline-disclosure">
+					<summary>Layer visibility</summary>
 				<div class="layer-toggles">
 					<label class="check"><input type="checkbox" data-layer="location" checked> Locations</label>
 					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable</label>
@@ -70,9 +71,54 @@
 					<label class="check"><input type="checkbox" data-layer="icon" checked> Icons</label>
 					<label class="check"><input type="checkbox" data-layer="logo" checked> Logos</label>
 				</div>
+				</details>
 			</section>
-			<section>
-				<h2>Delivery capability</h2>
+			<details class="control-disclosure">
+				<summary><span>Advanced tools</span><small>Imports, walkable extraction, and route network editing</small></summary>
+				<div class="disclosure-body">
+					<h3>Source and migration files</h3>
+					<label>Wayfinding project<input id="project-file" type="file" accept="application/json,.json"></label>
+					<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
+					<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
+					<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
+					<hr>
+					<h3>Walkable extraction</h3>
+					<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
+					<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
+					<p>Choose Sample, then tap representative pedestrian paths or crossings. Connected extraction excludes similarly colored isolated buildings.</p>
+					<div class="segmented" role="group" aria-label="Mask tool">
+						<button type="button" data-tool="pan">Pan</button>
+						<button type="button" data-tool="sample">Sample</button>
+						<button type="button" data-tool="include">Include</button>
+						<button type="button" data-tool="exclude">Exclude</button>
+					</div>
+					<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
+					<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
+					<div class="commands horizontal">
+						<button id="extract-mask" type="button">Extract mask</button>
+						<button id="clear-mask" type="button" class="secondary">Clear mask</button>
+						<button id="generate-centerlines" type="button">Generate routes</button>
+					</div>
+					<hr>
+					<h3>Route network editing</h3>
+					<p>Place destination entrances on walkable space, then connect and inspect the route network.</p>
+					<label>Level id<input id="level-id" type="text" value="level-0"></label>
+					<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
+						<button type="button" data-tool="anchor">Place entrance</button>
+						<button type="button" data-tool="draw">Draw route</button>
+						<button type="button" data-tool="graph">Edit route</button>
+					</div>
+					<div id="edge-draft" class="edge-draft" hidden>
+						<strong>ROUTE DRAFT</strong>
+						<span id="edge-draft-status">Tap an existing point to start a route.</span>
+						<div class="commands"><button id="finish-junction" type="button">Finish at new junction</button><button id="cancel-edge" type="button" class="secondary">Cancel</button></div>
+					</div>
+				</div>
+			</details>
+			<details class="control-disclosure review-disclosure">
+				<summary><span>Review & delivery</span><small>Only needed when preparing an approved runtime package</small></summary>
+				<div class="disclosure-body">
+				<h3>Delivery settings</h3>
 				<label>Project id<input id="project-id" type="text" value="wayfinding-project"></label>
 				<div class="field-pair">
 					<label>Source kind<select id="source-kind"><option value="floor-plan">Floor plan</option><option value="directory-map">Directory map</option><option value="illustrated-map">Illustrated map</option><option value="isometric-map">Isometric / 3D map</option><option value="vector-map">Vector map</option><option value="cad-bim">CAD / BIM</option><option value="gis">GIS</option><option value="mixed">Mixed</option></select></label>
@@ -86,62 +132,26 @@
 				<label class="check"><input id="allow-fallback" type="checkbox" checked> Fall back to the strongest evidenced mode</label>
 				<label class="check"><input id="step-free-required" type="checkbox"> Require verified step-free routing</label>
 				<label class="check"><input id="independent-mask" type="checkbox"> Walkable mask reviewed independently of topology</label>
+				<hr>
+				<h3>Delivery evidence</h3>
+				<p class="explanation"><strong>What is this?</strong> These fields record which map facts are safe to ship. A reviewer is the person or role that verified a fact against the source, the venue, or customer approval. Leave items as Proposed while authoring.</p>
 				<div class="field-pair">
-					<label>Reviewer<input id="reviewer-id" type="text" placeholder="Name or role"></label>
-					<label>Review method<select id="review-method"><option value="overlay-review">Overlay review</option><option value="customer-approval">Customer approval</option><option value="field-verification">Field verification</option><option value="source-authority">Source authority</option></select></label>
+					<label>Verified by<input id="reviewer-id" type="text" placeholder="Name or role"></label>
+					<label>Verification method<select id="review-method"><option value="overlay-review">Compared with source</option><option value="customer-approval">Customer approved</option><option value="field-verification">Checked at venue</option><option value="source-authority">Authoritative source</option></select></label>
 				</div>
 				<div id="evidence-list" class="evidence-list"></div>
 				<div id="project-assessment" class="project-assessment"></div>
-				<div class="commands"><button id="export-project" type="button">Export project JSON</button></div>
-			</section>
-			<section>
-				<h2>Walkable extraction</h2>
-				<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
-				<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
-				<p>Choose Sample, then tap representative pedestrian paths or crossings. Connected extraction excludes similarly colored isolated buildings.</p>
-				<div class="segmented" role="group" aria-label="Mask tool">
-					<button type="button" data-tool="pan">Pan</button>
-					<button type="button" data-tool="sample" class="active">Sample</button>
-					<button type="button" data-tool="include">Include</button>
-					<button type="button" data-tool="exclude">Exclude</button>
-				</div>
-				<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
-				<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
-				<div class="commands">
-					<button id="extract-mask" type="button">Extract connected mask</button>
-					<button id="clear-mask" type="button" class="secondary">Clear mask</button>
-				</div>
-				<div class="commands">
-					<button id="generate-centerlines" type="button">Generate centerline proposals</button>
-				</div>
-			</section>
-			<section>
-				<h2>Explicit graph authoring</h2>
-				<p>Place selected destination anchors at walkable entrances. Generated centerlines remain proposed topology; inspect, classify, and confirm every edge individually.</p>
-				<label>Level id<input id="level-id" type="text" value="level-0"></label>
-				<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
-					<button type="button" data-tool="anchor">Anchor</button>
-					<button type="button" data-tool="draw">Draw edge</button>
-					<button type="button" data-tool="graph">Edit edge</button>
-				</div>
-				<div id="edge-draft" class="edge-draft" hidden>
-					<strong>EDGE DRAFT</strong>
-					<span id="edge-draft-status">Tap an existing node to start an edge.</span>
-					<div class="commands">
-						<button id="finish-junction" type="button">Finish at new junction</button>
-						<button id="cancel-edge" type="button" class="secondary">Cancel draft</button>
-					</div>
-				</div>
-			</section>
-			<section>
-				<h2>Review and export</h2>
+				<hr>
+				<h3>Specialist exports</h3>
 				<label class="check"><input id="mask-confirmed" type="checkbox"> Mask reviewed against source</label>
-				<div class="commands">
+				<div class="commands horizontal">
+					<button id="export-project" type="button">Delivery JSON</button>
 					<button id="export-mask" type="button">Export mask JSON</button>
 					<button id="export-graph" type="button" class="secondary">Export graph JSON</button>
 					<button id="export-destinations" type="button" class="secondary">Export destination TABLE</button>
 				</div>
-			</section>
+				</div>
+			</details>
 			<section id="metadata-editor" class="metadata-editor" hidden>
 				<h2>Destination metadata</h2>
 				<p id="metadata-summary">Load a destination datasource to edit public copy.</p>
