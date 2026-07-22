@@ -1,0 +1,104 @@
+{
+	"contractVersion": 1,
+	"projectId": "civic-building-directory",
+	"source": {
+		"kind": "floor-plan",
+		"presentation": "schematic",
+		"levels": 3,
+		"equivalentRedrawAllowed": true
+	},
+	"guidance": {
+		"targetMode": "route",
+		"allowFallback": true,
+		"stepFreeRequired": true
+	},
+	"evidence": {
+		"destinationMetadata": {
+			"status": "confirmed",
+			"provenance": "authoritative-import",
+			"artifact": "Canonical three-level civic directory fixture",
+			"review": {
+				"method": "source-authority",
+				"reviewerType": "authoritative-source",
+				"reviewedBy": "Canonical fixture review"
+			}
+		},
+		"destinationAnchors": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "map.svg department zones reviewed against the canonical redraw",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Codex visual review"
+			}
+		},
+		"currentLocationAnchors": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "Level 1 main-lobby anchor in src/editor-assets/route-graph.json",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review"
+			}
+		},
+		"orientation": {
+			"status": "unavailable",
+			"provenance": "reviewer-authored"
+		},
+		"walkableSpace": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "src/editor-assets/walkable-mask.json",
+			"independentFrom": ["routeTopology"],
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review",
+				"note": "Walkable public circulation was authored from the redesigned corridor surfaces before route centerlines were validated."
+			}
+		},
+		"routeTopology": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "src/editor-assets/route-graph.json",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review"
+			}
+		},
+		"entranceApproaches": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "Leaf destination entrances in src/editor-assets/route-graph.json",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review"
+			}
+		},
+		"levelTransitions": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "Aligned elevator nodes and explicit cross-level edges in src/editor-assets/route-graph.json",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review"
+			}
+		},
+		"accessibility": {
+			"status": "confirmed",
+			"provenance": "reviewer-authored",
+			"artifact": "Step-free public corridor and elevator edge classifications in src/editor-assets/route-graph.json",
+			"review": {
+				"method": "overlay-review",
+				"reviewerType": "qualified-reviewer",
+				"reviewedBy": "Canonical civic-building example review",
+				"note": "This certification applies to the fictional canonical example only; customer deployments require site confirmation."
+			}
+		}
+	}
+}

@@ -1,0 +1,151 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "775055966815d801baab622c248d4f800e7253c1edb00fec4ae35baa400be143",
+	"reviewedAt": "2026-07-22T11:56:53+02:00",
+	"reviewer": "Codex",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The three-level civic directory, multilingual search, highlight mode, and reviewed routing behavior match the generation brief."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "The redraw preserves the functional floor evidence while intentionally using a clearer signage-oriented orthogonal plan."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "The civic identity, room zoning, circulation, level controls, and destination detail view form a specific wayfinding product."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Department labels, room names, level controls, and route guidance remain legible at both Full HD and compact review sizes."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Default, custom light, selected-room, pulse, and route states retain sufficient contrast."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Measured SVG text fitting keeps every visible label within its authored room safe width and clear of stairs and elevators."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The map, directory, detail panel, keyboard, and compact layouts use the available surface without collisions or clipped controls."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Map geometry and controls are coherent across the default and custom theme palettes."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The plan-led spatial interface is materially distinct from dashboard and card-oriented examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Default Full HD composition is balanced, readable, and collision-free."
+		},
+		{
+			"file": "compact-1366x768.png",
+			"status": "pass",
+			"notes": "Compact composition preserves navigation, labels, and a usable scrolling directory."
+		},
+		{
+			"file": "scenario-active-highlight-1920x1080.png",
+			"status": "pass",
+			"notes": "Selected destination is clear without obscuring the room label or circulation."
+		},
+		{
+			"file": "scenario-app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Default scenario matches the accepted Full HD layout."
+		},
+		{
+			"file": "scenario-compact-1366x768.png",
+			"status": "pass",
+			"notes": "Compact scenario has no clipped labels, controls, or amenities."
+		},
+		{
+			"file": "scenario-cross-floor-destination-level-1920x1080.png",
+			"status": "pass",
+			"notes": "Destination-level route leaves the elevator, has no reversal or overhang, and terminates at the reviewed room entrance."
+		},
+		{
+			"file": "scenario-cross-floor-selection-1920x1080.png",
+			"status": "pass",
+			"notes": "Origin-level guidance clearly directs the visitor to the central elevator."
+		},
+		{
+			"file": "scenario-custom-theme-1366x768.png",
+			"status": "pass",
+			"notes": "Custom light theme remains coherent and readable across map and directory surfaces."
+		},
+		{
+			"file": "scenario-empty-1366x768.png",
+			"status": "pass",
+			"notes": "Empty state is explicit while the map remains useful and stable."
+		},
+		{
+			"file": "scenario-keyboard-open-1366x768.png",
+			"status": "pass",
+			"notes": "Large multilingual signage keyboard fits the compact surface without overlap."
+		},
+		{
+			"file": "scenario-level-three-1920x1080.png",
+			"status": "pass",
+			"notes": "Level 3 labels wrap within non-overlapping flat room zones and remain clear of amenities."
+		},
+		{
+			"file": "scenario-level-two-1920x1080.png",
+			"status": "pass",
+			"notes": "Level 2 labels and open-below circulation remain collision-free."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Live datasource replacement updates the directory without destabilizing the map."
+		},
+		{
+			"file": "scenario-long-destination-list-1366x768.png",
+			"status": "pass",
+			"notes": "Long directory remains scrollable with stable map allocation."
+		},
+		{
+			"file": "scenario-long-destination-selected-1366x768.png",
+			"status": "pass",
+			"notes": "Long destination content wraps safely and retains the cross-floor action."
+		},
+		{
+			"file": "scenario-long-title-1366x768.png",
+			"status": "pass",
+			"notes": "Long branding and heading content stays within the header composition."
+		},
+		{
+			"file": "scenario-row-array-1366x768.png",
+			"status": "pass",
+			"notes": "Row-array datasource normalization produces the same stable directory layout."
+		},
+		{
+			"file": "scenario-same-floor-route-1920x1080.png",
+			"status": "pass",
+			"notes": "Same-floor route uses straight orthogonal segments and ends at the room doorway."
+		},
+		{
+			"file": "scenario-zoomed-route-1920x1080.png",
+			"status": "pass",
+			"notes": "Zoomed route remains registered to the plan with square caps and miter joins."
+		}
+	],
+	"unresolvedFindings": []
+}

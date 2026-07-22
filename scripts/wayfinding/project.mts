@@ -36,9 +36,11 @@ export interface WayfindingProjectDocument {
 	projectId: string;
 	source: {
 		equivalentRedrawAllowed: boolean;
+		fidelityReview?: string;
 		kind: 'floor-plan' | 'directory-map' | 'illustrated-map' | 'isometric-map' | 'vector-map' | 'cad-bim' | 'gis' | 'mixed';
 		levels: number;
 		presentation: 'source-overlay' | 'redrawn-equivalent' | 'schematic' | 'calibrated-isometric';
+		referenceContract?: string;
 	};
 }
 

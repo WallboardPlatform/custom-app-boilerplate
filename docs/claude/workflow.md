@@ -22,6 +22,8 @@ npm run validate:brief
 
 Do this before editing implementation artifacts.
 
+For a wayfinding `redrawn-equivalent`, also copy stable source renders into `reference/`, create `source-understanding.json` from `templates/wayfinding-source-understanding.json`, and record it in `wayfinding-project.json`. Freeze footprint, proportions, circulation, entrances, route-relevant doors, transitions, destination adjacency, allowed simplifications, prohibited changes, and unresolved facts before drawing the candidate.
+
 ## 4. Implement
 
 - Keep platform infrastructure unchanged and follow existing SolidJS/SCSS patterns.
@@ -43,6 +45,8 @@ Do this before editing implementation artifacts.
 5. Run `npm run measure:visual` only after a representative render; set coverage thresholds from measured evidence plus regression margin.
 6. Repeat until screenshots are intentional, then run `npm run validate:project` and `npm run validate:visual`.
 7. Run `npm run prepare:visual-review`, record the completed inspection in `preview/visual-review.json`, and pass `npm run validate:visual-review`.
+
+Reference-led spatial redraws need a second review context. Render one candidate map image per level, compare it with both the original source render and the frozen source-understanding invariants, then complete `source-fidelity-review.json`. The authoring context cannot approve its own source-fidelity review. Run `npm run wayfinding:validate-source-fidelity -- --project wayfinding-project.json`; hashes make source, candidate, and contract changes stale automatically.
 
 Automated checks cannot judge visual quality. Passing overflow and coverage checks never replaces screenshot inspection. The review fingerprint follows reachable app source, app-specific fixtures/tests, editor assets, and contracts, so unrelated unused boilerplate changes do not stale accepted evidence.
 

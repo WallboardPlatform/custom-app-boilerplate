@@ -1,0 +1,90 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://wallboard.info/schemas/wayfinding-source-understanding.schema.json",
+	"title": "Wallboard Wayfinding Source Understanding",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["contractVersion", "projectId", "authoredBy", "sourceFiles", "coordinateSystem", "levels", "invariants", "allowedSimplifications", "prohibitedChanges"],
+	"properties": {
+		"contractVersion": { "const": 1 },
+		"projectId": { "$ref": "#/$defs/nonEmptyString" },
+		"authoredBy": { "$ref": "#/$defs/nonEmptyString" },
+		"sourceFiles": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "path", "sha256", "kind", "role"],
+				"properties": {
+					"id": { "$ref": "#/$defs/id" },
+					"path": { "$ref": "#/$defs/nonEmptyString" },
+					"sha256": { "$ref": "#/$defs/sha256" },
+					"kind": { "enum": ["pdf", "raster", "svg", "cad-bim", "gis", "other"] },
+					"role": { "enum": ["authoritative", "reference", "supplemental"] },
+					"pages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 1 } },
+					"note": { "type": "string" }
+				}
+			}
+		},
+		"coordinateSystem": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["width", "height", "units", "origin", "mapping"],
+			"properties": {
+				"width": { "type": "number", "exclusiveMinimum": 0 },
+				"height": { "type": "number", "exclusiveMinimum": 0 },
+				"units": { "enum": ["source-pixels", "source-points", "meters", "millimeters", "custom"] },
+				"origin": { "enum": ["top-left", "bottom-left"] },
+				"mapping": { "$ref": "#/$defs/nonEmptyString" },
+				"tolerancePercent": { "type": "number", "minimum": 0, "maximum": 25 }
+			}
+		},
+		"levels": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "sourceFileId", "sourcePage", "description", "footprint", "circulation", "entrances", "doors", "transitions", "destinations", "uncertainties"],
+				"properties": {
+					"id": { "$ref": "#/$defs/id" },
+					"sourceFileId": { "$ref": "#/$defs/id" },
+					"sourcePage": { "type": "integer", "minimum": 1 },
+					"description": { "$ref": "#/$defs/nonEmptyString" },
+					"footprint": { "$ref": "#/$defs/nonEmptyString" },
+					"circulation": { "$ref": "#/$defs/stringList" },
+					"entrances": { "$ref": "#/$defs/stringList" },
+					"doors": { "$ref": "#/$defs/stringList" },
+					"transitions": { "$ref": "#/$defs/stringList" },
+					"destinations": { "$ref": "#/$defs/stringList" },
+					"uncertainties": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" } }
+				}
+			}
+		},
+		"invariants": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "category", "levelIds", "severity", "statement"],
+				"properties": {
+					"id": { "$ref": "#/$defs/id" },
+					"category": { "enum": ["footprint", "proportion", "adjacency", "circulation", "entrance", "door", "transition", "destination", "orientation", "other"] },
+					"levelIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+					"severity": { "enum": ["required", "advisory"] },
+					"statement": { "$ref": "#/$defs/nonEmptyString" }
+				}
+			}
+		},
+		"allowedSimplifications": { "$ref": "#/$defs/stringList" },
+		"prohibitedChanges": { "$ref": "#/$defs/stringList" }
+	},
+	"$defs": {
+		"nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+		"id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+		"sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+		"stringList": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmptyString" } }
+	}
+}

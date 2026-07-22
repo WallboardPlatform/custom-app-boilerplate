@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" role="img" aria-labelledby="map-title map-description">
+  <title id="map-title">Three-level civic building directory map</title>
+  <desc id="map-description">A simplified, touch-friendly redraw of a three-level civic building with public departments, stairs, an elevator, entrances, and a central lobby.</desc>
+  <defs>
+    <filter id="zone-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#18302e" flood-opacity="0.14" />
+    </filter>
+    <pattern id="open-pattern" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#49615f" stroke-opacity="0.16" stroke-width="2" />
+    </pattern>
+  </defs>
+
+  <g id="level-1" data-wayfinding-level="1">
+    <path class="wb-civic-building-shell" d="M86 116H350V72H650V116H914V500H650V552H350V500H86Z" />
+    <path class="wb-civic-public-circulation" d="M456 72H544V552H456Z M86 286H544V334H86Z" />
+    <path id="location-court-services" class="wb-civic-zone wb-civic-zone-service" data-wayfinding-location-id="court-services" d="M86 116H267V286H86Z" />
+    <path id="location-utility-billing" class="wb-civic-zone wb-civic-zone-utility" data-wayfinding-location-id="utility-billing" d="M267 116H456V286H267Z" />
+    <path id="location-council-chambers" class="wb-civic-zone wb-civic-zone-council" data-wayfinding-location-id="council-chambers" d="M86 334H280V500H86Z" />
+    <path id="location-emergency-management" class="wb-civic-zone wb-civic-zone-emergency" data-wayfinding-location-id="emergency-management" d="M280 334H456V500H280Z" />
+    <path id="location-public-library" class="wb-civic-zone wb-civic-zone-library" data-wayfinding-location-id="public-library" d="M544 116H914V500H544Z" />
+    <path id="location-main-lobby" class="wb-civic-zone wb-civic-zone-lobby" data-wayfinding-location-id="main-lobby" d="M456 334H544V500H456Z" />
+
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="court-services" data-label-width="145" data-label-lines="3" transform="translate(176 196)">
+      <text text-anchor="middle"><tspan x="0">COURT</tspan><tspan x="0" dy="18">SERVICES</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">PUBLIC COUNTER</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="utility-billing" data-label-width="150" data-label-lines="3" transform="translate(361 196)">
+      <text text-anchor="middle"><tspan x="0">UTILITY</tspan><tspan x="0" dy="18">BILLING</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">PAYMENTS</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="council-chambers" data-label-width="158" data-label-lines="3" transform="translate(183 404)">
+      <text text-anchor="middle"><tspan x="0">COUNCIL</tspan><tspan x="0" dy="18">CHAMBERS</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">PUBLIC MEETINGS</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="emergency-management" data-label-width="142" data-label-lines="3" transform="translate(368 404)">
+      <text text-anchor="middle"><tspan x="0">EMERGENCY</tspan><tspan x="0" dy="18">OPERATIONS</tspan></text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="public-library" data-label-width="310" data-label-lines="3" transform="translate(729 286)">
+      <text text-anchor="middle"><tspan x="0">PUBLIC</tspan><tspan x="0" dy="18">LIBRARY</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">COLLECTIONS + SERVICES</text>
+    </g>
+    <g class="wb-civic-zone-label wb-civic-compact" data-wayfinding-label-for="main-lobby" data-label-width="70" data-label-lines="3" transform="translate(500 480)">
+      <text text-anchor="middle"><tspan x="0">MAIN</tspan><tspan x="0" dy="18">LOBBY</tspan></text>
+    </g>
+
+	<g class="wb-civic-amenity wb-civic-amenity-elevator" transform="translate(480 410)"><rect width="40" height="40" rx="3"/><text x="20" y="25" text-anchor="middle">ELEV</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(460 108)"><title>Stair 1</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S1</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(508 108)"><title>Stair 2</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S2</text></g>
+    <g class="wb-civic-current-anchor" data-start-location-id="main-lobby" transform="translate(500 365)">
+      <circle class="wb-civic-current-pulse" r="27"/><circle class="wb-civic-current-core" r="10"/><path class="wb-civic-current-heading" d="M0-31L-8-15H8Z"/>
+    </g>
+    <g class="wb-civic-entrance" transform="translate(500 76)"><path d="M-22 0Q0 28 22 0"/><text y="-9" text-anchor="middle">NORTH ENTRY</text></g>
+    <g class="wb-civic-entrance" transform="translate(500 548) rotate(180)"><path d="M-22 0Q0 28 22 0"/></g>
+  </g>
+
+  <g id="level-2" data-wayfinding-level="2" style="display:none">
+    <path class="wb-civic-building-shell" d="M86 116H350V72H650V116H914V500H650V552H350V500H86Z" />
+    <path class="wb-civic-public-circulation" d="M438 72H562V552H438Z M86 296H914V344H86Z" />
+    <path class="wb-civic-open-below" d="M454 206H546V290H454Z" />
+    <path id="location-planning-development" class="wb-civic-zone wb-civic-zone-planning" data-wayfinding-location-id="planning-development" d="M190 116H438V296H190Z" />
+    <path id="location-engineering" class="wb-civic-zone wb-civic-zone-engineering" data-wayfinding-location-id="engineering" d="M86 344H438V500H86Z" />
+    <path id="location-building-inspection" class="wb-civic-zone wb-civic-zone-inspection" data-wayfinding-location-id="building-inspection" d="M562 116H914V296H562Z" />
+    <path id="location-library-services" class="wb-civic-zone wb-civic-zone-library" data-wayfinding-location-id="library-services" d="M562 344H914V500H562Z" />
+    <path id="location-code-compliance" class="wb-civic-zone wb-civic-zone-code" data-wayfinding-location-id="code-compliance" d="M86 116H190V296H86Z" />
+
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="planning-development" data-label-width="210" data-label-lines="3" transform="translate(314 206)">
+      <text text-anchor="middle"><tspan x="0">PLANNING +</tspan><tspan x="0" dy="18">DEVELOPMENT</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">PERMITS + REVIEW</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="engineering" data-label-width="300" data-label-lines="3" transform="translate(262 414)">
+      <text text-anchor="middle">ENGINEERING</text><text class="wb-civic-zone-kicker" x="0" y="30" text-anchor="middle">PUBLIC SERVICES</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="building-inspection" data-label-width="300" data-label-lines="3" transform="translate(738 206)">
+      <text text-anchor="middle"><tspan x="0">BUILDING</tspan><tspan x="0" dy="18">INSPECTION</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">PERMITS</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="library-services" data-label-width="300" data-label-lines="3" transform="translate(738 414)">
+      <text text-anchor="middle"><tspan x="0">LIBRARY</tspan><tspan x="0" dy="18">SERVICES</tspan></text>
+      <text class="wb-civic-zone-kicker" x="0" y="48" text-anchor="middle">ADULT + TEEN</text>
+    </g>
+    <g class="wb-civic-zone-label wb-civic-compact" data-wayfinding-label-for="code-compliance" data-label-width="78" data-label-lines="3" data-label-min-size="10" transform="translate(138 206)">
+      <text text-anchor="middle"><tspan x="0">CODE</tspan><tspan x="0" dy="16">COMPLIANCE</tspan></text>
+    </g>
+    <g class="wb-civic-open-label" transform="translate(500 350)"><text text-anchor="middle"><tspan x="0">OPEN TO</tspan><tspan x="0" dy="17">LOBBY BELOW</tspan></text></g>
+
+	<g class="wb-civic-amenity wb-civic-amenity-elevator" transform="translate(480 410)"><rect width="40" height="40" rx="3"/><text x="20" y="25" text-anchor="middle">ELEV</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(460 108)"><title>Stair 1</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S1</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(508 108)"><title>Stair 2</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S2</text></g>
+  </g>
+
+  <g id="level-3" data-wayfinding-level="3" style="display:none">
+    <path class="wb-civic-building-shell" d="M95 130H350V82H650V130H905V493H95Z" />
+    <path class="wb-civic-public-circulation" d="M432 82H568V493H432Z M95 311H905V359H95Z" />
+    <path id="location-council-office" class="wb-civic-zone wb-civic-zone-council" data-wayfinding-location-id="council-office" d="M95 130H432V311H95Z" />
+    <path id="location-communications" class="wb-civic-zone wb-civic-zone-communications" data-wayfinding-location-id="communications" d="M568 130H905V311H568Z" />
+    <path id="location-information-technology" class="wb-civic-zone wb-civic-zone-it" data-wayfinding-location-id="information-technology" d="M95 359H280V493H95Z" />
+    <path id="location-finance-purchasing" class="wb-civic-zone wb-civic-zone-finance" data-wayfinding-location-id="finance-purchasing" d="M280 359H432V493H280Z" />
+    <path id="location-human-resources" class="wb-civic-zone wb-civic-zone-hr" data-wayfinding-location-id="human-resources" d="M568 359H720V493H568Z" />
+    <path id="location-town-administration" class="wb-civic-zone wb-civic-zone-administration" data-wayfinding-location-id="town-administration" d="M720 359H905V493H720Z" />
+
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="council-office" data-label-width="285" data-label-lines="3" transform="translate(264 220)">
+      <text text-anchor="middle"><tspan x="0">TOWN COUNCIL</tspan><tspan x="0" dy="18">OFFICE</tspan></text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="communications" data-label-width="285" data-label-lines="3" transform="translate(736 220)">
+      <text text-anchor="middle">COMMUNICATIONS</text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="information-technology" data-label-width="150" data-label-lines="3" transform="translate(188 426)">
+      <text text-anchor="middle"><tspan x="0">INFORMATION</tspan><tspan x="0" dy="18">TECHNOLOGY</tspan></text>
+    </g>
+    <g class="wb-civic-zone-label wb-civic-compact" data-wayfinding-label-for="finance-purchasing" data-label-width="120" data-label-lines="3" transform="translate(356 442)">
+      <text text-anchor="middle"><tspan x="0">FINANCE +</tspan><tspan x="0" dy="16">PURCHASING</tspan></text>
+    </g>
+    <g class="wb-civic-zone-label wb-civic-compact" data-wayfinding-label-for="human-resources" data-label-width="120" data-label-lines="3" transform="translate(644 442)">
+      <text text-anchor="middle"><tspan x="0">HUMAN</tspan><tspan x="0" dy="16">RESOURCES</tspan></text>
+    </g>
+    <g class="wb-civic-zone-label" data-wayfinding-label-for="town-administration" data-label-width="150" data-label-lines="3" transform="translate(812 426)">
+      <text text-anchor="middle"><tspan x="0">TOWN</tspan><tspan x="0" dy="18">ADMINISTRATION</tspan></text>
+    </g>
+
+	<g class="wb-civic-amenity wb-civic-amenity-elevator" transform="translate(480 410)"><rect width="40" height="40" rx="3"/><text x="20" y="25" text-anchor="middle">ELEV</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(460 112)"><title>Stair 1</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S1</text></g>
+    <g class="wb-civic-amenity wb-civic-amenity-stair" transform="translate(508 112)"><title>Stair 2</title><rect width="32" height="34" rx="3"/><path d="M7 25L16 10l9 15"/><text x="16" y="31" text-anchor="middle">S2</text></g>
+  </g>
+</svg>

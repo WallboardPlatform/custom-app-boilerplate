@@ -103,6 +103,26 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'edge-backtracking-review'));
 	});
 
+	void it('does not report projected edge crossings between different levels', (): void => {
+		const multiLevelGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [
+				{ accessible: true, bidirectional: true, corridorWidth: 18, from: 'ground-west', geometry: [{ x: 100, y: 200 }, { x: 300, y: 200 }], id: 'ground-horizontal', kind: 'walk', reviewStatus: 'confirmed', to: 'ground-east', traversal: 'indoor-corridor' },
+				{ accessible: true, bidirectional: true, corridorWidth: 18, from: 'upper-north', geometry: [{ x: 200, y: 100 }, { x: 200, y: 300 }], id: 'upper-vertical', kind: 'walk', reviewStatus: 'confirmed', to: 'upper-south', traversal: 'indoor-corridor' }
+			],
+			graphId: 'multi-level-projection',
+			nodes: [
+				{ id: 'ground-west', kind: 'route', levelId: 'ground', x: 100, y: 200 },
+				{ id: 'ground-east', kind: 'route', levelId: 'ground', x: 300, y: 200 },
+				{ id: 'upper-north', kind: 'route', levelId: 'upper', x: 200, y: 100 },
+				{ id: 'upper-south', kind: 'route', levelId: 'upper', x: 200, y: 300 }
+			]
+		};
+		const report = validateWayfinding({ destinations: [], graph: multiLevelGraph, map: parseWayfindingSvg(sourceSvg) });
+
+		assert.equal(report.issues.some((issue): boolean => issue.code === 'edge-crossing-without-node'), false);
+	});
+
 	void it('routes and measures version 2 edges through their reviewed centerline geometry', (): void => {
 		const curvedGraph: WayfindingGraphDocument = {
 			contractVersion: 2,
@@ -318,6 +338,31 @@ void describe('wayfinding authoring foundation', (): void => {
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'cross-level-distance-missing'));
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'cross-level-transition-node-required'));
 		assert.ok(report.issues.some((issue): boolean => issue.code === 'cross-level-edge-kind-invalid'));
+	});
+
+	void it('accepts aligned transition points on adjacent levels', (): void => {
+		const alignedTransitionGraph: WayfindingGraphDocument = {
+			contractVersion: 2,
+			edges: [{
+				accessible: true,
+				bidirectional: true,
+				distanceMeters: 4,
+				from: 'lift-ground',
+				id: 'lift-ground-level-one',
+				kind: 'elevator',
+				reviewStatus: 'confirmed',
+				to: 'lift-level-one',
+				traversal: 'transition'
+			}],
+			graphId: 'aligned-transition',
+			nodes: [
+				{ id: 'lift-ground', kind: 'transition', levelId: 'ground', x: 400, y: 225 },
+				{ id: 'lift-level-one', kind: 'transition', levelId: 'Level1', x: 400, y: 225 }
+			]
+		};
+		const report = validateWayfinding({ destinations: [], graph: alignedTransitionGraph, map: parseWayfindingSvg(sourceSvg) });
+
+		assert.ok(!report.issues.some((issue): boolean => issue.code === 'edge-geometry-zero-segment'));
 	});
 
 	void it('writes a self-contained report with the graph overlay', (): void => {

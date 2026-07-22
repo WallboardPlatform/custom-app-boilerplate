@@ -1,0 +1,58 @@
+{
+  "Destinations": {
+    "header": {
+      "id": "string",
+      "name": "string",
+      "alternateName": "string",
+      "mapLabel": "string",
+      "floor": "string",
+      "category": "string",
+      "description": "string",
+      "hours": "string",
+      "status": "string",
+      "keywords": "string",
+      "accessible": "boolean"
+    },
+    "rows": [
+      {
+        "id": "main-lobby",
+        "name": "Main Lobby & Information",
+        "alternateName": "Vestíbulo e información",
+        "mapLabel": "Main Lobby",
+        "floor": "1",
+        "category": "Visitor services",
+        "description": "Welcome desk and building information.",
+        "hours": "Mon-Fri 8:00 AM-5:00 PM",
+        "status": "Open",
+        "keywords": "information help front desk entrance",
+        "accessible": true
+      },
+      {
+        "id": "building-inspection",
+        "name": "Building Inspection",
+        "alternateName": "Inspección de edificios",
+        "mapLabel": "Building Inspection",
+        "floor": "2",
+        "category": "Development services",
+        "description": "Permits, plan review, and inspection coordination.",
+        "hours": "Mon-Fri 8:00 AM-4:30 PM",
+        "status": "Open",
+        "keywords": "inspection permit plans",
+        "accessible": true
+      },
+      {
+        "id": "town-administration",
+        "name": "Town Administration",
+        "alternateName": "Administración municipal",
+        "mapLabel": "Town Administration",
+        "floor": "3",
+        "category": "Town leadership",
+        "description": "Executive administration offices.",
+        "hours": "By appointment",
+        "status": "Staff area",
+        "keywords": "manager administration leadership",
+        "accessible": true
+      }
+    ]
+  }
+}

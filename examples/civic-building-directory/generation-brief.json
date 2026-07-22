@@ -1,0 +1,244 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "Create a fictional three-floor civic-building touch directory as a reusable signage schematic.",
+		"audience": "Visitors using a shared landscape lobby kiosk to find public departments, rooms, and services.",
+		"primaryGoal": "Let a visitor search or tap a destination and follow a reviewed step-free route across the redesigned public circulation and aligned floor transitions."
+	},
+	"assumptions": [
+		"The reusable example is a fictional canonical schematic and makes no fidelity claim about a real building.",
+		"The reusable example owns a fictional Level 1 main-lobby kiosk anchor. A customer deployment must replace and confirm that anchor against the installed screen.",
+		"Image generation supplies visual direction only; map geometry, floor relationships, and interaction anchors come from the architectural source and explicit semantic artifacts.",
+		"Because the public corridors are redesigned as explicit walkable surfaces, the reusable example includes a separately authored walkable mask and reviewed multi-floor route graph. These claims do not transfer automatically to a customer building.",
+		"The accepted surfaces are 1920x1080 and 1366x768 landscape touch displays."
+	],
+	"app": { "mode": "new", "name": "Civic Building Directory", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The information architecture is designed for landscape lobby kiosks; portrait placements require a separate composition."
+	},
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary Full-HD public lobby kiosk.", "minimumContentCoverage": { "width": 94, "height": 92 } },
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape public kiosk.", "minimumContentCoverage": { "width": 94, "height": 92 } }
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{ "property": "destinationData", "source": "generated", "contract": "TABLE", "access": "read" }
+		]
+	},
+	"ownership": [
+		{
+			"id": "destination-content",
+			"area": "content",
+			"owner": "datasource",
+			"targets": ["destinationData"],
+			"rationale": "Operators quick-edit public names, alternate-language labels, descriptions, categories, floor, hours, status, and keywords."
+		},
+		{
+			"id": "spatial-model",
+			"area": "presentation",
+			"owner": "locked",
+			"targets": ["map.svg", "walkable-mask.json", "route-graph.json", "floor geometry", "destination hit zones", "entrance approaches", "level transitions"],
+			"rationale": "Geometry and route eligibility remain reviewed build artifacts and cannot be created by mutable table rows."
+		},
+		{
+			"id": "kiosk-settings",
+			"area": "content",
+			"owner": "setting",
+			"targets": ["title", "subtitle", "guidanceMode", "initialFloor", "startLocationId", "emptyStateText", "interfaceLanguages", "onScreenKeyboard", "keyboardLanguages", "selectionResetSeconds"],
+			"rationale": "Operators configure public copy, initial floor, evidenced guidance strength, language behavior, and idle reset."
+		},
+		{
+			"id": "presentation-settings",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": ["motionPreset", "themePreset", "backgroundColor", "panelColor", "mapSurfaceColor", "primaryTextColor", "secondaryTextColor", "accentColor", "destinationColor", "routeColor"],
+			"rationale": "Coordinated presets remain safe while Custom exposes a complete semantic palette."
+		},
+		{
+			"id": "visitor-session",
+			"area": "state",
+			"owner": "interaction",
+			"targets": ["query", "category", "active-floor", "selected-destination", "keyboard-state", "map-viewport"],
+			"rationale": "Search, selection, viewport, and floor inspection are private to the active kiosk session."
+		}
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "directory", "purpose": "Browse, filter, search, or tap a destination." },
+			{ "id": "floor-map", "purpose": "Inspect one simplified floor with quiet interactive department zones." },
+			{ "id": "details", "purpose": "Show destination information, reviewed distance and walking time, and cross-floor elevator guidance." },
+			{ "id": "keyboard", "purpose": "Provide an app-owned multilingual touch keyboard for search." }
+		],
+		"inputs": [
+			{ "id": "touch-map", "type": "touch", "action": "Select a department zone or control map pan and zoom." },
+			{ "id": "touch-directory", "type": "touch", "action": "Search, filter, select, change floors, and reset." },
+			{ "id": "touch-keyboard", "type": "keyboard", "action": "Filter destination names through the app-owned English and Spanish layouts." },
+			{ "id": "physical-keyboard", "type": "keyboard", "action": "Type in search and activate focused controls." }
+		],
+		"session": {
+			"reset": "timeout",
+			"timeoutSeconds": 60,
+			"expectation": "Selection, search, floor, and viewport reset after the configured idle interval or explicit reset."
+		}
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "background",
+		"rationale": "The map preserves its authored coordinate system while the directory reallocates width across the accepted landscape surfaces."
+	},
+	"motion": {
+		"default": "subtle",
+		"presetProperty": "motionPreset",
+		"transition": "custom",
+		"techniques": ["fade", "scale"],
+		"rationale": "Short floor fades and marker pulses communicate focus; Off preserves every state without animation."
+	},
+	"media": [
+		{
+			"id": "semantic-map",
+			"type": "image",
+			"source": "packaged",
+			"fit": "contain",
+			"cache": "bundle",
+			"preview": "packaged",
+			"fallback": "Show a designed map-unavailable state while keeping the directory usable.",
+			"rationale": "The simplified three-floor SVG works offline and keeps geometry synchronized with interaction anchors."
+		}
+	],
+	"branding": {
+		"source": "reference",
+		"editable": true,
+		"provenance": "A civic floor-plan reference and generated visual studies establish the municipal directory language; committed geometry, copy, and branding remain fictional.",
+		"fallback": "Use a restrained neutral civic identity and the configured semantic theme."
+	},
+	"presentation": {
+		"themes": ["light", "dark", "custom"],
+		"density": "balanced",
+		"viewingDistance": "near",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-civic-title", ".wb-civic-selected-name"] },
+			{ "role": "secondary", "selectors": [".wb-civic-destination-name", ".wb-civic-secondary"] },
+			{ "role": "metadata", "selectors": [".wb-civic-metadata", ".wb-civic-map-label"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "title", "purpose": "Public kiosk title." },
+		{ "property": "subtitle", "purpose": "Directory instruction." },
+		{ "property": "guidanceMode", "purpose": "Selects reviewed route, destination highlight, or directory-only behavior.", "effect": "guidance-mode" },
+		{ "property": "initialFloor", "purpose": "Initial floor shown after placement and idle reset.", "effect": "initial-floor" },
+		{ "property": "startLocationId", "purpose": "Selects the configured kiosk current-position anchor." },
+		{ "property": "emptyStateText", "purpose": "Message for an empty bound destination table." },
+		{ "property": "interfaceLanguages", "purpose": "Selects English, Spanish, or an on-screen language selector." },
+		{ "property": "onScreenKeyboard", "purpose": "Shows the app-owned touch keyboard when destination search receives focus." },
+		{ "property": "keyboardLanguages", "purpose": "Selects English, Spanish, or both keyboard layouts." },
+		{ "property": "selectionResetSeconds", "purpose": "Idle interval before selection, floor, viewport, and search reset.", "effect": "selection-reset" },
+		{ "property": "motionPreset", "purpose": "Selects Off or Subtle floor and focus feedback.", "effect": "motion-preset" },
+		{ "property": "themePreset", "purpose": "Selects the complete Light, Dark, or Custom palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom outer background." },
+		{ "property": "panelColor", "purpose": "Custom header and directory panel surface." },
+		{ "property": "mapSurfaceColor", "purpose": "Custom map canvas." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
+		{ "property": "secondaryTextColor", "purpose": "Custom secondary text." },
+		{ "property": "accentColor", "purpose": "Custom actions and floor selection." },
+		{ "property": "destinationColor", "purpose": "Custom selected destination spotlight." },
+		{ "property": "routeColor", "purpose": "Custom reviewed route line." }
+	],
+	"dynamicText": [
+		{
+			"id": "kiosk-title",
+			"role": "primary",
+			"source": { "type": "setting", "properties": ["title"] },
+			"selectors": [".wb-civic-title"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
+			"fallback": "Preserve the complete title and reduce adjacent metadata first.",
+			"rationale": "The civic identity must remain complete at both accepted widths.",
+			"evidenceScenario": "long-title"
+		},
+		{
+			"id": "destination-list-names",
+			"role": "secondary",
+			"source": { "type": "datasource", "properties": ["destinationData"] },
+			"selectors": [".wb-civic-destination-name"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Wrap to two lines and keep the directory scrollable before reducing touch-target height.",
+			"rationale": "Destination identity is essential and cannot be truncated.",
+			"evidenceScenario": "long-destination-list"
+		},
+		{
+			"id": "selected-destination-name",
+			"role": "primary",
+			"source": { "type": "datasource", "properties": ["destinationData"] },
+			"selectors": [".wb-civic-selected-name"],
+			"strategy": "auto-fit",
+			"limits": { "minimumFontSize": 22, "maximumLines": 3 },
+			"fallback": "Use three lines at the readable minimum and move optional details below the fold.",
+			"rationale": "The selected destination must remain complete.",
+			"evidenceScenario": "long-destination-selected"
+		}
+	],
+	"states": [
+		{ "scenario": "app-default", "expectation": "Level 1, the persistent current-location marker, floor controls, and directory fill the Full-HD kiosk." },
+		{ "scenario": "compact", "expectation": "The same touch workflow remains usable at 1366x768." },
+		{ "scenario": "level-two", "expectation": "Level 2 redraw and destinations render without changing the visitor-controlled zoom." },
+		{ "scenario": "level-three", "expectation": "Level 3 redraw reflects the revised department zoning." },
+		{ "scenario": "same-floor-route", "expectation": "A same-floor destination draws the reviewed centerline route and shows its distance and walking time." },
+		{ "scenario": "zoomed-route", "expectation": "The reviewed route and markers remain registered to map coordinates after manual zoom without changing the selected viewport." },
+		{ "scenario": "cross-floor-selection", "expectation": "A cross-floor destination draws the reviewed path to the elevator, preserves the current viewport, and offers an explicit floor-change action." },
+		{ "scenario": "cross-floor-destination-level", "expectation": "After an explicit floor change, the continuation route begins at the aligned elevator and ends at the selected destination entrance." },
+		{ "scenario": "active-highlight", "expectation": "A selected zone and target marker pulse without rendering a walking path." },
+		{ "scenario": "keyboard-open", "expectation": "The touch keyboard fits without covering search results or the close action." },
+		{ "scenario": "custom-theme", "expectation": "The complete custom palette applies to interface, floor controls, map, and spotlight." },
+		{ "scenario": "long-title", "expectation": "A long title remains complete at the readable floor." },
+		{ "scenario": "long-destination-list", "expectation": "Long destination names wrap without clipped glyphs or broken touch targets." },
+		{ "scenario": "long-destination-selected", "expectation": "Long selected names remain complete in the detail panel." },
+		{ "scenario": "empty", "expectation": "A bound empty table shows a stable designed state instead of bundled rows." },
+		{ "scenario": "row-array", "expectation": "A direct row array normalizes to the same directory." },
+		{ "scenario": "live-datasource-update", "expectation": "A live table update replaces public metadata without changing locked map geometry." }
+	],
+	"behaviors": [
+		{ "id": "no-automatic-viewport", "expectation": "Selecting any destination preserves zoom, pan, and the currently inspected floor until the visitor explicitly changes them.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "same-floor-routing", "expectation": "A same-floor destination renders only the reviewed graph centerline, with distance and walking time derived from the route result.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "cross-floor-disclosure", "expectation": "A destination on another level renders the reviewed route to the elevator, identifies the required transition, and exposes an explicit view-floor action without moving the viewport automatically.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "persistent-origin", "expectation": "The Level 1 kiosk marker remains visible and pulsing at rest and after selection when Level 1 is visible.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "target-pulse", "expectation": "The selected map zone and target marker pulse when motion is enabled and remain static but visible when motion is Off.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "session-reset", "expectation": "The configured timeout clears selection, query, category, viewport, and floor state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "touch-keyboard", "expectation": "The app-owned keyboard enters English and Spanish search text and can be dismissed without losing the query.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "floor-navigation", "expectation": "Floor tabs switch among all three levels and retain a clear selected-floor state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "touch-map-navigation", "expectation": "Pointer drag, wheel, and pinch gestures move and zoom the map without accidentally selecting a destination.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "live-destination-update", "expectation": "A live destination table update replaces public copy without rebuilding geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{ "id": "semantic-map", "source": "packaged", "path": "src/assets/map.svg", "required": true },
+		{ "id": "route-graph", "source": "packaged", "path": "src/editor-assets/route-graph.json", "required": true },
+		{ "id": "walkable-mask", "source": "packaged", "path": "src/editor-assets/walkable-mask.json", "required": true }
+	],
+	"visualDirection": {
+		"source": "creative-led",
+		"summary": "Translate dense architectural sheets into a calm, high-contrast civic directory with faithful floor proportions, white circulation space, softly colored department zones, and direct touch affordances.",
+		"references": [],
+		"signatureChoices": [
+			"Three aligned floor diagrams use the same coordinate language so vertical transitions remain understandable.",
+			"Department zones are the touch targets; no decorative numbered circles clutter the maps."
+		],
+		"avoid": ["Construction-plan clutter", "Generic dashboard cards", "Auto-zoom on selection", "Routes outside reviewed walkable surfaces", "Perspective or decorative 3D routing"]
+	},
+	"visualReview": {
+		"intent": "A credible municipal lobby directory where visitors understand the building hierarchy immediately and can inspect any floor without losing spatial context.",
+		"focus": [
+			"Verify all three floor redraws preserve the authoritative footprint, public spine, zone adjacency, and elevator/stair relationships.",
+			"Verify destination zones remain readable and selectable without marker clutter.",
+			"Verify same-floor routes remain inside the designed public corridor and cross-floor routes stop at the aligned elevator before continuing on the selected level.",
+			"Verify destination selection never moves the viewport automatically and the explicit floor action is obvious.",
+			"Verify long names, touch keyboard, map labels, current marker, target pulse, and all themes remain coherent without clipping."
+		]
+	}
+}

@@ -10,6 +10,8 @@ Copy `templates/wayfinding-project.json`, record only known/reviewed facts, vali
 npm run wayfinding:assess -- --project wayfinding-project.json
 ```
 
+`redrawn-equivalent` additionally requires `source.referenceContract` and `source.fidelityReview`. The assessment validates their schemas, source/candidate hashes, one comparison per level, every frozen invariant, reviewer independence, and zero unresolved findings. This prevents an internally consistent but spatially unrelated redraw from passing route checks.
+
 | Mode | Visitor experience | Required confirmed evidence |
 |------|--------------------|-----------------------------|
 | Directory | Search, categories, destination details | Destination metadata |
@@ -76,6 +78,18 @@ The shared `WayfindingGraph` supports standard and step-free shortest paths plus
 
 ## Image/PDF Extraction
 
+Before implementation, normalize the accepted source into stable per-level renders and write `source-understanding.json`. Describe the source before seeing the candidate: exterior footprint, asymmetric projections, voids, public circulation, entrances, route-relevant doors, stairs/elevators/escalators, destination adjacency, orientation, allowed simplifications, and unknown facts. Hash the original files and normalized renders. This description is the visual-semantic oracle used alongside the original image during independent review; it is not a substitute for looking at the source.
+
+| Input | Extraction path | Required restraint |
+|-------|-----------------|--------------------|
+| Vector PDF/CAD/BIM/GIS | Preserve page coordinates; extract paths/text where useful; render stable comparison images | Do not flatten authoritative geometry into a guessed schematic merely because extraction is inconvenient |
+| Raster/scan/photo | Correct crop/perspective, retain the untouched original, then propose walls/walkable areas with OCR/CV or manual tracing | Segmentation and OCR stay proposed until reviewed over the original; ask for scale, hidden connections, and inaccessible areas |
+| Mixed/annotated source | Separate base geometry from customer markup and document which layer wins for each fact | Markup may change program labels without silently moving walls, doors, or transitions. Freehand outlines are semantic ownership evidence, not paths to trace; redraw clean geometry from the architectural source and mark unsupported extents provisional |
+
+The display map may use a compact source-derived wall raster under semantic SVG zones when a full vector export is too large. The root coordinate system must still map explicitly to the normalized source, and the wall extraction must be reviewed as a candidate, not promoted because it was generated deterministically.
+
+Clean a wall raster by removing furniture, labels, hatch, and isolated extraction noise while retaining the footprint, structural walls, public openings, stairs, elevators, voids, and route-relevant doors. If renovation markup is newer than the architectural plan, show its program zones as provisional overlays and keep them out of collision and routing geometry until a current plan or field survey confirms the partitions.
+
 For an existing SVG, audit it before trusting or migrating any embedded points:
 
 ```bash
@@ -108,6 +122,8 @@ Mask extraction and skeletons may propose topology but never certify it. Color e
 For a hand-authored graph, a graph-derived corridor envelope is useful only as a regression check. It is not an independent walkable mask and cannot certify the same graph that generated it; review every representative route over the source map.
 
 Visual review by the same model that proposed a route is diagnostic, not independent evidence. Automated image checks may reject obvious crossings and mask violations, but must not promote uncertain raster inference to `confirmed`.
+
+For a redrawn equivalent, prepare `source-fidelity-review.json` from the template only after candidate screenshots exist. A different AI context, human reviewer, or customer must compare every level against the source render and every invariant in `source-understanding.json`. Passing graph/mask tests, render tests, or the normal app visual review does not satisfy this source-fidelity gate.
 
 ## Metadata Updates
 
@@ -147,6 +163,7 @@ The report must show zero errors. Inspect `wayfinding-debug.svg` and representat
 Deliver the app ZIP plus:
 
 - assessed `wayfinding-project.json`;
+- frozen `source-understanding.json` and independently completed `source-fidelity-review.json` for every redrawn equivalent;
 - native annotated `map.svg`;
 - destination datasource contract and synthetic template;
 - screenshots of default, highlighted destination, long metadata, empty, and reset states.

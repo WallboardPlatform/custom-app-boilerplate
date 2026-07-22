@@ -503,6 +503,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			for (const element of elements) {
 				const style: CSSStyleDeclaration = window.getComputedStyle(element);
 				const rect: DOMRect = element.getBoundingClientRect();
+				const isSvgElement: boolean = element instanceof SVGElement;
 				const isVisible: boolean =
 					style.display !== 'none' &&
 					style.visibility !== 'hidden' &&
@@ -525,6 +526,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				if (
+					!isSvgElement &&
 					!allowsOffCanvasContent &&
 					!clipsTextWithEllipsis &&
 					element.clientWidth > 0 &&
@@ -534,6 +536,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				if (
+					!isSvgElement &&
 					!allowsOffCanvasContent &&
 					element.childElementCount > 0 &&
 					element.clientHeight > 0 &&
@@ -544,6 +547,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				}
 
 				if (
+					!isSvgElement &&
 					!allowsOffCanvasContent &&
 					element !== root &&
 					(rect.left < rootRect.left - 1 ||

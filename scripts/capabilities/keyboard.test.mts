@@ -10,7 +10,7 @@ import { applyCapability } from '../capability-materialization.mjs';
 interface KeyboardModule {
 	appendKeyboardValue: (value: string, key: string, maximumLength?: number) => string;
 	keyboardLayoutsFor: (
-		ids: readonly ('en' | 'hu')[]
+		ids: readonly ('en' | 'es' | 'hu')[]
 	) => Array<{ id: string; rows: readonly (readonly string[])[] }>;
 	removeLastKeyboardCharacter: (value: string) => string;
 }
@@ -52,7 +52,8 @@ void describe('on-screen keyboard capability', (): void => {
 		assert.ok(keyboardModule);
 		const { keyboardLayoutsFor } = keyboardModule;
 
-		assert.deepEqual(keyboardLayoutsFor(['hu', 'en', 'hu']).map((layout) => layout.id), ['hu', 'en']);
+		assert.deepEqual(keyboardLayoutsFor(['es', 'hu', 'en', 'es']).map((layout) => layout.id), ['es', 'hu', 'en']);
+		assert.ok(keyboardLayoutsFor(['es'])[0].rows.flat().includes('\u00f1'));
 		assert.ok(keyboardLayoutsFor(['hu'])[0].rows.flat().includes('ő'));
 	});
 

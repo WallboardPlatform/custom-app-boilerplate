@@ -297,7 +297,12 @@ const validateGraph = (
 		}
 
 		for (let index = 1; index < points.length; index += 1) {
-			if (pointDistance(points[index - 1], points[index]) <= 0.01) {
+			const isAlignedLevelTransition = from.levelId !== to.levelId
+				&& points.length === 2
+				&& index === 1
+				&& ['elevator', 'escalator', 'stairs'].includes(edge.kind);
+
+			if (pointDistance(points[index - 1], points[index]) <= 0.01 && !isAlignedLevelTransition) {
 				addIssue(issues, 'error', 'edge-geometry-zero-segment', `Edge '${edge.id}' contains a zero-length centerline segment.`, [edge.id, String(index - 1)]);
 			}
 		}
@@ -350,6 +355,10 @@ const validateGraph = (
 		for (let rightIndex = leftIndex + 1; rightIndex < validEdges.length; rightIndex += 1) {
 			const left = validEdges[leftIndex];
 			const right = validEdges[rightIndex];
+			const leftIsSingleLevel: boolean = left.from.levelId === left.to.levelId;
+			const rightIsSingleLevel: boolean = right.from.levelId === right.to.levelId;
+
+			if (!leftIsSingleLevel || !rightIsSingleLevel || left.from.levelId !== right.from.levelId) continue;
 
 			if ([right.from.id, right.to.id].includes(left.from.id) || [right.from.id, right.to.id].includes(left.to.id)) continue;
 

@@ -88,7 +88,10 @@ const prepareOutputDirectory = () => {
 		'generation-brief.json',
 		'visual-review.json',
 		'datasource-contract.json',
-		'sample-datasource.json'
+		'sample-datasource.json',
+		'wayfinding-project.json',
+		'source-understanding.json',
+		'source-fidelity-review.json'
 	]);
 	const manifestPath = path.join(outputDirectory, 'delivery-manifest.json');
 
@@ -184,6 +187,7 @@ const brief = readJson(briefPath);
 const visualReviewPath = path.join(projectDirectory, 'preview', 'visual-review.json');
 const visualReview = unverified ? null : readJson(visualReviewPath);
 let datasource = null;
+let wayfinding = null;
 
 fs.copyFileSync(briefPath, path.join(outputDirectory, 'generation-brief.json'));
 
@@ -263,6 +267,24 @@ if (fs.existsSync(contractPath)) {
 	};
 }
 
+const wayfindingProjectPath = path.join(projectDirectory, 'wayfinding-project.json');
+
+if (fs.existsSync(wayfindingProjectPath)) {
+	const project = readJson(wayfindingProjectPath);
+	fs.copyFileSync(wayfindingProjectPath, path.join(outputDirectory, 'wayfinding-project.json'));
+	wayfinding = { projectFile: 'wayfinding-project.json', presentation: project.source?.presentation ?? null };
+
+	if (project.source?.presentation === 'redrawn-equivalent') {
+		const sourceContractPath = path.resolve(projectDirectory, project.source.referenceContract);
+		const fidelityReviewPath = path.resolve(projectDirectory, project.source.fidelityReview);
+
+		fs.copyFileSync(sourceContractPath, path.join(outputDirectory, 'source-understanding.json'));
+		fs.copyFileSync(fidelityReviewPath, path.join(outputDirectory, 'source-fidelity-review.json'));
+		wayfinding.sourceUnderstandingFile = 'source-understanding.json';
+		wayfinding.sourceFidelityReviewFile = 'source-fidelity-review.json';
+	}
+}
+
 const manifest = {
 	deliveryVersion: 3,
 	app: {
@@ -292,6 +314,7 @@ const manifest = {
 			}
 		: null,
 	datasource,
+	wayfinding,
 	acceptance: {
 		status: unverified ? 'unverified' : 'accepted',
 		uploadReady: !unverified,

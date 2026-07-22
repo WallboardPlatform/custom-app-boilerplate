@@ -6,15 +6,20 @@ import { Ajv, type AnySchema, type ErrorObject } from 'ajv';
 
 import type { WayfindingGraphDocument, WayfindingWalkableMaskDocument } from '../../src/utils/wayfinding.js';
 import type { WayfindingProjectDocument } from './project.mjs';
+import type { WayfindingSourceFidelityReview, WayfindingSourceUnderstanding } from './source-fidelity.mjs';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const routeGraphSchema = JSON.parse(fs.readFileSync(path.join(rootDirectory, 'schemas', 'wayfinding-route-graph.schema.json'), 'utf8')) as AnySchema;
 const walkableMaskSchema = JSON.parse(fs.readFileSync(path.join(rootDirectory, 'schemas', 'wayfinding-walkable-mask.schema.json'), 'utf8')) as AnySchema;
 const projectSchema = JSON.parse(fs.readFileSync(path.join(rootDirectory, 'schemas', 'wayfinding-project.schema.json'), 'utf8')) as AnySchema;
+const sourceUnderstandingSchema = JSON.parse(fs.readFileSync(path.join(rootDirectory, 'schemas', 'wayfinding-source-understanding.schema.json'), 'utf8')) as AnySchema;
+const sourceFidelityReviewSchema = JSON.parse(fs.readFileSync(path.join(rootDirectory, 'schemas', 'wayfinding-source-fidelity-review.schema.json'), 'utf8')) as AnySchema;
 const ajv = new Ajv({ allErrors: true, strict: true });
 const validateRouteGraphSchema = ajv.compile<WayfindingGraphDocument>(routeGraphSchema);
 const validateWalkableMaskSchema = ajv.compile<WayfindingWalkableMaskDocument>(walkableMaskSchema);
 const validateProjectSchema = ajv.compile<WayfindingProjectDocument>(projectSchema);
+const validateSourceUnderstandingSchema = ajv.compile<WayfindingSourceUnderstanding>(sourceUnderstandingSchema);
+const validateSourceFidelityReviewSchema = ajv.compile<WayfindingSourceFidelityReview>(sourceFidelityReviewSchema);
 
 const formatErrors = (errors: ErrorObject[] | null | undefined): string => (errors ?? [])
 	.map((error: ErrorObject): string => `${error.instancePath || '/'} ${error.message ?? 'is invalid'}`)
@@ -48,4 +53,24 @@ export const parseWayfindingProject = (source: string): WayfindingProjectDocumen
 	}
 
 	return value as WayfindingProjectDocument;
+};
+
+export const parseWayfindingSourceUnderstanding = (source: string): WayfindingSourceUnderstanding => {
+	const value: unknown = JSON.parse(source.replace(/^\uFEFF/, '')) as unknown;
+
+	if (!validateSourceUnderstandingSchema(value)) {
+		throw new Error(`Source-understanding schema validation failed: ${formatErrors(validateSourceUnderstandingSchema.errors)}`);
+	}
+
+	return value as WayfindingSourceUnderstanding;
+};
+
+export const parseWayfindingSourceFidelityReview = (source: string): WayfindingSourceFidelityReview => {
+	const value: unknown = JSON.parse(source.replace(/^\uFEFF/, '')) as unknown;
+
+	if (!validateSourceFidelityReviewSchema(value)) {
+		throw new Error(`Source-fidelity-review schema validation failed: ${formatErrors(validateSourceFidelityReviewSchema.errors)}`);
+	}
+
+	return value as WayfindingSourceFidelityReview;
 };
