@@ -21,7 +21,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 
 `README.md` is the setup and command reference. Do not preload unrelated system docs.
 
-For a wayfinding request based on a PDF, image, SVG, or existing map, follow `.claude/skills/create-wayfinding-app/SKILL.md`.
+For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and use the repository's Wayfinding Studio workflow.
 
 ## Non-Negotiable
 
