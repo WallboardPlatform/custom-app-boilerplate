@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { assessWayfindingProject } from './project.mjs';
 import { parseWayfindingProject } from './schema.mjs';
+import { validateConfiguredSourceFidelity } from './source-fidelity-project.mjs';
 
 const argument = (name: string): string | undefined => {
 	const index: number = process.argv.indexOf(`--${name}`);
@@ -19,6 +20,7 @@ if (!projectArgument) {
 } else {
 	const projectPath: string = path.resolve(projectArgument);
 	const project = parseWayfindingProject(fs.readFileSync(projectPath, 'utf8'));
+	validateConfiguredSourceFidelity(path.dirname(projectPath), project);
 	const assessment = assessWayfindingProject(project);
 	const serialized: string = `${JSON.stringify(assessment, null, 2)}\n`;
 	const outputArgument: string | undefined = argument('output');

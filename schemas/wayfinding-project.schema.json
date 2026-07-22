@@ -26,8 +26,22 @@
 					"enum": ["source-overlay", "redrawn-equivalent", "schematic", "calibrated-isometric"]
 				},
 				"levels": { "type": "integer", "minimum": 1 },
-				"equivalentRedrawAllowed": { "type": "boolean" }
-			}
+				"equivalentRedrawAllowed": { "type": "boolean" },
+				"referenceContract": { "$ref": "#/$defs/nonEmptyString" },
+				"fidelityReview": { "$ref": "#/$defs/nonEmptyString" }
+			},
+			"allOf": [
+				{
+					"if": { "properties": { "presentation": { "const": "redrawn-equivalent" } } },
+					"then": {
+						"required": ["referenceContract", "fidelityReview"],
+						"properties": {
+							"referenceContract": { "$ref": "#/$defs/nonEmptyString" },
+							"fidelityReview": { "$ref": "#/$defs/nonEmptyString" }
+						}
+					}
+				}
+			]
 		},
 		"guidance": {
 			"type": "object",

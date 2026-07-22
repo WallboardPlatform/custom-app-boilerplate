@@ -1,0 +1,52 @@
+{
+	"contractVersion": 1,
+	"projectId": "replace-with-project-id",
+	"authoredBy": "replace-with-author-or-agent-context",
+	"sourceFiles": [
+		{
+			"id": "source-plan",
+			"path": "reference/source-plan.png",
+			"sha256": "replace-with-64-character-sha256",
+			"kind": "raster",
+			"role": "authoritative",
+			"pages": [1]
+		}
+	],
+	"coordinateSystem": {
+		"width": 1920,
+		"height": 1080,
+		"units": "source-pixels",
+		"origin": "top-left",
+		"mapping": "Map coordinates match the normalized authoritative render.",
+		"tolerancePercent": 2
+	},
+	"levels": [
+		{
+			"id": "level-1",
+			"sourceFileId": "source-plan",
+			"sourcePage": 1,
+			"description": "Describe the level before implementation.",
+			"footprint": "Describe the exterior shell, setbacks, curves, and asymmetry.",
+			"circulation": ["Describe each public corridor and junction."],
+			"entrances": ["Describe public exterior entrances."],
+			"doors": ["Describe route-relevant room doors and openings."],
+			"transitions": ["Describe stairs, elevators, escalators, and ramps."],
+			"destinations": ["Describe destination zones and adjacency."],
+			"uncertainties": ["List every fact that needs customer or field confirmation."]
+		}
+	],
+	"invariants": [
+		{
+			"id": "level-1-footprint",
+			"category": "footprint",
+			"levelIds": ["level-1"],
+			"severity": "required",
+			"statement": "The redraw preserves the source footprint and major setbacks within the declared tolerance."
+		}
+	],
+	"allowedSimplifications": ["Remove furniture and construction annotations that do not affect public navigation."],
+	"prohibitedChanges": [
+		"Do not move doors, entrances, corridors, stairs, elevators, or destination adjacency for visual convenience.",
+		"Do not trace freehand customer markup as architectural geometry; use it only for the explicitly documented semantic facts and mark unsupported boundaries provisional."
+	]
+}

@@ -34,6 +34,7 @@
 		"test:wayfinding": "tsx --test scripts/wayfinding/*.test.mts",
 		"wayfinding:audit-source": "tsx scripts/wayfinding/source-audit-cli.mts",
 		"wayfinding:assess": "tsx scripts/wayfinding/project-cli.mts",
+		"wayfinding:validate-source-fidelity": "tsx scripts/wayfinding/source-fidelity-cli.mts",
 		"wayfinding:validate": "tsx scripts/wayfinding/cli.mts",
 		"wayfinding:workbench": "vite --host 127.0.0.1 --config scripts/wayfinding/workbench/vite.config.mts",
 		"validate:identity": "node scripts/validate-app-identity.mjs",

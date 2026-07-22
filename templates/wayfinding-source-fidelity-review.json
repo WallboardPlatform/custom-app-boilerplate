@@ -1,0 +1,30 @@
+{
+	"reviewVersion": 1,
+	"projectId": "replace-with-project-id",
+	"contractPath": "source-understanding.json",
+	"contractHash": "replace-with-64-character-sha256",
+	"reviewer": {
+		"id": "independent-review-context",
+		"context": "independent-ai",
+		"reviewedAt": "2026-01-01T00:00:00.000Z"
+	},
+	"comparisons": [
+		{
+			"levelId": "level-1",
+			"sourceImage": "reference/source-plan.png",
+			"sourceHash": "replace-with-64-character-sha256",
+			"candidateImage": "reference/candidate-level-1.png",
+			"candidateHash": "replace-with-64-character-sha256",
+			"status": "pass",
+			"notes": "Compare the original and candidate visually; record concrete geometry, circulation, transition, and label findings."
+		}
+	],
+	"invariantResults": [
+		{
+			"invariantId": "level-1-footprint",
+			"status": "pass",
+			"notes": "Record the visual evidence that supports this result."
+		}
+	],
+	"unresolvedFindings": []
+}

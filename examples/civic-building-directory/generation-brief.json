@@ -1,12 +1,12 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Create a three-floor civic-building touch directory from an architectural reference, using a simplified signage redraw instead of exposing construction drawings.",
+		"summary": "Create a fictional three-floor civic-building touch directory as a reusable signage schematic.",
 		"audience": "Visitors using a shared landscape lobby kiosk to find public departments, rooms, and services.",
 		"primaryGoal": "Let a visitor search or tap a destination and follow a reviewed step-free route across the redesigned public circulation and aligned floor transitions."
 	},
 	"assumptions": [
-		"The non-committed reference is authoritative for building proportions and spatial relationships; the reusable example contains only the fictional canonical redraw.",
+		"The reusable example is a fictional canonical schematic and makes no fidelity claim about a real building.",
 		"The reusable example owns a fictional Level 1 main-lobby kiosk anchor. A customer deployment must replace and confirm that anchor against the installed screen.",
 		"Image generation supplies visual direction only; map geometry, floor relationships, and interaction anchors come from the architectural source and explicit semantic artifacts.",
 		"Because the public corridors are redesigned as explicit walkable surfaces, the reusable example includes a separately authored walkable mask and reviewed multi-floor route graph. These claims do not transfer automatically to a customer building.",
@@ -222,9 +222,9 @@
 		{ "id": "walkable-mask", "source": "packaged", "path": "src/editor-assets/walkable-mask.json", "required": true }
 	],
 	"visualDirection": {
-		"source": "reference-led",
+		"source": "creative-led",
 		"summary": "Translate dense architectural sheets into a calm, high-contrast civic directory with faithful floor proportions, white circulation space, softly colored department zones, and direct touch affordances.",
-		"references": ["Non-committed three-level architectural reference used for geometry study", "AI-generated Level 1-3 art-direction studies used only for visual exploration"],
+		"references": [],
 		"signatureChoices": [
 			"Three aligned floor diagrams use the same coordinate language so vertical transitions remain understandable.",
 			"Department zones are the touch targets; no decorative numbered circles clutter the maps."

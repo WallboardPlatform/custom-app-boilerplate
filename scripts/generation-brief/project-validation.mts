@@ -4,6 +4,8 @@ import { pathToFileURL } from 'node:url';
 
 import { normalizeDatasourceBindings } from '../datasource-provisioning.mjs';
 import { readPngDimensions } from '../png-validation.mjs';
+import { parseWayfindingProject } from '../wayfinding/schema.mts';
+import { validateConfiguredSourceFidelity } from '../wayfinding/source-fidelity-project.mts';
 import type { GenerationBrief } from './validation.mts';
 import { validateStyleIsolation } from './style-isolation.mts';
 
@@ -279,6 +281,13 @@ export const validateBriefAgainstProject = async (
 	context: ProjectValidationContext,
 	brief: GenerationBrief
 ): Promise<void> => {
+	const wayfindingProjectPath: string = path.join(context.applicationDirectory, 'wayfinding-project.json');
+
+	if (fs.existsSync(wayfindingProjectPath)) {
+		const wayfindingProject = parseWayfindingProject(fs.readFileSync(wayfindingProjectPath, 'utf8'));
+		validateConfiguredSourceFidelity(context.applicationDirectory, wayfindingProject);
+	}
+
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
 	validatePropertyNesting(context, properties.properties);
 	const propertySummary = collectProperties(context, properties.properties);

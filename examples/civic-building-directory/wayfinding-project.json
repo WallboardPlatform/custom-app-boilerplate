@@ -3,7 +3,7 @@
 	"projectId": "civic-building-directory",
 	"source": {
 		"kind": "floor-plan",
-		"presentation": "redrawn-equivalent",
+		"presentation": "schematic",
 		"levels": 3,
 		"equivalentRedrawAllowed": true
 	},
