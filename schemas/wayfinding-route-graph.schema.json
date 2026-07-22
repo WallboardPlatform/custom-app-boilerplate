@@ -31,7 +31,8 @@
 				"kind": { "enum": ["route", "location", "transition"] },
 				"x": { "type": "number" },
 				"y": { "type": "number" },
-				"locationId": { "$ref": "#/$defs/nonEmptyString" }
+				"locationId": { "$ref": "#/$defs/nonEmptyString" },
+				"semanticElementId": { "$ref": "#/$defs/nonEmptyString" }
 			},
 			"allOf": [
 				{

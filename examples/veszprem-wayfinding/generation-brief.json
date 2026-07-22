@@ -6,7 +6,7 @@
 		"primaryGoal": "Let a visitor search or tap a landmark, see its public details, and locate it immediately without presenting unverified raster-derived topology as a walking route."
 	},
 	"assumptions": [
-		"The supplied 1341x947 PNG is the visual reference; reviewed SVG hit geometry supplies destination anchors but does not certify walking topology.",
+		"The supplied 1341x947 PNG is the visual reference; the maintained .wbwayfinding project owns reviewed destination hit geometry but does not certify walking topology.",
 		"The visible red location pin is the representative current position and is exposed as the configurable start id tourinform-veszprem.",
 		"The 35 numbered public landmark names are transcribed from the supplied map legend; descriptions, hours, live status, and accessibility are not invented.",
 		"A datasource row without matching reviewed SVG geometry remains selectable and is explicitly labelled as not shown on the map.",
@@ -39,7 +39,7 @@
 			"id": "map-artwork",
 			"area": "presentation",
 			"owner": "locked",
-			"targets": ["veszprem-map.webp", "map.svg", "location-hit-targets"],
+			"targets": ["veszprem-downtown.wbwayfinding", "veszprem-map.webp", "map.svg", "location-hit-targets"],
 			"rationale": "The accepted reference artwork and calibrated interaction geometry must remain synchronized."
 		},
 		{

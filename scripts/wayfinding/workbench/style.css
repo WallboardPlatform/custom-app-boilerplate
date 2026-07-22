@@ -134,6 +134,11 @@ main {
 
 .segmented { display: grid; margin-top: 13px; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .segmented.authoring-tools { grid-template-columns: repeat(3, 1fr); }
+.tool-grid { display: grid; margin-top: 13px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.tool-grid button { min-height: 36px; padding: 5px; border: 1px solid #aeb9b5; background: #ffffff; color: #44514e; font-size: 10px; font-weight: 800; }
+.tool-grid button.active { border-color: #18826f; background: #18826f; color: #ffffff; }
+.layer-toggles { display: grid; margin-top: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 8px; }
+.layer-toggles label { margin-top: 7px; font-size: 10px; }
 
 .segmented button,
 .commands button {
@@ -154,7 +159,9 @@ main {
 .segmented button.active { border-color: #18826f; background: #18826f; color: #ffffff; }
 
 .commands { display: grid; margin-top: 13px; gap: 8px; }
+.commands.horizontal { grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); }
 .commands button.secondary { background: #ffffff; color: #126b5c; }
+.commands button.danger { border-color: #b94034; background: #ffffff; color: #a3332a; }
 .commands button:disabled { cursor: not-allowed; opacity: 0.45; }
 
 .edge-draft { margin-top: 13px; padding: 12px; border: 1px solid #d1ad35; background: #fff7d8; }
@@ -226,6 +233,11 @@ main {
 .selected-edge dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .selected-edge button { width: 100%; height: 34px; margin-top: 12px; border: 1px solid #18826f; background: #ffffff; color: #126b5c; font-size: 11px; font-weight: 800; }
 .selected-edge button.danger { border-color: #b94034; color: #a3332a; }
+.selected-edge label { display: block; margin-top: 10px; color: #687571; font-size: 10px; font-weight: 700; }
+.selected-edge label input,
+.selected-edge label select { display: block; width: 100%; min-height: 32px; margin-top: 4px; border: 1px solid #c5ceca; background: #ffffff; color: #17201f; }
+.route-simulator { background: #eef4f1; }
+.route-simulator p { margin-top: 10px; }
 .edge-fields { display: grid; margin-bottom: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .edge-fields label { color: #687571; font-size: 10px; font-weight: 700; }
 .edge-fields select,

@@ -9,6 +9,6 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "wayfinding-project.json", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-map.webp", "overlay/src/assets/map.svg"],
+	"artifacts": ["generation-brief.json", "wayfinding-project.json", "veszprem-downtown.wbwayfinding", "datasource-contract.json", "sample-destinations-datasource.json", "overlay/src/assets/veszprem-map.webp", "overlay/src/assets/map.svg"],
 	"referenceScreenshots": ["app-default-1920x1080.png", "scenario-active-highlight-1920x1080.png"]
 }

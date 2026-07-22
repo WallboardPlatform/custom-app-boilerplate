@@ -79,6 +79,8 @@ jest-output/
 reports/
 preview/output/
 preview/.playwright/
+playwright-report/
+test-results/
 
 # ==============================
 # Temporary / Cache Files

@@ -96,13 +96,16 @@ export const validateWalkableMaskStructure = (document: WayfindingWalkableMaskDo
 	const expectedRows: number = Math.ceil(document.height / document.cellSize);
 
 	if (document.columns !== expectedColumns) errors.push(`columns must be ${expectedColumns} for the configured width and cell size`);
+
 	if (document.rows !== expectedRows) errors.push(`rows must be ${expectedRows} for the configured height and cell size`);
 
 	for (const [index, run] of document.walkableRuns.entries()) {
 		const [row, startColumn, endColumn]: WayfindingWalkableMaskRun = run;
 
 		if (row >= document.rows) errors.push(`run ${index} row is outside the mask`);
+
 		if (startColumn > endColumn) errors.push(`run ${index} starts after it ends`);
+
 		if (endColumn >= document.columns) errors.push(`run ${index} ends outside the mask`);
 	}
 

@@ -1,0 +1,139 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://wallboard.info/schemas/wayfinding-studio-project.schema.json",
+	"title": "Wallboard Wayfinding Studio Project",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["contractVersion", "projectId", "name", "createdAt", "updatedAt", "delivery", "assets", "floors", "graph", "destinations"],
+	"properties": {
+		"contractVersion": { "const": 1 },
+		"projectId": { "$ref": "#/$defs/nonEmptyString" },
+		"name": { "$ref": "#/$defs/nonEmptyString" },
+		"createdAt": { "$ref": "#/$defs/nonEmptyString" },
+		"updatedAt": { "$ref": "#/$defs/nonEmptyString" },
+		"delivery": { "$ref": "wayfinding-project.schema.json" },
+		"assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+		"floors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/floor" } },
+		"graph": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["contractVersion", "graphId", "nodes", "edges"],
+			"properties": {
+				"contractVersion": { "enum": [1, 2] },
+				"graphId": { "$ref": "#/$defs/nonEmptyString" },
+				"nodes": { "type": "array", "items": { "$ref": "wayfinding-route-graph.schema.json#/$defs/node" } },
+				"edges": { "type": "array", "items": { "$ref": "wayfinding-route-graph.schema.json#/$defs/edge" } }
+			}
+		},
+		"destinations": { "type": "array", "items": { "$ref": "#/$defs/destination" } }
+	},
+	"$defs": {
+		"nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+		"point": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["x", "y"],
+			"properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+		},
+		"asset": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "name", "kind", "mimeType", "dataUrl"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"name": { "$ref": "#/$defs/nonEmptyString" },
+				"kind": { "enum": ["background", "icon", "logo"] },
+				"mimeType": { "$ref": "#/$defs/nonEmptyString" },
+				"dataUrl": { "type": "string", "pattern": "^data:" }
+			}
+		},
+		"polygonElement": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "geometry"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "enum": ["location", "obstacle", "walkable"] }, "geometry": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+				"label": { "type": "string" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"doorElement": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point", "angle", "length"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "const": "door" }, "point": { "$ref": "#/$defs/point" }, "angle": { "type": "number" }, "length": { "type": "number", "exclusiveMinimum": 0 },
+				"locationId": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"poiElement": {
+			"type": "object", "additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "const": "poi" }, "point": { "$ref": "#/$defs/point" }, "category": { "type": "string" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" }, "label": { "type": "string" }
+			}
+		},
+		"originElement": {
+			"type": "object", "additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point", "facingDegrees", "label", "screenId"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "const": "origin" }, "point": { "$ref": "#/$defs/point" }, "defaultLanguage": { "type": "string" }, "facingDegrees": { "type": "number" }, "label": { "$ref": "#/$defs/nonEmptyString" }, "screenId": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"transitionElement": {
+			"type": "object", "additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point", "accessible", "connectionId", "kind", "label"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "const": "transition" }, "point": { "$ref": "#/$defs/point" }, "accessible": { "type": "boolean" }, "connectionId": { "$ref": "#/$defs/nonEmptyString" }, "kind": { "enum": ["elevator", "escalator", "stairs"] }, "label": { "$ref": "#/$defs/nonEmptyString" }
+			}
+		},
+		"labelElement": {
+			"type": "object", "additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point", "text"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "const": "label" }, "point": { "$ref": "#/$defs/point" }, "text": { "type": "string" }
+			}
+		},
+		"mediaElement": {
+			"type": "object", "additionalProperties": false,
+			"required": ["id", "floorId", "status", "provenance", "type", "point", "assetId", "width", "height"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
+				"type": { "enum": ["icon", "logo"] }, "point": { "$ref": "#/$defs/point" }, "assetId": { "$ref": "#/$defs/nonEmptyString" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }
+			}
+		},
+		"floor": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "name", "order", "width", "height", "elements"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "order": { "type": "integer" },
+				"width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 },
+				"backgroundAssetId": { "$ref": "#/$defs/nonEmptyString" },
+				"walkableMask": { "$ref": "wayfinding-walkable-mask.schema.json" },
+				"elements": { "type": "array", "items": { "oneOf": [
+					{ "$ref": "#/$defs/polygonElement" }, { "$ref": "#/$defs/doorElement" }, { "$ref": "#/$defs/poiElement" },
+					{ "$ref": "#/$defs/originElement" }, { "$ref": "#/$defs/transitionElement" }, { "$ref": "#/$defs/labelElement" }, { "$ref": "#/$defs/mediaElement" }
+				] } }
+			}
+		},
+		"destination": {
+			"type": "object",
+			"additionalProperties": true,
+			"required": ["id", "name"],
+			"properties": { "id": { "$ref": "#/$defs/nonEmptyString" }, "name": { "$ref": "#/$defs/nonEmptyString" } }
+		}
+	}
+}

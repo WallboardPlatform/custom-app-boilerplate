@@ -79,6 +79,9 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
 | Validate wayfinding | `npm run wayfinding:validate -- ...` |
 | Assess wayfinding evidence/mode | `npm run wayfinding:assess -- --project wayfinding-project.json` |
+| Author a manual-first wayfinding package | `npm run wayfinding:studio` |
+| Migrate reviewed map artifacts | `npm run wayfinding:studio:migrate-svg -- --delivery ... --svg ... --destinations ... --output venue.wbwayfinding` |
+| Export a wayfinding runtime bundle | `npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfinding-runtime` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |

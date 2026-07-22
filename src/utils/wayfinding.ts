@@ -38,6 +38,7 @@ export interface WayfindingNode {
 	x: number;
 	y: number;
 	locationId?: string;
+	semanticElementId?: string;
 }
 
 export interface WayfindingEdge {

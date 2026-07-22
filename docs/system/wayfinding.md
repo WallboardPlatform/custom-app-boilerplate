@@ -1,154 +1,178 @@
 # Wayfinding
 
-Generate the strongest guidance justified by available evidence. Every project needs an interactive visual map and editable destination data; walkable space and a route graph are optional artifacts used only when routing is independently certifiable. A plausible line, connected graph, or structurally valid SVG is not proof of usable routing.
+Wayfinding delivery is manual-first. Customer material or AI output may provide background artwork and proposed semantics, but a reviewer authors or confirms the navigable model in Wayfinding Studio. Do not promise automatic image/PDF-to-map reconstruction.
 
-## Guidance Decision
+## Product Modes
 
-Copy `templates/wayfinding-project.json`, record only known/reviewed facts, validate it against `schemas/wayfinding-project.schema.json`, then run:
+| Mode | Visitor experience | Confirmed evidence |
+|------|--------------------|-------------------|
+| Directory | Search, categories, details | Destination metadata |
+| Highlight | Directory plus target spotlight | Metadata + target geometry |
+| Directional | Target, `You are here`, facing-aware cue | Highlight + origin + orientation |
+| Route | Traversable path, floors, accessibility | Directional + doors + graph + walkable space + transitions |
+
+`highlight` is the default for uncertain customer maps. A visually connected line is never route evidence. Assess delivery capability with the embedded `delivery` record or the standalone template:
 
 ```bash
 npm run wayfinding:assess -- --project wayfinding-project.json
 ```
 
-| Mode | Visitor experience | Required confirmed evidence |
-|------|--------------------|-----------------------------|
-| Directory | Search, categories, destination details | Destination metadata |
-| Highlight | Directory plus strong target spotlight while preserving the visitor's map context | Metadata + destination anchors |
-| Directional | Highlight target and `You are here`; show relative direction without implying a walkable path | Highlight + current-location anchors + orientation |
-| Route | Draw a traversable path from the installed kiosk/start | Metadata, destination/current anchors, entrance approaches, graph topology, independent walkable space; transitions for multi-level maps |
+## Canonical Project
 
-If the target mode is not certified, deliver the highest allowed fallback only when `allowFallback` is explicit. Never represent a straight line, arrow, or animated trail as a walking route. A strong highlight experience is a valid product mode, not a failed route.
+`*.wbwayfinding` is the editable source of truth, validated by `schemas/wayfinding-studio-project.schema.json`.
 
-Confirmed evidence requires a named review method. AI inference and image segmentation remain `proposed` until overlay, source-authority, field, or customer review. Confirmed walkable space must declare independence from route topology; a graph-derived corridor envelope cannot certify the graph.
+| Project section | Owns |
+|-----------------|------|
+| `assets` | Optional floor backgrounds, logos, icons as embedded data URLs |
+| `floors` | Coordinate size and semantic elements per floor |
+| `destinations` | Baseline public copy and data structure |
+| `graph` | Reviewed nodes, edges, accessibility, closures, floor transitions |
+| `delivery` | Source class, target/fallback mode, evidence provenance and review |
 
-## Source Decision
+Semantic floor elements:
 
-| Mode | Use when | Output |
-|------|----------|--------|
-| Source overlay (classic) | Supplied map is branded, detailed, or expensive to redraw; highlight is the primary job | Original raster/PDF render under vector hit areas; route overlay only when separately certified |
-| Redrawn equivalent (route-first) | A print-oriented source obscures corridors, crossings, entrances, or touch targets | Standardized signage map with explicit walkable geometry, entrances, zones, landmarks, and interactive layers |
-| Schematic | Distance readability and simple navigation matter more than exact geometry | Simplified vector landmarks, corridors, zones, and labels |
-| Calibrated isometric | Supplied 3D artwork is valuable but is not a route coordinate plane | Separate 2D topology projected into the visual layer after calibration |
+| Type | Purpose |
+|------|---------|
+| `location` | Room/building polygon and optional destination relation |
+| `door` | Reviewed entrance/approach; a routeable location terminates here |
+| `poi` | Point destination or amenity |
+| `walkable` / `obstacle` | Explicit authoring geometry and review aid |
+| `origin` | Installed screen position, facing degrees, default language |
+| `transition` | Paired stairs/elevator/escalator connection across floors |
+| `label` / `icon` / `logo` | Independent presentation layers |
 
-Do not inpaint source labels/icons by default. Remove them only when they must become dynamic, localized, themeable, or independently interactive.
+Stable IDs are mandatory. Geometry, doors, origins, and transitions stay in the package. Mutable names, descriptions, status, hours, images, localization, and CTA copy may be bound to a Wallboard `TABLE`; mutable data cannot create geometry or route eligibility.
 
-`equivalentRedrawAllowed` means the supplied image is a semantic reference, not a mandatory rendering. Prefer a clean equivalent or schematic map when it improves legibility, localization, maintainability, or spatial clarity. Preserve authoritative geometry and customer identity; do not preserve raster defects merely for pixel fidelity.
+## Wayfinding Studio
 
-Print maps are normally highlight sources, not route models. For route-first delivery, redraw into a standardized 2D signage profile while carrying forward the accepted brand, landmark language, and authoritative spatial relationships. Preserve measured proportions within a project-defined tolerance; target at most 1% deviation only when the source itself provides survey-grade geometry. If it does not, record the uncertainty instead of claiming false precision.
-
-The redraw must expose walkable corridors, legal crossings, doors, stairs, elevators, level transitions, destination entrances, and current-position orientation as separate reviewable semantics. The original remains a comparison reference. A future 3D or isometric presentation should consume the same canonical 2D topology and a calibrated visual projection; never route directly in perspective screen coordinates.
-
-## Ownership
-
-| Artifact | Owns | Must not own |
-|----------|------|--------------|
-| `map.svg` | Base artwork, location hit areas, level geometry, stable IDs | Mutable public copy, live status, route nodes or inferred topology |
-| `walkable-mask.json` | Independently reviewed traversable space in map coordinates | Route topology, destination copy, or inferred accessibility |
-| `route-graph.json` | Nodes, explicit edges, floor transitions, accessibility, optional measured distances | Destination descriptions or presentation |
-| destination `TABLE` | Name, aliases, description, category, floor, hours, image, status, accessibility, keywords, CTA | SVG geometry or graph edges |
-| `wayfinding-project.json` | Source class, presentation strategy, target/fallback mode, evidence status and review provenance | Geometry, destination copy, or unreviewed claims |
-
-Graph location nodes represent walkable entrances/approach points, not polygon centroids. Keep `locationId` explicit in graph nodes. Annotate the corresponding SVG hit target with `data-wayfinding-location-id`; the table is authoritative for public copy.
-
-## SVG Contract
-
-- use any positive, stable `viewBox` suited to the source and accepted design;
-- allow transforms, nested groups, raster backgrounds, and arbitrary visual layers;
-- give every interactive target a unique SVG `id` and `data-wayfinding-location-id`;
-- add `data-wayfinding-level` when the target belongs to a floor;
-- wrap multipart geometry in one annotated group;
-- keep route nodes and edges exclusively in `route-graph.json`.
-
-Graph coordinates are always expressed in the root SVG viewBox coordinate system. Pointer and authoring tools must normalize transformed artwork into that coordinate space.
-
-## Routing
-
-- Generated maps require explicit graph edges.
-- Sample centerlines into nodes only as needed for route shape; topology comes from edges, not point density.
-- Connect every route-eligible location graph node at its entrance. Destinations without reviewed geometry remain listed-only; the editable TABLE cannot grant route eligibility.
-- Keep location nodes as leaf entrances; a route through an unrelated destination is a topology defect.
-- Represent crossings, doors, stairs, elevators, and escalators as named edges. Do not replace them with a visual shortcut.
-- Model cross-floor edges as `stairs`, `elevator`, or `escalator`; set accessibility per edge.
-- Keep stable edge IDs so live closures and external commands can disable edges and reroute.
-- Prefer authored `distanceMeters`; otherwise calibrate `mapRatio` and label distances approximate.
-
-The shared `WayfindingGraph` supports standard and step-free shortest paths plus disabled edges.
-
-## Image/PDF Extraction
-
-For an existing SVG, audit it before trusting or migrating any embedded points:
+Run:
 
 ```bash
-npm run wayfinding:audit-source -- --svg legacy-map.svg --report-dir wayfinding-source-audit
+npm run wayfinding:studio
 ```
 
-The audit reports duplicate IDs and executable content, migrates location geometry to native annotations, and exports proposed legacy location anchors. Legacy route-point clouds are evidence only: the audit never infers graph edges.
+Workflow:
 
-Classify the source before extraction:
+1. Create/open a `.wbwayfinding` project.
+2. Add floors and optional background artwork. Backgrounds may be customer-supplied, manually redrawn, or AI-produced; they are references, not topology.
+3. Draw locations, walkable areas, obstacles, doors, POIs, origins, transitions, labels, icons, and logos. Select mode moves points and polygon vertices; double-click a selected polygon edge to insert a precision vertex.
+4. Give paired cross-floor transitions the same `connectionId`; set type and accessibility from verified venue facts.
+5. Connect origin, transition, route, and location entrance nodes using explicit graph edges. Confirm each edge after source/site review.
+6. Simulate standard and step-free routes across floors. Fix unreachable states, missing entrance-side doors, unintended shortcuts, and proposed corridor edges.
+7. Mark AI/imported elements `proposed`. Only a reviewer changes them to `confirmed`.
+8. Save drafts at any time. Runtime export is a separate acceptance gate: it blocks unsupported evidence, disconnected origins/destinations, missing confirmed room entrances or masks, routes leaving walkable space, missing required step-free paths, and unreviewed route elements/edges.
 
-| Source class | Typical first delivery | Route path |
-|--------------|------------------------|------------|
-| Clean 2D floor plan or mall directory | Highlight or reviewed route | Trace corridors, entrances, doors, and transitions |
-| Illustrated tourist/campus map | Highlight or directional | Route only after a separate street/path model is confirmed; artwork colors are not topology |
-| 3D/isometric directory | Highlight | Build a separate 2D topology and calibrate projection before any route overlay |
-| CAD/BIM/GIS/vector network | Route candidate | Import authoritative geometry, then review entrances, restrictions, levels, and accessibility |
-| Poor scan/photo or incomplete source | Redrawn equivalent highlight | Ask for missing spatial facts; do not infer a certified path from decoration |
+`npm run wayfinding:workbench` remains an alias for the same Studio. Separate project/graph/mask/TABLE imports are available when consolidating existing artifacts.
 
-Use `npm run wayfinding:workbench` after rendering the accepted PDF/image to a stable map image or after auditing an existing SVG. Load or complete `wayfinding-project.json` first: the assessment panel must show the permitted delivery mode before app behavior is chosen.
+Migrate an existing reviewed-artifact set into the canonical package:
 
-1. AI/OCR proposes destination IDs and metadata; never treat OCR as confirmed copy.
-2. Sample representative walkable colors, extract the connected mask, then paint include/exclude corrections over crossings, doors, and false positives.
-3. For route candidates, place each destination graph anchor at its reviewed entrance or walkable approach. Moving an anchor invalidates every connected edge review.
-4. Draw explicit edges along visible corridors, or generate centerline proposals from the mask. Add bends where the source changes direction; classify traversal, direction, accessibility, and corridor width.
-5. Review the source overlay, confirm the independent mask, then inspect and confirm each contained edge individually. There is no bulk topology confirmation.
-6. Export mask, graph, and destination TABLE separately; validate the exported files before app integration.
+```bash
+npm run wayfinding:studio:migrate-svg -- --delivery wayfinding-project.json --svg map.svg --destinations destinations.json --background map.webp --output venue.wbwayfinding
+```
 
-Mask extraction and skeletons may propose topology but never certify it. Color extraction can miss valid paths hidden by labels, buildings, crossings, or other artwork; complete those semantics during overlay review. Indoor, outdoor, and mixed maps require different walkability semantics; entrances, junctions, edges, and accessibility remain reviewer decisions.
+Imported geometry is `proposed` by default. Add `--status confirmed` only when the supplied SVG geometry has already completed human review.
 
-For a hand-authored graph, a graph-derived corridor envelope is useful only as a regression check. It is not an independent walkable mask and cannot certify the same graph that generated it; review every representative route over the source map.
+Deterministic export:
 
-Visual review by the same model that proposed a route is diagnostic, not independent evidence. Automated image checks may reject obvious crossings and mask violations, but must not promote uncertain raster inference to `confirmed`.
+```bash
+npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfinding-runtime
+```
 
-## Metadata Updates
+Output:
 
-| Change | Workflow |
-|--------|----------|
-| Name, translation, description, category, hours, image, status, keywords, CTA | Quick-edit the destination TABLE; no geometry rebuild |
-| Destination visibility/listing | Edit TABLE; this cannot create map or route geometry |
-| Stable ID, map hit area, entrance/approach point, route eligibility, walkable space, floor, transition, closure topology | Reopen workbench, review/export geometry, rerun assessment and validation |
+```text
+manifest.json
+route-graph.json
+destinations-datasource.json
+validation.json
+floors/<floor-id>.svg
+```
 
-The workbench destination editor highlights the selected graph anchor, reports its graph relationship as read-only, and exports the native TABLE shape. It never rewrites map artwork or grants route eligibility from mutable public copy.
+Generated SVG groups are stable: `Background`, `Walkable`, `Obstacles`, `Locations`, `Doors`, `POIs`, `Origins`, `Transitions`, `Labels`, `Icons`, `Logos`. Labels/icons/logos are always independent layers. Runtime routes remain in `route-graph.json`, not invisible SVG geometry.
 
-## Product Baseline
+`manifest.json` records both `targetMode` and evidence-assessed `deliveryMode`. When fallback is allowed and route evidence is incomplete, export may safely downgrade to directory/highlight/directional mode; its runtime graph is intentionally empty so an app cannot accidentally render an uncertified route. Studio project parsing remains structural, so an incomplete route draft can always be reopened and corrected.
 
-- Search, category filters, aliases, app-owned multilingual keyboard.
-- Fixed or selectable "you are here", venue-confirmed facing direction, route reset, idle timeout, privacy-safe session state.
-- Destination detail panel/modal with description, image, hours, accessibility, live status, and optional CTA.
-- Pan/zoom, floor switch, transition indicators, legend, standard/step-free route modes.
-- Dynamic closures, off-map state, unreachable state, and designed empty/loading failures.
-- Optional sensor events and external commands for search, selection, route, reset, start, and target.
-- Near-view touch targets and complete essential directions; do not sacrifice legibility to fit more destinations.
-- Keep the current-position marker visible and pulsing at rest; add a facing arrow only after venue orientation is confirmed.
-- Highlight mode dims unselected regions, preserves the current viewport, pulses the target, fits `You are here` and the destination together, and shows a readable callout. Selecting a destination must not auto-pan or auto-zoom; movement is visitor-controlled.
-- Directional mode uses relative orientation and semantic cues such as floor, zone, or wing. Show distance only when calibrated; do not draw a line that resembles a verified walking route.
+## Background Strategy
 
-## Authoring And QA
+Choose per source; do not force one reconstruction method:
 
-The AI may propose visuals and extract OCR metadata, but ambiguous names, entrances, and corridor topology require an explicit review item. Never invent missing operational facts.
+| Source | Recommended authoring start |
+|--------|-----------------------------|
+| Branded/illustrated map | Keep as background; add reviewed hit geometry; default to highlight |
+| Clean floor plan/CAD/vector | Render/extract a clean reference; manually author navigation semantics |
+| Photo/skewed plan | Rectify before use; never treat image segmentation as confirmed geometry |
+| Isometric/3D map | Keep useful artwork; author topology in a separate floor coordinate model |
+| Poor/incomplete input | Produce a manual or AI draft background, then review against venue facts |
+
+AI image generation is optional. It may simplify artwork or propose a signage-ready background, but must not silently change room count, adjacency, doors, entrances, transitions, or proportions. If it cannot preserve those facts, use the customer reference or a manually drawn background.
+
+## Routing Rules
+
+- Route graph coordinates use each floor's coordinate system.
+- Location nodes are leaf entrances at reviewed doors/approaches, never polygon centroids or transit shortcuts.
+- Add a node at every real junction and every bend needed for route shape.
+- Cross-floor pairs become explicit stairs/elevator/escalator edges; set physical distance and accessibility.
+- A step-free profile excludes inaccessible edges.
+- Keep stable edge IDs so live closures can disable and reroute.
+- Confirmed generated centre lines require an independently reviewed walkable mask. A graph-derived mask cannot certify its own graph.
+- Validate every routeable destination from every installed origin and inspect each floor segment.
+
+The shared `WayfindingGraph` provides standard/step-free shortest paths and disabled-edge rerouting.
+
+## AI Draft Contract
+
+AI may create a complete `.wbwayfinding` draft using the same schema as the Studio. Every AI-created semantic element must use:
+
+```json
+{ "status": "proposed", "provenance": "ai-draft" }
+```
+
+AI responsibilities:
+
+- preserve the original source and record uncertain interpretation;
+- propose a clean background only when useful;
+- keep labels, icons, and logos independent from background artwork;
+- propose locations, doors, POIs, origins, transitions, walkable regions, and graph edges;
+- never mark geometry, routing, orientation, or accessibility confirmed;
+- open the artifact in Studio for human correction and route simulation.
+
+The AI output is an authoring accelerator, not the accepted map.
+
+## Runtime App Baseline
+
+- Search/category filters and an app-owned multilingual keyboard.
+- Fixed or selectable origin, pulsing `You are here`, optional confirmed facing arrow.
+- Strong target highlight and detail panel/modal.
+- Visitor-controlled pan/zoom; selection must not force auto-zoom.
+- Floor selector and transition instructions.
+- Standard/step-free routes only when assessed and validated.
+- Reset, idle timeout, unreachable/closed/off-map states, privacy-safe session state.
+- Dynamic destination copy/status via `TABLE`; packaged geometry remains immutable at runtime.
+
+## Validation
+
+For a Studio project, run schema/model tests and export. For an existing standalone SVG/graph delivery, retain the detailed validator:
 
 ```bash
 npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start lobby --route-to auditorium --report-dir wayfinding-report
 ```
 
-The report must show zero errors. Inspect `wayfinding-debug.svg` and representative routes at actual kiosk size and multiple zoom centres. Cover every entrance side plus each crossing and transition class. Review warnings for backtracking, detours, long edges, high-degree nodes, edge crossings without junctions, missing metadata, and destinations whose accessibility is intentionally unknown. Use `--strict` only when the project requires a warning-free report; never invent facts to silence warnings. Do not accept connectivity or XML/render success alone.
+Acceptance requires:
+
+- no duplicate/orphan IDs or missing assets;
+- every routeable destination terminates at a reviewed entrance;
+- paired and correctly classified cross-floor transitions;
+- standard and step-free simulation from every installed origin;
+- route segments contained by confirmed walkable space when that evidence is used;
+- source/site review of entrances, orientation, accessibility, and representative routes;
+- real-kiosk visual tests for search, keyboard, pan/zoom, floor changes, highlight, route, reset, long data, empty, and unreachable states.
 
 ## Delivery
 
-Deliver the app ZIP plus:
+Deliver:
 
-- assessed `wayfinding-project.json`;
-- native annotated `map.svg`;
+- uploadable custom-app ZIP and source ZIP;
+- editable `.wbwayfinding` project;
+- deterministic runtime export;
 - destination datasource contract and synthetic template;
-- screenshots of default, highlighted destination, long metadata, empty, and reset states.
-
-Route projects also deliver confirmed `walkable-mask.json`, canonical `route-graph.json`, validation report, graph overlay, and selected/unreachable/step-free evidence that applies.
+- screenshots and route evidence appropriate to the assessed mode.

@@ -158,10 +158,15 @@ export const auditWayfindingSource = (svg: string): WayfindingSourceAudit => {
 	const issues: WayfindingSourceIssue[] = [];
 
 	if (duplicates.length > 0) issues.push({ code: 'duplicate-svg-ids', elementIds: duplicates, message: 'SVG ids must be unique before migration.', severity: 'error' });
+
 	if (unsafe.length > 0) issues.push({ code: 'unsafe-svg-content', elementIds: unsafe.map((element: Element): string => element.getAttribute('id') ?? '').filter(Boolean), message: 'Executable or embedded document content must be removed before use.', severity: 'error' });
+
 	if (routePointCount > 0) issues.push({ code: 'point-cloud-is-not-topology', message: `${routePointCount} legacy route points were found. They are evidence only; explicit graph edges must be authored and reviewed.`, severity: 'warning' });
+
 	if (anchors.length > 0) issues.push({ code: 'anchors-require-review', message: `${anchors.length} location-point anchors were proposed from legacy circles. Verify each entrance or approach point against the source.`, severity: 'warning' });
+
 	if (document.getElementsByTagName('title').length + document.getElementsByTagName('desc').length > 0) issues.push({ code: 'embedded-copy-unverified', message: 'Embedded title and description copy is not promoted to the destination table automatically.', severity: 'warning' });
+
 	if (modernAnnotations === 0 && geometry.length === 0) issues.push({ code: 'no-location-geometry', message: 'No modern annotations or legacy location geometry were found.', severity: 'warning' });
 
 	return {
