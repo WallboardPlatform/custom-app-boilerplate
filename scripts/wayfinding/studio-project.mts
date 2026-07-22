@@ -18,6 +18,8 @@ import { validateWalkableMaskStructure, WayfindingWalkableMask } from './walkabl
 export type WayfindingStudioElementStatus = 'confirmed' | 'proposed';
 export type WayfindingStudioProvenance = 'ai-draft' | 'customer-source' | 'imported' | 'reviewer-authored';
 export type WayfindingTransitionKind = 'elevator' | 'escalator' | 'stairs';
+export type WayfindingStudioFontFamily = 'monospace' | 'sans-serif' | 'serif';
+export type WayfindingStudioTextAnchor = 'end' | 'middle' | 'start';
 
 export interface WayfindingStudioAsset {
 	dataUrl: string;
@@ -76,8 +78,15 @@ export interface WayfindingStudioTransitionElement extends WayfindingStudioEleme
 }
 
 export interface WayfindingStudioLabelElement extends WayfindingStudioElementBase {
+	color?: string;
+	fontFamily?: WayfindingStudioFontFamily;
+	fontSize?: number;
+	fontWeight?: 400 | 600 | 700;
+	outlineColor?: string;
+	outlineWidth?: number;
 	point: WayfindingPoint;
 	text: string;
+	textAnchor?: WayfindingStudioTextAnchor;
 	type: 'label';
 }
 
@@ -290,6 +299,7 @@ return imported;
 const duplicateIds = (ids: string[]): string[] => [...new Set(ids.filter((id: string, index: number): boolean => ids.indexOf(id) !== index))];
 const managedNodeId = (elementId: string): string => `semantic:${elementId}`;
 const finitePoint = (value: WayfindingPoint): boolean => Number.isFinite(value.x) && Number.isFinite(value.y);
+const validColor = (value: string | undefined): boolean => value === undefined || /^#[0-9a-f]{6}$/iu.test(value);
 const pointInFloor = (value: WayfindingPoint, floor: WayfindingStudioFloor): boolean => finitePoint(value)
 	&& value.x >= 0
 	&& value.y >= 0
@@ -338,6 +348,12 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 			if ('geometry' in element && element.geometry.some((value: WayfindingPoint): boolean => !pointInFloor(value, floor))) issues.push({ code: 'polygon-outside-floor', elementIds: [element.id], message: `Polygon '${element.id}' contains an invalid or out-of-bounds point.`, severity: 'error' });
 
 			if ('point' in element && !pointInFloor(element.point, floor)) issues.push({ code: 'element-outside-floor', elementIds: [element.id], message: `Element '${element.id}' has an invalid or out-of-bounds point.`, severity: 'error' });
+
+			if (element.type === 'label') {
+				if (element.fontSize !== undefined && (!Number.isFinite(element.fontSize) || element.fontSize < 6 || element.fontSize > 512)) issues.push({ code: 'invalid-label-font-size', elementIds: [element.id], message: `Text label '${element.id}' font size must be between 6 and 512.`, severity: 'error' });
+				if (element.outlineWidth !== undefined && (!Number.isFinite(element.outlineWidth) || element.outlineWidth < 0 || element.outlineWidth > 16)) issues.push({ code: 'invalid-label-outline-width', elementIds: [element.id], message: `Text label '${element.id}' outline width must be between 0 and 16.`, severity: 'error' });
+				if (!validColor(element.color) || !validColor(element.outlineColor)) issues.push({ code: 'invalid-label-color', elementIds: [element.id], message: `Text label '${element.id}' colors must use six-digit hex values.`, severity: 'error' });
+			}
 
 			if ((element.type === 'location' || element.type === 'poi') && element.destinationId && !destinationIds.has(element.destinationId)) issues.push({ code: 'missing-destination', elementIds: [element.id, element.destinationId], message: `Element '${element.id}' references missing destination '${element.destinationId}'.`, severity: 'error' });
 
@@ -501,6 +517,11 @@ const escapeXml = (value: string): string => value.replaceAll('&', '&amp;').repl
 const number = (value: number): string => Number(value.toFixed(3)).toString();
 const point = (value: WayfindingPoint): string => `${number(value.x)},${number(value.y)}`;
 const attrs = (element: WayfindingStudioElement): string => `id="${escapeXml(element.id)}" data-wayfinding-level="${escapeXml(element.floorId)}" data-review-status="${element.status}" data-provenance="${element.provenance}"`;
+const labelFontFamilies: Record<WayfindingStudioFontFamily, string> = {
+	monospace: 'Courier New, monospace',
+	'sans-serif': 'Arial, sans-serif',
+	serif: 'Georgia, serif'
+};
 
 export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floorId: string): string => {
 	const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === floorId);
@@ -534,9 +555,9 @@ return `<g ${attrs(origin)} data-screen-id="${escapeXml(origin.screenId)}" data-
 		`<g id="Transitions" fill="#ffffff" stroke="#17201f">${elements('transition').map((item): string => { const transition = item as WayfindingStudioTransitionElement;
 
 return `<circle ${attrs(transition)} data-connection-id="${escapeXml(transition.connectionId)}" data-transition-kind="${transition.kind}" cx="${number(transition.point.x)}" cy="${number(transition.point.y)}" r="12"/>`; }).join('')}</g>`,
-		`<g id="Labels" fill="#17201f" font-family="Arial, sans-serif">${elements('label').map((item): string => { const label = item as WayfindingStudioLabelElement;
+		`<g id="Labels">${elements('label').map((item): string => { const label = item as WayfindingStudioLabelElement; const outlineWidth = label.outlineWidth ?? 0;
 
-return `<text ${attrs(label)} x="${number(label.point.x)}" y="${number(label.point.y)}">${escapeXml(label.text)}</text>`; }).join('')}</g>`,
+return `<text ${attrs(label)} x="${number(label.point.x)}" y="${number(label.point.y)}" fill="${escapeXml(label.color ?? '#17201f')}" font-family="${escapeXml(labelFontFamilies[label.fontFamily ?? 'sans-serif'])}" font-size="${number(label.fontSize ?? 24)}" font-weight="${label.fontWeight ?? 600}" text-anchor="${label.textAnchor ?? 'start'}"${outlineWidth > 0 ? ` stroke="${escapeXml(label.outlineColor ?? '#ffffff')}" stroke-width="${number(outlineWidth)}" stroke-linejoin="round" paint-order="stroke fill"` : ''}>${escapeXml(label.text)}</text>`; }).join('')}</g>`,
 		`<g id="Icons">${elements('icon').map((item): string => media(item as WayfindingStudioMediaElement)).join('')}</g>`,
 		`<g id="Logos">${elements('logo').map((item): string => media(item as WayfindingStudioMediaElement)).join('')}</g>`,
 		'</svg>'

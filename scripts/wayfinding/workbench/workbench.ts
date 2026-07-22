@@ -792,7 +792,7 @@ const renderSemanticEditor = (): void => {
 		label.append(select);
 		host.append(label);
 	};
-	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
+	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const input = document.createElement('input');
@@ -880,6 +880,13 @@ const renderSemanticEditor = (): void => {
 		selectField('Accessibility', [['true', 'Step-free'], ['false', 'Not step-free']], String(element.accessible), (value): void => { element.accessible = value === 'true'; });
 	} else if (element.type === 'label') {
 		textField('Text', element.text, (value): void => { element.text = value; });
+		selectField('Font family', [['sans-serif', 'Sans serif'], ['serif', 'Serif'], ['monospace', 'Monospace']], element.fontFamily ?? 'sans-serif', (value): void => { element.fontFamily = value as WayfindingStudioLabelElement['fontFamily']; });
+		textField('Font size', String(element.fontSize ?? 24), (value): void => { element.fontSize = Math.min(512, Math.max(6, Number(value) || 24)); }, 'number');
+		selectField('Weight', [['400', 'Regular'], ['600', 'Semibold'], ['700', 'Bold']], String(element.fontWeight ?? 600), (value): void => { element.fontWeight = Number(value) as WayfindingStudioLabelElement['fontWeight']; });
+		textField('Text color', element.color ?? '#17201f', (value): void => { element.color = value; }, 'color');
+		selectField('Alignment', [['start', 'Left'], ['middle', 'Center'], ['end', 'Right']], element.textAnchor ?? 'start', (value): void => { element.textAnchor = value as WayfindingStudioLabelElement['textAnchor']; });
+		textField('Outline color', element.outlineColor ?? '#ffffff', (value): void => { element.outlineColor = value; }, 'color');
+		textField('Outline width', String(element.outlineWidth ?? 0), (value): void => { element.outlineWidth = Math.min(16, Math.max(0, Number(value) || 0)); }, 'number', semanticEditor, 'Use a small outline when the map artwork makes text hard to read.');
 	} else if (element.type === 'icon' || element.type === 'logo') {
 		textField('Width', String(element.width), (value): void => { element.width = Math.max(8, Number(value) || 8); }, 'number');
 		textField('Height', String(element.height), (value): void => { element.height = Math.max(8, Number(value) || 8); }, 'number');
@@ -1222,9 +1229,30 @@ const drawSemanticElements = (): void => {
 			context.lineTo(element.point.x + dx, element.point.y + dy);
 			context.stroke();
 		} else if (element.type === 'label') {
-			context.fillStyle = colors.label;
-			context.font = `${Math.max(14, 18 / scale)}px Arial`;
+			const fontFamilies: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
+				monospace: '"Courier New", monospace',
+				'sans-serif': 'Arial, sans-serif',
+				serif: 'Georgia, serif'
+			};
+			const fontSize: number = element.fontSize ?? 24;
+			const outlineWidth: number = element.outlineWidth ?? 0;
+			context.font = `${element.fontWeight ?? 600} ${fontSize}px ${fontFamilies[element.fontFamily ?? 'sans-serif']}`;
+			context.textAlign = element.textAnchor === 'middle' ? 'center' : element.textAnchor === 'end' ? 'right' : 'left';
+			context.textBaseline = 'alphabetic';
+			if (outlineWidth > 0) {
+				context.strokeStyle = element.outlineColor ?? '#ffffff';
+				context.lineWidth = outlineWidth;
+				context.lineJoin = 'round';
+				context.strokeText(element.text, element.point.x, element.point.y);
+			}
+			context.fillStyle = element.color ?? colors.label;
 			context.fillText(element.text, element.point.x, element.point.y);
+			if (selected) {
+				context.beginPath();
+				context.arc(element.point.x, element.point.y, 6 / scale, 0, Math.PI * 2);
+				context.fillStyle = '#ffe06c';
+				context.fill();
+			}
 		} else {
 			context.beginPath();
 			context.arc(element.point.x, element.point.y, (selected ? 12 : 8) / scale, 0, Math.PI * 2);
@@ -1293,7 +1321,7 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
 		if (asset !== sourceAsset) studioProject.assets.push(asset);
 		element = { ...base, assetId: asset.id, height: 96, id: nextId(type), point: pointValue, type, width: 96 } satisfies WayfindingStudioMediaElement;
-	} else element = { ...base, id: nextId('label'), point: pointValue, text: 'Label', type: 'label' } satisfies WayfindingStudioLabelElement;
+	} else element = { ...base, color: '#17201f', fontFamily: 'sans-serif', fontSize: 24, fontWeight: 600, id: nextId('label'), outlineColor: '#ffffff', outlineWidth: 0, point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	syncStudioGraph();

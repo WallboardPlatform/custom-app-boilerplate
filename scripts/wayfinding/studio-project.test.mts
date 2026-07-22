@@ -62,7 +62,7 @@ const multiFloorProject = (): WayfindingStudioProject => {
 				{ ...confirmed, accessible: true, connectionId: 'lift-a', floorId: 'first', id: 'lift-a-first', kind: 'elevator', label: 'Lift A', point: { x: 240, y: 120 }, type: 'transition' },
 				{ ...confirmed, destinationId: 'council', floorId: 'first', geometry: [{ x: 550, y: 70 }, { x: 820, y: 70 }, { x: 820, y: 300 }, { x: 550, y: 300 }], id: 'council-room', label: 'Council chamber', type: 'location' },
 				{ ...confirmed, angle: 0, floorId: 'first', id: 'council-door', length: 36, locationId: 'council-room', point: { x: 550, y: 170 }, type: 'door' },
-				{ ...confirmed, floorId: 'first', id: 'council-label', point: { x: 610, y: 160 }, text: 'Council chamber', type: 'label' }
+				{ ...confirmed, color: '#264653', floorId: 'first', fontFamily: 'serif', fontSize: 32, fontWeight: 700, id: 'council-label', outlineColor: '#ffffff', outlineWidth: 2, point: { x: 610, y: 160 }, text: 'Council chamber', textAnchor: 'middle', type: 'label' }
 			],
 			height: 600,
 			id: 'first',
@@ -110,6 +110,7 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.match(svg, /data-wayfinding-location-id="council"/u);
 	assert.match(svg, /<g id="Doors"/u);
 	assert.match(svg, /<g id="Labels"/u);
+	assert.match(svg, /fill="#264653" font-family="Georgia, serif" font-size="32" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="2"/u);
 	assert.equal(bundle.floors.length, 2);
 	assert.equal(bundle.destinations.Destinations.rows[0].name, 'Council chamber');
 	assert.equal(bundle.manifest.deliveryMode, 'route');

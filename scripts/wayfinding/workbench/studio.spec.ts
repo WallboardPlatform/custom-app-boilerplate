@@ -150,15 +150,30 @@ test('edits room and POI descriptions with discoverable keyboard authoring', asy
 	await selection.getByLabel('Name', { exact: true }).fill('Information desk');
 	await selection.getByLabel('Description').fill('Staffed help desk near the main entrance.');
 	await selection.getByLabel('Category').fill('Information');
+	await selection.getByRole('heading', { name: 'Point of interest' }).click();
+	await page.keyboard.press('l');
+	await canvas.click({ position: { x: 600, y: 300 } });
+	await expect(selection.getByRole('heading', { name: 'Text label' })).toBeVisible();
+	await selection.getByLabel('Text', { exact: true }).fill('Main entrance');
+	await selection.getByLabel('Font family').selectOption('serif');
+	await selection.getByLabel('Font size').fill('36');
+	await selection.getByLabel('Weight').selectOption('700');
+	await selection.getByLabel('Text color').fill('#264653');
+	await selection.getByLabel('Alignment').selectOption('middle');
+	await selection.getByLabel('Outline color').fill('#ffffff');
+	await selection.getByLabel('Outline width').fill('2');
 
 	const downloadPromise = page.waitForEvent('download');
 	await page.keyboard.press('Control+s');
 	const download = await downloadPromise;
 	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { destinations: Array<{ category?: string; description?: string; name: string }> };
+	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { destinations: Array<{ category?: string; description?: string; name: string }>; floors: Array<{ elements: Array<Record<string, unknown>> }> };
 	expect(project.destinations).toEqual(expect.arrayContaining([
 		expect.objectContaining({ category: 'Services', description: 'Maps, tickets, and local assistance for visitors.', name: 'Visitor services' }),
 		expect.objectContaining({ category: 'Information', description: 'Staffed help desk near the main entrance.', name: 'Information desk' })
+	]));
+	expect(project.floors[0].elements).toEqual(expect.arrayContaining([
+		expect.objectContaining({ color: '#264653', fontFamily: 'serif', fontSize: 36, fontWeight: 700, outlineColor: '#ffffff', outlineWidth: 2, text: 'Main entrance', textAnchor: 'middle', type: 'label' })
 	]));
 	expect(errors).toEqual([]);
 });

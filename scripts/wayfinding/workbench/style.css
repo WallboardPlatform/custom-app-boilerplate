@@ -359,6 +359,7 @@ main {
 .selected-edge label select,
 .selected-edge label textarea { display: block; width: 100%; min-height: 32px; margin-top: 4px; padding: 7px; border: 1px solid #c5ceca; border-radius: 0; background: #ffffff; color: #17201f; }
 .selected-edge label textarea { min-height: 76px; resize: vertical; line-height: 1.4; }
+.selected-edge label input[type="color"] { height: 36px; padding: 3px; }
 .selected-edge details { margin-top: 14px; border-top: 1px solid #d4dcd8; }
 .selected-edge details summary { padding: 11px 0 2px; color: #687571; cursor: pointer; font-size: 10px; font-weight: 750; }
 .selected-edge .public-details-heading { margin: 14px 0 0; color: #126b5c; font-size: 10px; text-transform: uppercase; }
