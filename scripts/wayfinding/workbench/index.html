@@ -3,23 +3,73 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Wallboard Wayfinding Workbench</title>
+	<title>Wallboard Wayfinding Studio</title>
 	<link rel="stylesheet" href="./style.css">
 </head>
 <body>
 	<header class="topbar">
-		<div><span>WALLBOARD / WAYFINDING</span><h1>Map evidence workbench</h1></div>
-		<div class="status"><span id="mask-status">NO MASK</span><strong id="coverage-status">Load an image and graph</strong></div>
+		<div><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1></div>
+		<div class="status"><span id="mask-status">NO MASK</span><strong id="coverage-status">Project ready</strong></div>
 	</header>
 	<main>
 		<aside class="controls" aria-label="Authoring controls">
 			<section>
-				<h2>Source files</h2>
-				<label>Map image<input id="image-file" type="file" accept="image/*"></label>
+				<h2>Studio project</h2>
+				<label>Open .wbwayfinding project<input id="studio-project-file" type="file" accept="application/json,.json,.wbwayfinding"></label>
+				<label>Project name<input id="studio-project-name" type="text" value="Wayfinding project"></label>
+				<div class="field-pair">
+					<label>Floor<select id="studio-floor"></select></label>
+					<label>Floor name<input id="studio-floor-name" type="text"></label>
+				</div>
+				<div class="commands horizontal">
+					<button id="studio-add-floor" type="button">Add floor</button>
+					<button id="studio-delete-floor" type="button" class="danger">Delete floor</button>
+					<button id="studio-export-project" type="button" class="secondary">Save project</button>
+					<button id="studio-export-runtime" type="button" class="secondary">Runtime bundle</button>
+				</div>
+				<div id="studio-validation" class="project-assessment"></div>
+			</section>
+			<section>
+				<h2>Migration and source files</h2>
+				<label>Current floor background<input id="image-file" type="file" accept="image/*"></label>
 				<label>Wayfinding project<input id="project-file" type="file" accept="application/json,.json"></label>
 				<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
 				<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
 				<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
+			</section>
+			<section>
+				<h2>Semantic map layers</h2>
+				<p>Draw verified semantics over the optional background. AI imports stay proposed until a reviewer confirms them.</p>
+				<div class="tool-grid" role="group" aria-label="Semantic authoring tool">
+					<button type="button" data-tool="select">Select</button>
+					<button type="button" data-tool="location">Location</button>
+					<button type="button" data-tool="walkable">Walkable</button>
+					<button type="button" data-tool="obstacle">Obstacle</button>
+					<button type="button" data-tool="door">Door</button>
+					<button type="button" data-tool="poi">POI</button>
+					<button type="button" data-tool="origin">You are here</button>
+					<button type="button" data-tool="transition">Transition</button>
+					<button type="button" data-tool="label">Label</button>
+					<button type="button" data-tool="icon">Icon</button>
+					<button type="button" data-tool="logo">Logo</button>
+				</div>
+				<label>Icon or logo asset<input id="semantic-media-file" type="file" accept="image/*"></label>
+				<div id="semantic-draft" class="edge-draft" hidden>
+					<strong>POLYGON DRAFT</strong><span>Tap each corner. Finish after at least three points.</span>
+					<div class="commands horizontal"><button id="semantic-finish" type="button">Finish</button><button id="semantic-cancel" type="button" class="secondary">Cancel</button></div>
+				</div>
+				<div class="layer-toggles">
+					<label class="check"><input type="checkbox" data-layer="location" checked> Locations</label>
+					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable</label>
+					<label class="check"><input type="checkbox" data-layer="obstacle" checked> Obstacles</label>
+					<label class="check"><input type="checkbox" data-layer="door" checked> Doors</label>
+					<label class="check"><input type="checkbox" data-layer="poi" checked> POIs</label>
+					<label class="check"><input type="checkbox" data-layer="origin" checked> Origins</label>
+					<label class="check"><input type="checkbox" data-layer="transition" checked> Transitions</label>
+					<label class="check"><input type="checkbox" data-layer="label" checked> Labels</label>
+					<label class="check"><input type="checkbox" data-layer="icon" checked> Icons</label>
+					<label class="check"><input type="checkbox" data-layer="logo" checked> Logos</label>
+				</div>
 			</section>
 			<section>
 				<h2>Delivery capability</h2>
@@ -29,7 +79,7 @@
 					<label>Presentation<select id="source-presentation"><option value="source-overlay">Source overlay</option><option value="redrawn-equivalent">Redrawn equivalent</option><option value="schematic">Schematic</option><option value="calibrated-isometric">Calibrated isometric</option></select></label>
 				</div>
 				<div class="field-pair">
-					<label>Levels<input id="source-levels" type="number" min="1" max="100" value="1"></label>
+					<label>Levels<input id="source-levels" type="number" min="1" max="100" value="1" readonly></label>
 					<label>Target mode<select id="target-mode"><option value="directory">Directory</option><option value="highlight" selected>Highlight</option><option value="directional">Directional</option><option value="route">Route</option></select></label>
 				</div>
 				<label class="check"><input id="equivalent-redraw" type="checkbox" checked> Equivalent redraw permitted</label>
@@ -115,11 +165,23 @@
 			</section>
 		</aside>
 		<section class="stage-shell" aria-label="Map authoring stage">
-			<div id="stage-empty" class="stage-empty"><strong>Load the original map image</strong><span>The source remains visible under authored hit areas, evidence, and optional route proposals.</span></div>
+			<div id="stage-empty" class="stage-empty"><strong>Open a project or add a background</strong><span>Background artwork is optional; semantic geometry and routes remain independently editable.</span></div>
 			<canvas id="stage" width="1341" height="947"></canvas>
-			<footer><span>Wheel: zoom</span><span>Pan: drag map</span><span>Draw: nodes and corridor bends</span><span>Edit: drag route vertices</span></footer>
+			<footer><span>Wheel: zoom</span><span>Pan: drag map</span><span>Draw: nodes and corridor bends</span><span>Select: drag or double-click polygon edges</span></footer>
 		</section>
 		<aside class="review" aria-label="Route review">
+			<div id="semantic-editor" class="selected-edge">
+				<h2>Semantic selection</h2>
+				<p>Select an authored location, point, door, label, or transition on the map.</p>
+			</div>
+			<div class="selected-edge route-simulator">
+				<h2>Route simulator</h2>
+				<label>Start<select id="route-start"></select></label>
+				<label>Destination<select id="route-destination"></select></label>
+				<label>Profile<select id="route-profile"><option value="standard">Standard</option><option value="step-free">Step-free</option></select></label>
+				<button id="route-simulate" type="button">Simulate route</button>
+				<p id="route-result">Add an origin and a destination entrance, then connect them to the graph.</p>
+			</div>
 			<div class="review-summary"><span>ROUTE REVIEW</span><strong id="edge-summary">0 edges</strong><small id="edge-failures">No graph loaded</small></div>
 			<div id="selected-edge" class="selected-edge"><p>Select an edge on the map to inspect it.</p></div>
 			<div id="edge-list" class="edge-list"></div>

@@ -96,6 +96,7 @@ export const addProposedEdge = (
 	const to: WayfindingNode | undefined = document.nodes.find((node: WayfindingNode): boolean => node.id === toNodeId);
 
 	if (!from || !to) throw new Error('A proposed edge requires existing start and end nodes.');
+
 	if (from.id === to.id) throw new Error('A proposed edge cannot connect a node to itself.');
 
 	const points: WayfindingPoint[] = distinctPoints([from, ...geometry.slice(1, -1), to]);

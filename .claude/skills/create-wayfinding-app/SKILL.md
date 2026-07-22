@@ -1,52 +1,43 @@
 ---
 name: create-wayfinding-app
-description: Create or repair a Wallboard interactive wayfinding custom app from a PDF, floor-plan image, map screenshot, SVG, or existing point-based map. Use when the request involves destination search, routes, floors, accessibility, map metadata, location details, kiosk navigation, or converting a supplied venue map into an uploadable Wallboard app.
+description: Create or repair a Wallboard wayfinding app and its manual-first Wayfinding Studio project from customer maps, PDFs, images, SVGs, CAD renders, or AI drafts. Use for directories, highlights, routes, multiple floors, accessibility, kiosk origins, map metadata, and venue navigation.
 ---
 
 # Create Wayfinding App
 
-Build an interactive map whose guidance strength matches confirmed evidence. Every project needs visual `map.svg` plus an editable destination `TABLE`; add `walkable-mask.json` and `route-graph.json` only for independently certifiable routing. Treat the supplied reference and accepted use case as art direction; an equivalent redraw is allowed when it serves the visitor better.
+Produce a reviewable `.wbwayfinding` project first, then build the runtime app from its deterministic export. Do not attempt autonomous source-to-perfect-SVG reconstruction and do not treat visual plausibility as navigation proof.
 
 ## Workflow
 
-1. Read `AGENTS.md`, `docs/system/wayfinding.md`, the supplied source, and only the other task-relevant system docs.
-2. Resolve kiosk surface, current-location policy, floors, languages, required accessibility modes, data ownership, and delivery. Ask only when an unknown changes the map or graph materially.
-3. Copy `templates/wayfinding-project.json` to the project. Choose target guidance (`directory`, `highlight`, `directional`, or `route`), explicit fallback policy, evidence status, and one visual mode:
-   - **Source overlay by default:** retain useful supplied artwork under vector hit areas; add routes only when separately certified.
-   - **Schematic:** simplify geometry when distance readability matters more than fidelity.
-   - **Exact vector:** trace when reliable geometry is required and available.
-   - **Calibrated isometric:** retain useful 3D artwork over a separately authored and projected 2D spatial model.
-4. Run `npm run wayfinding:assess -- --project wayfinding-project.json`. Do not build route UI unless the assessment permits it. A polished highlight/directional product is the required fallback for uncertain raster topology.
-5. Create the generation brief and pass `npm run validate:brief` before app implementation.
-6. Author the artifacts using [references/artifacts.md](references/artifacts.md). Audit existing SVGs with `npm run wayfinding:audit-source -- --svg <map.svg> --report-dir <directory>` before migration. Treat exported legacy anchors as proposals and legacy point clouds as evidence, never topology.
-7. Use `npm run wayfinding:workbench` to load/export the project assessment and review map evidence. For raster/PDF or audited SVG route candidates, confirm the independent mask, place graph anchors at reviewed approaches, and draw/classify explicit corridor edges. Generated centre lines stay proposed; inspect every destination entrance side plus each crossing, door, and transition class over the source. Color extraction may miss paths hidden by map artwork. Preserve supplied public landmark metadata; use fictional representative values only for invented samples, and never commit confidential records.
-8. Annotate each interactive SVG target with a stable `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`. Listed-only rows may omit SVG geometry; route-eligible destinations require both a hit target and graph anchor. Keep route nodes and edges exclusively in the graph; do not duplicate them as invisible SVG circles.
-9. For route projects, validate and generate the QA dashboard/overlay:
+1. Read `AGENTS.md`, `docs/system/wayfinding.md`, the source, and only relevant project docs.
+2. Resolve installed screen/origin, facing direction, floors, languages, guidance target, accessibility, destination data ownership, and source constraints. Ask when an unknown changes geometry or topology.
+3. Start from `templates/wayfinding-studio-project.json` or create a schema-valid draft using [references/ai-draft.md](references/ai-draft.md). Preserve the original source.
+4. Choose background treatment: retain supplied artwork, manually simplify it, or generate a signage draft. Background pixels never own topology.
+5. Run `npm run wayfinding:studio`. Add floors/backgrounds and author semantic locations, doors, POIs, walkable areas, obstacles, origins, transitions, labels, icons, and logos.
+6. Treat every AI-created element as `status: proposed`, `provenance: ai-draft`. A reviewer corrects geometry and confirms facts in Studio.
+7. Keep mutable destination copy in the embedded destination baseline and emitted Wallboard `TABLE`. Geometry and route eligibility stay package-owned.
+8. For route mode, connect explicit graph edges to reviewed doors/approaches. Pair cross-floor transitions by `connectionId`; classify stairs/elevator/escalator and verified accessibility.
+9. Simulate every routeable destination from every installed origin using standard and step-free profiles. Fix disconnected nodes, shortcuts, incorrect entrance sides, and floor transitions.
+10. Set evidence/review status and assess the delivery mode. Keep incomplete work as an editable draft; use highlight/directional fallback when routing is not confirmed. Read `manifest.targetMode` and `manifest.deliveryMode` at runtime and never execute draft graph data after a downgrade.
+11. Export deterministically:
 
 ```bash
-npm run wayfinding:validate -- --svg map.svg --graph route-graph.json --walkable-mask walkable-mask.json --destinations destinations.json --start <location-id> --route-to <representative-location-id> --report-dir wayfinding-report
+npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfinding-runtime
 ```
 
-10. Fix every error. Inspect the graph overlay and representative routes; resolve or explicitly review warnings. Use `--strict` only when warnings must also fail delivery; never invent accessibility or operational facts to obtain a warning-free report. Rendering alone is not route proof.
-11. Build the assessed mode. Every mode provides search/filter, strong target highlighting, selected-location details, reset, and an app-owned keyboard when text input is used. Keep a confirmed `You are here` marker visible at rest, pulse current and selected target markers, preserve the visitor-controlled viewport on selection, and add a facing arrow/relative direction only with confirmed origin/orientation. Add `WayfindingGraph`, unreachable states, and step-free routing only when assessed.
-12. Test default, target highlight, long metadata, empty, reset, and live datasource update states. Add route, step-free, floor transition, and closure scenarios only when those capabilities exist. Complete normal visual review and delivery.
+12. Build the app from the runtime floor SVGs, graph, and destination contract. Test search, multilingual keyboard, highlight, details, pan/zoom, floors, reset, long data, empty/unreachable states, and every assessed route behavior.
 
 ## Non-Negotiable
 
-- Use native location annotations. Use explicit edges only for assessed route projects; the SVG structure and coordinate space follow the accepted source and design.
-- Never use route as the universal default. Directory, highlight, and directional guidance are first-class sellable modes.
-- Require an independently confirmed walkable mask for generated v2 centerlines. AI/OCR/image-analysis proposals and self-review are not confirmation.
-- Require a confirmed kiosk/current-location id for route certification. Keep accessibility unknown unless the source or reviewer verifies it.
-- Place a location node at its walkable entrance/approach, not its polygon centroid.
-- Keep location nodes as leaf entrances; never route through an unrelated destination. Name and classify crossings, doors, stairs, elevators, and escalators explicitly.
-- Keep mutable names, descriptions, hours, images, status, localization, and CTA content in the destination TABLE.
-- Derive map presence from reviewed SVG geometry and route eligibility from the graph. Keep off-map or intentionally unreachable destinations listed-only; never let mutable TABLE data grant routing.
-- Model stairs/elevators/escalators and accessibility on graph edges. Use stable edge IDs for closures and rerouting.
-- Preserve source labels/icons unless replacement is needed for interaction, localization, theming, or readability. Do not mandate inpainting.
-- Do not embed arbitrary HTML, scripts, event handlers, credentials, customer records, or live customer URLs in SVG/metadata.
-- Do not ship unresolved disconnected destinations, unexplained edge crossings, backtracking/detour warnings, high-degree shortcuts, or unreviewed graph warnings. Connectivity alone is not route proof.
-- Treat print-first artwork as a classic highlight source. When trustworthy routing is required and `equivalentRedrawAllowed` is true, create a standardized route-first 2D signage redraw with explicit corridors, crossings, entrances, transitions, and a documented geometry tolerance; preserve the accepted brand and authoritative spatial relationships. Project any future 3D view from the same reviewed 2D topology.
+- Human-editable Studio output is required; AI is a draft accelerator.
+- Never mark AI/image/OCR inference confirmed.
+- Labels, icons, and logos use independent SVG layers.
+- Location route nodes terminate at reviewed doors/approaches and remain leaf nodes.
+- Mutable TABLE data cannot grant map presence or routing.
+- No fake straight-line route, invented corridor, orientation, accessibility, door, or transition.
+- Selection preserves visitor viewport; current and target markers remain obvious.
+- Use synthetic representative example data; do not commit customer records or URLs.
 
 ## Deliver
 
-Return the uploadable app ZIP and separate source ZIP, plus `wayfinding-project.json`, `map.svg`, destination contract/template, and installation/binding notes. Route projects also include the confirmed walkable mask, graph, validation report, and graph overlay.
+Return the app/source ZIPs, editable `.wbwayfinding` project, runtime export, destination contract/template, setup notes, screenshots, and route evidence appropriate to the assessed mode.

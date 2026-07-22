@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --registry=https://registry.npmjs.org/
 
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
       - name: Validate repository contracts
         run: npm run validate:repository
 

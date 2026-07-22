@@ -1,55 +1,34 @@
 # Wayfinding Artifacts
 
-## `wayfinding-project.json`
+## Editable `.wbwayfinding`
 
-- Validate with `schemas/wayfinding-project.schema.json` and `npm run wayfinding:assess` before implementation.
-- Record source class, presentation mode, target/fallback guidance, evidence provenance, and review method.
-- `confirmed` always names a non-AI review method. Keep uncertain extraction `proposed`.
-- A route-capable project declares confirmed walkable space independent from route topology.
+Validate with `schemas/wayfinding-studio-project.schema.json`. It is the single authoring source for assets, floors, semantic layers, route graph, destination baseline, and delivery evidence.
 
-## `map.svg`
+- Embed optional backgrounds/logos/icons as assets.
+- Keep stable IDs across edits.
+- Keep AI/import output `proposed`; only reviewers confirm it.
+- Model each installed screen as an `origin` with floor, point, facing, and language.
+- Pair transitions across floors with a shared `connectionId`.
 
-- Root: positive stable viewBox; dimensions and internal structure follow the accepted design.
-- Transforms, nested groups, raster backgrounds, and arbitrary visual layers are allowed.
-- Each interactive target has a stable SVG `id`, `data-wayfinding-location-id`, and optional `data-wayfinding-level`.
-- Wrap multipart hit geometry in one annotated group. Keep route nodes and edges out of the SVG.
-- Keep base artwork visually useful; overlays must not wash it out.
+## Runtime export
 
-## `route-graph.json`
+`wayfinding:studio:export` generates:
 
-Validate against `schemas/wayfinding-route-graph.schema.json`.
+- `floors/<floor-id>.svg` with Background, Walkable, Obstacles, Locations, Doors, POIs, Origins, Transitions, Labels, Icons, Logos groups;
+- `route-graph.json` with explicit topology and semantic-node relations;
+- `destinations-datasource.json` in Wallboard TABLE shape;
+- `manifest.json` and `validation.json`.
 
-Omit this artifact for directory, highlight, and directional projects. Do not add a decorative straight line as a substitute.
+SVG target geometry owns stable map presence. Graph location nodes own route eligibility. TABLE rows own mutable public copy.
 
-- Nodes own coordinates, level, kind, and location mapping.
-- Node coordinates use the root SVG viewBox coordinate system even when artwork is nested or transformed.
-- Edges own explicit adjacency, direction, route kind, accessibility, and optional measured metres.
-- Cross-floor edges use transition nodes and `stairs`, `elevator`, or `escalator` kinds.
-- Location nodes are leaf entrances. Crossings, doors, stairs, elevators, and escalators use named edges rather than visual shortcuts.
-- Prefer a small intentional graph over an unnecessarily dense mesh. Add a node at every real junction and bend required for route shape.
+The manifest declares requested `targetMode` and assessed `deliveryMode`. Draft projects remain saveable, but runtime export requires structural validity and sufficient confirmed evidence. A non-route fallback exports an empty graph by design; never infer route support from graph data left in the editable project.
 
-## `walkable-mask.json`
+## Existing standalone artifacts
 
-Omit this artifact when routing is not assessed. Highlight geometry belongs in `map.svg`, not in a fake walkable mask.
+The Studio can import existing evidence/project, graph, walkable-mask, and destination JSON while projects migrate. Audit an existing SVG before trusting it:
 
-- Generate in the same root coordinate system as `map.svg`; bounds must match the SVG viewBox.
-- Review connected traversable space against the visible source. Correct crossings, doors, false-positive background regions, and route margins explicitly.
-- Color extraction can omit traversable paths obscured by labels or artwork; add reviewed semantic corrections before confirmation.
-- Keep `reviewStatus: "proposed"` until a reviewer confirms the overlay. Only confirmed masks can certify generated centerlines.
-- Derive centerlines from the mask, collapse junction clusters, and remove dangling branches not used by destination anchors.
+```bash
+npm run wayfinding:audit-source -- --svg map.svg --report-dir wayfinding-source-audit
+```
 
-## Destination `TABLE`
-
-Minimum: `id`, `name`, `category`, `description`, `accessible`. Leave `accessible` empty/unknown until a source or reviewer verifies it. Map presence comes from SVG geometry; route eligibility comes from the graph, never the TABLE.
-
-Add only useful fields: `shortName`, aliases/keywords, `floor`, `hours`, `status`, `statusDetail`, image/file reference, CTA label/target, and localized values. IDs must match SVG location shapes and graph location nodes.
-
-## Review
-
-- Verify every graph-linked destination from each installed kiosk start.
-- Verify standard and step-free profiles separately.
-- Inspect long edges, crossings without nodes, high-degree nodes, closed routes, and floor transitions.
-- Compare the visual map to the source at the real kiosk dimensions.
-- Require every reviewed edge corridor to remain inside the independently confirmed walkable mask.
-- Treat a graph-derived corridor envelope as regression evidence only; it cannot independently certify its source graph.
-- Record uncertain OCR, entrances, route topology, and missing operational metadata as review items instead of guessing.
+Point clouds and extracted anchors remain proposals. Use `npm run wayfinding:validate` for standalone SVG/graph deliveries.
