@@ -18,7 +18,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	await canvas.click({ position: { x: 430, y: 490 } });
 	await canvas.click({ position: { x: 230, y: 490 } });
 	await page.locator('#semantic-finish').click();
-	await expect(page.locator('#semantic-editor h2')).toContainText('LOCATION');
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 	await page.locator('[data-tool="select"]').click();
 	await canvas.dblclick({ position: { x: 330, y: 320 } });
 
@@ -36,7 +36,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	await expect(page.locator('#studio-floor option')).toHaveCount(1);
 	await page.locator('[data-tool="select"]').click();
 	await canvas.click({ position: { x: 330, y: 400 } });
-	await expect(page.locator('#semantic-editor h2')).toContainText('LOCATION');
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 
 	const screenshotPath: string = testInfo.outputPath('authored-studio.png');
 	await page.screenshot({ fullPage: true, path: screenshotPath });
@@ -108,11 +108,57 @@ test('keeps specialist controls out of the authoring path and supports reversibl
 
 	await page.locator('#undo').click();
 	await canvas.click({ position: { x: 320, y: 360 } });
-	await expect(page.locator('#semantic-editor h2')).toContainText('LOCATION');
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 	await expect(page.locator('#redo')).toBeEnabled();
 
 	await page.locator('#redo').click();
 	await canvas.click({ position: { x: 320, y: 360 } });
 	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
+	expect(errors).toEqual([]);
+});
+
+test('edits room and POI descriptions with discoverable keyboard authoring', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+
+	await page.keyboard.press('?');
+	await expect(page.locator('#shortcut-dialog')).toBeVisible();
+	await expect(page.locator('#shortcut-dialog')).toContainText('Hold to pan');
+	await expect(page.locator('#shortcut-dialog')).toContainText('Save project');
+	await page.locator('#shortcut-close').click();
+
+	const canvas = page.locator('#stage');
+	await page.keyboard.press('r');
+	await expect(page.locator('[data-tool="location"]')).toHaveClass(/active/u);
+	await canvas.click({ position: { x: 220, y: 280 } });
+	await canvas.click({ position: { x: 420, y: 280 } });
+	await canvas.click({ position: { x: 420, y: 440 } });
+	await canvas.click({ position: { x: 220, y: 440 } });
+	await page.keyboard.press('Enter');
+	const selection = page.locator('#semantic-editor');
+	await expect(selection.getByRole('heading', { name: 'Room / area' })).toBeVisible();
+	await selection.getByLabel('Name', { exact: true }).fill('Visitor services');
+	await selection.getByLabel('Description').fill('Maps, tickets, and local assistance for visitors.');
+	await selection.getByLabel('Category').fill('Services');
+
+	await selection.getByRole('heading', { name: 'Room / area' }).click();
+	await page.keyboard.press('p');
+	await canvas.click({ position: { x: 520, y: 360 } });
+	await expect(selection.getByRole('heading', { name: 'Point of interest' })).toBeVisible();
+	await selection.getByLabel('Name', { exact: true }).fill('Information desk');
+	await selection.getByLabel('Description').fill('Staffed help desk near the main entrance.');
+	await selection.getByLabel('Category').fill('Information');
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.keyboard.press('Control+s');
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { destinations: Array<{ category?: string; description?: string; name: string }> };
+	expect(project.destinations).toEqual(expect.arrayContaining([
+		expect.objectContaining({ category: 'Services', description: 'Maps, tickets, and local assistance for visitors.', name: 'Visitor services' }),
+		expect.objectContaining({ category: 'Information', description: 'Staffed help desk near the main entrance.', name: 'Information desk' })
+	]));
 	expect(errors).toEqual([]);
 });
