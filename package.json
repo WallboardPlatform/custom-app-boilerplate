@@ -80,6 +80,7 @@
 		"@stylistic/eslint-plugin": "^5.5.0",
 		"@types/archiver": "^6.0.3",
 		"@types/node": "^24.9.1",
+		"@types/three": "^0.185.1",
 		"@typescript-eslint/eslint-plugin": "^8.32.0",
 		"@typescript-eslint/parser": "^8.32.0",
 		"@xmldom/xmldom": "^0.8.13",
@@ -126,6 +127,7 @@
 		"rxjs": "^7.8.2",
 		"solid-js": "^1.9.9",
 		"terser": "^5.44.0",
+		"three": "^0.185.1",
 		"tsyringe": "~4.10.0"
 	}
 }

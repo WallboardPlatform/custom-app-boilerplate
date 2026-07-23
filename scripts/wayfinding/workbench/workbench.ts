@@ -43,9 +43,12 @@ import {
 	type WayfindingStudioProject,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
+import { WayfindingScene3d, wayfindingPolygonPresentationDefaults } from './scene3d';
 
 type SemanticPolygonTool = 'location' | 'obstacle' | 'walkable';
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph' | 'select' | SemanticPolygonTool | 'door' | 'poi' | 'origin' | 'transition' | 'label' | 'icon' | 'logo';
+type DrawingMode = 'lasso' | 'points' | 'smart';
+type ProjectOrigin = 'local-recovery' | 'new' | 'portable-file';
 
 interface ColorSample {
 	b: number;
@@ -98,6 +101,18 @@ interface HistoryState {
 	project: WayfindingStudioProject;
 }
 
+interface AutosaveRecord {
+	currentFloorId: string;
+	id: 'latest';
+	project: WayfindingStudioProject;
+	savedAt: string;
+}
+
+const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
+const AUTOSAVE_STORE = 'drafts';
+const AUTOSAVE_DELAY_MS = 700;
+const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
+
 const requireElement = <T extends Element>(selector: string): T => {
 	const element: T | null = document.querySelector<T>(selector);
 
@@ -136,12 +151,15 @@ const toleranceValue = requireElement<HTMLOutputElement>('#tolerance-value');
 const brushValue = requireElement<HTMLOutputElement>('#brush-value');
 const bridgeValue = requireElement<HTMLOutputElement>('#bridge-value');
 const maskStatus = requireElement<HTMLElement>('#mask-status');
+const autosaveStatus = requireElement<HTMLElement>('#autosave-status');
 const coverageStatus = requireElement<HTMLElement>('#coverage-status');
 const edgeSummary = requireElement<HTMLElement>('#edge-summary');
 const edgeFailures = requireElement<HTMLElement>('#edge-failures');
 const selectedEdgeHost = requireElement<HTMLElement>('#selected-edge');
 const edgeList = requireElement<HTMLElement>('#edge-list');
 const stageEmpty = requireElement<HTMLElement>('#stage-empty');
+const stage3dHost = requireElement<HTMLElement>('#stage-3d');
+const stageShell = requireElement<HTMLElement>('.stage-shell');
 const metadataEditor = requireElement<HTMLElement>('#metadata-editor');
 const metadataSummary = requireElement<HTMLElement>('#metadata-summary');
 const destinationSelect = requireElement<HTMLSelectElement>('#destination-select');
@@ -165,23 +183,52 @@ const studioProjectName = requireElement<HTMLInputElement>('#studio-project-name
 const studioFloorSelect = requireElement<HTMLSelectElement>('#studio-floor');
 const studioFloorName = requireElement<HTMLInputElement>('#studio-floor-name');
 const studioValidation = requireElement<HTMLElement>('#studio-validation');
+const localRecovery = requireElement<HTMLElement>('#local-recovery');
+const localRecoverySummary = requireElement<HTMLElement>('#local-recovery-summary');
+const restoreAutosaveButton = requireElement<HTMLButtonElement>('#restore-autosave');
+const discardAutosaveButton = requireElement<HTMLButtonElement>('#discard-autosave');
 const semanticDraftHost = requireElement<HTMLElement>('#semantic-draft');
 const semanticEditor = requireElement<HTMLElement>('#semantic-editor');
 const routeStart = requireElement<HTMLSelectElement>('#route-start');
 const routeDestination = requireElement<HTMLSelectElement>('#route-destination');
 const routeProfile = requireElement<HTMLSelectElement>('#route-profile');
 const routeResult = requireElement<HTMLElement>('#route-result');
+const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
 const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file');
 const undoButton = requireElement<HTMLButtonElement>('#undo');
 const redoButton = requireElement<HTMLButtonElement>('#redo');
 const deleteSelectionButton = requireElement<HTMLButtonElement>('#delete-selection');
 const fitViewButton = requireElement<HTMLButtonElement>('#fit-view');
+const view2dButton = requireElement<HTMLButtonElement>('#view-2d');
+const view3dButton = requireElement<HTMLButtonElement>('#view-3d');
+const reset3dViewButton = requireElement<HTMLButtonElement>('#reset-3d-view');
+const save3dViewButton = requireElement<HTMLButtonElement>('#save-3d-view');
 const shortcutHelpButton = requireElement<HTMLButtonElement>('#shortcut-help');
 const footerShortcutHelpButton = requireElement<HTMLButtonElement>('#footer-shortcut-help');
 const shortcutDialog = requireElement<HTMLDialogElement>('#shortcut-dialog');
 const shortcutCloseButton = requireElement<HTMLButtonElement>('#shortcut-close');
 const toolTitle = requireElement<HTMLElement>('#tool-title');
 const toolHelp = requireElement<HTMLElement>('#tool-help');
+const projectContext = requireElement<HTMLElement>('#project-context');
+const projectContextName = requireElement<HTMLElement>('#project-context-name');
+const projectContextSource = requireElement<HTMLElement>('#project-context-source');
+const projectContextRecovery = requireElement<HTMLElement>('#project-context-recovery');
+const projectContextPortable = requireElement<HTMLElement>('#project-context-portable');
+const newProjectButton = requireElement<HTMLButtonElement>('#studio-new-project');
+const openProjectButton = requireElement<HTMLButtonElement>('#studio-open-project');
+const drawingModePoints = requireElement<HTMLButtonElement>('#drawing-mode-points');
+const drawingModeLasso = requireElement<HTMLButtonElement>('#drawing-mode-lasso');
+const drawingModeSmart = requireElement<HTMLButtonElement>('#drawing-mode-smart');
+const drawingModeHelp = requireElement<HTMLElement>('#drawing-mode-help');
+const snapToEdgesInput = requireElement<HTMLInputElement>('#snap-to-edges');
+const snapRadiusInput = requireElement<HTMLInputElement>('#snap-radius');
+const snapRadiusValue = requireElement<HTMLOutputElement>('#snap-radius-value');
+const semanticDraftHelp = requireElement<HTMLElement>('#semantic-draft-help');
+const mediaAssetState = requireElement<HTMLElement>('#media-asset-state');
+const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
+const chooseMediaAsset = requireElement<HTMLButtonElement>('#choose-media-asset');
+const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
+const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -210,13 +257,28 @@ let offsetY = 0;
 let currentFloorId = 'level-0';
 let semanticDraft: { points: WayfindingPoint[]; type: SemanticPolygonTool } | undefined;
 let selectedSemanticId: string | undefined;
+let selectedSemanticVertexIndex: number | undefined;
+let insertPointForSemanticId: string | undefined;
 let simulatedRoute: ReturnType<WayfindingGraph['route']>;
+let viewMode: '2d' | '3d' = '2d';
 let pendingMediaAssetId: string | undefined;
 let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
 let dragHistoryState: HistoryState | undefined;
 let dragMutated = false;
 let restoringHistory = false;
 let toolBeforeTemporaryPan: Tool | undefined;
+let autosaveDatabase: IDBDatabase | undefined;
+let autosaveEnabled = false;
+let autosaveTimer: number | undefined;
+let autosaveSnapshot = '';
+let autosaveWrite: Promise<void> = Promise.resolve();
+let pendingRecovery: AutosaveRecord | undefined;
+let drawingMode: DrawingMode = 'points';
+let lassoDrawing = false;
+let projectOrigin: ProjectOrigin = 'new';
+let openedProjectFileName: string | undefined;
+let portableSnapshot: string | undefined;
+let lastLocalSaveAt: string | undefined;
 const undoStack: HistoryState[] = [];
 const redoStack: HistoryState[] = [];
 const HISTORY_LIMIT = 30;
@@ -321,6 +383,19 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
+const simulatedRoutePoints = (): WayfindingPoint[] => simulatedRoute?.path
+	.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
+	.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [];
+const scene3d = new WayfindingScene3d(stage3dHost, {
+	onSelectElement: (elementId: string): void => {
+		selectedSemanticId = elementId;
+		selectedSemanticVertexIndex = undefined;
+		selectedEdgeId = undefined;
+		renderSemanticEditor();
+		renderReview();
+		scene3d.selectElement(elementId);
+	}
+});
 const layerVisible = (type: WayfindingStudioElement['type']): boolean => requireElement<HTMLInputElement>(`[data-layer="${type}"]`)?.checked ?? true;
 const nextId = (prefix: string): string => {
 	const elements: WayfindingStudioElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioElement[] => floor.elements);
@@ -338,6 +413,179 @@ const nextId = (prefix: string): string => {
 
 const destinationDatasource = (): DestinationDatasourceDocument => ({ Destinations: { rows: studioProject.destinations as DestinationRow[] } });
 
+const renderProjectContext = (): void => {
+	const floor: WayfindingStudioFloor | undefined = studioProject.floors.find((candidate: WayfindingStudioFloor): boolean => candidate.id === currentFloorId) ?? studioProject.floors[0];
+	const currentSnapshot: string = JSON.stringify(studioProject);
+	const portableState: 'current' | 'dirty' | 'missing' = !portableSnapshot
+		? 'missing'
+		: portableSnapshot === currentSnapshot ? 'current' : 'dirty';
+	const sourceLabels: Record<ProjectOrigin, string> = {
+		'local-recovery': 'Browser recovery draft',
+		'new': 'New browser draft',
+		'portable-file': openedProjectFileName ? `Portable file: ${openedProjectFileName}` : 'Portable project file'
+	};
+	projectContextName.textContent = `${studioProject.name} / ${floor?.name ?? currentFloorId}`;
+	projectContextSource.textContent = sourceLabels[projectOrigin];
+	projectContextRecovery.textContent = pendingRecovery
+		? 'Older recovery waiting'
+		: lastLocalSaveAt ? `Saved locally ${savedTimeLabel(lastLocalSaveAt)}` : autosaveEnabled ? 'Ready' : 'Starting...';
+	projectContextPortable.textContent = portableState === 'current'
+		? 'Downloaded and current'
+		: portableState === 'dirty' ? 'Changes not downloaded' : 'Not downloaded';
+	projectContext.dataset.portable = portableState;
+};
+
+const renderDrawingMode = (): void => {
+	const lasso: boolean = drawingMode === 'lasso';
+	const points: boolean = drawingMode === 'points';
+	const smart: boolean = drawingMode === 'smart';
+	drawingModePoints.classList.toggle('active', points);
+	drawingModePoints.setAttribute('aria-pressed', String(points));
+	drawingModeLasso.classList.toggle('active', lasso);
+	drawingModeLasso.setAttribute('aria-pressed', String(lasso));
+	drawingModeSmart.classList.toggle('active', smart);
+	drawingModeSmart.setAttribute('aria-pressed', String(smart));
+	drawingModeHelp.textContent = smart
+		? 'Choose Room, Walkable, or Blocked, then click inside a flat-color region. Studio traces its visible boundary.'
+		: lasso
+			? 'Press and drag around an area. Studio simplifies the trace into editable points.'
+			: 'Best for precise straight-edged rooms and regions.';
+	semanticDraftHelp.textContent = smart
+		? 'Click inside a visually enclosed region. Adjust Color tolerance under Advanced tools if detection leaks or stops early.'
+		: lasso
+			? 'Keep dragging around the boundary, then release to create an editable polygon.'
+			: 'Tap each corner. Finish after at least three points.';
+	snapRadiusInput.disabled = !snapToEdgesInput.checked || smart;
+};
+
+const renderMediaAssetState = (): void => {
+	const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === pendingMediaAssetId);
+	mediaAssetState.dataset.ready = String(Boolean(asset));
+	mediaAssetSummary.textContent = asset
+		? `${asset.name} is ready. Choose Icon for a functional map symbol or Logo for a brand mark, then click the map.`
+		: 'Choose an image before placing it. Icon means a functional map symbol; Logo means a brand or tenant mark.';
+	chooseMediaAsset.textContent = asset ? 'Change image' : 'Choose image';
+};
+
+const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 'recovery' | 'error', title: string): void => {
+	autosaveStatus.textContent = label;
+	autosaveStatus.dataset.state = state;
+	autosaveStatus.title = title;
+	renderProjectContext();
+};
+
+const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
+	simulatedRoute = undefined;
+	routeResult.textContent = message;
+	routeClearButton.disabled = true;
+	draw();
+};
+
+const refresh3d = (): void => {
+	if (viewMode !== '3d') return;
+	scene3d.rebuild(studioProject, currentFloorId, simulatedRoutePoints());
+	scene3d.selectElement(selectedSemanticId);
+};
+
+const setViewMode = (mode: '2d' | '3d'): void => {
+	viewMode = mode;
+	const showing3d: boolean = mode === '3d';
+	view2dButton.classList.toggle('active', !showing3d);
+	view2dButton.setAttribute('aria-pressed', String(!showing3d));
+	view3dButton.classList.toggle('active', showing3d);
+	view3dButton.setAttribute('aria-pressed', String(showing3d));
+	canvas.classList.toggle('view-hidden', showing3d);
+	stageShell.classList.toggle('view-3d', showing3d);
+	scene3d.setVisible(showing3d);
+	fitViewButton.disabled = showing3d;
+
+	if (showing3d) {
+		stageEmpty.classList.add('hidden');
+		refresh3d();
+		coverageStatus.textContent = '3D preview: drag to rotate, wheel to zoom, and select a shape to edit it.';
+	}
+};
+
+const openAutosaveDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject): void => {
+	const request: IDBOpenDBRequest = indexedDB.open(AUTOSAVE_DATABASE, 1);
+	request.addEventListener('upgradeneeded', (): void => {
+		const database: IDBDatabase = request.result;
+		if (!database.objectStoreNames.contains(AUTOSAVE_STORE)) database.createObjectStore(AUTOSAVE_STORE, { keyPath: 'id' });
+	});
+	request.addEventListener('success', (): void => { resolve(request.result); });
+	request.addEventListener('error', (): void => { reject(request.error ?? new Error('Local recovery storage could not be opened.')); });
+});
+
+const readAutosaveRecord = (database: IDBDatabase): Promise<AutosaveRecord | undefined> => new Promise((resolve, reject): void => {
+	const transaction: IDBTransaction = database.transaction(AUTOSAVE_STORE, 'readonly');
+	const request: IDBRequest<AutosaveRecord | undefined> = transaction.objectStore(AUTOSAVE_STORE).get('latest');
+	request.addEventListener('success', (): void => { resolve(request.result); });
+	request.addEventListener('error', (): void => { reject(request.error ?? new Error('Local recovery could not be read.')); });
+});
+
+const writeAutosaveRecord = (database: IDBDatabase, record: AutosaveRecord): Promise<void> => new Promise((resolve, reject): void => {
+	const transaction: IDBTransaction = database.transaction(AUTOSAVE_STORE, 'readwrite');
+	transaction.objectStore(AUTOSAVE_STORE).put(record);
+	transaction.addEventListener('complete', (): void => { resolve(); });
+	transaction.addEventListener('abort', (): void => { reject(transaction.error ?? new Error('Local recovery could not be saved.')); });
+	transaction.addEventListener('error', (): void => { reject(transaction.error ?? new Error('Local recovery could not be saved.')); });
+});
+
+const deleteAutosaveRecord = (database: IDBDatabase): Promise<void> => new Promise((resolve, reject): void => {
+	const transaction: IDBTransaction = database.transaction(AUTOSAVE_STORE, 'readwrite');
+	transaction.objectStore(AUTOSAVE_STORE).delete('latest');
+	transaction.addEventListener('complete', (): void => { resolve(); });
+	transaction.addEventListener('abort', (): void => { reject(transaction.error ?? new Error('Local recovery could not be discarded.')); });
+	transaction.addEventListener('error', (): void => { reject(transaction.error ?? new Error('Local recovery could not be discarded.')); });
+});
+
+const savedTimeLabel = (savedAt: string): string => new Intl.DateTimeFormat(undefined, {
+	hour: '2-digit',
+	minute: '2-digit'
+}).format(new Date(savedAt));
+
+async function persistAutosave(force = false): Promise<void> {
+	if (!autosaveEnabled || !autosaveDatabase) return;
+	if (autosaveTimer !== undefined) {
+		window.clearTimeout(autosaveTimer);
+		autosaveTimer = undefined;
+	}
+	synchronizeStudioState();
+	const snapshot: string = JSON.stringify(studioProject);
+	if (!force && snapshot === autosaveSnapshot) return;
+	const savedAt = new Date().toISOString();
+	const record: AutosaveRecord = {
+		currentFloorId,
+		id: 'latest',
+		project: cloneStudioProject(studioProject),
+		savedAt
+	};
+	setAutosaveStatus('SAVING...', 'saving', 'Saving a local recovery draft in this browser.');
+	try {
+		const database: IDBDatabase = autosaveDatabase;
+		autosaveWrite = autosaveWrite.catch((): void => undefined).then(async (): Promise<void> => {
+			await writeAutosaveRecord(database, record);
+		});
+		await autosaveWrite;
+		autosaveSnapshot = snapshot;
+		lastLocalSaveAt = savedAt;
+		setAutosaveStatus(`SAVED ${savedTimeLabel(savedAt)}`, 'saved', `Local recovery saved at ${new Date(savedAt).toLocaleString()}. Use Save project for a portable file.`);
+	} catch (error) {
+		const detail: string = error instanceof Error ? error.message : 'Unknown storage error';
+		setAutosaveStatus('AUTOSAVE FAILED', 'error', `${detail} Use Save project to download a portable copy.`);
+	}
+}
+
+function scheduleAutosave(): void {
+	renderProjectContext();
+	if (!autosaveEnabled || !autosaveDatabase) return;
+	if (autosaveTimer !== undefined) window.clearTimeout(autosaveTimer);
+	autosaveTimer = window.setTimeout((): void => {
+		autosaveTimer = undefined;
+		void persistAutosave();
+	}, AUTOSAVE_DELAY_MS);
+}
+
 const synchronizeStudioState = (): void => {
 	persistCurrentMask();
 	studioProject.delivery = project;
@@ -350,6 +598,7 @@ const synchronizeStudioState = (): void => {
 const syncStudioGraph = (): void => {
 	synchronizeStudioState();
 	touchWayfindingStudioProject(studioProject);
+	scheduleAutosave();
 };
 
 const cloneStudioProject = (value: WayfindingStudioProject): WayfindingStudioProject => JSON.parse(JSON.stringify(value)) as WayfindingStudioProject;
@@ -370,6 +619,8 @@ const recordHistory = (before: HistoryState): void => {
 	undoStack.push(before);
 	if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
 	redoStack.length = 0;
+	clearSimulatedRoute('The map changed. Simulate the route again.');
+	scheduleAutosave();
 	updateEditActions();
 };
 
@@ -389,10 +640,12 @@ const restoreHistoryState = async (state: HistoryState): Promise<void> => {
 	destinationTableName = 'Destinations';
 	selectedDestinationId = studioProject.destinations[0]?.id;
 	selectedSemanticId = undefined;
+	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
 	semanticDraft = undefined;
 	edgeDraft = undefined;
 	insertPointForEdge = undefined;
+	insertPointForSemanticId = undefined;
 	draggedSemantic = undefined;
 	draggedVertex = undefined;
 	simulatedRoute = undefined;
@@ -509,6 +762,8 @@ const activateFloor = async (floorId: string): Promise<void> => {
 	currentFloorId = studioProject.floors.some((floor: WayfindingStudioFloor): boolean => floor.id === floorId) ? floorId : studioProject.floors[0].id;
 	levelIdInput.value = currentFloorId;
 	selectedSemanticId = undefined;
+	selectedSemanticVertexIndex = undefined;
+	insertPointForSemanticId = undefined;
 	selectedEdgeId = undefined;
 	simulatedRoute = undefined;
 	mask = new Uint8Array();
@@ -645,10 +900,12 @@ const renderProjectAssessment = (): void => {
 		status.addEventListener('change', (): void => {
 			item.status = status.value as WayfindingEvidenceItem['status'];
 			renderProjectAssessment();
+			scheduleAutosave();
 		});
 		provenance.addEventListener('change', (): void => {
 			item.provenance = provenance.value as WayfindingEvidenceItem['provenance'];
 			renderProjectAssessment();
+			scheduleAutosave();
 		});
 		heading.append(label, description);
 		statusLabel.append(status);
@@ -694,6 +951,7 @@ const renderRouteSimulator = (): void => {
 	}));
 	if (Array.from(routeStart.options).some((option): boolean => option.value === previousStart)) routeStart.value = previousStart;
 	if (Array.from(routeDestination.options).some((option): boolean => option.value === previousDestination)) routeDestination.value = previousDestination;
+	routeClearButton.disabled = !simulatedRoute;
 };
 
 const renderStudioControls = (): void => {
@@ -724,9 +982,48 @@ const renderStudioControls = (): void => {
 	summary.textContent = deliveryIssues.length === 0 ? 'Project structure and delivery evidence are valid.' : deliveryIssues.slice(0, 4).map((issue): string => humanizeEvidenceMessage(issue.message)).join(' ');
 	studioValidation.append(heading, summary);
 	renderRouteSimulator();
+	renderProjectContext();
+	renderMediaAssetState();
+};
+
+const selectedSemanticPolygon = (): WayfindingStudioPolygonElement | undefined => {
+	const element: WayfindingStudioElement | undefined = semanticElement();
+
+	return element && 'geometry' in element ? element : undefined;
+};
+
+const nearestSemanticVertex = (element: WayfindingStudioPolygonElement, point: WayfindingPoint, radius = 22 / scale): number | undefined => {
+	const index: number = element.geometry
+		.map((vertex: WayfindingPoint): number => Math.hypot(vertex.x - point.x, vertex.y - point.y))
+		.findIndex((distance: number): boolean => distance <= radius);
+
+	return index >= 0 ? index : undefined;
+};
+
+const deleteSelectedSemanticVertex = (): boolean => {
+	const element: WayfindingStudioPolygonElement | undefined = selectedSemanticPolygon();
+	if (!element || selectedSemanticVertexIndex === undefined) return false;
+	if (element.geometry.length <= 3) {
+		coverageStatus.textContent = 'A polygon needs at least three points. Delete the whole item or move its remaining points.';
+		return true;
+	}
+	const before: HistoryState = captureHistoryState();
+	element.geometry.splice(selectedSemanticVertexIndex, 1);
+	element.status = 'proposed';
+	selectedSemanticVertexIndex = undefined;
+	insertPointForSemanticId = undefined;
+	syncStudioGraph();
+	recordHistory(before);
+	coverageStatus.textContent = `Removed a point from ${element.id}`;
+	renderSemanticEditor();
+	renderStudioControls();
+	draw();
+
+	return true;
 };
 
 const deleteCurrentSelection = (): void => {
+	if (deleteSelectedSemanticVertex()) return;
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	const edge: WayfindingEdge | undefined = graph?.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId);
 	if (!element && !edge) return;
@@ -743,6 +1040,8 @@ const deleteCurrentSelection = (): void => {
 			if (selectedDestinationId === element.destinationId) selectedDestinationId = rows[0]?.id;
 		}
 		selectedSemanticId = undefined;
+		selectedSemanticVertexIndex = undefined;
+		insertPointForSemanticId = undefined;
 		coverageStatus.textContent = `Deleted ${element.type} ${element.id}`;
 	} else if (edge && graph) {
 		graph.edges = graph.edges.filter((candidate: WayfindingEdge): boolean => candidate.id !== edge.id);
@@ -775,7 +1074,7 @@ const renderSemanticEditor = (): void => {
 	identity.textContent = element.id;
 	semanticEditor.append(identity);
 
-	const selectField = (labelText: string, values: Array<[string, string]>, value: string, update: (next: string) => void, host: HTMLElement = semanticEditor): void => {
+	const selectField = (labelText: string, values: Array<[string, string]>, value: string, update: (next: string) => void, host: HTMLElement = semanticEditor, note?: string): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const select = document.createElement('select');
@@ -790,6 +1089,12 @@ const renderSemanticEditor = (): void => {
 			draw();
 		});
 		label.append(select);
+		if (note) {
+			const hint: HTMLElement = document.createElement('span');
+			hint.className = 'field-note';
+			hint.textContent = note;
+			label.append(hint);
+		}
 		host.append(label);
 	};
 	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
@@ -862,14 +1167,95 @@ const renderSemanticEditor = (): void => {
 		});
 	}
 
+	if ('geometry' in element) {
+		const defaults = wayfindingPolygonPresentationDefaults(element.type);
+		const appearanceHeading: HTMLHeadingElement = document.createElement('h3');
+		appearanceHeading.className = 'public-details-heading';
+		appearanceHeading.textContent = 'Map appearance';
+		const appearanceFields: HTMLDivElement = document.createElement('div');
+		appearanceFields.className = 'appearance-fields';
+		textField('Fill color', element.presentation?.fillColor ?? defaults.color, (value): void => {
+			element.presentation ??= {};
+			element.presentation.fillColor = value;
+		}, 'color', appearanceFields);
+		textField('Opacity %', String(Math.round((element.presentation?.fillOpacity ?? defaults.opacity) * 100)), (value): void => {
+			element.presentation ??= {};
+			element.presentation.fillOpacity = Math.min(1, Math.max(0, (Number(value) || 0) / 100));
+		}, 'number', appearanceFields);
+		textField('3D visual height', String(element.presentation?.extrusionHeight ?? defaults.height), (value): void => {
+			element.presentation ??= {};
+			element.presentation.extrusionHeight = Math.min(100, Math.max(0, Number(value) || 0));
+		}, 'number', appearanceFields, '0 is flat; 100 is the tallest visual profile. This is a design scale, not metres.');
+		semanticEditor.append(appearanceHeading, appearanceFields);
+
+		const heading: HTMLHeadingElement = document.createElement('h3');
+		heading.className = 'public-details-heading';
+		heading.textContent = 'Shape points';
+		const status: HTMLParagraphElement = document.createElement('p');
+		status.className = 'shape-point-status';
+		status.textContent = selectedSemanticVertexIndex === undefined
+			? `${element.geometry.length} points. Click a white corner handle to select it.`
+			: `Point ${selectedSemanticVertexIndex + 1} of ${element.geometry.length} selected. Drag it or use the arrow keys to move it.`;
+		const actions: HTMLDivElement = document.createElement('div');
+		actions.className = 'shape-point-actions';
+		const addPoint: HTMLButtonElement = document.createElement('button');
+		addPoint.type = 'button';
+		addPoint.textContent = insertPointForSemanticId === element.id ? 'Cancel add point' : 'Add point on edge';
+		addPoint.classList.toggle('active', insertPointForSemanticId === element.id);
+		addPoint.addEventListener('click', (): void => {
+			insertPointForSemanticId = insertPointForSemanticId === element.id ? undefined : element.id;
+			coverageStatus.textContent = insertPointForSemanticId
+				? 'Click the polygon edge where the new point should be inserted.'
+				: 'Point insertion cancelled.';
+			renderSemanticEditor();
+			draw();
+		});
+		const deletePoint: HTMLButtonElement = document.createElement('button');
+		deletePoint.type = 'button';
+		deletePoint.className = 'danger';
+		deletePoint.textContent = 'Delete selected point';
+		deletePoint.disabled = selectedSemanticVertexIndex === undefined;
+		deletePoint.addEventListener('click', (): void => { deleteSelectedSemanticVertex(); });
+		actions.append(addPoint, deletePoint);
+		semanticEditor.append(heading, status, actions);
+		if (element.type === 'walkable') {
+			const exclusion: HTMLButtonElement = document.createElement('button');
+			exclusion.type = 'button';
+			exclusion.textContent = 'Draw blocked island inside';
+			exclusion.title = 'Create an obstacle over furniture, planters, voids, or other non-walkable areas without redrawing the surrounding walkable polygon.';
+			exclusion.addEventListener('click', (): void => {
+				activateTool('obstacle');
+				coverageStatus.textContent = 'Draw around the blocked island. Routes will treat authored blocked areas as exclusions.';
+			});
+			semanticEditor.append(exclusion);
+		}
+	}
+
 	if (!destination && 'label' in element && typeof element.label === 'string') textField('Label', element.label, (value): void => {
 		element.label = value;
 	});
 	if (element.type === 'door') {
 		const locations: WayfindingStudioPolygonElement[] = currentElements().filter((item: WayfindingStudioElement): item is WayfindingStudioPolygonElement => item.type === 'location');
-		selectField('Location', [['', 'Unassigned'], ...locations.map((location): [string, string] => [location.id, location.label ?? location.id])], element.locationId ?? '', (value): void => { element.locationId = value || undefined; });
-		textField('Angle', String(element.angle), (value): void => { element.angle = Number(value) || 0; }, 'number');
-		textField('Length', String(element.length), (value): void => { element.length = Math.max(4, Number(value) || 4); }, 'number');
+		selectField('Connected room / area', [['', 'Unassigned'], ...locations.map((location): [string, string] => [location.id, location.label ?? location.id])], element.locationId ?? '', (value): void => { element.locationId = value || undefined; }, semanticEditor, 'Links this entrance to its destination. Route guidance terminates at the door center.');
+		textField('Rotation (degrees)', String(element.angle), (value): void => { element.angle = Number(value) || 0; }, 'number', semanticEditor, 'Rotate the door marker to align it with the wall. This also records the entrance orientation.');
+		const rotationActions: HTMLDivElement = document.createElement('div');
+		rotationActions.className = 'shape-point-actions';
+		for (const [label, angle] of [['Horizontal', 0], ['Vertical', 90], ['-15 deg', element.angle - 15], ['+15 deg', element.angle + 15]] as const) {
+			const rotate: HTMLButtonElement = document.createElement('button');
+			rotate.type = 'button';
+			rotate.textContent = label;
+			rotate.addEventListener('click', (): void => {
+				const before: HistoryState = captureHistoryState();
+				element.angle = ((angle % 360) + 360) % 360;
+				syncStudioGraph();
+				recordHistory(before);
+				renderSemanticEditor();
+				draw();
+			});
+			rotationActions.append(rotate);
+		}
+		semanticEditor.append(rotationActions);
+		textField('Marker length', String(element.length), (value): void => { element.length = Math.max(4, Number(value) || 4); }, 'number');
 	} else if (element.type === 'origin') {
 		textField('Screen id', element.screenId, (value): void => { element.screenId = value; });
 		textField('Facing degrees', String(element.facingDegrees), (value): void => { element.facingDegrees = Number(value) || 0; }, 'number');
@@ -969,6 +1355,8 @@ const updateSelectedDestination = (field: keyof DestinationRow, value: unknown):
 
 		if (selectedOption) selectedOption.textContent = [stringValue(row.mapNumber), row.name].filter(Boolean).join(' - ');
 	}
+	clearSimulatedRoute('Destination details changed. Simulate the route again.');
+	scheduleAutosave();
 };
 
 const edgePoints = (edge: WayfindingEdge): WayfindingPoint[] => {
@@ -1008,7 +1396,11 @@ const nudgeSelectedSemantic = (dx: number, dy: number): void => {
 	if (!element) return;
 	const before: HistoryState = captureHistoryState();
 	if ('geometry' in element) {
-		element.geometry = element.geometry.map((point: WayfindingPoint): WayfindingPoint => ({ x: point.x + dx, y: point.y + dy }));
+		if (selectedSemanticVertexIndex !== undefined) {
+			const point: WayfindingPoint | undefined = element.geometry[selectedSemanticVertexIndex];
+			if (!point) return;
+			element.geometry[selectedSemanticVertexIndex] = { x: point.x + dx, y: point.y + dy };
+		} else element.geometry = element.geometry.map((point: WayfindingPoint): WayfindingPoint => ({ x: point.x + dx, y: point.y + dy }));
 	} else {
 		element.point = { x: element.point.x + dx, y: element.point.y + dy };
 	}
@@ -1066,6 +1458,127 @@ const pixelColorAt = (x: number, y: number): Pick<ColorSample, 'r' | 'g' | 'b'> 
 	const index: number = (pixelY * sourceImage.naturalWidth + pixelX) * 4;
 
 	return { r: sourcePixels.data[index], g: sourcePixels.data[index + 1], b: sourcePixels.data[index + 2] };
+};
+
+const colorDistance = (
+	left: Pick<ColorSample, 'r' | 'g' | 'b'>,
+	right: Pick<ColorSample, 'r' | 'g' | 'b'>
+): number => Math.hypot(left.r - right.r, left.g - right.g, left.b - right.b);
+
+const edgeStrengthAt = (x: number, y: number): number => {
+	const left = pixelColorAt(x - 1, y);
+	const right = pixelColorAt(x + 1, y);
+	const top = pixelColorAt(x, y - 1);
+	const bottom = pixelColorAt(x, y + 1);
+	if (!left || !right || !top || !bottom) return 0;
+
+	return colorDistance(left, right) + colorDistance(top, bottom);
+};
+
+const snapPointToSourceEdge = (point: WayfindingPoint): WayfindingPoint => {
+	if (!snapToEdgesInput.checked || !sourcePixels || !sourceImage) return { ...point };
+	const radius: number = Number(snapRadiusInput.value);
+	const stride: number = radius > 18 ? 2 : 1;
+	let best: WayfindingPoint = { ...point };
+	let bestScore = edgeStrengthAt(point.x, point.y);
+
+	for (let y = Math.round(point.y - radius); y <= point.y + radius; y += stride) {
+		for (let x = Math.round(point.x - radius); x <= point.x + radius; x += stride) {
+			const distance: number = Math.hypot(x - point.x, y - point.y);
+			if (distance > radius) continue;
+			const score: number = edgeStrengthAt(x, y) - distance * 3;
+			if (score > bestScore) {
+				best = { x, y };
+				bestScore = score;
+			}
+		}
+	}
+
+	return bestScore >= 55 ? best : { ...point };
+};
+
+interface BoundaryEdge {
+	end: [number, number];
+	start: [number, number];
+}
+
+const polygonArea = (points: WayfindingPoint[]): number => points.reduce((area: number, point: WayfindingPoint, index: number): number => {
+	const next: WayfindingPoint = points[(index + 1) % points.length];
+
+	return area + point.x * next.y - next.x * point.y;
+}, 0) / 2;
+
+const detectFlatRegionBoundary = (point: WayfindingPoint): WayfindingPoint[] | undefined => {
+	if (!sourceImage || !sourcePixels) return undefined;
+	const gridSize: number = Math.max(2, Math.round(Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight) / 900));
+	const columns: number = Math.ceil(sourceImage.naturalWidth / gridSize);
+	const rows: number = Math.ceil(sourceImage.naturalHeight / gridSize);
+	const seedColumn: number = Math.max(0, Math.min(columns - 1, Math.floor(point.x / gridSize)));
+	const seedRow: number = Math.max(0, Math.min(rows - 1, Math.floor(point.y / gridSize)));
+	const seedColor = pixelColorAt((seedColumn + 0.5) * gridSize, (seedRow + 0.5) * gridSize);
+	if (!seedColor) return undefined;
+	const region = new Uint8Array(columns * rows);
+	const queued = new Uint8Array(columns * rows);
+	const queue: Array<[number, number]> = [[seedColumn, seedRow]];
+	queued[seedRow * columns + seedColumn] = 1;
+	const threshold: number = Math.max(8, tolerance());
+
+	for (let cursor = 0; cursor < queue.length; cursor += 1) {
+		const [column, row] = queue[cursor];
+		const index: number = row * columns + column;
+		const color = pixelColorAt((column + 0.5) * gridSize, (row + 0.5) * gridSize);
+		if (!color || colorDistance(color, seedColor) > threshold) continue;
+		region[index] = 1;
+		for (const [nextColumn, nextRow] of [[column - 1, row], [column + 1, row], [column, row - 1], [column, row + 1]] as Array<[number, number]>) {
+			if (nextColumn < 0 || nextRow < 0 || nextColumn >= columns || nextRow >= rows) continue;
+			const nextIndex: number = nextRow * columns + nextColumn;
+			if (queued[nextIndex] === 1) continue;
+			queued[nextIndex] = 1;
+			queue.push([nextColumn, nextRow]);
+		}
+	}
+
+	const regionSize: number = region.reduce((sum: number, value: number): number => sum + value, 0);
+	if (regionSize < 12 || regionSize > columns * rows * 0.48) return undefined;
+	const boundaryEdges: BoundaryEdge[] = [];
+	const inside = (column: number, row: number): boolean => column >= 0 && row >= 0 && column < columns && row < rows && region[row * columns + column] === 1;
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			if (!inside(column, row)) continue;
+			if (!inside(column, row - 1)) boundaryEdges.push({ start: [column, row], end: [column + 1, row] });
+			if (!inside(column + 1, row)) boundaryEdges.push({ start: [column + 1, row], end: [column + 1, row + 1] });
+			if (!inside(column, row + 1)) boundaryEdges.push({ start: [column + 1, row + 1], end: [column, row + 1] });
+			if (!inside(column - 1, row)) boundaryEdges.push({ start: [column, row + 1], end: [column, row] });
+		}
+	}
+	const key = ([x, y]: [number, number]): string => `${x}:${y}`;
+	const outgoing = new Map<string, number[]>();
+	for (const [index, edge] of boundaryEdges.entries()) outgoing.set(key(edge.start), [...(outgoing.get(key(edge.start)) ?? []), index]);
+	const unused = new Set<number>(boundaryEdges.map((_, index: number): number => index));
+	const loops: WayfindingPoint[][] = [];
+
+	while (unused.size > 0) {
+		const firstIndex: number = unused.values().next().value as number;
+		const first: BoundaryEdge = boundaryEdges[firstIndex];
+		const loop: WayfindingPoint[] = [{ x: first.start[0] * gridSize, y: first.start[1] * gridSize }];
+		let edgeIndex: number | undefined = firstIndex;
+		let guard = 0;
+		while (edgeIndex !== undefined && guard < boundaryEdges.length + 1) {
+			guard += 1;
+			const edge: BoundaryEdge = boundaryEdges[edgeIndex];
+			unused.delete(edgeIndex);
+			loop.push({ x: edge.end[0] * gridSize, y: edge.end[1] * gridSize });
+			if (key(edge.end) === key(first.start)) break;
+			edgeIndex = (outgoing.get(key(edge.end)) ?? []).find((candidate: number): boolean => unused.has(candidate));
+		}
+		if (loop.length >= 4) loops.push(loop);
+	}
+
+	const outer: WayfindingPoint[] | undefined = loops.sort((left, right): number => Math.abs(polygonArea(right)) - Math.abs(polygonArea(left)))[0];
+	if (!outer) return undefined;
+	const simplified: WayfindingPoint[] = simplifyGeometry(outer.slice(0, -1), Math.max(gridSize * 1.5, 3));
+
+	return simplified.length >= 3 ? simplified : undefined;
 };
 
 const colorMatches = (column: number, row: number): boolean => {
@@ -1146,6 +1659,10 @@ const paintMask = (point: ImagePoint, include: boolean): void => {
 };
 
 const pointWalkable = (point: WayfindingPoint): boolean => {
+	const insideAuthoredObstacle: boolean = currentElements().some((element: WayfindingStudioElement): boolean =>
+		element.type === 'obstacle' && pointInPolygon(point, element.geometry)
+	);
+	if (insideAuthoredObstacle) return false;
 	const column: number = Math.floor(point.x / cellSize());
 	const row: number = Math.floor(point.y / cellSize());
 
@@ -1193,10 +1710,12 @@ const drawSemanticElements = (): void => {
 	for (const element of currentElements()) {
 		if (!layerVisible(element.type)) continue;
 		const selected: boolean = element.id === selectedSemanticId;
+		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
+		const polygonDefaults = polygon ? wayfindingPolygonPresentationDefaults(polygon.type) : undefined;
 		context.save();
 		context.lineWidth = (selected ? 5 : 2.5) / scale;
-		context.strokeStyle = selected ? '#ffe06c' : colors[element.type];
-		context.fillStyle = `${colors[element.type]}33`;
+		context.strokeStyle = selected ? '#ffe06c' : polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.color : colors[element.type];
+		context.fillStyle = polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.color : colors[element.type];
 		if (element.type === 'icon' || element.type === 'logo') {
 			const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === element.assetId);
 			if (asset) {
@@ -1209,15 +1728,24 @@ const drawSemanticElements = (): void => {
 			context.moveTo(element.geometry[0].x, element.geometry[0].y);
 			for (const vertex of element.geometry.slice(1)) context.lineTo(vertex.x, vertex.y);
 			context.closePath();
+			context.globalAlpha = element.presentation?.fillOpacity ?? polygonDefaults?.opacity ?? 0.2;
 			context.fill();
+			context.globalAlpha = 1;
 			context.stroke();
 			if (selected) {
 				context.fillStyle = '#fffdf6';
-				for (const vertex of element.geometry) {
+				for (const [index, vertex] of element.geometry.entries()) {
 					context.beginPath();
-					context.arc(vertex.x, vertex.y, 7 / scale, 0, Math.PI * 2);
+					context.arc(vertex.x, vertex.y, (index === selectedSemanticVertexIndex ? 10 : 7) / scale, 0, Math.PI * 2);
 					context.fill();
 					context.stroke();
+					if (index === selectedSemanticVertexIndex) {
+						context.beginPath();
+						context.fillStyle = '#17201f';
+						context.arc(vertex.x, vertex.y, 3 / scale, 0, Math.PI * 2);
+						context.fill();
+						context.fillStyle = '#fffdf6';
+					}
 				}
 			}
 		} else if (element.type === 'door') {
@@ -1331,18 +1859,18 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 	draw();
 };
 
-const finishSemanticPolygon = (): void => {
-	if (!semanticDraft || semanticDraft.points.length < 3) return;
+const commitSemanticPolygon = (type: SemanticPolygonTool, points: WayfindingPoint[]): void => {
+	if (points.length < 3) return;
 	const before: HistoryState = captureHistoryState();
-	const id: string = nextId(semanticDraft.type);
+	const id: string = nextId(type);
 	const element: WayfindingStudioPolygonElement = {
 		floorId: currentFloorId,
-		geometry: semanticDraft.points,
+		geometry: points,
 		id,
-		label: semanticDraft.type === 'location' ? `Location ${id.split('-').at(-1)}` : undefined,
+		label: type === 'location' ? `Location ${id.split('-').at(-1)}` : undefined,
 		provenance: 'reviewer-authored',
 		status: 'proposed',
-		type: semanticDraft.type
+		type
 	};
 	if (element.type === 'location') {
 		element.destinationId = id;
@@ -1357,6 +1885,11 @@ const finishSemanticPolygon = (): void => {
 	renderSemanticEditor();
 	renderStudioControls();
 	draw();
+};
+
+const finishSemanticPolygon = (): void => {
+	if (!semanticDraft || semanticDraft.points.length < 3) return;
+	commitSemanticPolygon(semanticDraft.type, semanticDraft.points);
 };
 
 const draw = (): void => {
@@ -1486,6 +2019,7 @@ const draw = (): void => {
 	}
 
 	context.restore();
+	refresh3d();
 };
 
 const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
@@ -1610,6 +2144,8 @@ const selectEdge = (edgeId: string | undefined): void => {
 	selectedEdgeId = edgeId;
 	if (edgeId) {
 		selectedSemanticId = undefined;
+		selectedSemanticVertexIndex = undefined;
+		insertPointForSemanticId = undefined;
 		renderSemanticEditor();
 	}
 	insertPointForEdge = undefined;
@@ -1708,6 +2244,44 @@ const cancelEdgeDraft = (): void => {
 	draw();
 };
 
+interface RouteSegmentPreset {
+	kind: WayfindingEdgeKind;
+	label: string;
+	traversal: WayfindingTraversal;
+	value: string;
+}
+
+const ROUTE_SEGMENT_PRESETS: RouteSegmentPreset[] = [
+	{ kind: 'walk', label: 'Indoor corridor', traversal: 'indoor-corridor', value: 'indoor' },
+	{ kind: 'walk', label: 'Open indoor area', traversal: 'open-area', value: 'open' },
+	{ kind: 'outdoor', label: 'Outdoor path', traversal: 'outdoor-path', value: 'outdoor' },
+	{ kind: 'outdoor', label: 'Pedestrian crossing', traversal: 'crossing', value: 'crossing' },
+	{ kind: 'walk', label: 'Doorway or portal', traversal: 'portal', value: 'portal' },
+	{ kind: 'stairs', label: 'Stairs', traversal: 'transition', value: 'stairs' },
+	{ kind: 'elevator', label: 'Elevator', traversal: 'transition', value: 'elevator' },
+	{ kind: 'escalator', label: 'Escalator', traversal: 'transition', value: 'escalator' },
+	{ kind: 'shuttle', label: 'Shuttle', traversal: 'transition', value: 'shuttle' }
+];
+
+const routeNodeName = (nodeId: string): string => {
+	const node: WayfindingNode | undefined = graphNode(nodeId);
+
+	if (!node) return 'Missing point';
+	if (node.locationId) return destinationRows().find((destination: DestinationRow): boolean => destination.id === node.locationId)?.name ?? node.locationId;
+	if (node.semanticElementId) {
+		const element: WayfindingStudioElement | undefined = studioProject.floors
+			.flatMap((floor): WayfindingStudioElement[] => floor.elements)
+			.find((candidate): boolean => candidate.id === node.semanticElementId);
+
+		if (element && 'label' in element && element.label) return element.label;
+		if (element?.type === 'transition') return element.label;
+	}
+
+	return node.kind === 'transition' ? 'Floor connection' : 'Route junction';
+};
+
+const routeSegmentName = (edge: WayfindingEdge): string => `${routeNodeName(edge.from)} to ${routeNodeName(edge.to)}`;
+
 const renderReview = (): void => {
 	const edges: WayfindingEdge[] = graph?.edges ?? [];
 	const hasWalkableMask: boolean = mask.some((value: number): boolean => value === 1);
@@ -1718,12 +2292,12 @@ const renderReview = (): void => {
 		? project.guidance.targetMode === 'route' ? 'NO MASK' : 'MASK OPTIONAL'
 		: maskReviewStatus === 'confirmed' ? 'MASK CONFIRMED' : 'MASK NEEDS REVIEW';
 	maskStatus.dataset.confirmed = String(hasWalkableMask && maskReviewStatus === 'confirmed');
-	edgeSummary.textContent = `${edges.length} edges`;
+	edgeSummary.textContent = `${edges.length} route segment${edges.length === 1 ? '' : 's'}`;
 	edgeFailures.textContent = !hasWalkableMask
 		? project.guidance.targetMode === 'route' ? 'Extract or load a mask to evaluate routes' : `Walkable mask is optional for ${project.guidance.targetMode} delivery`
-		: invalidEdgeIds.size === 0 ? 'All edge corridors are contained' : `${invalidEdgeIds.size} edge(s) leave walkable space`;
+		: invalidEdgeIds.size === 0 ? 'All route segments stay inside walkable space' : `${invalidEdgeIds.size} route segment${invalidEdgeIds.size === 1 ? '' : 's'} leave walkable space`;
 	coverageStatus.textContent = graph && hasWalkableMask
-		? `${edges.length - invalidEdgeIds.size}/${edges.length} edges contained`
+		? `${edges.length - invalidEdgeIds.size}/${edges.length} route segments contained`
 		: sourceImage
 			? 'Background loaded; author semantic layers'
 			: `${currentElements().length} semantic element(s) on ${currentFloor().name}`;
@@ -1734,69 +2308,110 @@ const renderReview = (): void => {
 		button.dataset.valid = String(!invalidEdgeIds.has(edge.id));
 		button.className = edge.id === selectedEdgeId ? 'active' : '';
 		button.innerHTML = `<i></i><strong></strong><small></small>`;
-		button.querySelector('strong')!.textContent = edge.id;
-		button.querySelector('small')!.textContent = edge.reviewStatus ?? 'unreviewed';
+		button.querySelector('strong')!.textContent = routeSegmentName(edge);
+		const floorName: string = studioProject.floors.find((floor): boolean => floor.id === graphNode(edge.from)?.levelId)?.name ?? 'Unknown floor';
+		button.querySelector('small')!.textContent = `${floorName} / ${edge.reviewStatus === 'confirmed' ? 'Reviewed' : 'Needs review'}`;
 		button.addEventListener('click', (): void => { tool = 'graph'; setActiveTool(); selectEdge(edge.id); });
 
 		return button;
 	}));
 
 	if (!selected) {
-		selectedEdgeHost.innerHTML = '<p>Select an edge on the map to inspect it.</p>';
+		selectedEdgeHost.innerHTML = '<p>Select a route segment on the map to inspect it.</p>';
 		updateEditActions();
 
 		return;
 	}
 
 	selectedEdgeHost.innerHTML = `
-		<h2></h2>
+		<h2>Route segment</h2>
+		<p class="segment-summary"></p>
 		<div class="edge-fields">
-			<label>Kind<select data-edge-field="kind"><option value="walk">Walk</option><option value="outdoor">Outdoor</option><option value="stairs">Stairs</option><option value="elevator">Elevator</option><option value="escalator">Escalator</option><option value="shuttle">Shuttle</option></select></label>
-			<label>Traversal<select data-edge-field="traversal"><option value="outdoor-path">Outdoor path</option><option value="crossing">Crossing</option><option value="indoor-corridor">Indoor corridor</option><option value="open-area">Open area</option><option value="portal">Portal</option><option value="transition">Transition</option></select></label>
-			<label>Step-free status<select data-edge-field="accessible"><option value="false">Unverified / no</option><option value="true">Verified step-free</option></select></label>
-			<label>Corridor width<input data-edge-field="corridorWidth" type="number" min="0.1" step="0.5"></label>
-			<label class="check"><input data-edge-field="bidirectional" type="checkbox"> Bidirectional</label>
+			<label>Segment type<select data-edge-field="preset"></select></label>
+			<label>Direction<select data-edge-field="direction"><option value="both">Both directions</option><option value="one">From start to end</option></select></label>
+			<label class="check"><input data-edge-field="accessible" type="checkbox"> Verified step-free</label>
 		</div>
-		<dl><dt>Review</dt><dd></dd><dt>Mask failures</dt><dd></dd></dl>
-		<button type="button" data-action="insert">Insert geometry point</button>
-		<button type="button" data-action="confirm">Confirm contained geometry</button>
-		<button type="button" data-action="delete" class="danger">Delete edge</button>`;
-	selectedEdgeHost.querySelector('h2')!.textContent = selected.id;
-	const values: NodeListOf<HTMLElement> = selectedEdgeHost.querySelectorAll('dd');
-	values[0].textContent = selected.reviewStatus ?? 'unreviewed';
-	values[1].textContent = String(invalidEdgeIds.has(selected.id) ? edgeFailuresFor(selected).length : 0);
+		<div class="segment-health"><div><span>Review</span><strong data-segment-review></strong></div><div><span>Walkable check</span><strong data-segment-mask></strong></div></div>
+		<button type="button" data-action="insert">Add a bend</button>
+		<button type="button" data-action="confirm">Mark segment as reviewed</button>
+		<details class="segment-advanced">
+			<summary>Advanced segment settings</summary>
+			<span class="selection-id" data-segment-id></span>
+			<div class="edge-fields">
+				<label>Technical kind<select data-edge-field="kind"><option value="walk">Walk</option><option value="outdoor">Outdoor</option><option value="stairs">Stairs</option><option value="elevator">Elevator</option><option value="escalator">Escalator</option><option value="shuttle">Shuttle</option></select></label>
+				<label>Traversal model<select data-edge-field="traversal"><option value="outdoor-path">Outdoor path</option><option value="crossing">Crossing</option><option value="indoor-corridor">Indoor corridor</option><option value="open-area">Open area</option><option value="portal">Portal</option><option value="transition">Transition</option></select></label>
+				<label>Corridor width<input data-edge-field="corridorWidth" type="number" min="0.1" step="0.5"></label>
+			</div>
+		</details>
+		<button type="button" data-action="delete" class="danger">Delete route segment</button>`;
+	selectedEdgeHost.querySelector<HTMLElement>('.segment-summary')!.textContent = routeSegmentName(selected);
+	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-review]')!.textContent = selected.reviewStatus === 'confirmed' ? 'Reviewed' : 'Needs review';
+	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-mask]')!.textContent = invalidEdgeIds.has(selected.id) ? `${edgeFailuresFor(selected).length} point failures` : hasWalkableMask ? 'Contained' : 'Not checked';
+	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-id]')!.textContent = selected.id;
+	const presetSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="preset"]')!;
+	const directionSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="direction"]')!;
 	const kindSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="kind"]')!;
 	const traversalSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="traversal"]')!;
-	const accessibleSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="accessible"]')!;
+	const accessibleInput = selectedEdgeHost.querySelector<HTMLInputElement>('[data-edge-field="accessible"]')!;
 	const corridorWidthInput = selectedEdgeHost.querySelector<HTMLInputElement>('[data-edge-field="corridorWidth"]')!;
-	const bidirectionalInput = selectedEdgeHost.querySelector<HTMLInputElement>('[data-edge-field="bidirectional"]')!;
+	for (const preset of ROUTE_SEGMENT_PRESETS) presetSelect.add(new Option(preset.label, preset.value));
+	const selectedPreset: RouteSegmentPreset | undefined = ROUTE_SEGMENT_PRESETS.find((preset): boolean => preset.kind === selected.kind && preset.traversal === (selected.traversal ?? 'open-area'));
+	if (!selectedPreset) presetSelect.add(new Option('Custom technical settings', 'custom'));
+	presetSelect.value = selectedPreset?.value ?? 'custom';
+	directionSelect.value = selected.bidirectional ? 'both' : 'one';
+	accessibleInput.checked = selected.accessible;
 	kindSelect.value = selected.kind;
 	traversalSelect.value = selected.traversal ?? 'open-area';
-	accessibleSelect.value = String(selected.accessible);
 	corridorWidthInput.value = String(selected.corridorWidth ?? cellSize());
-	bidirectionalInput.checked = selected.bidirectional;
-	const updateEdge = (): void => {
+	const updateEdge = (before: HistoryState): void => {
 		selected.reviewStatus = 'proposed';
+		syncStudioGraph();
+		recordHistory(before);
 		renderReview();
 		draw();
 	};
-	kindSelect.addEventListener('change', (): void => { selected.kind = kindSelect.value as WayfindingEdgeKind; updateEdge(); });
-	traversalSelect.addEventListener('change', (): void => { selected.traversal = traversalSelect.value as WayfindingTraversal; updateEdge(); });
-	accessibleSelect.addEventListener('change', (): void => { selected.accessible = accessibleSelect.value === 'true'; updateEdge(); });
+	presetSelect.addEventListener('change', (): void => {
+		const preset: RouteSegmentPreset | undefined = ROUTE_SEGMENT_PRESETS.find((candidate): boolean => candidate.value === presetSelect.value);
+		if (!preset) return;
+		const before: HistoryState = captureHistoryState();
+		selected.kind = preset.kind;
+		selected.traversal = preset.traversal;
+		updateEdge(before);
+	});
+	directionSelect.addEventListener('change', (): void => {
+		const before: HistoryState = captureHistoryState();
+		selected.bidirectional = directionSelect.value === 'both';
+		updateEdge(before);
+	});
+	accessibleInput.addEventListener('change', (): void => {
+		const before: HistoryState = captureHistoryState();
+		selected.accessible = accessibleInput.checked;
+		updateEdge(before);
+	});
+	kindSelect.addEventListener('change', (): void => {
+		const before: HistoryState = captureHistoryState();
+		selected.kind = kindSelect.value as WayfindingEdgeKind;
+		updateEdge(before);
+	});
+	traversalSelect.addEventListener('change', (): void => {
+		const before: HistoryState = captureHistoryState();
+		selected.traversal = traversalSelect.value as WayfindingTraversal;
+		updateEdge(before);
+	});
 	corridorWidthInput.addEventListener('change', (): void => {
+		const before: HistoryState = captureHistoryState();
 		const width: number = Number(corridorWidthInput.value);
 
 		if (Number.isFinite(width) && width > 0) selected.corridorWidth = width;
-		updateEdge();
+		updateEdge(before);
 	});
-	bidirectionalInput.addEventListener('change', (): void => { selected.bidirectional = bidirectionalInput.checked; updateEdge(); });
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="insert"]')!.addEventListener('click', (): void => {
 		insertPointForEdge = selected.id;
-		coverageStatus.textContent = 'Tap the map to insert a point on the selected edge';
+		coverageStatus.textContent = 'Click the route segment where you want to add a bend.';
 	});
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="confirm"]')!.addEventListener('click', (): void => {
 		if (mask.length === 0 || maskReviewStatus !== 'confirmed') {
-			coverageStatus.textContent = 'Confirm the independently reviewed walkable mask before confirming an edge';
+			coverageStatus.textContent = 'Confirm the independently reviewed walkable area before reviewing this route segment.';
 
 			return;
 		}
@@ -1804,7 +2419,7 @@ const renderReview = (): void => {
 		const failures: WayfindingPoint[] = edgeFailuresFor(selected);
 
 		if (failures.length > 0) {
-			coverageStatus.textContent = `${selected.id} leaves walkable space at ${failures.length} sampled point(s)`;
+			coverageStatus.textContent = `This route segment leaves walkable space at ${failures.length} sampled point(s).`;
 
 			return;
 		}
@@ -1830,10 +2445,19 @@ const activateTool = (nextTool: Tool): void => {
 	if (tool === 'draw' && nextTool !== 'draw') cancelEdgeDraft();
 	if (semanticDraft && nextTool !== semanticDraft.type) {
 		semanticDraft = undefined;
+		lassoDrawing = false;
 		semanticDraftHost.hidden = true;
+	}
+	if (nextTool !== 'select') {
+		selectedSemanticVertexIndex = undefined;
+		insertPointForSemanticId = undefined;
 	}
 	tool = nextTool;
 	setActiveTool();
+	if ((nextTool === 'icon' || nextTool === 'logo') && !pendingMediaAssetId) {
+		coverageStatus.textContent = `Choose an image, then click the map to place the ${nextTool}.`;
+		semanticMediaFile.click();
+	}
 	draw();
 };
 
@@ -1847,7 +2471,11 @@ const restoreTemporaryPan = (): void => {
 
 const saveStudioProject = (): void => {
 	syncStudioGraph();
+	void persistAutosave(true);
+	portableSnapshot = JSON.stringify(studioProject);
 	downloadText(`${studioProject.projectId}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
+	renderProjectContext();
+	coverageStatus.textContent = 'Downloaded a portable project file containing the current work.';
 };
 
 const downloadJson = (filename: string, value: unknown): void => {
@@ -2009,9 +2637,20 @@ const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> 
 	return file ? JSON.parse(await file.text()) as T : undefined;
 };
 
-const insertSemanticVertex = (element: WayfindingStudioPolygonElement, point: WayfindingPoint): void => {
+const closestPointOnSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): WayfindingPoint => {
+	const dx: number = right.x - left.x;
+	const dy: number = right.y - left.y;
+	const lengthSquared: number = dx * dx + dy * dy;
+	if (lengthSquared === 0) return { ...left };
+	const ratio: number = Math.max(0, Math.min(1, ((point.x - left.x) * dx + (point.y - left.y) * dy) / lengthSquared));
+
+	return { x: left.x + dx * ratio, y: left.y + dy * ratio };
+};
+
+const insertSemanticVertex = (element: WayfindingStudioPolygonElement, point: WayfindingPoint): number | undefined => {
 	let segment = 1;
 	let minimumDistance = Number.POSITIVE_INFINITY;
+	let insertedPoint: WayfindingPoint = { ...point };
 	for (let index = 1; index <= element.geometry.length; index += 1) {
 		const left: WayfindingPoint = element.geometry[index - 1];
 		const right: WayfindingPoint = element.geometry[index % element.geometry.length];
@@ -2019,40 +2658,129 @@ const insertSemanticVertex = (element: WayfindingStudioPolygonElement, point: Wa
 		if (distance < minimumDistance) {
 			minimumDistance = distance;
 			segment = index;
+			insertedPoint = closestPointOnSegment(point, left, right);
 		}
 	}
-	if (minimumDistance > 24 / scale) return;
+	if (minimumDistance > 24 / scale) return undefined;
 	const before: HistoryState = captureHistoryState();
-	element.geometry.splice(segment, 0, { ...point });
+	element.geometry.splice(segment, 0, insertedPoint);
 	element.status = 'proposed';
 	touchWayfindingStudioProject(studioProject);
 	syncStudioGraph();
 	recordHistory(before);
 	renderStudioControls();
 	draw();
+
+	return segment;
+};
+
+const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Promise<void> => {
+	studioProject = parseWayfindingStudioProject(loaded);
+	project = studioProject.delivery;
+	graph = studioProject.graph;
+	destinationDocument = destinationDatasource();
+	destinationTableName = 'Destinations';
+	selectedDestinationId = studioProject.destinations[0]?.id;
+	selectedSemanticId = undefined;
+	selectedSemanticVertexIndex = undefined;
+	selectedEdgeId = undefined;
+	semanticDraft = undefined;
+	edgeDraft = undefined;
+	insertPointForEdge = undefined;
+	insertPointForSemanticId = undefined;
+	draggedSemantic = undefined;
+	draggedVertex = undefined;
+	simulatedRoute = undefined;
+	pendingMediaAssetId = undefined;
+	renderMediaAssetState();
+	clearHistory();
+	syncProjectControls();
+	renderProjectAssessment();
+	renderMetadataEditor();
+	await activateFloor(preferredFloorId ?? studioProject.floors[0].id);
+};
+
+const adoptCurrentProjectForAutosave = (savedAt?: string): void => {
+	pendingRecovery = undefined;
+	localRecovery.hidden = true;
+	autosaveEnabled = true;
+	synchronizeStudioState();
+	autosaveSnapshot = JSON.stringify(studioProject);
+	if (savedAt) {
+		lastLocalSaveAt = savedAt;
+		setAutosaveStatus(`SAVED ${savedTimeLabel(savedAt)}`, 'saved', `Recovered local work saved at ${new Date(savedAt).toLocaleString()}.`);
+	}
+	else {
+		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Changes are saved locally after a short pause. Use Save project for a portable file.');
+		void persistAutosave(true);
+	}
+};
+
+const initializeAutosave = async (): Promise<void> => {
+	if (typeof indexedDB === 'undefined') {
+		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', 'This browser does not provide local recovery storage. Use Save project frequently.');
+		return;
+	}
+	try {
+		autosaveDatabase = await openAutosaveDatabase();
+		const record: AutosaveRecord | undefined = await readAutosaveRecord(autosaveDatabase);
+		if (record) {
+			pendingRecovery = record;
+			localRecoverySummary.textContent = `${record.project.name}, saved ${new Date(record.savedAt).toLocaleString()}. Restore it or discard it before new edits are autosaved.`;
+			localRecovery.hidden = false;
+			setAutosaveStatus('RECOVERY FOUND', 'recovery', `Unsaved local work from ${new Date(record.savedAt).toLocaleString()} is available.`);
+			return;
+		}
+		autosaveEnabled = true;
+		synchronizeStudioState();
+		autosaveSnapshot = JSON.stringify(studioProject);
+		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Changes are saved locally after a short pause. Use Save project for a portable file.');
+	} catch (error) {
+		const detail: string = error instanceof Error ? error.message : 'Unknown storage error';
+		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', `${detail} Use Save project frequently.`);
+	}
+};
+
+const startNewProject = async (): Promise<void> => {
+	synchronizeStudioState();
+	const hasAuthoredWork: boolean = studioProject.assets.length > 0
+		|| studioProject.destinations.length > 0
+		|| studioProject.floors.some((floor: WayfindingStudioFloor): boolean => floor.elements.length > 0);
+	if (hasAuthoredWork && !window.confirm('Start a new project? Download the current project first if you need a portable copy. Browser recovery for the current project will be replaced.')) return;
+	if (autosaveDatabase) await deleteAutosaveRecord(autosaveDatabase);
+	pendingRecovery = undefined;
+	localRecovery.hidden = true;
+	await openStudioProject(createWayfindingStudioProject('wayfinding-project'));
+	projectOrigin = 'new';
+	openedProjectFileName = undefined;
+	portableSnapshot = undefined;
+	lastLocalSaveAt = undefined;
+	studioProjectFile.value = '';
+	imageFile.value = '';
+	adoptCurrentProjectForAutosave();
+	coverageStatus.textContent = 'New project ready. Add a floor background image to begin.';
+	renderProjectContext();
 };
 
 studioProjectFile.addEventListener('change', async (): Promise<void> => {
 	const loaded: unknown = await loadJsonFile<unknown>(studioProjectFile);
 	if (!loaded) return;
 	try {
-		studioProject = parseWayfindingStudioProject(loaded);
-		project = studioProject.delivery;
-		graph = studioProject.graph;
-		destinationDocument = destinationDatasource();
-		destinationTableName = 'Destinations';
-		selectedDestinationId = studioProject.destinations[0]?.id;
-		clearHistory();
-		syncProjectControls();
-		renderProjectAssessment();
-		renderMetadataEditor();
-		await activateFloor(studioProject.floors[0].id);
+		await openStudioProject(loaded);
+		projectOrigin = 'portable-file';
+		openedProjectFileName = studioProjectFile.files?.[0]?.name;
+		portableSnapshot = JSON.stringify(studioProject);
+		lastLocalSaveAt = undefined;
+		adoptCurrentProjectForAutosave();
 		coverageStatus.textContent = `Opened ${studioProject.name}`;
+		renderProjectContext();
 	} catch (error) {
 		studioValidation.textContent = error instanceof Error ? error.message : 'The Studio project could not be opened.';
 		studioValidation.dataset.allowed = 'false';
 	}
 });
+newProjectButton.addEventListener('click', (): void => { void startNewProject(); });
+openProjectButton.addEventListener('click', (): void => { studioProjectFile.click(); });
 
 semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 	const file: File | undefined = semanticMediaFile.files?.[0];
@@ -2060,10 +2788,12 @@ semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 	const id: string = nextId('asset');
 	studioProject.assets.push({ dataUrl: await readFileDataUrl(file), id, kind: 'icon', mimeType: file.type || 'image/png', name: file.name });
 	pendingMediaAssetId = id;
-	coverageStatus.textContent = `${file.name} ready to place as an icon or logo`;
+	scheduleAutosave();
+	renderMediaAssetState();
+	coverageStatus.textContent = `${file.name} is ready. Click the map to place the ${tool === 'logo' ? 'logo' : 'icon'}.`;
 });
 
-studioProjectName.addEventListener('input', (): void => { studioProject.name = studioProjectName.value.trim() || 'Wayfinding project'; touchWayfindingStudioProject(studioProject); });
+studioProjectName.addEventListener('input', (): void => { studioProject.name = studioProjectName.value.trim() || 'Wayfinding project'; touchWayfindingStudioProject(studioProject); scheduleAutosave(); });
 studioFloorName.addEventListener('input', (): void => { currentFloor().name = studioFloorName.value.trim() || currentFloorId; touchWayfindingStudioProject(studioProject); renderStudioControls(); });
 studioFloorSelect.addEventListener('change', async (): Promise<void> => { persistCurrentMask(); await activateFloor(studioFloorSelect.value); });
 requireElement<HTMLButtonElement>('#studio-add-floor').addEventListener('click', async (): Promise<void> => {
@@ -2122,23 +2852,100 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 	downloadText(`${studioProject.projectId}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
 });
 requireElement<HTMLButtonElement>('#semantic-finish').addEventListener('click', finishSemanticPolygon);
-requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => { semanticDraft = undefined; semanticDraftHost.hidden = true; draw(); });
+requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => {
+	semanticDraft = undefined;
+	lassoDrawing = false;
+	semanticDraftHost.hidden = true;
+	draw();
+});
+drawingModePoints.addEventListener('click', (): void => {
+	drawingMode = 'points';
+	renderDrawingMode();
+});
+drawingModeLasso.addEventListener('click', (): void => {
+	drawingMode = 'lasso';
+	renderDrawingMode();
+});
+drawingModeSmart.addEventListener('click', (): void => {
+	drawingMode = 'smart';
+	renderDrawingMode();
+});
+snapToEdgesInput.addEventListener('change', renderDrawingMode);
+snapRadiusInput.addEventListener('input', (): void => {
+	snapRadiusValue.value = snapRadiusInput.value;
+});
+chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
 for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.addEventListener('change', draw);
+showAllLayers.addEventListener('click', (): void => {
+	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = true;
+	draw();
+});
+hideAllLayers.addEventListener('click', (): void => {
+	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = false;
+	draw();
+});
 requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (): void => {
 	syncStudioGraph();
 	const startId: string = routeStart.value;
 	const destinationIdValue: string = routeDestination.value;
 	if (!startId || !destinationIdValue) {
 		routeResult.textContent = 'Add an origin and a routeable destination entrance first.';
+		routeClearButton.disabled = true;
 		return;
 	}
 	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationIdValue, { profile: routeProfile.value as 'standard' | 'step-free' });
-	if (!simulatedRoute) routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
+	if (!simulatedRoute) {
+		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
+		routeClearButton.disabled = true;
+	}
 	else {
 		const floors: string[] = [...new Set(simulatedRoute.nodeIds.map((id: string): string => studioProject.graph.nodes.find((node: WayfindingNode): boolean => node.id === id)?.levelId ?? ''))].filter(Boolean);
 		routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${floors.join(' -> ')}`;
+		routeClearButton.disabled = false;
 	}
 	draw();
+});
+routeClearButton.addEventListener('click', (): void => {
+	clearSimulatedRoute('Route preview cleared. Choose Simulate route to draw it again.');
+});
+for (const input of [routeStart, routeDestination, routeProfile]) {
+	input.addEventListener('change', (): void => {
+		if (simulatedRoute) clearSimulatedRoute('Route selection changed. Choose Simulate route to draw the new route.');
+	});
+}
+restoreAutosaveButton.addEventListener('click', async (): Promise<void> => {
+	if (!pendingRecovery) return;
+	const record: AutosaveRecord = pendingRecovery;
+	try {
+		await openStudioProject(record.project, record.currentFloorId);
+		projectOrigin = 'local-recovery';
+		openedProjectFileName = undefined;
+		portableSnapshot = undefined;
+		adoptCurrentProjectForAutosave(record.savedAt);
+		coverageStatus.textContent = `Restored local work for ${studioProject.name}`;
+		renderProjectContext();
+	} catch (error) {
+		const detail: string = error instanceof Error ? error.message : 'The local recovery draft is invalid.';
+		setAutosaveStatus('RESTORE FAILED', 'error', detail);
+		coverageStatus.textContent = detail;
+	}
+});
+discardAutosaveButton.addEventListener('click', async (): Promise<void> => {
+	if (!autosaveDatabase) return;
+	try {
+		await deleteAutosaveRecord(autosaveDatabase);
+		pendingRecovery = undefined;
+		localRecovery.hidden = true;
+		autosaveEnabled = true;
+		synchronizeStudioState();
+		autosaveSnapshot = JSON.stringify(studioProject);
+		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Local recovery was discarded. New changes will be saved locally.');
+		coverageStatus.textContent = 'Discarded the previous local recovery draft';
+		renderProjectContext();
+	} catch (error) {
+		const detail: string = error instanceof Error ? error.message : 'The local recovery draft could not be discarded.';
+		setAutosaveStatus('DISCARD FAILED', 'error', detail);
+	}
 });
 
 projectFile.addEventListener('change', async (): Promise<void> => {
@@ -2151,6 +2958,7 @@ projectFile.addEventListener('change', async (): Promise<void> => {
 		project = loaded;
 		syncProjectControls();
 		renderProjectAssessment();
+		scheduleAutosave();
 	} catch (error) {
 		projectAssessment.textContent = error instanceof Error ? error.message : 'The project contract is invalid.';
 		projectAssessment.dataset.allowed = 'false';
@@ -2171,6 +2979,7 @@ imageFile.addEventListener('change', async (): Promise<void> => {
 	currentFloor().height = sourceImage?.naturalHeight ?? currentFloor().height;
 	touchWayfindingStudioProject(studioProject);
 	renderStudioControls();
+	scheduleAutosave();
 });
 
 graphFile.addEventListener('change', async (): Promise<void> => {
@@ -2181,6 +2990,7 @@ graphFile.addEventListener('change', async (): Promise<void> => {
 	renderMetadataEditor();
 	renderReview();
 	draw();
+	scheduleAutosave();
 });
 
 maskFile.addEventListener('change', async (): Promise<void> => {
@@ -2191,6 +3001,7 @@ maskFile.addEventListener('change', async (): Promise<void> => {
 	currentFloor().walkableMask = document;
 	renderReview();
 	draw();
+	scheduleAutosave();
 });
 
 destinationFile.addEventListener('change', async (): Promise<void> => {
@@ -2211,6 +3022,7 @@ destinationFile.addEventListener('change', async (): Promise<void> => {
 
 	selectedDestinationId = destinationRows()[0]?.id;
 	renderMetadataEditor();
+	scheduleAutosave();
 });
 
 destinationSelect.addEventListener('change', (): void => {
@@ -2244,6 +3056,22 @@ undoButton.addEventListener('click', (): void => { void undo(); });
 redoButton.addEventListener('click', (): void => { void redo(); });
 deleteSelectionButton.addEventListener('click', deleteCurrentSelection);
 fitViewButton.addEventListener('click', fitView);
+view2dButton.addEventListener('click', (): void => { setViewMode('2d'); });
+view3dButton.addEventListener('click', (): void => { setViewMode('3d'); });
+reset3dViewButton.addEventListener('click', (): void => {
+	scene3d.resetCamera();
+	coverageStatus.textContent = currentFloor().camera3d ? 'Restored the saved 3D camera for this floor.' : 'Restored the default 3D camera.';
+});
+save3dViewButton.addEventListener('click', (): void => {
+	const camera = scene3d.getCameraState();
+
+	if (!camera) return;
+	const before: HistoryState = captureHistoryState();
+	currentFloor().camera3d = camera;
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	coverageStatus.textContent = `Saved the default 3D camera for ${currentFloor().name}.`;
+});
 const showShortcutHelp = (): void => { if (!shortcutDialog.open) shortcutDialog.showModal(); };
 shortcutHelpButton.addEventListener('click', showShortcutHelp);
 footerShortcutHelpButton.addEventListener('click', showShortcutHelp);
@@ -2285,10 +3113,17 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 		}
 		if (semanticDraft) {
 			semanticDraft = undefined;
+			lassoDrawing = false;
 			semanticDraftHost.hidden = true;
 		} else if (edgeDraft) cancelEdgeDraft();
+		else if (insertPointForSemanticId || selectedSemanticVertexIndex !== undefined) {
+			insertPointForSemanticId = undefined;
+			selectedSemanticVertexIndex = undefined;
+			renderSemanticEditor();
+		}
 		else {
 			selectedSemanticId = undefined;
+			selectedSemanticVertexIndex = undefined;
 			selectedEdgeId = undefined;
 			renderSemanticEditor();
 			renderReview();
@@ -2298,6 +3133,11 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 		return;
 	}
 	if (isEditingText || event.ctrlKey || event.metaKey || event.altKey) return;
+	if (event.key === '2' || event.key === '3') {
+		event.preventDefault();
+		setViewMode(event.key === '3' ? '3d' : '2d');
+		return;
+	}
 	if (event.key === '?' || (event.key === '/' && event.shiftKey)) {
 		event.preventDefault();
 		showShortcutHelp();
@@ -2401,7 +3241,10 @@ for (const input of [
 	reviewerIdInput,
 	reviewMethodInput
 ]) {
-	input.addEventListener(input === reviewerIdInput || input === projectIdInput ? 'input' : 'change', renderProjectAssessment);
+	input.addEventListener(input === reviewerIdInput || input === projectIdInput ? 'input' : 'change', (): void => {
+		renderProjectAssessment();
+		scheduleAutosave();
+	});
 }
 
 canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
@@ -2433,6 +3276,23 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		return;
 	}
 
+	if (insertPointForSemanticId) {
+		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === insertPointForSemanticId);
+		if (element && 'geometry' in element) {
+			const insertedIndex: number | undefined = insertSemanticVertex(element, imagePoint);
+			if (insertedIndex !== undefined) {
+				selectedSemanticId = element.id;
+				selectedSemanticVertexIndex = insertedIndex;
+				insertPointForSemanticId = undefined;
+				coverageStatus.textContent = `Added point ${insertedIndex + 1} to ${element.id}`;
+			} else coverageStatus.textContent = 'Click closer to the selected polygon edge, or choose Cancel add point.';
+		}
+		renderSemanticEditor();
+		draw();
+
+		return;
+	}
+
 	if (tool === 'sample') {
 		const color = pixelColorAt(imagePoint.x, imagePoint.y);
 
@@ -2447,24 +3307,43 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	} else if (tool === 'draw') {
 		authorEdgePoint(imagePoint);
 	} else if (tool === 'location' || tool === 'walkable' || tool === 'obstacle') {
-		semanticDraft ??= { points: [], type: tool };
-		semanticDraft.points.push({ x: imagePoint.x, y: imagePoint.y });
-		semanticDraftHost.hidden = false;
+		if (drawingMode === 'smart') {
+			const detected: WayfindingPoint[] | undefined = detectFlatRegionBoundary(imagePoint);
+			if (detected) {
+				commitSemanticPolygon(tool, detected);
+				coverageStatus.textContent = `Detected an editable ${tool} boundary with ${detected.length} points. Inspect and adjust it before confirmation.`;
+			} else {
+				coverageStatus.textContent = 'No enclosed flat-color region was found. Adjust Color tolerance, or use Click corners / Freehand lasso.';
+			}
+			pointerDown = false;
+			canvas.releasePointerCapture(event.pointerId);
+		} else if (drawingMode === 'lasso') {
+			semanticDraft = { points: [snapPointToSourceEdge(imagePoint)], type: tool };
+			lassoDrawing = true;
+		} else {
+			semanticDraft ??= { points: [], type: tool };
+			semanticDraft.points.push(snapPointToSourceEdge(imagePoint));
+		}
+		semanticDraftHost.hidden = drawingMode === 'smart';
 		draw();
 	} else if (tool === 'door' || tool === 'poi' || tool === 'origin' || tool === 'transition' || tool === 'label' || tool === 'icon' || tool === 'logo') {
 		addSemanticPoint(tool, imagePoint);
 	} else if (tool === 'select') {
-		const selected: WayfindingStudioElement | undefined = nearestSemantic(imagePoint);
+		const currentPolygon: WayfindingStudioPolygonElement | undefined = selectedSemanticPolygon();
+		const currentVertexIndex: number | undefined = currentPolygon ? nearestSemanticVertex(currentPolygon, imagePoint) : undefined;
+		const selected: WayfindingStudioElement | undefined = currentVertexIndex !== undefined ? currentPolygon : nearestSemantic(imagePoint);
 		selectedSemanticId = selected?.id;
+		selectedSemanticVertexIndex = currentVertexIndex;
 		selectedEdgeId = undefined;
 		if (selected) {
 			const vertexIndex: number | undefined = 'geometry' in selected
-				? selected.geometry.map((vertex: WayfindingPoint): number => Math.hypot(vertex.x - imagePoint.x, vertex.y - imagePoint.y)).findIndex((distance: number): boolean => distance <= 18 / scale)
+				? currentVertexIndex ?? nearestSemanticVertex(selected, imagePoint)
 				: undefined;
-			draggedSemantic = { elementId: selected.id, vertexIndex: vertexIndex !== undefined && vertexIndex >= 0 ? vertexIndex : undefined };
+			selectedSemanticVertexIndex = vertexIndex;
+			draggedSemantic = { elementId: selected.id, vertexIndex };
 			dragHistoryState = captureHistoryState();
 			dragMutated = false;
-		}
+		} else selectedSemanticVertexIndex = undefined;
 		renderSemanticEditor();
 		renderReview();
 		draw();
@@ -2497,6 +3376,15 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 	} else if (tool === 'include' || tool === 'exclude') {
 		paintMask(imagePoint, tool === 'include');
 		draw();
+	} else if (lassoDrawing && semanticDraft && (tool === 'location' || tool === 'walkable' || tool === 'obstacle')) {
+		const floor: WayfindingStudioFloor = currentFloor();
+		if (imagePoint.x >= 0 && imagePoint.y >= 0 && imagePoint.x <= floor.width && imagePoint.y <= floor.height) {
+			const previous: WayfindingPoint = semanticDraft.points.at(-1) as WayfindingPoint;
+			if (Math.hypot(imagePoint.x - previous.x, imagePoint.y - previous.y) >= Math.max(3, 6 / scale)) {
+				semanticDraft.points.push(snapPointToSourceEdge(imagePoint));
+				draw();
+			}
+		}
 	} else if (tool === 'graph' && draggedVertex) {
 		moveVertex(draggedVertex, imagePoint);
 		dragMutated = true;
@@ -2513,6 +3401,7 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 				element.geometry = element.geometry.map((vertex): WayfindingPoint => ({ x: vertex.x + dx, y: vertex.y + dy }));
 			}
 		} else element.point = { x: imagePoint.x, y: imagePoint.y };
+		element.status = 'proposed';
 		dragMutated = true;
 		draw();
 	}
@@ -2520,6 +3409,17 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 
 canvas.addEventListener('pointerup', (): void => {
 	pointerDown = false;
+	if (lassoDrawing && semanticDraft) {
+		lassoDrawing = false;
+		semanticDraft.points = simplifyGeometry(semanticDraft.points, Math.max(2, 4 / scale));
+		if (semanticDraft.points.length >= 3) finishSemanticPolygon();
+		else {
+			semanticDraft = undefined;
+			semanticDraftHost.hidden = true;
+			coverageStatus.textContent = 'The freehand trace was too short. Drag around a complete area.';
+			draw();
+		}
+	}
 
 	if (draggedVertex) {
 		draggedVertex = undefined;
@@ -2532,6 +3432,7 @@ canvas.addEventListener('pointerup', (): void => {
 		draggedSemantic = undefined;
 		syncStudioGraph();
 		if (dragHistoryState && dragMutated) recordHistory(dragHistoryState);
+		renderSemanticEditor();
 		renderStudioControls();
 		draw();
 	}
@@ -2544,7 +3445,14 @@ canvas.addEventListener('dblclick', (event: MouseEvent): void => {
 	const point: ImagePoint = toImagePoint(eventPoint(event));
 	const selected: WayfindingStudioElement | undefined = semanticElement() ?? nearestSemantic(point);
 	if (!selected || !('geometry' in selected)) return;
-	insertSemanticVertex(selected, point);
+	const insertedIndex: number | undefined = insertSemanticVertex(selected, point);
+	if (insertedIndex === undefined) return;
+	selectedSemanticId = selected.id;
+	selectedSemanticVertexIndex = insertedIndex;
+	insertPointForSemanticId = undefined;
+	coverageStatus.textContent = `Added point ${insertedIndex + 1} to ${selected.id}`;
+	renderSemanticEditor();
+	draw();
 });
 
 canvas.addEventListener('wheel', (event: WheelEvent): void => {
@@ -2559,14 +3467,25 @@ canvas.addEventListener('wheel', (event: WheelEvent): void => {
 }, { passive: false });
 
 window.addEventListener('resize', resizeCanvas);
+document.addEventListener('visibilitychange', (): void => {
+	if (document.visibilityState === 'hidden') void persistAutosave();
+});
+window.addEventListener('pagehide', (): void => { void persistAutosave(); scene3d.dispose(); });
 syncProjectControls();
 renderProjectAssessment();
 setActiveTool();
+renderDrawingMode();
+renderMediaAssetState();
+renderProjectContext();
 renderEdgeDraft();
 renderReview();
 destinationDocument = destinationDatasource();
 destinationTableName = 'Destinations';
 canvas.classList.add('ready');
 stageEmpty.classList.add('hidden');
+setViewMode('2d');
 renderSemanticEditor();
-void activateFloor(currentFloorId);
+void (async (): Promise<void> => {
+	await activateFloor(currentFloorId);
+	await initializeAutosave();
+})();

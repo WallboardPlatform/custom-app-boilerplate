@@ -44,6 +44,33 @@ Editor wizards and layout editors are opt-in under `templates/editor-assets/`. C
 
 Functional controls require `label`, `type`, and `property` (font controls use `propertyContainer`). Add concise tooltips only where the decision is unclear.
 
+## Custom Settings Editors
+
+Use a `button` with `customSettingsUrl` when structured app-owned content or layout cannot be edited safely in the property sidebar:
+
+```json
+{
+	"label": "Edit content",
+	"property": "contentEditor",
+	"type": "button",
+	"customSettingsUrl": "/editor-assets/custom-settings-editor/index.html"
+}
+```
+
+The editor page runs inside Wallboard and communicates with its parent window:
+
+| Direction | `messageType` | Payload |
+|---|---|---|
+| Editor -> Wallboard | `customWidget_requestCustomProperties` | none |
+| Wallboard -> editor | n/a | current configuration, including `configValues` |
+| Editor -> Wallboard | `customWidget_saveCustomProperty` | `customPropertyValue: {configValues}` |
+
+Preserve the complete received `configValues` object when saving; update only the property owned by the custom editor. Accept messages only from `window.parent`. The Wallboard host origin varies, so outgoing messages use `"*"`.
+
+Use `templates/editor-assets/custom-settings-editor/` as the small starter. The existing layout editor is for apps that actually need its layout-builder model, not a default dependency.
+
+**Ownership rule:** datasource for shared/dynamic/external data; custom editor for complex bundled state manually owned by this app; normal properties for simple settings.
+
 ## Mapping
 
 Normalize and clamp values in `src/settings.ts`; components consume only mapped `Settings`.

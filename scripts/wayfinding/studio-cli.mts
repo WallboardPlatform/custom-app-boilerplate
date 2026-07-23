@@ -30,11 +30,16 @@ if (!outputDirectory) {
 } else {
 	const target: string = path.resolve(outputDirectory);
 	fs.mkdirSync(path.join(target, 'floors'), { recursive: true });
+	fs.writeFileSync(path.join(target, 'assets.json'), `${JSON.stringify(bundle.assets, null, 2)}\n`);
 	fs.writeFileSync(path.join(target, 'manifest.json'), `${JSON.stringify(bundle.manifest, null, 2)}\n`);
 	fs.writeFileSync(path.join(target, 'route-graph.json'), `${JSON.stringify(bundle.graph, null, 2)}\n`);
 	fs.writeFileSync(path.join(target, 'destinations-datasource.json'), `${JSON.stringify(bundle.destinations, null, 2)}\n`);
 
-	for (const floor of bundle.floors) fs.writeFileSync(path.join(target, 'floors', `${floor.id}.svg`), `${floor.svg}\n`);
+	for (const floor of bundle.floors) {
+		const { svg, ...scene } = floor;
+		fs.writeFileSync(path.join(target, 'floors', `${floor.id}.scene.json`), `${JSON.stringify(scene, null, 2)}\n`);
+		fs.writeFileSync(path.join(target, 'floors', `${floor.id}.svg`), `${svg}\n`);
+	}
 	fs.writeFileSync(path.join(target, 'validation.json'), `${JSON.stringify({ issues }, null, 2)}\n`);
 	process.stdout.write(`Exported ${bundle.floors.length} floor(s) to ${target}\n`);
 }

@@ -296,8 +296,8 @@ export const createPendingVisualReview = (
 ): VisualReview => {
 	const sourceHash: string = createVisualReviewSourceHash(projectDirectory);
 	const preserve: boolean = previous?.sourceHash === sourceHash;
-	const previousCriteria = new Map(previous?.criteria.map((criterion) => [criterion.id, criterion]) ?? []);
-	const previousScreenshots = new Map(previous?.screenshots.map((screenshot) => [screenshot.file, screenshot]) ?? []);
+	const previousCriteria = new Map(previous?.criteria?.map((criterion) => [criterion.id, criterion]) ?? []);
+	const previousScreenshots = new Map(previous?.screenshots?.map((screenshot) => [screenshot.file, screenshot]) ?? []);
 
 	return {
 		reviewVersion: 1,

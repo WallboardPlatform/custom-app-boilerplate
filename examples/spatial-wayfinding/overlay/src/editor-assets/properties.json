@@ -1,0 +1,67 @@
+{
+	"version": "1",
+	"name": "Northline Spatial Wayfinding",
+	"interactive": true,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{ "label": "Campus name", "type": "text", "property": "title", "default": "Northline Campus" },
+				{
+					"label": "Default map view",
+					"type": "select",
+					"property": "defaultView",
+					"default": "3d",
+					"tooltip": "3D enables touch rotation, pan, and zoom. 2D renders the same Studio runtime artifact as a flat accessible map.",
+					"options": [
+						{ "label": "3D", "value": "3d" },
+						{ "label": "2D", "value": "2d" }
+					]
+				},
+				{ "label": "Allow visitor to switch view", "type": "boolean", "property": "showViewSwitcher", "default": true },
+				{
+					"label": "Motion",
+					"type": "select",
+					"property": "motionPreset",
+					"default": "subtle",
+					"tooltip": "Subtle pulses the current-position marker. Off keeps all authored map geometry static.",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" },
+						{ "label": "Expressive", "value": "expressive" }
+					]
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Light", "value": "light" },
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Background", "type": "color", "property": "backgroundColor", "default": "#e8ece7", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Directory panel", "type": "color", "property": "panelColor", "default": "#fffdf7", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#15302b", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Secondary text", "type": "color", "property": "secondaryTextColor", "default": "#667973", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } },
+				{ "label": "Route and selection", "type": "color", "property": "accentColor", "default": "#bd6d1d", "visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" } }
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"externalCommands": []
+}

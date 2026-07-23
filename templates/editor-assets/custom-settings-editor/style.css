@@ -1,0 +1,55 @@
+:root {
+	font-family: Inter, "Segoe UI", Arial, sans-serif;
+	color: #17201f;
+	background: #eef2f0;
+}
+
+* { box-sizing: border-box; }
+html,
+body { width: 100%; min-height: 100%; margin: 0; }
+body { display: grid; min-height: 100vh; grid-template-rows: auto 1fr auto; }
+
+header,
+footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 18px 24px;
+	border-color: #c9d3cf;
+	background: #ffffff;
+}
+
+header { border-bottom: 1px solid #c9d3cf; }
+footer { justify-content: flex-end; border-top: 1px solid #c9d3cf; gap: 10px; }
+header span { color: #18826f; font-size: 10px; font-weight: 800; }
+header h1 { margin: 4px 0 0; font-size: 22px; }
+header p { margin: 0; color: #61706c; font-size: 12px; }
+header p[data-state="dirty"] { color: #8b5c05; }
+header p[data-state="error"] { color: #a3332a; }
+
+main { width: min(960px, 100%); margin: 0 auto; padding: 28px 24px; }
+section { padding: 22px; border: 1px solid #c9d3cf; background: #ffffff; }
+label { display: block; font-size: 14px; font-weight: 800; }
+section p { color: #61706c; font-size: 12px; line-height: 1.45; }
+textarea {
+	width: 100%;
+	min-height: 420px;
+	padding: 14px;
+	border: 1px solid #9eaaa6;
+	border-radius: 0;
+	font: 13px/1.5 Consolas, monospace;
+	resize: vertical;
+}
+
+button {
+	height: 40px;
+	padding: 0 18px;
+	border: 1px solid #18826f;
+	background: #18826f;
+	color: #ffffff;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+button.secondary { background: #ffffff; color: #126b5c; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }

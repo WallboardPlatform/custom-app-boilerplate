@@ -4,6 +4,7 @@ These editor-only modules are opt-in. Copy only the module an app actually uses 
 
 | Module | Required configuration |
 |---|---|
+| `custom-settings-editor` | A `button` property with `customSettingsUrl: "/editor-assets/custom-settings-editor/index.html"`; replace the starter property name and form with the app-specific editor |
 | `layout-editor` | A property with `customSettingsUrl: "/editor-assets/layout-editor/index.html"` plus the matching runtime layout implementation |
 | `popup-wizard` | `initWizard.url: "/editor-assets/popup-wizard/index.html"` |
 | `dblClickWizard` | `dblClickWizard.url: "/editor-assets/dblClickWizard/index.html"` |

@@ -55,14 +55,21 @@ Workflow:
 
 1. Create/open a `.wbwayfinding` project.
 2. Add floors and optional background artwork. Backgrounds may be customer-supplied, manually redrawn, or AI-produced; they are references, not topology.
-3. Draw locations, walkable areas, obstacles, doors, POIs, origins, transitions, labels, icons, and logos. Select mode moves points and polygon vertices; double-click a selected polygon edge to insert a precision vertex.
+3. Draw locations, walkable areas, obstacles, doors, POIs, origins, transitions, labels, icons, and logos. Select mode moves items and polygon vertices. Select a vertex to nudge or delete it; double-click an edge or use **Add point on edge** to insert a projected point.
 4. Give paired cross-floor transitions the same `connectionId`; set type and accessibility from verified venue facts.
 5. Connect origin, transition, route, and location entrance nodes using explicit graph edges. Confirm each edge after source/site review.
-6. Simulate standard and step-free routes across floors. Fix unreachable states, missing entrance-side doors, unintended shortcuts, and proposed corridor edges.
+6. Simulate standard and step-free routes across floors. Clear the preview when comparing another route; changing map geometry invalidates the current preview automatically. Fix unreachable states, missing entrance-side doors, unintended shortcuts, and proposed corridor edges.
 7. Mark AI/imported elements `proposed`. Only a reviewer changes them to `confirmed`.
-8. Save drafts at any time. Runtime export is a separate acceptance gate: it blocks unsupported evidence, disconnected origins/destinations, missing confirmed room entrances or masks, routes leaving walkable space, missing required step-free paths, and unreviewed route elements/edges.
+8. Studio autosaves a local recovery draft in IndexedDB after edits. A reload offers explicit restore/discard actions and never silently replaces a project opened from disk. **Save project** still downloads the portable source of truth and is required for transfer, backup, or review. Runtime export is a separate acceptance gate: it blocks unsupported evidence, disconnected origins/destinations, missing confirmed room entrances or masks, routes leaving walkable space, missing required step-free paths, and unreviewed route elements/edges.
 
 `npm run wayfinding:workbench` remains an alias for the same Studio. Separate project/graph/mask/TABLE imports are available when consolidating existing artifacts.
+
+### 3D presentation
+
+- Edit canonical geometry in **2D edit**; inspect the same floor with orbit, zoom, and pan in **3D preview** (`2`/`3`).
+- A polygon may override fill color, opacity, and normalized visual height (`0` flat, `100` tallest). Height is presentation, not a physical measurement.
+- **Save as default** stores the current camera per floor. Text, icons, and logos remain independent billboard layers rather than textures baked into extruded geometry.
+- The optional 3D fields do not affect route topology. Runtime export includes structured floor elements, referenced assets, and camera state so an opt-in custom app can render the same scene.
 
 Migrate an existing reviewed-artifact set into the canonical package:
 
@@ -81,14 +88,16 @@ npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfin
 Output:
 
 ```text
+assets.json
 manifest.json
 route-graph.json
 destinations-datasource.json
 validation.json
+floors/<floor-id>.scene.json
 floors/<floor-id>.svg
 ```
 
-Generated SVG groups are stable: `Background`, `Walkable`, `Obstacles`, `Locations`, `Doors`, `POIs`, `Origins`, `Transitions`, `Labels`, `Icons`, `Logos`. Labels/icons/logos are always independent layers. Runtime routes remain in `route-graph.json`, not invisible SVG geometry.
+Generated SVG groups are stable: `Background`, `Walkable`, `Obstacles`, `Locations`, `Doors`, `POIs`, `Origins`, `Transitions`, `Labels`, `Icons`, `Logos`. Labels/icons/logos are always independent layers. Each scene file contains the same semantic elements plus optional 3D presentation and camera state; referenced data URLs live in `assets.json`. Runtime routes remain in `route-graph.json`, not invisible SVG geometry.
 
 `manifest.json` records both `targetMode` and evidence-assessed `deliveryMode`. When fallback is allowed and route evidence is incomplete, export may safely downgrade to directory/highlight/directional mode; its runtime graph is intentionally empty so an app cannot accidentally render an uncertified route. Studio project parsing remains structural, so an incomplete route draft can always be reopened and corrected.
 
