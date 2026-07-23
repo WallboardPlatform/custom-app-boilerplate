@@ -689,7 +689,7 @@ export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floor
 	const media = (element: WayfindingStudioMediaElement): string => {
 		const asset: WayfindingStudioAsset | undefined = assetById.get(element.assetId);
 
-		return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}"/>` : '';
+		return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}" preserveAspectRatio="xMidYMid meet"/>` : '';
 	};
 	const door = (item: WayfindingStudioElement): string => {
 		const value = item as WayfindingStudioDoorElement;

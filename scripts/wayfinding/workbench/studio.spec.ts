@@ -8,6 +8,7 @@ import {
 	synchronizeWayfindingStudioGraph,
 	type WayfindingStudioDoorElement,
 	type WayfindingStudioElement,
+	type WayfindingStudioMediaElement,
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
@@ -405,16 +406,52 @@ test('prompts for an icon or logo image before placement', async ({ page }, test
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
-	const iconPath: string = testInfo.outputPath('marker.png');
-	fs.writeFileSync(iconPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n1EAAAAASUVORK5CYII=', 'base64'));
+	const iconPath: string = testInfo.outputPath('marker.svg');
+	fs.writeFileSync(iconPath, '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"><rect width="200" height="100" fill="#177f70"/></svg>');
 	const chooserPromise = page.waitForEvent('filechooser');
 	await page.locator('[data-tool="logo"]').click();
 	const chooser = await chooserPromise;
 	await chooser.setFiles(iconPath);
 	await expect(page.locator('#media-asset-state')).toHaveAttribute('data-ready', 'true');
-	await expect(page.locator('#media-asset-summary')).toContainText('marker.png is ready');
+	await expect(page.locator('#media-asset-summary')).toContainText('marker.svg (200 x 100) is ready');
 	await page.locator('#stage').click({ position: { x: 330, y: 380 } });
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Logo');
+	await expect(page.locator('#semantic-editor').getByLabel('Width')).toHaveValue('160');
+	await expect(page.locator('#semantic-editor').getByLabel('Height')).toHaveValue('80');
+	await expect(page.locator('#semantic-editor')).toContainText('Source 200 x 100');
+
+	const firstDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const firstDownload = await firstDownloadPromise;
+	const firstDownloadPath: string = await firstDownload.path() as string;
+	const firstProject = JSON.parse(fs.readFileSync(firstDownloadPath, 'utf8')) as WayfindingStudioProject;
+	const firstLogo = firstProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioMediaElement => element.type === 'logo') as WayfindingStudioMediaElement;
+	expect(firstLogo.width / firstLogo.height).toBeCloseTo(2, 5);
+
+	const canvas = page.locator('#stage');
+	const bounds = await canvas.boundingBox();
+	expect(bounds).not.toBeNull();
+	const mapScale = Math.min((bounds?.width ?? 1) / firstProject.floors[0].width, (bounds?.height ?? 1) / firstProject.floors[0].height) * 0.96;
+	const mapOffsetX = ((bounds?.width ?? 1) - firstProject.floors[0].width * mapScale) / 2;
+	const mapOffsetY = ((bounds?.height ?? 1) - firstProject.floors[0].height * mapScale) / 2;
+	const handleX = (bounds?.x ?? 0) + mapOffsetX + (firstLogo.point.x + firstLogo.width) * mapScale;
+	const handleY = (bounds?.y ?? 0) + mapOffsetY + (firstLogo.point.y + firstLogo.height) * mapScale;
+	await page.mouse.move(handleX, handleY);
+	await page.mouse.down();
+	await page.mouse.move(handleX + 100 * mapScale, handleY + 50 * mapScale, { steps: 4 });
+	await page.mouse.up();
+
+	const resizedDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const resizedDownload = await resizedDownloadPromise;
+	const resizedDownloadPath: string = await resizedDownload.path() as string;
+	const resizedProject = JSON.parse(fs.readFileSync(resizedDownloadPath, 'utf8')) as WayfindingStudioProject;
+	const resizedLogo = resizedProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioMediaElement => element.type === 'logo') as WayfindingStudioMediaElement;
+	expect(resizedLogo.width).toBeGreaterThan(firstLogo.width);
+	expect(resizedLogo.width / resizedLogo.height).toBeCloseTo(2, 5);
+	const resizedScreenshotPath: string = testInfo.outputPath('proportional-media-resize.png');
+	await page.screenshot({ fullPage: true, path: resizedScreenshotPath });
+	await testInfo.attach('proportional-media-resize', { contentType: 'image/png', path: resizedScreenshotPath });
 	expect(errors).toEqual([]);
 });
 
@@ -462,6 +499,61 @@ test('clears a simulated route without changing the authored project', async ({ 
 	await clearRoute.click();
 	await expect(clearRoute).toBeDisabled();
 	await expect(page.locator('#route-result')).toContainText('Route preview cleared');
+	expect(errors).toEqual([]);
+});
+
+test('adjusts only the active visitor route with editable bends', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+	const projectPath: string = testInfo.outputPath('route-adjust-test.wbwayfinding');
+	const sourceProject = createRouteTestProject();
+	fs.writeFileSync(projectPath, JSON.stringify(sourceProject));
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('#route-simulate').click();
+	await expect(page.locator('#route-result')).toContainText('min');
+	await page.locator('#route-adjust').click();
+	await expect(page.locator('#route-adjust-panel')).toBeVisible();
+	await expect(page.locator('[data-layer="route-network"]')).toBeChecked();
+	await expect(page.locator('[data-tool="graph"]')).toHaveClass(/active/u);
+	await expect(page.locator('#edge-summary')).toHaveText('1 segment in active route');
+	await expect(page.locator('#edge-list button')).toHaveCount(1);
+	const adjustmentScreenshotPath: string = testInfo.outputPath('active-route-adjustment.png');
+	await page.screenshot({ fullPage: true, path: adjustmentScreenshotPath });
+	await testInfo.attach('active-route-adjustment', { contentType: 'image/png', path: adjustmentScreenshotPath });
+
+	const canvas = page.locator('#stage');
+	const bounds = await canvas.boundingBox();
+	expect(bounds).not.toBeNull();
+	const floor = sourceProject.floors[0];
+	const mapScale = Math.min((bounds?.width ?? 1) / floor.width, (bounds?.height ?? 1) / floor.height) * 0.96;
+	const mapOffsetX = ((bounds?.width ?? 1) - floor.width * mapScale) / 2;
+	const mapOffsetY = ((bounds?.height ?? 1) - floor.height * mapScale) / 2;
+	await page.locator('#route-adjust-add-bend').click();
+	await canvas.click({ position: { x: mapOffsetX + 210 * mapScale, y: mapOffsetY + 200 * mapScale } });
+	await expect(page.locator('#route-adjust-remove-bend')).toBeEnabled();
+	await expect(page.locator('#selected-edge')).toContainText('Bend');
+
+	const insertedDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const insertedDownload = await insertedDownloadPromise;
+	const insertedDownloadPath: string = await insertedDownload.path() as string;
+	const insertedProject = JSON.parse(fs.readFileSync(insertedDownloadPath, 'utf8')) as WayfindingStudioProject;
+	expect(insertedProject.graph.edges[0].geometry).toHaveLength(4);
+
+	await page.locator('#route-adjust-remove-bend').click();
+	const restoredDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const restoredDownload = await restoredDownloadPromise;
+	const restoredDownloadPath: string = await restoredDownload.path() as string;
+	const restoredProject = JSON.parse(fs.readFileSync(restoredDownloadPath, 'utf8')) as WayfindingStudioProject;
+	expect(restoredProject.graph.edges[0].geometry).toHaveLength(3);
+
+	await page.locator('#route-adjust-done').click();
+	await expect(page.locator('#route-adjust-panel')).toBeHidden();
+	await expect(page.locator('[data-layer="route-network"]')).not.toBeChecked();
+	await expect(page.locator('[data-tool="select"]')).toHaveClass(/active/u);
 	expect(errors).toEqual([]);
 });
 

@@ -624,6 +624,12 @@ main {
 .route-build { width: 100%; margin-bottom: 12px; }
 .route-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .route-actions button:disabled { border-color: #d5dcda; background: #f4f6f5; color: #9ba5a2; cursor: not-allowed; }
+.route-simulator .route-adjust { width: 100%; margin-top: 9px; }
+.route-adjust-panel { margin-top: 10px; padding: 11px; border: 1px solid #82aa9f; background: #ffffff; }
+.route-adjust-panel > strong { display: block; color: #126b5c; font-size: 9px; letter-spacing: 0.04em; }
+.route-adjust-panel > p { margin: 5px 0 9px; color: #52615d; font-size: 10px; line-height: 1.45; }
+.route-adjust-panel .route-actions button { margin-top: 0; }
+.route-adjust-panel > button { width: 100%; margin-top: 9px; }
 .edge-fields { display: grid; margin-bottom: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .edge-fields label { color: #687571; font-size: 10px; font-weight: 700; }
 .edge-fields select,

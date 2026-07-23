@@ -89,6 +89,15 @@ interface DraggedVertex {
 	pointIndex: number;
 }
 
+type MediaResizeCorner = 'north-east' | 'north-west' | 'south-east' | 'south-west';
+
+interface DraggedMediaResize {
+	aspectRatio: number;
+	corner: MediaResizeCorner;
+	elementId: string;
+	opposite: WayfindingPoint;
+}
+
 interface EdgeDraft {
 	levelId: string;
 	points: WayfindingPoint[];
@@ -206,6 +215,11 @@ const routeClickMode = requireElement<HTMLInputElement>('#route-click-mode');
 const routeResult = requireElement<HTMLElement>('#route-result');
 const routeBuildButton = requireElement<HTMLButtonElement>('#route-build');
 const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
+const routeAdjustButton = requireElement<HTMLButtonElement>('#route-adjust');
+const routeAdjustPanel = requireElement<HTMLElement>('#route-adjust-panel');
+const routeAdjustAddBendButton = requireElement<HTMLButtonElement>('#route-adjust-add-bend');
+const routeAdjustRemoveBendButton = requireElement<HTMLButtonElement>('#route-adjust-remove-bend');
+const routeAdjustDoneButton = requireElement<HTMLButtonElement>('#route-adjust-done');
 const routeSetupChecklist = requireElement<HTMLElement>('#route-setup-checklist');
 const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file');
 const undoButton = requireElement<HTMLButtonElement>('#undo');
@@ -242,6 +256,7 @@ const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
 const chooseMediaAsset = requireElement<HTMLButtonElement>('#choose-media-asset');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
+const routeNetworkLayer = requireElement<HTMLInputElement>('[data-layer="route-network"]');
 const elementInventorySummary = requireElement<HTMLElement>('#element-inventory-summary');
 const elementInventoryList = requireElement<HTMLElement>('#element-inventory-list');
 const defaultLocationColor = requireElement<HTMLInputElement>('#default-location-color');
@@ -282,7 +297,9 @@ let colorSamples: ColorSample[] = [];
 let includeOverrides = new Set<number>();
 let excludeOverrides = new Set<number>();
 let selectedEdgeId: string | undefined;
+let selectedEdgeVertexIndex: number | undefined;
 let draggedVertex: DraggedVertex | undefined;
+let draggedMediaResize: DraggedMediaResize | undefined;
 let insertPointForEdge: string | undefined;
 let edgeDraft: EdgeDraft | undefined;
 let pointerDown = false;
@@ -296,9 +313,13 @@ let selectedSemanticId: string | undefined;
 let selectedSemanticVertexIndex: number | undefined;
 let insertPointForSemanticId: string | undefined;
 let simulatedRoute: ReturnType<WayfindingGraph['route']>;
+let routeAdjustmentActive = false;
+let routeNetworkVisibleBeforeAdjustment = false;
 let viewMode: '2d' | '3d' = '2d';
 let pendingMediaAssetId: string | undefined;
-let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
+let pendingMediaNaturalSize: { height: number; width: number } | undefined;
+const mediaNaturalSizeCache = new Map<string, { height: number; width: number }>();
+let draggedSemantic: { elementId: string; pointOffset?: WayfindingPoint; vertexIndex?: number } | undefined;
 let dragHistoryState: HistoryState | undefined;
 let dragMutated = false;
 let restoringHistory = false;
@@ -479,25 +500,19 @@ function routeSegmentContained(left: WayfindingPoint, right: WayfindingPoint): b
 
 const routeGeometryContained = (points: WayfindingPoint[]): boolean => points.slice(1).every((point: WayfindingPoint, index: number): boolean => routeSegmentContained(points[index], point));
 
-const simplifyVisibleRoute = (points: WayfindingPoint[]): WayfindingPoint[] => {
+const simplifyCenterlineRoute = (points: WayfindingPoint[]): WayfindingPoint[] => {
 	if (points.length < 3) return points;
-	const simplified: WayfindingPoint[] = [{ ...points[0] }];
-	let currentIndex = 0;
+	const baseTolerance: number = Math.max(1, Math.min(cellSize() * 1.5, resolveWayfindingStudioPresentation(studioProject).route.width * 0.75));
 
-	while (currentIndex < points.length - 1) {
-		let nextIndex = currentIndex + 1;
+	for (const factor of [1, 0.75, 0.5, 0.25, 0]) {
+		const candidate: WayfindingPoint[] = factor === 0
+			? points.map((point): WayfindingPoint => ({ ...point }))
+			: simplifyGeometry(points, baseTolerance * factor);
 
-		for (let candidate = points.length - 1; candidate > currentIndex + 1; candidate -= 1) {
-			if (!routeSegmentContained(points[currentIndex], points[candidate])) continue;
-			nextIndex = candidate;
-			break;
-		}
-
-		simplified.push({ ...points[nextIndex] });
-		currentIndex = nextIndex;
+		if (routeGeometryContained(candidate)) return candidate;
 	}
 
-	return simplified;
+	return points;
 };
 
 const safelyRoundedRoute = (points: WayfindingPoint[], roundingPercent: number): WayfindingPoint[] => {
@@ -514,7 +529,7 @@ const simulatedRoutePoints = (): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = simulatedRoute?.path
 		.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
 		.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [];
-	const simplified: WayfindingPoint[] = simplifyVisibleRoute(points);
+	const simplified: WayfindingPoint[] = simplifyCenterlineRoute(points);
 
 	return safelyRoundedRoute(simplified, resolveWayfindingStudioPresentation(studioProject).route.cornerRounding);
 };
@@ -523,6 +538,7 @@ const scene3d = new WayfindingScene3d(stage3dHost, {
 		selectedSemanticId = elementId;
 		selectedSemanticVertexIndex = undefined;
 		selectedEdgeId = undefined;
+		selectedEdgeVertexIndex = undefined;
 		renderSemanticEditor();
 		renderReview();
 		scene3d.selectElement(elementId);
@@ -598,12 +614,55 @@ const renderDrawingMode = (): void => {
 
 const renderMediaAssetState = (): void => {
 	const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === pendingMediaAssetId);
+	const naturalSize = asset ? mediaNaturalSizeCache.get(asset.id) ?? pendingMediaNaturalSize : undefined;
 	mediaAssetState.dataset.ready = String(Boolean(asset));
 	mediaAssetSummary.textContent = asset
-		? `${asset.name} is ready. Choose Icon for a functional map symbol or Logo for a brand mark, then click the map.`
+		? `${asset.name}${naturalSize ? ` (${naturalSize.width} x ${naturalSize.height})` : ''} is ready. Choose Icon for a functional map symbol or Logo for a brand mark, then click the map. It will keep its source proportions.`
 		: 'Choose an image before placing it. Icon means a functional map symbol; Logo means a brand or tenant mark.';
 	chooseMediaAsset.textContent = asset ? 'Change image' : 'Choose image';
 };
+
+const activeRouteEdgeIds = (): Set<string> => new Set(simulatedRoute?.edgeIds ?? []);
+
+function enterRouteAdjustment(): void {
+	if (!simulatedRoute) {
+		coverageStatus.textContent = 'Simulate a visitor route before adjusting it.';
+		return;
+	}
+	routeNetworkVisibleBeforeAdjustment = routeNetworkLayer.checked;
+	routeAdjustmentActive = true;
+	routeNetworkLayer.checked = true;
+	routeClickMode.checked = false;
+	selectedSemanticId = undefined;
+	selectedSemanticVertexIndex = undefined;
+	selectedEdgeId = simulatedRoute.edgeIds.find((edgeId: string): boolean => {
+		const edge: WayfindingEdge | undefined = graph?.edges.find((candidate): boolean => candidate.id === edgeId);
+		return Boolean(edge && graphNode(edge.from)?.levelId === currentFloorId && graphNode(edge.to)?.levelId === currentFloorId);
+	});
+	selectedEdgeVertexIndex = undefined;
+	tool = 'graph';
+	setActiveTool();
+	renderSemanticEditor();
+	renderRouteSimulator();
+	renderReview();
+	coverageStatus.textContent = 'Adjusting this visitor route. Drag a round handle or double-click a highlighted segment to add a bend.';
+	draw();
+}
+
+function exitRouteAdjustment(redraw = true): void {
+	if (!routeAdjustmentActive) return;
+	routeAdjustmentActive = false;
+	routeNetworkLayer.checked = routeNetworkVisibleBeforeAdjustment;
+	selectedEdgeId = undefined;
+	selectedEdgeVertexIndex = undefined;
+	insertPointForEdge = undefined;
+	draggedVertex = undefined;
+	tool = 'select';
+	setActiveTool();
+	renderRouteSimulator();
+	renderReview();
+	if (redraw) draw();
+}
 
 const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 'recovery' | 'error', title: string): void => {
 	autosaveStatus.textContent = label;
@@ -614,6 +673,7 @@ const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 
 
 const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
 	simulatedRoute = undefined;
+	exitRouteAdjustment(false);
 	routeResult.textContent = message;
 	routeClearButton.disabled = true;
 	draw();
@@ -758,11 +818,11 @@ const updateEditActions = (): void => {
 	deleteSelectionButton.disabled = (!selectedSemanticId && !selectedEdgeId) || restoringHistory;
 };
 
-const recordHistory = (before: HistoryState): void => {
+const recordHistory = (before: HistoryState, preserveSimulatedRoute = false): void => {
 	undoStack.push(before);
 	if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
 	redoStack.length = 0;
-	clearSimulatedRoute('The map changed. Simulate the route again.');
+	if (!preserveSimulatedRoute) clearSimulatedRoute('The map changed. Simulate the route again.');
 	scheduleAutosave();
 	updateEditActions();
 };
@@ -785,13 +845,16 @@ const restoreHistoryState = async (state: HistoryState): Promise<void> => {
 	selectedSemanticId = undefined;
 	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
+	selectedEdgeVertexIndex = undefined;
 	semanticDraft = undefined;
 	edgeDraft = undefined;
 	insertPointForEdge = undefined;
 	insertPointForSemanticId = undefined;
 	draggedSemantic = undefined;
 	draggedVertex = undefined;
+	draggedMediaResize = undefined;
 	simulatedRoute = undefined;
+	routeAdjustmentActive = false;
 	semanticDraftHost.hidden = true;
 	renderEdgeDraft();
 	syncProjectControls();
@@ -863,10 +926,83 @@ const cachedMediaImage = (asset: WayfindingStudioAsset): HTMLImageElement => {
 	const cached: HTMLImageElement | undefined = mediaImageCache.get(asset.id);
 	if (cached?.src === asset.dataUrl) return cached;
 	const image = new Image();
-	image.onload = draw;
+	image.onload = (): void => {
+		mediaNaturalSizeCache.set(asset.id, { height: image.naturalHeight, width: image.naturalWidth });
+		draw();
+	};
 	image.src = asset.dataUrl;
 	mediaImageCache.set(asset.id, image);
 	return image;
+};
+
+const decodeMediaNaturalSize = (dataUrl: string): Promise<{ height: number; width: number }> => new Promise((resolve, reject): void => {
+	const image = new Image();
+	image.onload = (): void => { resolve({ height: image.naturalHeight, width: image.naturalWidth }); };
+	image.onerror = (): void => { reject(new Error('The selected image could not be decoded.')); };
+	image.src = dataUrl;
+});
+
+const selectedMediaElement = (): WayfindingStudioMediaElement | undefined => {
+	const element: WayfindingStudioElement | undefined = semanticElement();
+
+	return element?.type === 'icon' || element?.type === 'logo' ? element : undefined;
+};
+
+const mediaNaturalSize = (element: WayfindingStudioMediaElement): { height: number; width: number } | undefined => {
+	const cachedSize = mediaNaturalSizeCache.get(element.assetId);
+	if (cachedSize) return cachedSize;
+	const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate): boolean => candidate.id === element.assetId);
+	if (!asset) return undefined;
+	const image: HTMLImageElement = cachedMediaImage(asset);
+	if (!image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) return undefined;
+	const size = { height: image.naturalHeight, width: image.naturalWidth };
+	mediaNaturalSizeCache.set(element.assetId, size);
+
+	return size;
+};
+
+const mediaAspectRatio = (element: WayfindingStudioMediaElement): number => {
+	const naturalSize = mediaNaturalSize(element);
+	const ratio: number = naturalSize
+		? naturalSize.width / naturalSize.height
+		: element.width / element.height;
+
+	return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+};
+
+const fitMediaSize = (bounds: { height: number; width: number }, aspectRatio: number): { height: number; width: number } => {
+	const safeRatio: number = Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 1;
+	const boundsRatio: number = bounds.width / bounds.height;
+
+	return boundsRatio > safeRatio
+		? { height: bounds.height, width: bounds.height * safeRatio }
+		: { height: bounds.width / safeRatio, width: bounds.width };
+};
+
+const mediaResizeCorners = (element: WayfindingStudioMediaElement): Record<MediaResizeCorner, WayfindingPoint> => ({
+	'north-east': { x: element.point.x + element.width, y: element.point.y },
+	'north-west': { x: element.point.x, y: element.point.y },
+	'south-east': { x: element.point.x + element.width, y: element.point.y + element.height },
+	'south-west': { x: element.point.x, y: element.point.y + element.height }
+});
+
+const nearestMediaResizeCorner = (element: WayfindingStudioMediaElement, point: WayfindingPoint): MediaResizeCorner | undefined => {
+	const radius: number = 11 / scale;
+
+	return (Object.entries(mediaResizeCorners(element)) as Array<[MediaResizeCorner, WayfindingPoint]>)
+		.find(([, cornerPoint]): boolean => Math.hypot(cornerPoint.x - point.x, cornerPoint.y - point.y) <= radius)?.[0];
+};
+
+const oppositeMediaResizePoint = (element: WayfindingStudioMediaElement, corner: MediaResizeCorner): WayfindingPoint => {
+	const corners = mediaResizeCorners(element);
+	const opposite: Record<MediaResizeCorner, MediaResizeCorner> = {
+		'north-east': 'south-west',
+		'north-west': 'south-east',
+		'south-east': 'north-west',
+		'south-west': 'north-east'
+	};
+
+	return corners[opposite[corner]];
 };
 
 const persistCurrentMask = (): void => {
@@ -1141,6 +1277,16 @@ const renderRouteSimulator = (): void => {
 		return item;
 	}));
 	routeClearButton.disabled = !simulatedRoute;
+	routeAdjustButton.disabled = !simulatedRoute;
+	routeAdjustButton.hidden = routeAdjustmentActive;
+	routeAdjustPanel.hidden = !routeAdjustmentActive;
+	const selectedRouteEdge: WayfindingEdge | undefined = graph?.edges.find((edge): boolean => edge.id === selectedEdgeId);
+	const selectedRoutePoints: WayfindingPoint[] = selectedRouteEdge ? edgePoints(selectedRouteEdge) : [];
+	routeAdjustAddBendButton.disabled = !routeAdjustmentActive || !selectedRouteEdge;
+	routeAdjustRemoveBendButton.disabled = !routeAdjustmentActive
+		|| selectedEdgeVertexIndex === undefined
+		|| selectedEdgeVertexIndex <= 0
+		|| selectedEdgeVertexIndex >= selectedRoutePoints.length - 1;
 };
 
 const elementTypeLabels: Record<WayfindingStudioElement['type'], string> = {
@@ -1303,9 +1449,14 @@ const deleteSelectedSemanticVertex = (): boolean => {
 
 const deleteCurrentSelection = (): void => {
 	if (deleteSelectedSemanticVertex()) return;
+	if (deleteSelectedEdgeVertex()) return;
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	const edge: WayfindingEdge | undefined = graph?.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId);
 	if (!element && !edge) return;
+	if (!element && edge && routeAdjustmentActive) {
+		coverageStatus.textContent = 'Select an internal bend to remove it. Deleting a complete route segment remains available in Advanced segment settings.';
+		return;
+	}
 	const before: HistoryState = captureHistoryState();
 	if (element) {
 		const removedIds = new Set<string>([element.id]);
@@ -1325,6 +1476,7 @@ const deleteCurrentSelection = (): void => {
 	} else if (edge && graph) {
 		graph.edges = graph.edges.filter((candidate: WayfindingEdge): boolean => candidate.id !== edge.id);
 		selectedEdgeId = undefined;
+		selectedEdgeVertexIndex = undefined;
 		coverageStatus.textContent = `Deleted route ${edge.id}`;
 	}
 	syncStudioGraph();
@@ -1559,8 +1711,74 @@ const renderSemanticEditor = (): void => {
 		textField('Outline color', element.outlineColor ?? defaults.outlineColor, (value): void => { element.outlineColor = value; }, 'color');
 		textField('Outline width', String(element.outlineWidth ?? defaults.outlineWidth), (value): void => { element.outlineWidth = Math.min(16, Math.max(0, Number(value) || 0)); }, 'number', semanticEditor, 'Use a small outline when the map artwork makes text hard to read.');
 	} else if (element.type === 'icon' || element.type === 'logo') {
-		textField('Width', String(element.width), (value): void => { element.width = Math.max(8, Number(value) || 8); }, 'number');
-		textField('Height', String(element.height), (value): void => { element.height = Math.max(8, Number(value) || 8); }, 'number');
+		const naturalSize = mediaNaturalSize(element);
+		const aspectRatio: number = mediaAspectRatio(element);
+		const sizeFields: HTMLDivElement = document.createElement('div');
+		sizeFields.className = 'appearance-fields';
+		const widthLabel: HTMLLabelElement = document.createElement('label');
+		const heightLabel: HTMLLabelElement = document.createElement('label');
+		const widthInput: HTMLInputElement = document.createElement('input');
+		const heightInput: HTMLInputElement = document.createElement('input');
+		let before: HistoryState | undefined;
+		widthLabel.textContent = 'Width';
+		heightLabel.textContent = 'Height';
+		widthInput.type = 'number';
+		heightInput.type = 'number';
+		widthInput.min = '8';
+		heightInput.min = '8';
+		widthInput.value = String(Math.round(element.width * 100) / 100);
+		heightInput.value = String(Math.round(element.height * 100) / 100);
+		const captureBefore = (): void => { before ??= captureHistoryState(); };
+		widthInput.addEventListener('focus', captureBefore);
+		heightInput.addEventListener('focus', captureBefore);
+		widthInput.addEventListener('input', (): void => {
+			element.width = Math.max(8, Number(widthInput.value) || 8);
+			element.height = Math.max(8, element.width / aspectRatio);
+			heightInput.value = String(Math.round(element.height * 100) / 100);
+			syncStudioGraph();
+			renderStudioControls();
+			draw();
+		});
+		heightInput.addEventListener('input', (): void => {
+			element.height = Math.max(8, Number(heightInput.value) || 8);
+			element.width = Math.max(8, element.height * aspectRatio);
+			widthInput.value = String(Math.round(element.width * 100) / 100);
+			syncStudioGraph();
+			renderStudioControls();
+			draw();
+		});
+		const commitSize = (): void => {
+			if (before) recordHistory(before);
+			before = undefined;
+			renderSemanticEditor();
+		};
+		widthInput.addEventListener('change', commitSize);
+		heightInput.addEventListener('change', commitSize);
+		widthLabel.append(widthInput);
+		heightLabel.append(heightInput);
+		sizeFields.append(widthLabel, heightLabel);
+		semanticEditor.append(sizeFields);
+		const sizeNote: HTMLParagraphElement = document.createElement('p');
+		sizeNote.className = 'shape-point-status';
+		sizeNote.textContent = naturalSize
+			? `Source ${naturalSize.width} x ${naturalSize.height}. Proportions are locked while resizing on the map or in these fields.${element.width > naturalSize.width * 1.5 || element.height > naturalSize.height * 1.5 ? ' The displayed size exceeds the source and may look soft.' : ''}`
+			: 'Proportions are locked to the current image shape. Drag any selected corner handle on the map to resize.';
+		const restoreProportions: HTMLButtonElement = document.createElement('button');
+		restoreProportions.type = 'button';
+		restoreProportions.textContent = 'Restore source proportions';
+		restoreProportions.disabled = !naturalSize;
+		restoreProportions.addEventListener('click', (): void => {
+			if (!naturalSize) return;
+			const beforeState: HistoryState = captureHistoryState();
+			const fitted = fitMediaSize({ height: element.height, width: element.width }, naturalSize.width / naturalSize.height);
+			element.width = fitted.width;
+			element.height = fitted.height;
+			syncStudioGraph();
+			recordHistory(beforeState);
+			renderSemanticEditor();
+			draw();
+		});
+		semanticEditor.append(sizeNote, restoreProportions);
 	}
 	const advanced: HTMLDetailsElement = document.createElement('details');
 	const advancedSummary: HTMLElement = document.createElement('summary');
@@ -2110,9 +2328,23 @@ const drawSemanticElements = (): void => {
 			const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === element.assetId);
 			if (asset) {
 				const image: HTMLImageElement = cachedMediaImage(asset);
-				if (image.complete) context.drawImage(image, element.point.x, element.point.y, element.width, element.height);
+				if (image.complete) {
+					context.imageSmoothingEnabled = true;
+					context.drawImage(image, element.point.x, element.point.y, element.width, element.height);
+				}
 			}
 			context.strokeRect(element.point.x, element.point.y, element.width, element.height);
+			if (selected && tool === 'select') {
+				for (const corner of Object.values(mediaResizeCorners(element))) {
+					context.beginPath();
+					context.arc(corner.x, corner.y, 7 / scale, 0, Math.PI * 2);
+					context.fillStyle = '#fff8e9';
+					context.fill();
+					context.lineWidth = 3 / scale;
+					context.strokeStyle = '#ffd34e';
+					context.stroke();
+				}
+			}
 		} else if ('geometry' in element) {
 			context.beginPath();
 			context.moveTo(element.geometry[0].x, element.geometry[0].y);
@@ -2390,14 +2622,30 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 		const asset: WayfindingStudioAsset = sourceAsset.kind === type
 			? sourceAsset
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
-		if (asset !== sourceAsset) studioProject.assets.push(asset);
+		if (asset !== sourceAsset) {
+			studioProject.assets.push(asset);
+			const sourceSize = mediaNaturalSizeCache.get(sourceAsset.id) ?? pendingMediaNaturalSize;
+			if (sourceSize) mediaNaturalSizeCache.set(asset.id, sourceSize);
+		}
 		const defaults = resolveWayfindingStudioPresentation(studioProject)[type];
-		element = { ...base, assetId: asset.id, height: defaults.height, id: nextId(type), point: pointValue, type, width: defaults.width } satisfies WayfindingStudioMediaElement;
+		const naturalSize = mediaNaturalSizeCache.get(asset.id) ?? pendingMediaNaturalSize;
+		const fitted = fitMediaSize(defaults, naturalSize ? naturalSize.width / naturalSize.height : defaults.width / defaults.height);
+		const floor: WayfindingStudioFloor = currentFloor();
+		const mediaPoint: WayfindingPoint = {
+			x: Math.max(0, Math.min(floor.width - fitted.width, pointValue.x - fitted.width / 2)),
+			y: Math.max(0, Math.min(floor.height - fitted.height, pointValue.y - fitted.height / 2))
+		};
+		element = { ...base, assetId: asset.id, height: fitted.height, id: nextId(type), point: mediaPoint, type, width: fitted.width } satisfies WayfindingStudioMediaElement;
 	} else element = { ...base, id: nextId('label'), point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	syncStudioGraph();
 	recordHistory(before);
+	if (element.type === 'icon' || element.type === 'logo') {
+		tool = 'select';
+		setActiveTool();
+		coverageStatus.textContent = `${element.type === 'logo' ? 'Logo' : 'Icon'} placed. Drag a corner handle to resize it proportionally, or drag the image to move it.`;
+	}
 	if (element.type === 'door') {
 		const linkedLocation: WayfindingStudioPolygonElement | undefined = element.locationId
 			? currentElements().find((candidate: WayfindingStudioElement): candidate is WayfindingStudioPolygonElement => candidate.type === 'location' && candidate.id === element.locationId)
@@ -2489,6 +2737,7 @@ const draw = (): void => {
 
 	const showRouteNetwork: boolean = layerVisible('route-network') || tool === 'anchor' || tool === 'draw' || tool === 'graph';
 	if (graph && showRouteNetwork) {
+		const activeEdgeIds: Set<string> = activeRouteEdgeIds();
 		for (const edge of graph.edges) {
 			const fromNode: WayfindingNode | undefined = graphNode(edge.from);
 			const toNode: WayfindingNode | undefined = graphNode(edge.to);
@@ -2505,15 +2754,21 @@ const draw = (): void => {
 
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
-			context.lineWidth = (edge.id === selectedEdgeId ? 5 : 2.5) / scale;
-			context.strokeStyle = edge.id === selectedEdgeId ? '#ffd34e' : valid ? '#008f77' : '#e13f34';
+			const selectedEdge: boolean = edge.id === selectedEdgeId;
+			const activeEdge: boolean = activeEdgeIds.has(edge.id);
+			context.lineWidth = (selectedEdge ? 6 : routeAdjustmentActive ? activeEdge ? 4 : 1.25 : 2.5) / scale;
+			context.strokeStyle = selectedEdge
+				? '#ffd34e'
+				: routeAdjustmentActive
+					? activeEdge ? '#008f77' : 'rgba(78, 96, 91, 0.35)'
+					: valid ? '#008f77' : '#e13f34';
 			context.stroke();
 
-			if (tool === 'graph' && edge.id === selectedEdgeId) {
-				for (const point of points) {
+			if (tool === 'graph' && selectedEdge) {
+				for (const [pointIndex, point] of points.entries()) {
 					context.beginPath();
-					context.arc(point.x, point.y, 6 / scale, 0, Math.PI * 2);
-					context.fillStyle = '#fff8e9';
+					context.arc(point.x, point.y, (pointIndex === selectedEdgeVertexIndex ? 8 : 6) / scale, 0, Math.PI * 2);
+					context.fillStyle = pointIndex === selectedEdgeVertexIndex ? '#ffd34e' : '#fff8e9';
 					context.fill();
 					context.lineWidth = 2 / scale;
 					context.strokeStyle = '#17201f';
@@ -2562,7 +2817,7 @@ const draw = (): void => {
 			context.stroke();
 		}
 	}
-	if (simulatedRoute && layerVisible('route-preview')) {
+	if (simulatedRoute && layerVisible('route-preview') && !routeAdjustmentActive) {
 		const points: WayfindingPoint[] = simulatedRoutePoints();
 		if (points.length > 1) {
 			const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
@@ -2595,8 +2850,10 @@ const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right:
 const nearestEdge = (point: WayfindingPoint): WayfindingEdge | undefined => {
 	let selected: WayfindingEdge | undefined;
 	let minimumDistance = 14 / scale;
+	const activeEdgeIds: Set<string> = activeRouteEdgeIds();
 
 	for (const edge of graph?.edges ?? []) {
+		if (routeAdjustmentActive && !activeEdgeIds.has(edge.id)) continue;
 		if (graphNode(edge.from)?.levelId !== currentFloorId || graphNode(edge.to)?.levelId !== currentFloorId) continue;
 		const points: WayfindingPoint[] = edgePoints(edge);
 
@@ -2680,7 +2937,7 @@ const moveVertex = (drag: DraggedVertex, point: WayfindingPoint): void => {
 	if (drag.pointIndex === edge.geometry.length - 1) setNodePoint(edge.to, point);
 };
 
-const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): void => {
+const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): number => {
 	const points: WayfindingPoint[] = edgePoints(edge).map((candidate: WayfindingPoint): WayfindingPoint => ({ ...candidate }));
 	let segment = 1;
 	let minimumDistance = Number.POSITIVE_INFINITY;
@@ -2697,10 +2954,37 @@ const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): void => {
 	points.splice(segment, 0, { ...point });
 	edge.geometry = points;
 	edge.reviewStatus = 'proposed';
+
+	return segment;
+};
+
+const deleteSelectedEdgeVertex = (): boolean => {
+	if (!graph || !selectedEdgeId || selectedEdgeVertexIndex === undefined) return false;
+	const edge: WayfindingEdge | undefined = graph.edges.find((candidate): boolean => candidate.id === selectedEdgeId);
+	if (!edge) return false;
+	const points: WayfindingPoint[] = edgePoints(edge).map((point): WayfindingPoint => ({ ...point }));
+	if (selectedEdgeVertexIndex <= 0 || selectedEdgeVertexIndex >= points.length - 1) {
+		coverageStatus.textContent = 'Route endpoints connect graph segments and cannot be removed. Move the endpoint or select an internal bend.';
+		return true;
+	}
+	const before: HistoryState = captureHistoryState();
+	points.splice(selectedEdgeVertexIndex, 1);
+	edge.geometry = points;
+	edge.reviewStatus = 'proposed';
+	selectedEdgeVertexIndex = undefined;
+	syncStudioGraph();
+	recordHistory(before, true);
+	refreshSimulatedRouteAfterGraphEdit('Removed the selected bend.');
+	renderRouteSimulator();
+	renderReview();
+	draw();
+
+	return true;
 };
 
 const selectEdge = (edgeId: string | undefined): void => {
 	selectedEdgeId = edgeId;
+	selectedEdgeVertexIndex = undefined;
 	if (edgeId) {
 		selectedSemanticId = undefined;
 		selectedSemanticVertexIndex = undefined;
@@ -2708,6 +2992,7 @@ const selectEdge = (edgeId: string | undefined): void => {
 		renderSemanticEditor();
 	}
 	insertPointForEdge = undefined;
+	renderRouteSimulator();
 	renderReview();
 	updateEditActions();
 	draw();
@@ -2843,6 +3128,10 @@ const routeSegmentName = (edge: WayfindingEdge): string => `${routeNodeName(edge
 
 const renderReview = (): void => {
 	const edges: WayfindingEdge[] = graph?.edges ?? [];
+	const activeEdgeIds: Set<string> = activeRouteEdgeIds();
+	const listedEdges: WayfindingEdge[] = routeAdjustmentActive
+		? edges.filter((edge): boolean => activeEdgeIds.has(edge.id))
+		: edges;
 	const hasWalkableMask: boolean = mask.some((value: number): boolean => value === 1);
 	const invalidEdgeIds = new Set(edges.filter((edge: WayfindingEdge): boolean => hasWalkableMask && edgeFailuresFor(edge).length > 0).map((edge: WayfindingEdge): string => edge.id));
 	const selected: WayfindingEdge | undefined = edges.find((edge: WayfindingEdge): boolean => edge.id === selectedEdgeId);
@@ -2851,7 +3140,9 @@ const renderReview = (): void => {
 		? project.guidance.targetMode === 'route' ? 'NO MASK' : 'MASK OPTIONAL'
 		: maskReviewStatus === 'confirmed' ? 'MASK CONFIRMED' : 'MASK NEEDS REVIEW';
 	maskStatus.dataset.confirmed = String(hasWalkableMask && maskReviewStatus === 'confirmed');
-	edgeSummary.textContent = `${edges.length} route segment${edges.length === 1 ? '' : 's'}`;
+	edgeSummary.textContent = routeAdjustmentActive
+		? `${listedEdges.length} segment${listedEdges.length === 1 ? '' : 's'} in active route`
+		: `${edges.length} route segment${edges.length === 1 ? '' : 's'}`;
 	edgeFailures.textContent = !hasWalkableMask
 		? project.guidance.targetMode === 'route' ? 'Extract or load a mask to evaluate routes' : `Walkable mask is optional for ${project.guidance.targetMode} delivery`
 		: invalidEdgeIds.size === 0 ? 'All route segments stay inside walkable space' : `${invalidEdgeIds.size} route segment${invalidEdgeIds.size === 1 ? '' : 's'} leave walkable space`;
@@ -2861,7 +3152,7 @@ const renderReview = (): void => {
 			? 'Background loaded; author semantic layers'
 			: `${currentElements().length} semantic element(s) on ${currentFloor().name}`;
 
-	edgeList.replaceChildren(...edges.map((edge: WayfindingEdge): HTMLButtonElement => {
+	edgeList.replaceChildren(...listedEdges.map((edge: WayfindingEdge): HTMLButtonElement => {
 		const button: HTMLButtonElement = document.createElement('button');
 		button.type = 'button';
 		button.dataset.valid = String(!invalidEdgeIds.has(edge.id));
@@ -2891,7 +3182,9 @@ const renderReview = (): void => {
 			<label class="check"><input data-edge-field="accessible" type="checkbox"> Verified step-free</label>
 		</div>
 		<div class="segment-health"><div><span>Review</span><strong data-segment-review></strong></div><div><span>Walkable check</span><strong data-segment-mask></strong></div></div>
+		<p class="shape-point-status" data-route-point-status></p>
 		<button type="button" data-action="insert">Add a bend</button>
+		<button type="button" data-action="remove-bend" class="danger">Remove selected bend</button>
 		<button type="button" data-action="confirm">Mark segment as reviewed</button>
 		<details class="segment-advanced">
 			<summary>Advanced segment settings</summary>
@@ -2907,6 +3200,12 @@ const renderReview = (): void => {
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-review]')!.textContent = selected.reviewStatus === 'confirmed' ? 'Reviewed' : 'Needs review';
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-mask]')!.textContent = invalidEdgeIds.has(selected.id) ? `${edgeFailuresFor(selected).length} point failures` : hasWalkableMask ? 'Contained' : 'Not checked';
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-id]')!.textContent = selected.id;
+	const selectedPoints: WayfindingPoint[] = edgePoints(selected);
+	selectedEdgeHost.querySelector<HTMLElement>('[data-route-point-status]')!.textContent = selectedEdgeVertexIndex === undefined
+		? `${selectedPoints.length} route points. Select and drag a round handle, or double-click the line to add a bend.`
+		: selectedEdgeVertexIndex === 0 || selectedEdgeVertexIndex === selectedPoints.length - 1
+			? `Endpoint ${selectedEdgeVertexIndex + 1} selected. It joins another route segment and can be moved but not removed.`
+			: `Bend ${selectedEdgeVertexIndex + 1} selected. Drag it or remove it.`;
 	const presetSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="preset"]')!;
 	const directionSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="direction"]')!;
 	const kindSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="kind"]')!;
@@ -2925,9 +3224,12 @@ const renderReview = (): void => {
 	const updateEdge = (before: HistoryState): void => {
 		selected.reviewStatus = 'proposed';
 		syncStudioGraph();
-		recordHistory(before);
-		renderReview();
-		draw();
+		recordHistory(before, Boolean(simulatedRoute));
+		if (simulatedRoute) refreshSimulatedRouteAfterGraphEdit('Updated the active route segment.');
+		else {
+			renderReview();
+			draw();
+		}
 	};
 	presetSelect.addEventListener('change', (): void => {
 		const preset: RouteSegmentPreset | undefined = ROUTE_SEGMENT_PRESETS.find((candidate): boolean => candidate.value === presetSelect.value);
@@ -2968,6 +3270,9 @@ const renderReview = (): void => {
 		insertPointForEdge = selected.id;
 		coverageStatus.textContent = 'Click the route segment where you want to add a bend.';
 	});
+	const removeBendButton = selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="remove-bend"]')!;
+	removeBendButton.disabled = selectedEdgeVertexIndex === undefined || selectedEdgeVertexIndex <= 0 || selectedEdgeVertexIndex >= selectedPoints.length - 1;
+	removeBendButton.addEventListener('click', (): void => { deleteSelectedEdgeVertex(); });
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="confirm"]')!.addEventListener('click', (): void => {
 		if (mask.length === 0 || maskReviewStatus !== 'confirmed') {
 			coverageStatus.textContent = 'Confirm the independently reviewed walkable area before reviewing this route segment.';
@@ -3070,7 +3375,7 @@ const pointForMaskIndex = (index: number): WayfindingPoint => ({
 	y: (Math.floor(index / maskColumns) + 0.5) * cellSize()
 });
 
-const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] => {
+function simplifyGeometry(points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] {
 	if (points.length <= 2) return points;
 
 	let splitIndex = -1;
@@ -3093,7 +3398,7 @@ const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): Wa
 	const right: WayfindingPoint[] = simplifyGeometry(points.slice(splitIndex), toleranceValue);
 
 	return [...left.slice(0, -1), ...right];
-};
+}
 
 const geometryContained = (points: WayfindingPoint[]): boolean => {
 	const step: number = Math.max(1, cellSize() / 2);
@@ -3369,14 +3674,19 @@ const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Pr
 	selectedSemanticId = undefined;
 	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
+	selectedEdgeVertexIndex = undefined;
 	semanticDraft = undefined;
 	edgeDraft = undefined;
 	insertPointForEdge = undefined;
 	insertPointForSemanticId = undefined;
 	draggedSemantic = undefined;
 	draggedVertex = undefined;
+	draggedMediaResize = undefined;
 	simulatedRoute = undefined;
+	routeAdjustmentActive = false;
 	pendingMediaAssetId = undefined;
+	pendingMediaNaturalSize = undefined;
+	mediaNaturalSizeCache.clear();
 	renderMediaAssetState();
 	clearHistory();
 	syncProjectControls();
@@ -3470,12 +3780,23 @@ openProjectButton.addEventListener('click', (): void => { studioProjectFile.clic
 semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 	const file: File | undefined = semanticMediaFile.files?.[0];
 	if (!file) return;
-	const id: string = nextId('asset');
-	studioProject.assets.push({ dataUrl: await readFileDataUrl(file), id, kind: 'icon', mimeType: file.type || 'image/png', name: file.name });
-	pendingMediaAssetId = id;
-	scheduleAutosave();
-	renderMediaAssetState();
-	coverageStatus.textContent = `${file.name} is ready. Click the map to place the ${tool === 'logo' ? 'logo' : 'icon'}.`;
+	try {
+		const dataUrl: string = await readFileDataUrl(file);
+		const naturalSize = await decodeMediaNaturalSize(dataUrl);
+		const id: string = nextId('asset');
+		studioProject.assets.push({ dataUrl, id, kind: 'icon', mimeType: file.type || 'image/png', name: file.name });
+		mediaNaturalSizeCache.set(id, naturalSize);
+		pendingMediaNaturalSize = naturalSize;
+		pendingMediaAssetId = id;
+		scheduleAutosave();
+		renderMediaAssetState();
+		coverageStatus.textContent = `${file.name} (${naturalSize.width} x ${naturalSize.height}) is ready. Click the map to place it at its original proportions.`;
+	} catch (error) {
+		pendingMediaAssetId = undefined;
+		pendingMediaNaturalSize = undefined;
+		renderMediaAssetState();
+		coverageStatus.textContent = error instanceof Error ? error.message : 'The selected image could not be opened.';
+	}
 });
 
 studioProjectName.addEventListener('input', (): void => { studioProject.name = studioProjectName.value.trim() || 'Wayfinding project'; touchWayfindingStudioProject(studioProject); scheduleAutosave(); });
@@ -3612,6 +3933,7 @@ const simulateSelectedRoute = (destinationIdValue: string = routeDestination.val
 	if (!simulatedRoute) {
 		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
 		routeClearButton.disabled = true;
+		renderRouteSimulator();
 		draw();
 
 		return false;
@@ -3621,10 +3943,30 @@ const simulateSelectedRoute = (destinationIdValue: string = routeDestination.val
 		routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${floors.join(' -> ')}`;
 		routeClearButton.disabled = false;
 	}
+	renderRouteSimulator();
 	draw();
 
 	return true;
 };
+
+function refreshSimulatedRouteAfterGraphEdit(message: string): void {
+	const wasAdjusting: boolean = routeAdjustmentActive;
+	if (!simulateSelectedRoute()) {
+		exitRouteAdjustment(false);
+		coverageStatus.textContent = 'The edited graph no longer produces this route. Reconnect the affected segment or undo the edit.';
+		return;
+	}
+	if (wasAdjusting) {
+		routeAdjustmentActive = true;
+		routeNetworkLayer.checked = true;
+		tool = 'graph';
+		setActiveTool();
+	}
+	coverageStatus.textContent = message;
+	renderRouteSimulator();
+	renderReview();
+	draw();
+}
 
 const routeNodeForElement = (element: WayfindingStudioElement): WayfindingNode | undefined => {
 	if ((element.type !== 'location' && element.type !== 'poi') || !element.destinationId) return undefined;
@@ -3656,6 +3998,18 @@ requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (
 });
 routeClearButton.addEventListener('click', (): void => {
 	clearSimulatedRoute('Route preview cleared. Choose Simulate route to draw it again.');
+});
+routeAdjustButton.addEventListener('click', enterRouteAdjustment);
+routeAdjustAddBendButton.addEventListener('click', (): void => {
+	if (!selectedEdgeId) return;
+	insertPointForEdge = selectedEdgeId;
+	coverageStatus.textContent = 'Click the highlighted segment where the new bend should be inserted.';
+	renderReview();
+});
+routeAdjustRemoveBendButton.addEventListener('click', (): void => { deleteSelectedEdgeVertex(); });
+routeAdjustDoneButton.addEventListener('click', (): void => {
+	exitRouteAdjustment();
+	coverageStatus.textContent = 'Route adjustment finished. Simulate other destinations or export the project when ready.';
 });
 routeClickMode.addEventListener('change', (): void => {
 	if (routeClickMode.checked) {
@@ -3964,8 +4318,12 @@ cellSizeInput.addEventListener('change', (): void => { resetMaskGrid(); renderRe
 toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
-requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', generateCenterlineGraph);
-routeBuildButton.addEventListener('click', generateCenterlineGraph);
+const rebuildRouteNetwork = (): void => {
+	exitRouteAdjustment(false);
+	generateCenterlineGraph();
+};
+requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', rebuildRouteNetwork);
+routeBuildButton.addEventListener('click', rebuildRouteNetwork);
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
@@ -4028,11 +4386,14 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 
 		if (edge) {
 			const before: HistoryState = captureHistoryState();
-			insertPoint(edge, imagePoint);
+			selectedEdgeId = edge.id;
+			selectedEdgeVertexIndex = insertPoint(edge, imagePoint);
 			syncStudioGraph();
-			recordHistory(before);
+			recordHistory(before, Boolean(simulatedRoute));
+			if (simulatedRoute) refreshSimulatedRouteAfterGraphEdit('Added a bend to the active route. Drag the selected handle to refine it.');
 		}
 		insertPointForEdge = undefined;
+		renderRouteSimulator();
 		renderReview();
 		draw();
 
@@ -4092,6 +4453,19 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	} else if (tool === 'door' || tool === 'poi' || tool === 'origin' || tool === 'transition' || tool === 'label' || tool === 'icon' || tool === 'logo') {
 		addSemanticPoint(tool, imagePoint);
 	} else if (tool === 'select') {
+		const currentMedia: WayfindingStudioMediaElement | undefined = selectedMediaElement();
+		const resizeCorner: MediaResizeCorner | undefined = currentMedia ? nearestMediaResizeCorner(currentMedia, imagePoint) : undefined;
+		if (currentMedia && resizeCorner) {
+			draggedMediaResize = {
+				aspectRatio: mediaAspectRatio(currentMedia),
+				corner: resizeCorner,
+				elementId: currentMedia.id,
+				opposite: oppositeMediaResizePoint(currentMedia, resizeCorner)
+			};
+			dragHistoryState = captureHistoryState();
+			dragMutated = false;
+			return;
+		}
 		const currentPolygon: WayfindingStudioPolygonElement | undefined = selectedSemanticPolygon();
 		const currentVertexIndex: number | undefined = currentPolygon ? nearestSemanticVertex(currentPolygon, imagePoint) : undefined;
 		const selected: WayfindingStudioElement | undefined = routeClickMode.checked
@@ -4100,6 +4474,7 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		selectedSemanticId = selected?.id;
 		selectedSemanticVertexIndex = currentVertexIndex;
 		selectedEdgeId = undefined;
+		selectedEdgeVertexIndex = undefined;
 		if (selected && routeClickMode.checked && (selected.type === 'location' || selected.type === 'poi')) {
 			selectedSemanticVertexIndex = undefined;
 			simulateRouteForElement(selected);
@@ -4116,7 +4491,13 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 				? currentVertexIndex ?? nearestSemanticVertex(selected, imagePoint)
 				: undefined;
 			selectedSemanticVertexIndex = vertexIndex;
-			draggedSemantic = { elementId: selected.id, vertexIndex };
+			draggedSemantic = {
+				elementId: selected.id,
+				pointOffset: selected.type === 'icon' || selected.type === 'logo'
+					? { x: imagePoint.x - selected.point.x, y: imagePoint.y - selected.point.y }
+					: undefined,
+				vertexIndex
+			};
 			dragHistoryState = captureHistoryState();
 			dragMutated = false;
 		} else selectedSemanticVertexIndex = undefined;
@@ -4130,9 +4511,14 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		const vertex: number | undefined = edge ? nearestVertex(edge, imagePoint) : undefined;
 
 		if (edge && vertex !== undefined) {
+			selectedEdgeId = edge.id;
+			selectedEdgeVertexIndex = vertex;
 			draggedVertex = { edgeId: edge.id, pointIndex: vertex };
 			dragHistoryState = captureHistoryState();
 			dragMutated = false;
+			renderRouteSimulator();
+			renderReview();
+			draw();
 		}
 		else selectEdge(nearestEdge(imagePoint)?.id);
 	}
@@ -4165,6 +4551,29 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 		moveVertex(draggedVertex, imagePoint);
 		dragMutated = true;
 		draw();
+	} else if (tool === 'select' && draggedMediaResize) {
+		const element: WayfindingStudioElement | undefined = currentElements().find((candidate): boolean => candidate.id === draggedMediaResize?.elementId);
+		if (!element || (element.type !== 'icon' && element.type !== 'logo')) return;
+		const rawWidth: number = Math.max(8, Math.abs(imagePoint.x - draggedMediaResize.opposite.x));
+		const rawHeight: number = Math.max(8, Math.abs(imagePoint.y - draggedMediaResize.opposite.y));
+		let width: number;
+		let height: number;
+		if (rawWidth / rawHeight > draggedMediaResize.aspectRatio) {
+			width = rawWidth;
+			height = width / draggedMediaResize.aspectRatio;
+		} else {
+			height = rawHeight;
+			width = height * draggedMediaResize.aspectRatio;
+		}
+		element.width = width;
+		element.height = height;
+		element.point = {
+			x: draggedMediaResize.corner.endsWith('east') ? draggedMediaResize.opposite.x : draggedMediaResize.opposite.x - width,
+			y: draggedMediaResize.corner.startsWith('south') ? draggedMediaResize.opposite.y : draggedMediaResize.opposite.y - height
+		};
+		element.status = 'proposed';
+		dragMutated = true;
+		draw();
 	} else if (tool === 'select' && draggedSemantic) {
 		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === draggedSemantic?.elementId);
 		if (!element) return;
@@ -4176,7 +4585,10 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 				const dy: number = imagePoint.y - center.y;
 				element.geometry = element.geometry.map((vertex): WayfindingPoint => ({ x: vertex.x + dx, y: vertex.y + dy }));
 			}
-		} else element.point = { x: imagePoint.x, y: imagePoint.y };
+		} else element.point = {
+			x: imagePoint.x - (draggedSemantic.pointOffset?.x ?? 0),
+			y: imagePoint.y - (draggedSemantic.pointOffset?.y ?? 0)
+		};
 		element.status = 'proposed';
 		dragMutated = true;
 		draw();
@@ -4200,8 +4612,20 @@ canvas.addEventListener('pointerup', (): void => {
 	if (draggedVertex) {
 		draggedVertex = undefined;
 		syncStudioGraph();
-		if (dragHistoryState && dragMutated) recordHistory(dragHistoryState);
+		if (dragHistoryState && dragMutated) {
+			recordHistory(dragHistoryState, Boolean(simulatedRoute));
+			if (simulatedRoute) refreshSimulatedRouteAfterGraphEdit('Moved the selected route point.');
+		}
+		renderRouteSimulator();
 		renderReview();
+		draw();
+	}
+	if (draggedMediaResize) {
+		draggedMediaResize = undefined;
+		syncStudioGraph();
+		if (dragHistoryState && dragMutated) recordHistory(dragHistoryState);
+		renderSemanticEditor();
+		renderStudioControls();
 		draw();
 	}
 	if (draggedSemantic) {
@@ -4217,8 +4641,22 @@ canvas.addEventListener('pointerup', (): void => {
 });
 
 canvas.addEventListener('dblclick', (event: MouseEvent): void => {
-	if (tool !== 'select') return;
 	const point: ImagePoint = toImagePoint(eventPoint(event));
+	if (tool === 'graph') {
+		const edge: WayfindingEdge | undefined = nearestEdge(point);
+		if (!edge) return;
+		const before: HistoryState = captureHistoryState();
+		selectedEdgeId = edge.id;
+		selectedEdgeVertexIndex = insertPoint(edge, point);
+		syncStudioGraph();
+		recordHistory(before, Boolean(simulatedRoute));
+		if (simulatedRoute) refreshSimulatedRouteAfterGraphEdit('Added a bend to the active route. Drag the selected handle to refine it.');
+		renderRouteSimulator();
+		renderReview();
+		draw();
+		return;
+	}
+	if (tool !== 'select') return;
 	const selected: WayfindingStudioElement | undefined = semanticElement() ?? nearestSemantic(point);
 	if (!selected || !('geometry' in selected)) return;
 	const insertedIndex: number | undefined = insertSemanticVertex(selected, point);

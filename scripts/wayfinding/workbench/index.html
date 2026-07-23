@@ -326,6 +326,16 @@
 					<button id="route-simulate" type="button">Simulate route</button>
 					<button id="route-clear" type="button" class="danger" disabled>Clear route</button>
 				</div>
+				<button id="route-adjust" type="button" class="route-adjust" disabled>Adjust this route</button>
+				<div id="route-adjust-panel" class="route-adjust-panel" hidden>
+					<strong>ADJUSTING THE ACTIVE ROUTE</strong>
+					<p>Only this visitor route is emphasized. Select a segment, drag its round handles, or double-click it to add a bend. Automatic Build routes replaces manual corrections, so adjust only after the final build.</p>
+					<div class="route-actions">
+						<button id="route-adjust-add-bend" type="button" disabled>Add bend</button>
+						<button id="route-adjust-remove-bend" type="button" class="danger" disabled>Remove selected bend</button>
+					</div>
+					<button id="route-adjust-done" type="button">Done adjusting</button>
+				</div>
 				<p id="route-result">Add an origin and a destination entrance, then connect them to the graph.</p>
 			</div>
 			<div class="review-summary"><span>ROUTE NETWORK REVIEW</span><strong id="edge-summary">0 route segments</strong><small id="edge-failures">No route network loaded</small></div>
@@ -336,10 +346,10 @@
 	<dialog id="shortcut-dialog" class="shortcut-dialog">
 		<header><div><span>AUTHORING HELP</span><h2>Keyboard shortcuts</h2></div><button id="shortcut-close" type="button" aria-label="Close shortcut help">Close</button></header>
 		<div class="shortcut-grid">
-			<section><h3>Navigate and edit</h3><dl><dt><kbd>V</kbd></dt><dd>Select and move</dd><dt><kbd>2</kbd> / <kbd>3</kbd></dt><dd>Switch between 2D editing and 3D preview</dd><dt><kbd>Space</kbd></dt><dd>Hold to pan</dd><dt><kbd>F</kbd></dt><dd>Fit floor to view</dd><dt><kbd>Wheel</kbd></dt><dd>Zoom at pointer</dd><dt><kbd>Double-click</kbd></dt><dd>Add a point on a selected polygon edge</dd><dt><kbd>Arrows</kbd></dt><dd>Nudge selected point or item</dd><dt><kbd>Shift</kbd> + <kbd>Arrows</kbd></dt><dd>Nudge by 10 units</dd><dt><kbd>Delete</kbd></dt><dd>Delete selected point or item</dd><dt><kbd>Esc</kbd></dt><dd>Cancel or clear point selection</dd></dl></section>
+			<section><h3>Navigate and edit</h3><dl><dt><kbd>V</kbd></dt><dd>Select and move</dd><dt><kbd>2</kbd> / <kbd>3</kbd></dt><dd>Switch between 2D editing and 3D preview</dd><dt><kbd>Space</kbd></dt><dd>Hold to pan</dd><dt><kbd>F</kbd></dt><dd>Fit floor to view</dd><dt><kbd>Wheel</kbd></dt><dd>Zoom at pointer</dd><dt><kbd>Double-click</kbd></dt><dd>Add a polygon point or route bend</dd><dt><kbd>Arrows</kbd></dt><dd>Nudge selected point or item</dd><dt><kbd>Shift</kbd> + <kbd>Arrows</kbd></dt><dd>Nudge by 10 units</dd><dt><kbd>Delete</kbd></dt><dd>Delete selected point or item</dd><dt><kbd>Esc</kbd></dt><dd>Cancel or clear point selection</dd></dl></section>
 			<section><h3>Project</h3><dl><dt><kbd>Ctrl</kbd> + <kbd>Z</kbd></dt><dd>Undo</dd><dt><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></dt><dd>Redo</dd><dt><kbd>Ctrl</kbd> + <kbd>Y</kbd></dt><dd>Redo (alternative)</dd><dt><kbd>Ctrl</kbd> + <kbd>S</kbd></dt><dd>Save project</dd><dt><kbd>?</kbd></dt><dd>Open this shortcut list</dd></dl></section>
 			<section><h3>Map items</h3><dl><dt><kbd>R</kbd></dt><dd>Room or area</dd><dt><kbd>W</kbd></dt><dd>Walkable area</dd><dt><kbd>B</kbd></dt><dd>Blocked area</dd><dt><kbd>D</kbd></dt><dd>Door</dd><dt><kbd>P</kbd></dt><dd>Point of interest</dd><dt><kbd>Y</kbd></dt><dd>You are here</dd><dt><kbd>T</kbd></dt><dd>Floor connection</dd><dt><kbd>L</kbd></dt><dd>Text label</dd><dt><kbd>I</kbd></dt><dd>Icon</dd><dt><kbd>G</kbd></dt><dd>Logo</dd><dt><kbd>Enter</kbd></dt><dd>Finish polygon</dd></dl></section>
-			<section><h3>Route tools</h3><dl><dt><kbd>H</kbd></dt><dd>Pan tool</dd><dt><kbd>A</kbd></dt><dd>Place destination entrance</dd><dt><kbd>E</kbd></dt><dd>Draw route</dd><dt><kbd>X</kbd></dt><dd>Edit route</dd><dt><kbd>Enter</kbd></dt><dd>Finish route at junction</dd></dl></section>
+			<section><h3>Route tools</h3><dl><dt><kbd>H</kbd></dt><dd>Pan tool</dd><dt><kbd>A</kbd></dt><dd>Place destination entrance</dd><dt><kbd>E</kbd></dt><dd>Draw route</dd><dt><kbd>X</kbd></dt><dd>Edit route network</dd><dt><kbd>Double-click</kbd></dt><dd>Add bend to selected route</dd><dt><kbd>Delete</kbd></dt><dd>Remove selected internal bend</dd><dt><kbd>Enter</kbd></dt><dd>Finish route at junction</dd></dl></section>
 		</div>
 	</dialog>
 	<script type="module" src="./workbench.ts"></script>
