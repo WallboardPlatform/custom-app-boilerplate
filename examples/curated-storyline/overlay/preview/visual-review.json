@@ -1,0 +1,121 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "51342fa48598872ef21069c0517c71b40503c7d9adc624f1e62202dd79148eb3",
+	"reviewedAt": "2026-07-23T17:43:39.020Z",
+	"reviewer": "Codex independent visual review",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The app proves the requested vertical slice: nested app-owned scenes are edited in a dedicated settings surface, saved as one structured value, and passively rotated without a datasource."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "This is a creative-led example with no supplied visual reference; the rendered result matches the frozen editorial direction and all declared signature choices."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Publication typography, asymmetric sequence fields, restrained index lines, and layout-specific statement, quote, and schedule scenes create a distinctive exhibition identity without dashboard cards."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Titles, labels, details, and collection identity remain room-readable across Full HD, wide-low, portrait, square, and long-copy scenarios."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark and custom light palettes preserve clear foreground, metadata, rule, and accent-field contrast without relying on color alone for structure."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Auto-fit bounds, descender-safe padding, deliberate contextual ellipsis, and the dedicated long-copy scenario show no text ink clipping or overflow."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The composition deliberately changes for wide-low, portrait, and square surfaces while preserving collection identity, sequence, primary title, and operational detail."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "The app-specific icon and placeholder derive from the approved visual system, all assets resolve, and coral, cobalt, sun, and mint tones remain coherent in both theme families."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The editorial sequence, monumental numbering, and nested custom editor are materially different from the maintained table, queue, dashboard, feed, media, and wayfinding examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Full HD statement scene inspected: hierarchy, index, body, detail, and accent field are balanced with no clipping or accidental empty bands."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Compact landscape inspected: essential title, index, detail, and accent geometry remain legible and inside the assigned surface."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Portrait inspected at full resolution: masthead, horizontal index, scene copy, and bottom color field form a deliberate vertical composition."
+		},
+		{
+			"file": "scenario-custom-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Custom light palette inspected: all foreground and muted text remains readable against the configured ground, stage, and accent colors."
+		},
+		{
+			"file": "scenario-empty-1366x768.png",
+			"status": "pass",
+			"notes": "Empty state inspected: no bundled scene leaks through and the editor recovery instruction is clear without creating a fake content layout."
+		},
+		{
+			"file": "scenario-long-copy-1536x864.png",
+			"status": "pass",
+			"notes": "Long-copy scene inspected: title and body fit their bounded regions at readable sizes with intact descenders and a fully visible detail line."
+		},
+		{
+			"file": "scenario-portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Named portrait scenario inspected and matches the approved portrait composition without overflow or overlap."
+		},
+		{
+			"file": "scenario-quote-1920x1080.png",
+			"status": "pass",
+			"notes": "Quote scene inspected: serif quotation hierarchy, supporting copy, attribution, and cobalt sequence field read as a distinct authored composition."
+		},
+		{
+			"file": "scenario-schedule-1920x1080.png",
+			"status": "pass",
+			"notes": "Schedule scene inspected: time and location detail, concise activity copy, and sun accent remain clear without borrowing dashboard grammar."
+		},
+		{
+			"file": "scenario-square-600x600.png",
+			"status": "pass",
+			"notes": "Square scenario inspected: compact masthead, sequence index, story title, detail, and bottom accent field all remain inside the 600px surface."
+		},
+		{
+			"file": "scenario-wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Wide-low scenario inspected: supporting copy is intentionally removed before primary hierarchy, producing a clean signage band with no clipped text."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Required square preset inspected and preserves the same complete compact hierarchy as its named scenario."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Required wide-low preset inspected: the stage fills the band, the title remains dominant, and the accent field stays proportionate."
+		}
+	],
+	"unresolvedFindings": []
+}

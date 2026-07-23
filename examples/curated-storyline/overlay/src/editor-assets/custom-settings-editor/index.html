@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Curated storyline editor</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<header class="app-header">
+		<div>
+			<span class="eyebrow">CURATED STORYLINE</span>
+			<h1>Edit published scenes</h1>
+			<p class="intro">Set the collection identity, arrange scenes, and choose how each story is composed on screen.</p>
+		</div>
+		<p id="status" role="status" aria-live="polite" data-state="connecting">Connecting to Wallboard...</p>
+	</header>
+
+	<main>
+		<section class="collection-fields" aria-labelledby="collection-heading">
+			<div class="section-heading">
+				<div>
+					<span>COLLECTION</span>
+					<h2 id="collection-heading">Shared identity</h2>
+				</div>
+				<button id="add-story" type="button" disabled>+ Add scene</button>
+			</div>
+			<div class="field-grid">
+				<label>
+					<span class="field-label">Venue or brand</span>
+					<input id="venue" type="text" maxlength="80" disabled>
+				</label>
+				<label>
+					<span class="field-label">Collection title</span>
+					<input id="collection-title" type="text" maxlength="120" disabled>
+				</label>
+				<label class="wide-field">
+					<span class="field-label">Collection description</span>
+					<textarea id="collection-deck" rows="2" maxlength="240" disabled></textarea>
+				</label>
+			</div>
+		</section>
+
+		<section class="story-workspace" aria-labelledby="story-heading">
+			<div class="section-heading">
+				<div>
+					<span>SEQUENCE</span>
+					<h2 id="story-heading">Published scenes</h2>
+				</div>
+				<p>Drag-free ordering keeps touch editing predictable. Use the arrow controls to reorder.</p>
+			</div>
+			<div id="empty-state" class="empty-state" hidden>
+				<strong>No scenes yet</strong>
+				<span>Add the first scene to begin the storyline.</span>
+			</div>
+			<div id="stories" class="story-list"></div>
+		</section>
+	</main>
+
+	<footer>
+		<span class="shortcut-hint">Ctrl+S saves</span>
+		<div class="footer-actions">
+			<button id="reset" type="button" class="secondary" disabled>Reset changes</button>
+			<button id="save" type="button" disabled>Save and close</button>
+		</div>
+	</footer>
+
+	<template id="story-template">
+		<article class="story-card">
+			<header class="story-header">
+				<div class="story-identity">
+					<span class="tone-swatch" aria-hidden="true"></span>
+					<div>
+						<span class="story-position"></span>
+						<strong class="story-summary"></strong>
+					</div>
+				</div>
+				<div class="story-actions" aria-label="Scene actions">
+					<button type="button" class="icon-button" data-action="move-up" title="Move scene up" aria-label="Move scene up">↑</button>
+					<button type="button" class="icon-button" data-action="move-down" title="Move scene down" aria-label="Move scene down">↓</button>
+					<button type="button" class="icon-button danger" data-action="delete" title="Delete scene" aria-label="Delete scene">×</button>
+				</div>
+			</header>
+			<div class="story-fields">
+				<label>
+					<span class="field-label">Eyebrow</span>
+					<input type="text" data-field="label" maxlength="80">
+				</label>
+				<label>
+					<span class="field-label">Title</span>
+					<textarea data-field="title" rows="2" maxlength="220"></textarea>
+				</label>
+				<label class="wide-field">
+					<span class="field-label">Supporting copy</span>
+					<textarea data-field="body" rows="3" maxlength="520"></textarea>
+				</label>
+				<label>
+					<span class="field-label">Location, time, or attribution</span>
+					<input type="text" data-field="detail" maxlength="140">
+				</label>
+				<div class="select-row">
+					<label>
+						<span class="field-label">Composition</span>
+						<select data-field="layout">
+							<option value="statement">Statement</option>
+							<option value="quote">Quote</option>
+							<option value="schedule">Schedule</option>
+						</select>
+					</label>
+					<label>
+						<span class="field-label">Accent</span>
+						<select data-field="tone">
+							<option value="coral">Coral</option>
+							<option value="cobalt">Cobalt</option>
+							<option value="sun">Sun</option>
+							<option value="mint">Mint</option>
+						</select>
+					</label>
+				</div>
+				<label class="checkbox-field">
+					<input type="checkbox" data-field="enabled">
+					<span>Publish this scene</span>
+				</label>
+			</div>
+		</article>
+	</template>
+
+	<script src="./editor.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {
 	"reviewThresholdMiB": 10,
-	"approvedBudgetMiB": 11,
-	"justification": "Retain the reviewed Full-HD Veszprem default and selected-state map images as visual regression evidence."
+	"approvedBudgetMiB": 11.5,
+	"justification": "Retain the reviewed Veszprem map evidence and two distinct Curated Storyline responsive references."
 }

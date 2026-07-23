@@ -1,0 +1,15 @@
+{
+	"title": "Curated Storyline",
+	"description": "App-owned ordered editorial scenes managed through a structured custom settings editor, with passive rotation and no datasource.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"artifacts": ["generation-brief.json"],
+	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+}
