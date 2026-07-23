@@ -524,6 +524,17 @@ main {
 .shortcut-grid kbd { display: inline-block; min-width: 25px; padding: 4px 6px; border: 1px solid #aeb9b5; background: #ffffff; color: #26322f; font-size: 9px; font-weight: 750; text-align: center; }
 .route-simulator { background: #eef4f1; }
 .route-simulator p { margin-top: 10px; }
+.route-simulator .route-intro { margin: 4px 0 12px; color: #52615d; }
+.route-setup-checklist { display: grid; margin: 0 0 12px; padding: 0; list-style: none; }
+.route-setup-checklist li { display: flex; align-items: center; min-width: 0; padding: 7px 0; border-top: 1px solid #d4dfdb; }
+.route-setup-checklist li:last-child { border-bottom: 1px solid #d4dfdb; }
+.route-setup-checklist li > span { flex: 0 0 44px; margin-right: 8px; color: #a45f12; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.route-setup-checklist li[data-ready="true"] > span { color: #16826f; }
+.route-setup-checklist li div { min-width: 0; }
+.route-setup-checklist li strong,
+.route-setup-checklist li div span { display: block; }
+.route-setup-checklist li div span { margin-top: 2px; color: #64716e; font-size: 9px; }
+.route-build { width: 100%; margin-bottom: 12px; }
 .route-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .route-actions button:disabled { border-color: #d5dcda; background: #f4f6f5; color: #9ba5a2; cursor: not-allowed; }
 .edge-fields { display: grid; margin-bottom: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

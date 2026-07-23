@@ -5,6 +5,9 @@ import { expect, test } from '@playwright/test';
 import {
 	createWayfindingStudioProject,
 	synchronizeWayfindingStudioGraph,
+	type WayfindingStudioDoorElement,
+	type WayfindingStudioElement,
+	type WayfindingStudioPolygonElement,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
 
@@ -29,6 +32,39 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 		to: 'semantic:meeting-room-shape',
 		traversal: 'indoor-corridor'
 	}];
+
+	return project;
+};
+
+const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
+	const project: WayfindingStudioProject = createWayfindingStudioProject('automatic-route-test');
+	const floor = project.floors[0];
+	floor.width = 900;
+	floor.height = 600;
+	floor.elements = [
+		{
+			floorId: floor.id,
+			geometry: [{ x: 50, y: 80 }, { x: 850, y: 80 }, { x: 850, y: 520 }, { x: 50, y: 520 }],
+			id: 'main-walkable',
+			provenance: 'reviewer-authored',
+			status: 'proposed',
+			type: 'walkable'
+		},
+		{
+			destinationId: 'meeting-room',
+			floorId: floor.id,
+			geometry: [{ x: 650, y: 180 }, { x: 840, y: 180 }, { x: 840, y: 420 }, { x: 650, y: 420 }],
+			id: 'meeting-room-shape',
+			label: 'Meeting room',
+			provenance: 'reviewer-authored',
+			status: 'proposed',
+			type: 'location'
+		},
+		{ angle: 90, floorId: floor.id, id: 'meeting-room-door', length: 36, point: { x: 650, y: 300 }, provenance: 'reviewer-authored', status: 'proposed', type: 'door' },
+		{ facingDegrees: 0, floorId: floor.id, id: 'lobby-screen', label: 'Lobby screen', point: { x: 100, y: 300 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'proposed', type: 'origin' }
+	];
+	project.destinations = [{ floor: floor.id, id: 'meeting-room', name: 'Meeting room', routeable: true }];
+	synchronizeWayfindingStudioGraph(project);
 
 	return project;
 };
@@ -203,7 +239,7 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 		buffer: Buffer.from(`
 			<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
 				<rect width="800" height="600" fill="#f8f6ef"/>
-				<rect x="150" y="120" width="500" height="360" fill="#9ed7cd" stroke="#173b35" stroke-width="10"/>
+				<path d="M150 120H650V480H430V450H370V480H150Z" fill="#9ed7cd" stroke="#173b35" stroke-width="10"/>
 			</svg>
 		`)
 	});
@@ -216,6 +252,14 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	await canvas.click({ position: { x: (bounds?.width ?? 0) / 2, y: (bounds?.height ?? 0) / 2 } });
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 	await expect(page.locator('#semantic-editor')).toContainText(/\d+ points/u);
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const detectedProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	const detectedRoom = detectedProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location');
+	expect(detectedRoom?.geometry).toHaveLength(4);
+	expect(detectedRoom?.presentation?.fillColor).toBe('#9ed7cd');
 
 	const layerToggles = page.locator('[data-layer]');
 	await expect(layerToggles).toHaveCount(10);
@@ -234,6 +278,37 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	await expect(page.locator('#studio-project-name')).toHaveValue('Wayfinding project');
 	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
 	await expect(page.locator('#coverage-status')).toContainText('New project ready');
+	expect(errors).toEqual([]);
+});
+
+test('builds routes from authored walkable areas and auto-links a nearby door', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+	const projectPath: string = testInfo.outputPath('automatic-route-test.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject()));
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
+	await page.locator('#route-build').click();
+	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(0);
+	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
+	await expect(page.locator('#route-result')).toContainText('ready to simulate');
+	await page.locator('#route-simulate').click();
+	await expect(page.locator('#route-result')).toContainText('min');
+	const screenshotPath: string = testInfo.outputPath('automatic-route-studio.png');
+	await page.screenshot({ fullPage: true, path: screenshotPath });
+	await testInfo.attach('automatic-route-studio', { contentType: 'image/png', path: screenshotPath });
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const builtProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	const door = builtProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door');
+	expect(door?.locationId).toBe('meeting-room-shape');
+	expect(builtProject.floors[0].walkableMask?.walkableRuns.length).toBeGreaterThan(0);
+	expect(builtProject.graph.edges.length).toBeGreaterThan(0);
 	expect(errors).toEqual([]);
 });
 

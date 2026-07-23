@@ -40,6 +40,7 @@ import {
 	type WayfindingStudioOriginElement,
 	type WayfindingStudioPointElement,
 	type WayfindingStudioPolygonElement,
+	type WayfindingStudioPolygonPresentation,
 	type WayfindingStudioProject,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
@@ -94,6 +95,11 @@ interface EdgeDraft {
 interface ImagePoint extends WayfindingPoint {
 	column: number;
 	row: number;
+}
+
+interface DetectedRegion {
+	color: string;
+	geometry: WayfindingPoint[];
 }
 
 interface HistoryState {
@@ -193,7 +199,9 @@ const routeStart = requireElement<HTMLSelectElement>('#route-start');
 const routeDestination = requireElement<HTMLSelectElement>('#route-destination');
 const routeProfile = requireElement<HTMLSelectElement>('#route-profile');
 const routeResult = requireElement<HTMLElement>('#route-result');
+const routeBuildButton = requireElement<HTMLButtonElement>('#route-build');
 const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
+const routeSetupChecklist = requireElement<HTMLElement>('#route-setup-checklist');
 const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file');
 const undoButton = requireElement<HTMLButtonElement>('#undo');
 const redoButton = requireElement<HTMLButtonElement>('#redo');
@@ -934,6 +942,17 @@ const renderProjectAssessment = (): void => {
 const renderRouteSimulator = (): void => {
 	const origins: WayfindingStudioOriginElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioOriginElement[] => floor.elements.filter((element: WayfindingStudioElement): element is WayfindingStudioOriginElement => element.type === 'origin'));
 	const locationNodes: WayfindingNode[] = studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId));
+	const floorElements: WayfindingStudioElement[] = currentElements();
+	const floorNodeIds = new Set(studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.levelId === currentFloorId).map((node: WayfindingNode): string => node.id));
+	const hasOrigin: boolean = origins.some((origin: WayfindingStudioOriginElement): boolean => origin.floorId === currentFloorId);
+	const hasDestination: boolean = locationNodes.some((node: WayfindingNode): boolean => node.levelId === currentFloorId);
+	const hasDestinationApproach: boolean = floorElements.some((element: WayfindingStudioElement): boolean => {
+		if (element.type === 'poi' && element.destinationId) return true;
+		return element.type === 'door' && Boolean(element.locationId);
+	});
+	const hasWalkableArea: boolean = floorElements.some((element: WayfindingStudioElement): boolean => element.type === 'walkable')
+		|| mask.some((value: number): boolean => value === 1);
+	const hasRouteNetwork: boolean = studioProject.graph.edges.some((edge: WayfindingEdge): boolean => floorNodeIds.has(edge.from) && floorNodeIds.has(edge.to));
 	const previousStart: string = routeStart.value;
 	const previousDestination: string = routeDestination.value;
 	routeStart.replaceChildren(...origins.map((origin: WayfindingStudioOriginElement): HTMLOptionElement => {
@@ -951,6 +970,28 @@ const renderRouteSimulator = (): void => {
 	}));
 	if (Array.from(routeStart.options).some((option): boolean => option.value === previousStart)) routeStart.value = previousStart;
 	if (Array.from(routeDestination.options).some((option): boolean => option.value === previousDestination)) routeDestination.value = previousDestination;
+	const setupItems: Array<[boolean, string, string]> = [
+		[hasOrigin, 'Start point', hasOrigin ? 'You are here is placed' : 'Add You are here'],
+		[hasDestination, 'Destination', hasDestination ? 'Routeable destination exists' : 'Add a room or point of interest'],
+		[hasDestinationApproach, 'Entrance', hasDestinationApproach ? 'Destination entrance is linked' : 'Add a door near the room and link it'],
+		[hasWalkableArea, 'Walkable space', hasWalkableArea ? 'Walkable area is available' : 'Draw a walkable area'],
+		[hasRouteNetwork, 'Route network', hasRouteNetwork ? 'Routes are built' : 'Choose Build routes']
+	];
+	routeSetupChecklist.replaceChildren(...setupItems.map(([ready, label, detail]): HTMLLIElement => {
+		const item: HTMLLIElement = document.createElement('li');
+		const state: HTMLSpanElement = document.createElement('span');
+		const copy: HTMLDivElement = document.createElement('div');
+		const heading: HTMLElement = document.createElement('strong');
+		const description: HTMLSpanElement = document.createElement('span');
+		item.dataset.ready = String(ready);
+		state.textContent = ready ? 'Ready' : 'Next';
+		heading.textContent = label;
+		description.textContent = detail;
+		copy.append(heading, description);
+		item.append(state, copy);
+
+		return item;
+	}));
 	routeClearButton.disabled = !simulatedRoute;
 };
 
@@ -976,7 +1017,7 @@ const renderStudioControls = (): void => {
 	heading.textContent = structuralErrors.length > 0
 		? `${structuralErrors.length} STRUCTURAL ISSUE(S)`
 		: deliveryErrors.length > 0
-			? 'PROJECT DRAFT / RUNTIME BLOCKED'
+			? 'DRAFT / DELIVERY NOT APPROVED'
 			: 'RUNTIME EXPORT READY';
 	const summary: HTMLElement = document.createElement('span');
 	summary.textContent = deliveryIssues.length === 0 ? 'Project structure and delivery evidence are valid.' : deliveryIssues.slice(0, 4).map((issue): string => humanizeEvidenceMessage(issue.message)).join(' ');
@@ -1439,10 +1480,10 @@ const maskIndex = (column: number, row: number): number => row * maskColumns + c
 const cellInBounds = (column: number, row: number): boolean => column >= 0 && row >= 0 && column < maskColumns && row < maskRows;
 
 const resetMaskGrid = (): void => {
-	if (!sourceImage) return;
-
-	maskColumns = Math.ceil(sourceImage.naturalWidth / cellSize());
-	maskRows = Math.ceil(sourceImage.naturalHeight / cellSize());
+	const width: number = sourceImage?.naturalWidth ?? currentFloor().width;
+	const height: number = sourceImage?.naturalHeight ?? currentFloor().height;
+	maskColumns = Math.ceil(width / cellSize());
+	maskRows = Math.ceil(height / cellSize());
 	mask = new Uint8Array(maskColumns * maskRows);
 	includeOverrides = new Set<number>();
 	excludeOverrides = new Set<number>();
@@ -1508,7 +1549,90 @@ const polygonArea = (points: WayfindingPoint[]): number => points.reduce((area: 
 	return area + point.x * next.y - next.x * point.y;
 }, 0) / 2;
 
-const detectFlatRegionBoundary = (point: WayfindingPoint): WayfindingPoint[] | undefined => {
+const colorToHex = (color: Pick<ColorSample, 'r' | 'g' | 'b'>): string => {
+	return `#${[color.r, color.g, color.b].map((value: number): string => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0')).join('')}`;
+};
+
+const distanceToLine = (point: WayfindingPoint, start: WayfindingPoint, end: WayfindingPoint): number => {
+	const length: number = Math.hypot(end.x - start.x, end.y - start.y);
+	if (length === 0) return Math.hypot(point.x - start.x, point.y - start.y);
+
+	return Math.abs((end.x - start.x) * (start.y - point.y) - (start.x - point.x) * (end.y - start.y)) / length;
+};
+
+const lineProjection = (point: WayfindingPoint, start: WayfindingPoint, end: WayfindingPoint): number => {
+	const dx: number = end.x - start.x;
+	const dy: number = end.y - start.y;
+	const lengthSquared: number = dx * dx + dy * dy;
+
+	return lengthSquared === 0 ? 0 : ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared;
+};
+
+const removeShallowBoundaryDetails = (points: WayfindingPoint[], gridSize: number): WayfindingPoint[] => {
+	if (points.length < 6) return points;
+	const xs: number[] = points.map((point: WayfindingPoint): number => point.x);
+	const ys: number[] = points.map((point: WayfindingPoint): number => point.y);
+	const minimumDimension: number = Math.max(gridSize, Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)));
+	const maximumChord: number = Math.max(gridSize * 8, Math.min(96, minimumDimension * 0.2));
+	const maximumDepth: number = Math.max(gridSize * 4, Math.min(48, minimumDimension * 0.11));
+	const lineTolerance: number = Math.max(gridSize * 2.5, minimumDimension * 0.008);
+	const cleaned: WayfindingPoint[] = [...points];
+	let changed = true;
+	let pass = 0;
+
+	while (changed && pass < 8 && cleaned.length >= 6) {
+		changed = false;
+		pass += 1;
+		for (let startIndex = 1; startIndex < cleaned.length - 3 && !changed; startIndex += 1) {
+			for (let endIndex = startIndex + 3; endIndex < Math.min(cleaned.length - 1, startIndex + 8); endIndex += 1) {
+				const start: WayfindingPoint = cleaned[startIndex];
+				const end: WayfindingPoint = cleaned[endIndex];
+				const previous: WayfindingPoint = cleaned[startIndex - 1];
+				const next: WayfindingPoint = cleaned[endIndex + 1];
+				const chord: number = Math.hypot(end.x - start.x, end.y - start.y);
+				if (chord < gridSize * 2 || chord > maximumChord) continue;
+				if (distanceToLine(previous, start, end) > lineTolerance || distanceToLine(next, start, end) > lineTolerance) continue;
+				if (lineProjection(previous, start, end) > 0.05 || lineProjection(next, start, end) < 0.95) continue;
+				const detail: WayfindingPoint[] = cleaned.slice(startIndex, endIndex + 1);
+				const maximumDeviation: number = Math.max(...detail.slice(1, -1).map((candidate: WayfindingPoint): number => distanceToLine(candidate, start, end)));
+				const pathLength: number = detail.slice(1).reduce((length: number, candidate: WayfindingPoint, index: number): number => {
+					const prior: WayfindingPoint = detail[index];
+
+					return length + Math.hypot(candidate.x - prior.x, candidate.y - prior.y);
+				}, 0);
+				if (maximumDeviation > maximumDepth || pathLength < chord * 1.35) continue;
+				cleaned.splice(startIndex + 1, endIndex - startIndex - 1);
+				changed = true;
+				break;
+			}
+		}
+	}
+
+	return cleaned;
+};
+
+const removeRedundantPolygonPoints = (points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] => {
+	const cleaned: WayfindingPoint[] = [...points];
+	let changed = true;
+	while (changed && cleaned.length > 3) {
+		changed = false;
+		for (let index = 0; index < cleaned.length; index += 1) {
+			const previous: WayfindingPoint = cleaned[(index - 1 + cleaned.length) % cleaned.length];
+			const current: WayfindingPoint = cleaned[index];
+			const next: WayfindingPoint = cleaned[(index + 1) % cleaned.length];
+			if (Math.hypot(current.x - previous.x, current.y - previous.y) <= toleranceValue
+				|| distanceToSegment(current, previous, next) <= toleranceValue) {
+				cleaned.splice(index, 1);
+				changed = true;
+				break;
+			}
+		}
+	}
+
+	return cleaned;
+};
+
+const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | undefined => {
 	if (!sourceImage || !sourcePixels) return undefined;
 	const gridSize: number = Math.max(2, Math.round(Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight) / 900));
 	const columns: number = Math.ceil(sourceImage.naturalWidth / gridSize);
@@ -1540,6 +1664,20 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): WayfindingPoint[] | u
 
 	const regionSize: number = region.reduce((sum: number, value: number): number => sum + value, 0);
 	if (regionSize < 12 || regionSize > columns * rows * 0.48) return undefined;
+	const averageColor = { b: 0, g: 0, r: 0 };
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			if (region[row * columns + column] !== 1) continue;
+			const color = pixelColorAt((column + 0.5) * gridSize, (row + 0.5) * gridSize);
+			if (!color) continue;
+			averageColor.r += color.r;
+			averageColor.g += color.g;
+			averageColor.b += color.b;
+		}
+	}
+	averageColor.r /= regionSize;
+	averageColor.g /= regionSize;
+	averageColor.b /= regionSize;
 	const boundaryEdges: BoundaryEdge[] = [];
 	const inside = (column: number, row: number): boolean => column >= 0 && row >= 0 && column < columns && row < rows && region[row * columns + column] === 1;
 	for (let row = 0; row < rows; row += 1) {
@@ -1577,8 +1715,12 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): WayfindingPoint[] | u
 	const outer: WayfindingPoint[] | undefined = loops.sort((left, right): number => Math.abs(polygonArea(right)) - Math.abs(polygonArea(left)))[0];
 	if (!outer) return undefined;
 	const simplified: WayfindingPoint[] = simplifyGeometry(outer.slice(0, -1), Math.max(gridSize * 1.5, 3));
+	const cleaned: WayfindingPoint[] = removeRedundantPolygonPoints(
+		removeShallowBoundaryDetails(simplified, gridSize),
+		Math.max(1, gridSize * 1.25)
+	);
 
-	return simplified.length >= 3 ? simplified : undefined;
+	return cleaned.length >= 3 ? { color: colorToHex(averageColor), geometry: cleaned } : undefined;
 };
 
 const colorMatches = (column: number, row: number): boolean => {
@@ -1824,11 +1966,67 @@ const nearestSemantic = (pointValue: WayfindingPoint): WayfindingStudioElement |
 	return Math.hypot(element.point.x - pointValue.x, element.point.y - pointValue.y) <= 18 / scale;
 });
 
+const distanceToPolygonBoundary = (pointValue: WayfindingPoint, geometry: WayfindingPoint[]): number => {
+	return geometry.reduce((minimum: number, vertex: WayfindingPoint, index: number): number => {
+		return Math.min(minimum, distanceToSegment(pointValue, vertex, geometry[(index + 1) % geometry.length]));
+	}, Number.POSITIVE_INFINITY);
+};
+
+const nearestLocationForDoor = (pointValue: WayfindingPoint): WayfindingStudioPolygonElement | undefined => {
+	const locations: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location');
+	const containing: WayfindingStudioPolygonElement | undefined = locations.find((location: WayfindingStudioPolygonElement): boolean => pointInPolygon(pointValue, location.geometry));
+	if (containing) return containing;
+	const maximumDistance: number = Math.max(36, Math.min(currentFloor().width, currentFloor().height) * 0.035);
+	const ranked = locations
+		.map((location: WayfindingStudioPolygonElement) => ({ distance: distanceToPolygonBoundary(pointValue, location.geometry), location }))
+		.sort((left, right): number => left.distance - right.distance);
+
+	return ranked[0]?.distance <= maximumDistance ? ranked[0].location : undefined;
+};
+
+const linkUnassignedDoorsToNearbyLocations = (): number => {
+	let linked = 0;
+	for (const door of currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door' && !element.locationId)) {
+		const location: WayfindingStudioPolygonElement | undefined = nearestLocationForDoor(door.point);
+		if (!location) continue;
+		door.locationId = location.id;
+		linked += 1;
+	}
+
+	return linked;
+};
+
+const rasterizeAuthoredWalkableAreas = (): boolean => {
+	const walkableAreas: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'walkable');
+	if (walkableAreas.length === 0) return false;
+	const obstacles: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
+	resetMaskGrid();
+	for (let row = 0; row < maskRows; row += 1) {
+		for (let column = 0; column < maskColumns; column += 1) {
+			const pointValue: WayfindingPoint = {
+				x: Math.min(currentFloor().width, (column + 0.5) * cellSize()),
+				y: Math.min(currentFloor().height, (row + 0.5) * cellSize())
+			};
+			const included: boolean = walkableAreas.some((area: WayfindingStudioPolygonElement): boolean => pointInPolygon(pointValue, area.geometry));
+			const excluded: boolean = obstacles.some((area: WayfindingStudioPolygonElement): boolean => pointInPolygon(pointValue, area.geometry));
+			if (included && !excluded) mask[maskIndex(column, row)] = 1;
+		}
+	}
+	maskReviewStatus = 'proposed';
+	maskConfirmedInput.checked = false;
+	persistCurrentMask();
+
+	return mask.some((value: number): boolean => value === 1);
+};
+
 const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'graph' | 'include' | 'location' | 'obstacle' | 'pan' | 'sample' | 'select' | 'walkable'>, pointValue: WayfindingPoint): void => {
 	const before: HistoryState = captureHistoryState();
 	const base = { floorId: currentFloorId, provenance: 'reviewer-authored' as const, status: 'proposed' as const };
 	let element: WayfindingStudioElement;
-	if (type === 'door') element = { ...base, angle: 0, id: nextId('door'), length: 36, point: pointValue, type } satisfies WayfindingStudioDoorElement;
+	if (type === 'door') {
+		const location: WayfindingStudioPolygonElement | undefined = nearestLocationForDoor(pointValue);
+		element = { ...base, angle: 0, id: nextId('door'), length: 36, locationId: location?.id, point: pointValue, type } satisfies WayfindingStudioDoorElement;
+	}
 	else if (type === 'poi') {
 		const id: string = nextId('poi');
 		element = { ...base, destinationId: id, id, label: `Point of interest ${id.split('-').at(-1)}`, point: pointValue, type } satisfies WayfindingStudioPointElement;
@@ -1854,12 +2052,24 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 	selectedSemanticId = element.id;
 	syncStudioGraph();
 	recordHistory(before);
+	if (element.type === 'door') {
+		const linkedLocation: WayfindingStudioPolygonElement | undefined = element.locationId
+			? currentElements().find((candidate: WayfindingStudioElement): candidate is WayfindingStudioPolygonElement => candidate.type === 'location' && candidate.id === element.locationId)
+			: undefined;
+		coverageStatus.textContent = linkedLocation
+			? `Door linked to ${linkedLocation.label ?? linkedLocation.id}. Change it in Connected room / area if needed.`
+			: 'Door added. Choose its Connected room / area before building routes.';
+	}
 	renderSemanticEditor();
 	renderStudioControls();
 	draw();
 };
 
-const commitSemanticPolygon = (type: SemanticPolygonTool, points: WayfindingPoint[]): void => {
+const commitSemanticPolygon = (
+	type: SemanticPolygonTool,
+	points: WayfindingPoint[],
+	presentation?: WayfindingStudioPolygonPresentation
+): void => {
 	if (points.length < 3) return;
 	const before: HistoryState = captureHistoryState();
 	const id: string = nextId(type);
@@ -1868,6 +2078,7 @@ const commitSemanticPolygon = (type: SemanticPolygonTool, points: WayfindingPoin
 		geometry: points,
 		id,
 		label: type === 'location' ? `Location ${id.split('-').at(-1)}` : undefined,
+		presentation,
 		provenance: 'reviewer-authored',
 		status: 'proposed',
 		type
@@ -2565,70 +2776,141 @@ const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[]
 	return points;
 };
 
-const generateCenterlineGraph = (): void => {
-	if (!graph || !sourceImage || mask.length === 0) return;
+const generateCenterlineGraph = (): boolean => {
+	const before: HistoryState = captureHistoryState();
+	const linkedDoors: number = linkUnassignedDoorsToNearbyLocations();
+	synchronizeWayfindingStudioGraph(studioProject);
+	graph = studioProject.graph;
+	const usedAuthoredAreas: boolean = rasterizeAuthoredWalkableAreas();
+	if ((!usedAuthoredAreas && !mask.some((value: number): boolean => value === 1)) || maskColumns === 0 || maskRows === 0) {
+		coverageStatus.textContent = 'Draw at least one Walkable area before building routes.';
+		routeResult.textContent = 'Route setup is incomplete: draw the pedestrian area, then choose Build routes.';
+		renderStudioControls();
+		return false;
+	}
+
+	const elementsById = new Map(currentElements().map((element: WayfindingStudioElement): [string, WayfindingStudioElement] => [element.id, element]));
+	const linkedLocationIds = new Set(currentElements()
+		.filter((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door' && Boolean(element.locationId))
+		.map((door: WayfindingStudioDoorElement): string => door.locationId as string));
+	const anchorNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => {
+		if (node.levelId !== currentFloorId || !node.semanticElementId) return false;
+		const element: WayfindingStudioElement | undefined = elementsById.get(node.semanticElementId);
+		if (!element) return false;
+		if (element.type === 'origin' || element.type === 'transition' || element.type === 'poi') return true;
+
+		return element.type === 'location' && linkedLocationIds.has(element.id);
+	});
+	const startNodes: WayfindingNode[] = anchorNodes.filter((node: WayfindingNode): boolean => elementsById.get(node.semanticElementId ?? '')?.type === 'origin');
+	const destinationNodes: WayfindingNode[] = anchorNodes.filter((node: WayfindingNode): boolean => node.kind === 'location');
+	if (startNodes.length === 0) {
+		coverageStatus.textContent = 'Add a You are here point on the walkable area before building routes.';
+		routeResult.textContent = 'Route setup is incomplete: no start point is available.';
+		renderStudioControls();
+		return false;
+	}
+	if (destinationNodes.length === 0) {
+		coverageStatus.textContent = 'Add a destination and place or assign a door at its walkable entrance.';
+		routeResult.textContent = 'Route setup is incomplete: a room needs a linked door, or add a point of interest.';
+		renderStudioControls();
+		return false;
+	}
 
 	mask = closeWalkableMask(mask, maskColumns, maskRows, bridgeRadius());
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
+	persistCurrentMask();
 	const skeleton: Uint8Array = skeletonizeWalkableMask(mask, maskColumns, maskRows);
 	const usedAnchorIndices = new Set<number>();
-	const locationNodeByIndex = new Map<number, WayfindingNode>();
-	const locationNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId));
+	const anchorNodeByIndex = new Map<number, WayfindingNode>();
 
-	for (const locationNode of locationNodes) {
+	for (const anchorNode of anchorNodes) {
 		const nearestIndex: number | undefined = nearestSkeletonIndex(skeleton, maskColumns, {
-			column: Math.floor(locationNode.x / cellSize()),
-			row: Math.floor(locationNode.y / cellSize())
+			column: Math.floor(anchorNode.x / cellSize()),
+			row: Math.floor(anchorNode.y / cellSize())
 		}, usedAnchorIndices);
-
 		if (nearestIndex === undefined) continue;
-
 		usedAnchorIndices.add(nearestIndex);
-		locationNodeByIndex.set(nearestIndex, locationNode);
+		anchorNodeByIndex.set(nearestIndex, anchorNode);
+	}
+	const connectedAnchorIds = new Set([...anchorNodeByIndex.values()].map((node: WayfindingNode): string => node.id));
+	if (!startNodes.some((node: WayfindingNode): boolean => connectedAnchorIds.has(node.id))
+		|| !destinationNodes.some((node: WayfindingNode): boolean => connectedAnchorIds.has(node.id))) {
+		coverageStatus.textContent = 'The start or destination entrance is too far from the Walkable area. Move it onto the pedestrian space and build again.';
+		routeResult.textContent = 'Route setup is incomplete: an endpoint could not connect to walkable space.';
+		renderStudioControls();
+		return false;
 	}
 
 	const network = extractSkeletonNetwork(mask, maskColumns, maskRows, usedAnchorIndices);
 	const nodeIdByIndex = new Map<number, string>();
-	const nodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
+	const generatedNodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
 		const point: WayfindingPoint = pointForMaskIndex(index);
-		const locationNode: WayfindingNode | undefined = locationNodeByIndex.get(index);
-		const node: WayfindingNode = locationNode
-			? { ...locationNode, ...point }
-			: { id: `route-auto-${String(nodeIndex + 1).padStart(4, '0')}`, kind: 'route', levelId: locationNodes[0]?.levelId ?? 'level-0', ...point };
+		const anchorNode: WayfindingNode | undefined = anchorNodeByIndex.get(index);
+		const node: WayfindingNode = anchorNode
+			? { ...anchorNode, ...point }
+			: { id: `route-auto:${currentFloorId}:${String(nodeIndex + 1).padStart(4, '0')}`, kind: 'route', levelId: currentFloorId, ...point };
 		nodeIdByIndex.set(index, node.id);
 
 		return node;
 	});
-	const edges: WayfindingEdge[] = network.chains.flatMap((chain, edgeIndex: number): WayfindingEdge[] => {
+	const generatedEdges: WayfindingEdge[] = network.chains.flatMap((chain, edgeIndex: number): WayfindingEdge[] => {
 		const from: string | undefined = nodeIdByIndex.get(chain.indices[0]);
 		const to: string | undefined = nodeIdByIndex.get(chain.indices[chain.indices.length - 1]);
-
 		if (!from || !to || from === to) return [];
 
 		return [{
 			accessible: true,
 			bidirectional: true,
-			corridorWidth: 1,
+			corridorWidth: cellSize(),
 			from,
 			geometry: simplifyContainedGeometry(chain.indices.map(pointForMaskIndex)),
-			id: `centerline-${String(edgeIndex + 1).padStart(4, '0')}`,
-			kind: 'outdoor',
+			id: `centerline:${currentFloorId}:${String(edgeIndex + 1).padStart(4, '0')}`,
+			kind: 'walk',
 			reviewStatus: 'proposed',
 			to,
-			traversal: 'outdoor-path'
+			traversal: 'indoor-corridor'
 		}];
 	});
-	const anchorNodeIds = new Set(locationNodes.map((node: WayfindingNode): string => node.id));
-	const retained = retainAnchorNetworkCore(nodes.map((node: WayfindingNode): string => node.id), edges, anchorNodeIds);
-	const retainedNodes: WayfindingNode[] = nodes.filter((node: WayfindingNode): boolean => retained.nodeIds.has(node.id));
-	const retainedEdges: WayfindingEdge[] = edges.filter((edge: WayfindingEdge): boolean => retained.edgeIds.has(edge.id));
+	const retained = retainAnchorNetworkCore(
+		generatedNodes.map((node: WayfindingNode): string => node.id),
+		generatedEdges,
+		connectedAnchorIds
+	);
+	const retainedNodes: WayfindingNode[] = generatedNodes.filter((node: WayfindingNode): boolean => retained.nodeIds.has(node.id));
+	const retainedEdges: WayfindingEdge[] = generatedEdges.filter((edge: WayfindingEdge): boolean => retained.edgeIds.has(edge.id));
+	if (retainedEdges.length === 0) {
+		coverageStatus.textContent = 'The Walkable area is disconnected between the start and destination. Extend it so both endpoints share one continuous area.';
+		routeResult.textContent = 'No connected route network could be built from the current walkable geometry.';
+		renderStudioControls();
+		return false;
+	}
 
-	graph = { ...graph, contractVersion: 2, nodes: retainedNodes, edges: retainedEdges };
+	const previousNodes = new Map(graph.nodes.map((node: WayfindingNode): [string, WayfindingNode] => [node.id, node]));
+	const otherFloorNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => node.levelId !== currentFloorId);
+	const otherFloorEdges: WayfindingEdge[] = graph.edges.filter((edge: WayfindingEdge): boolean => {
+		const from: WayfindingNode | undefined = previousNodes.get(edge.from);
+		const to: WayfindingNode | undefined = previousNodes.get(edge.to);
+
+		return from?.levelId !== currentFloorId || to?.levelId !== currentFloorId;
+	});
+	graph = {
+		...graph,
+		contractVersion: 2,
+		edges: [...otherFloorEdges, ...retainedEdges],
+		nodes: [...otherFloorNodes, ...retainedNodes]
+	};
 	selectedEdgeId = undefined;
-	coverageStatus.textContent = `Generated ${retainedNodes.length} destination-core nodes and ${retainedEdges.length} edges; review the mask before confirmation`;
+	syncStudioGraph();
+	recordHistory(before);
+	const linkedCopy: string = linkedDoors > 0 ? ` Auto-linked ${linkedDoors} nearby door${linkedDoors === 1 ? '' : 's'}.` : '';
+	coverageStatus.textContent = `Built ${retainedEdges.length} route segment${retainedEdges.length === 1 ? '' : 's'} connecting the start and destinations.${linkedCopy}`;
+	routeResult.textContent = 'Routes are ready to simulate. They remain proposed until the walkable area is reviewed.';
 	renderReview();
+	renderStudioControls();
 	draw();
+
+	return true;
 };
 
 const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> => {
@@ -3203,6 +3485,7 @@ toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
 requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', generateCenterlineGraph);
+routeBuildButton.addEventListener('click', generateCenterlineGraph);
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
@@ -3308,10 +3591,10 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		authorEdgePoint(imagePoint);
 	} else if (tool === 'location' || tool === 'walkable' || tool === 'obstacle') {
 		if (drawingMode === 'smart') {
-			const detected: WayfindingPoint[] | undefined = detectFlatRegionBoundary(imagePoint);
+			const detected: DetectedRegion | undefined = detectFlatRegionBoundary(imagePoint);
 			if (detected) {
-				commitSemanticPolygon(tool, detected);
-				coverageStatus.textContent = `Detected an editable ${tool} boundary with ${detected.length} points. Inspect and adjust it before confirmation.`;
+				commitSemanticPolygon(tool, detected.geometry, { fillColor: detected.color });
+				coverageStatus.textContent = `Detected an editable ${tool} boundary with ${detected.geometry.length} points and sampled ${detected.color}. Small doorway details were straightened; inspect and adjust it before confirmation.`;
 			} else {
 				coverageStatus.textContent = 'No enclosed flat-color region was found. Adjust Color tolerance, or use Click corners / Freehand lasso.';
 			}
