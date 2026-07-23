@@ -1,0 +1,114 @@
+:root {
+	font-family: Inter, "Segoe UI", Arial, sans-serif;
+	color: #f4f7f6;
+	background: #202725;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	min-height: 100%;
+	margin: 0;
+}
+
+body {
+	min-height: 100vh;
+}
+
+body > header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 72px;
+	padding: 14px 22px;
+	border-bottom: 1px solid #4a5753;
+	background: #141a18;
+}
+
+header span,
+.host-status span {
+	color: #4dd1b8;
+	font-size: 10px;
+	font-weight: 800;
+}
+
+header h1 {
+	margin: 4px 0 0;
+	font-size: 19px;
+}
+
+header p {
+	margin: 0;
+	color: #aebbb7;
+	font-size: 12px;
+}
+
+main {
+	display: grid;
+	min-height: calc(100vh - 72px);
+	grid-template-columns: minmax(680px, 1fr) 360px;
+}
+
+.editor-surface {
+	min-width: 0;
+	padding: 16px;
+}
+
+iframe {
+	display: block;
+	width: 100%;
+	height: calc(100vh - 104px);
+	border: 1px solid #5f6e69;
+	background: #eef2f0;
+}
+
+aside {
+	min-width: 0;
+	padding: 20px;
+	border-left: 1px solid #4a5753;
+	background: #18201e;
+}
+
+.host-status {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.host-status strong {
+	font-size: 12px;
+}
+
+aside > p {
+	color: #aebbb7;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+pre {
+	overflow: auto;
+	max-height: calc(100vh - 190px);
+	margin: 18px 0 0;
+	padding: 14px;
+	border: 1px solid #4a5753;
+	background: #101513;
+	color: #dbe4e1;
+	font: 11px/1.55 Consolas, monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+@media (max-width: 980px) {
+	main {
+		grid-template-columns: 1fr;
+	}
+
+	aside {
+		border-top: 1px solid #4a5753;
+		border-left: 0;
+	}
+}

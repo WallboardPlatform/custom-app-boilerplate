@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Custom editor host harness</title>
+	<link rel="stylesheet" href="./style.css">
+	<script src="./host.js" defer></script>
+</head>
+<body>
+	<header>
+		<div>
+			<span>DEVELOPMENT HARNESS</span>
+			<h1>Wallboard custom editor contract</h1>
+		</div>
+		<p>Simulated parent editor</p>
+	</header>
+	<main>
+		<section class="editor-surface">
+			<iframe
+				id="custom-editor"
+				title="Custom settings editor"
+				data-src="/templates/editor-assets/custom-settings-editor/index.html"
+			></iframe>
+		</section>
+		<aside>
+			<div class="host-status">
+				<span>HOST STATE</span>
+				<strong id="save-count">0 saves</strong>
+			</div>
+			<p>The panel below is the complete configuration currently owned by the simulated Wallboard host.</p>
+			<pre id="host-state"></pre>
+		</aside>
+	</main>
+</body>
+</html>
