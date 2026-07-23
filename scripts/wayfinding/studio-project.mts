@@ -642,7 +642,16 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 			if (floor.walkableMask.reviewStatus !== 'confirmed') issues.push({ code: 'unconfirmed-route-mask', elementIds: [edge.id, floor.id], message: `Walkable-space mask for floor '${floor.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
 			const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [from, to];
 
-			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, edge.corridorWidth ?? floor.walkableMask.cellSize).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the confirmed walkable-space mask.`, severity: 'error' });
+			if (edge.traversal === 'portal') {
+				const walkableMask = new WayfindingWalkableMask(floor.walkableMask);
+				const entryDistance: number = points[1] ? Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) : Number.POSITIVE_INFINITY;
+
+				if (entryDistance > Math.max(48, floor.walkableMask.cellSize * 4)) issues.push({ code: 'route-portal-approach-too-long', elementIds: [edge.id, floor.id], message: `Portal edge '${edge.id}' starts too far from confirmed walkable space.`, severity: 'error' });
+
+				if (!points[1] || !walkableMask.contains(points[1])) issues.push({ code: 'route-portal-misses-walkable-space', elementIds: [edge.id, floor.id], message: `Portal edge '${edge.id}' does not enter confirmed walkable space.`, severity: 'error' });
+
+				if (points.length > 2 && walkableMask.outsideCorridor(points.slice(1), edge.corridorWidth ?? 1).length > 0) issues.push({ code: 'route-portal-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Portal edge '${edge.id}' leaves walkable space after entering the pedestrian area.`, severity: 'error' });
+			} else if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, edge.corridorWidth ?? floor.walkableMask.cellSize).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the confirmed walkable-space mask.`, severity: 'error' });
 		}
 	}
 
@@ -715,8 +724,8 @@ export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floor
 	return [
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${number(floor.width)} ${number(floor.height)}" width="${number(floor.width)}" height="${number(floor.height)}">`,
 		`<g id="Background">${background ? `<image id="background-${escapeXml(floor.id)}" href="${escapeXml(background.dataUrl)}" x="0" y="0" width="${number(floor.width)}" height="${number(floor.height)}" preserveAspectRatio="none"/>` : ''}</g>`,
-		`<g id="Walkable" fill="${presentation.polygons.walkable.fillColor}" fill-opacity="${number(presentation.polygons.walkable.fillOpacity)}" stroke="#16836f">${elements('walkable').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
-		`<g id="Obstacles" fill="${presentation.polygons.obstacle.fillColor}" fill-opacity="${number(presentation.polygons.obstacle.fillOpacity)}" stroke="#151c1b">${elements('obstacle').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
+		`<g id="Walkable" data-authoring-only="true" style="display:none">${elements('walkable').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
+		`<g id="Obstacles" data-authoring-only="true" style="display:none">${elements('obstacle').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Locations" fill="${presentation.polygons.location.fillColor}" fill-opacity="${number(presentation.polygons.location.fillOpacity)}" stroke="#c88716">${elements('location').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Doors" stroke="#17201f" stroke-width="4">${elements('door').map(door).join('')}</g>`,
 		`<g id="POIs" fill="#2b6cb0">${elements('poi').map(poi).join('')}</g>`,
@@ -747,7 +756,7 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 		floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
 			backgroundAssetId: floor.backgroundAssetId,
 			camera3d: floor.camera3d ? structuredClone(floor.camera3d) : undefined,
-			elements: structuredClone(floor.elements),
+			elements: structuredClone(floor.elements.filter((element): boolean => element.type !== 'walkable' && element.type !== 'obstacle')),
 			height: floor.height,
 			id: floor.id,
 			name: floor.name,

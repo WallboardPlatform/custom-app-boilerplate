@@ -127,6 +127,10 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	});
 	project.floors[1].backgroundAssetId = 'first-floor-plan';
 	project.floors[1].camera3d = { azimuthDegrees: 32, distance: 780, pitchDegrees: 46, targetX: 450, targetY: 300 };
+	project.floors[1].elements.push(
+		{ ...confirmed, floorId: 'first', geometry: [{ x: 100, y: 350 }, { x: 400, y: 350 }, { x: 400, y: 500 }, { x: 100, y: 500 }], id: 'first-walkable', label: 'Authoring corridor', type: 'walkable' },
+		{ ...confirmed, floorId: 'first', geometry: [{ x: 420, y: 350 }, { x: 500, y: 350 }, { x: 500, y: 430 }, { x: 420, y: 430 }], id: 'first-obstacle', label: 'Authoring exclusion', type: 'obstacle' }
+	);
 	assert.ok(project.presentation);
 	project.presentation.route = { color: '#cc2244', cornerRounding: 30, width: 9 };
 	project.presentation.polygons.walkable.fillOpacity = 0.35;
@@ -137,7 +141,8 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	const bundle = createWayfindingRuntimeBundle(project);
 	assert.match(svg, /<g id="Background">/u);
 	assert.match(svg, /<g id="Locations"/u);
-	assert.match(svg, /<g id="Walkable" fill="#55bfa7" fill-opacity="0.35"/u);
+	assert.match(svg, /<g id="Walkable" data-authoring-only="true" style="display:none"/u);
+	assert.match(svg, /<g id="Obstacles" data-authoring-only="true" style="display:none"/u);
 	assert.match(svg, /data-wayfinding-location-id="council"/u);
 	assert.match(svg, /data-extrusion-height="42" fill="#336699" fill-opacity="0.84"/u);
 	assert.match(svg, /<g id="Doors"/u);
@@ -148,6 +153,7 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.equal(bundle.floors[1].backgroundAssetId, 'first-floor-plan');
 	assert.equal(bundle.floors[1].camera3d?.pitchDegrees, 46);
 	assert.deepEqual(bundle.floors[1].elements.find((element): boolean => element.id === 'council-room'), councilRoom);
+	assert.ok(!bundle.floors[1].elements.some((element): boolean => element.type === 'walkable' || element.type === 'obstacle'));
 	assert.equal(bundle.destinations.Destinations.rows[0].name, 'Council chamber');
 	assert.equal(bundle.manifest.deliveryMode, 'route');
 	assert.deepEqual(bundle.presentation.route, { color: '#cc2244', cornerRounding: 30, width: 9 });

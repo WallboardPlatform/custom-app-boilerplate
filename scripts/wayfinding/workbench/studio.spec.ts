@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { expect, test } from '@playwright/test';
+import { WayfindingGraph } from '../../../src/utils/wayfinding';
 import {
 	createWayfindingStudioProject,
 	synchronizeWayfindingStudioGraph,
@@ -36,8 +37,8 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 	return project;
 };
 
-const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
-	const project: WayfindingStudioProject = createWayfindingStudioProject('automatic-route-test');
+const createAutomaticRouteTestProject = (projectId = 'automatic-route-test'): WayfindingStudioProject => {
+	const project: WayfindingStudioProject = createWayfindingStudioProject(projectId);
 	const floor = project.floors[0];
 	floor.width = 900;
 	floor.height = 600;
@@ -292,10 +293,13 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	expect(detectedRoom?.presentation?.fillColor).toBe('#9ed7cd');
 
 	const layerToggles = page.locator('[data-layer]');
-	await expect(layerToggles).toHaveCount(11);
+	await expect(layerToggles).toHaveCount(13);
 	await expect(page.locator('[data-layer="route-network"]')).not.toBeChecked();
+	const visibleCanvas = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
 	await page.locator('#hide-all-layers').click();
 	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).not.toBeChecked();
+	const hiddenCanvas = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
+	expect(hiddenCanvas).not.toBe(visibleCanvas);
 	await page.locator('#show-all-layers').click();
 	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).toBeChecked();
 
@@ -318,7 +322,7 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	const projectPath: string = testInfo.outputPath('automatic-route-test.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject()));
+	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject(`automatic-route-test-${Date.now()}-${process.pid}`)));
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
 	await expect(page.locator('#route-setup-checklist')).toContainText('1 of 2 destinations enabled for routing');
@@ -331,8 +335,17 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(0);
 	await expect(page.locator('#route-setup-checklist')).toContainText('2 of 2 route-enabled rooms have authored entrances');
 	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
-	await expect(page.locator('#route-result')).toContainText('ready to simulate');
+	await expect(page.locator('#route-result')).toContainText('Routes are ready');
 	await expect(page.locator('[data-layer="route-network"]')).not.toBeChecked();
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const builtProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	fs.writeFileSync(testInfo.outputPath('built-automatic-route-project.json'), JSON.stringify(builtProject, null, 2));
+	const directoryNode = builtProject.graph.nodes.find((node): boolean => node.kind === 'location' && node.locationId === 'directory-only-room');
+	expect(directoryNode).toBeDefined();
+	expect(new WayfindingGraph(builtProject.graph).route('semantic:lobby-screen', directoryNode?.id as string, { profile: 'standard' })).toBeDefined();
 	const walkableVisible = await page.locator('#stage').evaluate((element: HTMLCanvasElement): string => element.toDataURL());
 	await page.locator('[data-layer="walkable"]').setChecked(false);
 	const walkableHidden = await page.locator('#stage').evaluate((element: HTMLCanvasElement): string => element.toDataURL());
@@ -341,21 +354,47 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	await page.locator('#route-destination').selectOption({ label: 'Directory-only room (level-0)' });
 	await page.locator('#route-simulate').click();
 	await expect(page.locator('#route-result')).toContainText('min');
+	await page.locator('#route-clear').click();
+	await page.locator('#route-destination').selectOption({ label: 'Meeting room (level-0)' });
+	await page.locator('#route-click-mode').check();
+	await expect(page.locator('[data-tool="select"]')).toHaveClass(/active/u);
+	const canvasBounds = await page.locator('#stage').boundingBox();
+	expect(canvasBounds).not.toBeNull();
+	const mapScale = Math.min((canvasBounds?.width ?? 1) / 900, (canvasBounds?.height ?? 1) / 600) * 0.96;
+	const mapOffsetX = ((canvasBounds?.width ?? 1) - 900 * mapScale) / 2;
+	const mapOffsetY = ((canvasBounds?.height ?? 1) - 600 * mapScale) / 2;
+	await page.locator('#stage').click({ position: { x: mapOffsetX + 490 * mapScale, y: mapOffsetY + 230 * mapScale } });
+	await expect(page.locator('#route-destination')).toHaveValue(/semantic:directory-only-room-shape/u);
+	await expect(page.locator('#route-result')).toContainText('min');
 	const screenshotPath: string = testInfo.outputPath('automatic-route-studio.png');
 	await page.screenshot({ fullPage: true, path: screenshotPath });
 	await testInfo.attach('automatic-route-studio', { contentType: 'image/png', path: screenshotPath });
 
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
 	const downloadedProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	expect(downloadedProject.floors[0].elements).toEqual(expect.arrayContaining([
 		expect.objectContaining({ locationId: 'directory-only-room-shape', provenance: 'ai-draft', type: 'door' })
 	]));
-	const builtProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	const door = builtProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door');
 	expect(door?.locationId).toBe('meeting-room-shape');
+	const routeableDoors = builtProject.floors[0].elements.filter((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => {
+		if (element.type !== 'door' || !element.locationId) return false;
+		const location = builtProject.floors[0].elements.find((candidate: WayfindingStudioElement): boolean => candidate.id === element.locationId);
+
+		return location?.type === 'location' && builtProject.destinations.some((destination): boolean => destination.id === location.destinationId && destination.routeable !== false);
+	});
+	for (const routeableDoor of routeableDoors) {
+		const location = builtProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location' && element.id === routeableDoor.locationId);
+		const entranceNode = builtProject.graph.nodes.find((node): boolean =>
+			node.kind === 'location'
+			&& node.locationId === location?.destinationId
+			&& node.x === routeableDoor.point.x
+			&& node.y === routeableDoor.point.y
+		);
+		expect(entranceNode, `Missing exact graph endpoint for ${routeableDoor.id}`).toBeDefined();
+		const portal = builtProject.graph.edges.find((edge): boolean => edge.from === entranceNode?.id && edge.traversal === 'portal');
+		expect(portal, `Missing portal connection for ${routeableDoor.id}`).toBeDefined();
+		expect(portal?.geometry?.[0]).toEqual(routeableDoor.point);
+	}
 	expect(builtProject.floors[0].walkableMask?.walkableRuns.length).toBeGreaterThan(0);
 	expect(builtProject.graph.edges.length).toBeGreaterThan(0);
 	expect(errors).toEqual([]);

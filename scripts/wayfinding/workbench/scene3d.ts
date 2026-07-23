@@ -192,15 +192,23 @@ export class WayfindingScene3d {
 		};
 	}
 
-	public rebuild(project: WayfindingStudioProject, floorId: string, route: WayfindingPoint[] = []): void {
+	public rebuild(
+		project: WayfindingStudioProject,
+		floorId: string,
+		route: WayfindingPoint[] = [],
+		visibleLayers?: ReadonlySet<WayfindingStudioElement['type'] | 'background'>
+	): void {
 		const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === floorId);
 
 		if (!floor) return;
 		this.currentProject = project;
 		this.currentFloor = floor;
 		this.disposeSceneContent();
-		this.addFloorPlane(project, floor);
-		for (const element of floor.elements) this.addElement(project, floor, element);
+		this.addFloorPlane(project, floor, visibleLayers?.has('background') ?? true);
+		for (const element of floor.elements) {
+			if (visibleLayers && !visibleLayers.has(element.type)) continue;
+			this.addElement(project, floor, element);
+		}
 		this.addRoute(floor, route);
 		const maximumDimension: number = Math.max(floor.width, floor.height);
 		this.camera.near = Math.max(0.1, maximumDimension / 5_000);
@@ -265,8 +273,10 @@ export class WayfindingScene3d {
 		else if (element.type === 'icon' || element.type === 'logo') this.addMedia(project, floor, element);
 	}
 
-	private addFloorPlane(project: WayfindingStudioProject, floor: WayfindingStudioFloor): void {
-		const background: WayfindingStudioAsset | undefined = project.assets.find((asset): boolean => asset.id === floor.backgroundAssetId);
+	private addFloorPlane(project: WayfindingStudioProject, floor: WayfindingStudioFloor, showBackground: boolean): void {
+		const background: WayfindingStudioAsset | undefined = showBackground
+			? project.assets.find((asset): boolean => asset.id === floor.backgroundAssetId)
+			: undefined;
 		const geometry = new THREE.PlaneGeometry(floor.width, floor.height);
 		const material = new THREE.MeshStandardMaterial({
 			color: background ? '#ffffff' : '#e7ece9',

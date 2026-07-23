@@ -109,9 +109,10 @@
 				<div class="layer-panel">
 					<div class="layer-panel-heading"><div><strong>Layer visibility</strong><span>Hide busy layers without deleting them.</span></div><div class="layer-actions"><button id="show-all-layers" type="button">Show all</button><button id="hide-all-layers" type="button">Hide all</button></div></div>
 					<div class="layer-toggles">
+					<label class="check" title="The source image beneath authored map elements."><input type="checkbox" data-layer="background" checked> Background image</label>
 					<label class="check"><input type="checkbox" data-layer="location" checked> Locations</label>
-					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable + mask</label>
-					<label class="check"><input type="checkbox" data-layer="obstacle" checked> Obstacles</label>
+					<label class="check" title="Authoring-only routing evidence; excluded from the production bundle."><input type="checkbox" data-layer="walkable" checked> Walkable + mask</label>
+					<label class="check" title="Authoring-only route exclusions; excluded from the production bundle."><input type="checkbox" data-layer="obstacle" checked> Blocked areas</label>
 					<label class="check"><input type="checkbox" data-layer="door" checked> Doors</label>
 					<label class="check"><input type="checkbox" data-layer="poi" checked> POIs</label>
 					<label class="check"><input type="checkbox" data-layer="origin" checked> Origins</label>
@@ -119,6 +120,7 @@
 					<label class="check"><input type="checkbox" data-layer="label" checked> Labels</label>
 					<label class="check"><input type="checkbox" data-layer="icon" checked> Icons</label>
 					<label class="check"><input type="checkbox" data-layer="logo" checked> Logos</label>
+					<label class="check" title="The visitor-facing route currently shown by the simulator."><input type="checkbox" data-layer="route-preview" checked> Visitor route</label>
 					<label class="check" title="The generated construction graph used by the route engine. It is hidden during normal map editing."><input type="checkbox" data-layer="route-network"> Route network</label>
 					</div>
 				</div>
@@ -313,12 +315,13 @@
 			</div>
 			<div class="selected-edge route-simulator">
 				<h2>Route simulator</h2>
-				<p class="route-intro">Draw the walkable area, add a start and destination entrance, then build and simulate a visitor route. The full construction graph stays hidden unless you enable its layer.</p>
+				<p class="route-intro">Draw the walkable area, add a start and destination entrance, then build routes. Test from the lists or enable room-click testing and select a room directly. Walkable and blocked areas are Studio-only routing evidence.</p>
 				<ul id="route-setup-checklist" class="route-setup-checklist"></ul>
 				<button id="route-build" type="button" class="route-build">Build routes</button>
 				<label>Start<select id="route-start"></select></label>
 				<label>Destination<select id="route-destination"></select></label>
 				<label>Profile<select id="route-profile"><option value="standard">Standard</option><option value="step-free">Step-free</option></select></label>
+				<label class="route-click-mode"><input id="route-click-mode" type="checkbox"> Click rooms on the map to test routes</label>
 				<div class="route-actions">
 					<button id="route-simulate" type="button">Simulate route</button>
 					<button id="route-clear" type="button" class="danger" disabled>Clear route</button>

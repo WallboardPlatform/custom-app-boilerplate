@@ -311,17 +311,35 @@ const validateGraph = (
 		}
 
 		if (walkableMask && from.levelId === to.levelId && edge.geometry && edge.corridorWidth !== undefined) {
-			const outside = walkableMask.outsideCorridor(points, edge.corridorWidth);
+			if (edge.traversal === 'portal') {
+				const entryDistance: number = points[1] ? pointDistance(points[0], points[1]) : Number.POSITIVE_INFINITY;
 
-			if (outside.length > 0) {
-				const first = outside[0];
-				addIssue(
-					issues,
-					'error',
-					'edge-outside-walkable-space',
-					`Edge '${edge.id}' leaves confirmed walkable space near (${Math.round(first.x)}, ${Math.round(first.y)}); ${outside.length} sampled cell(s) fail.`,
-					[edge.id, String(first.column), String(first.row)]
-				);
+				if (entryDistance > Math.max(48, walkableMask.document.cellSize * 4)) {
+					addIssue(issues, 'error', 'edge-portal-approach-too-long', `Portal edge '${edge.id}' starts too far from confirmed walkable space.`, [edge.id]);
+				}
+
+				if (!points[1] || !walkableMask.contains(points[1])) {
+					addIssue(issues, 'error', 'edge-portal-misses-walkable-space', `Portal edge '${edge.id}' does not enter confirmed walkable space.`, [edge.id]);
+				}
+				const outside = points.length > 2 ? walkableMask.outsideCorridor(points.slice(1), edge.corridorWidth) : [];
+
+				if (outside.length > 0) {
+					const first = outside[0];
+					addIssue(issues, 'error', 'edge-portal-leaves-walkable-space', `Portal edge '${edge.id}' leaves confirmed walkable space after its entrance approach near (${Math.round(first.x)}, ${Math.round(first.y)}).`, [edge.id]);
+				}
+			} else {
+				const outside = walkableMask.outsideCorridor(points, edge.corridorWidth);
+
+				if (outside.length > 0) {
+					const first = outside[0];
+					addIssue(
+						issues,
+						'error',
+						'edge-outside-walkable-space',
+						`Edge '${edge.id}' leaves confirmed walkable space near (${Math.round(first.x)}, ${Math.round(first.y)}); ${outside.length} sampled cell(s) fail.`,
+						[edge.id, String(first.column), String(first.row)]
+					);
+				}
 			}
 		}
 

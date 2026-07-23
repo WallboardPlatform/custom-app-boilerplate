@@ -610,6 +610,8 @@ main {
 .route-simulator { background: #eef4f1; }
 .route-simulator p { margin-top: 10px; }
 .route-simulator .route-intro { margin: 4px 0 12px; color: #52615d; }
+.route-simulator .route-click-mode { display: flex; align-items: center; margin: 12px 0; padding: 10px; border: 1px solid #b9cbc5; background: #fff; color: #18302a; font-weight: 700; gap: 9px; }
+.route-simulator .route-click-mode input { width: 18px; height: 18px; margin: 0; accent-color: #16836f; }
 .route-setup-checklist { display: grid; margin: 0 0 12px; padding: 0; list-style: none; }
 .route-setup-checklist li { display: flex; align-items: center; min-width: 0; padding: 7px 0; border-top: 1px solid #d4dfdb; }
 .route-setup-checklist li:last-child { border-bottom: 1px solid #d4dfdb; }

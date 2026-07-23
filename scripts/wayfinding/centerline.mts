@@ -317,6 +317,92 @@ export const nearestSkeletonIndex = (
 	return nearestIndex;
 };
 
+export const connectPointToSkeleton = (
+	mask: Uint8Array,
+	skeleton: Uint8Array,
+	columns: number,
+	rows: number,
+	point: { column: number; row: number },
+	excludedSkeletonIndices: ReadonlySet<number> = new Set<number>()
+): number[] | undefined => {
+	if (mask.length !== skeleton.length || mask.length !== columns * rows) return undefined;
+	let startIndex: number | undefined;
+	let nearestDistance = Number.POSITIVE_INFINITY;
+
+	for (let index = 0; index < mask.length; index += 1) {
+		if (mask[index] === 0) continue;
+		const column: number = index % columns;
+		const row: number = Math.floor(index / columns);
+		const distance: number = (column - point.column) ** 2 + (row - point.row) ** 2;
+
+		if (distance >= nearestDistance) continue;
+		nearestDistance = distance;
+		startIndex = index;
+	}
+
+	if (startIndex === undefined) return undefined;
+
+	const previous = new Int32Array(mask.length);
+	previous.fill(-2);
+	previous[startIndex] = -1;
+	const queue = new Int32Array(mask.length);
+	let head = 0;
+	let tail = 0;
+	queue[tail] = startIndex;
+	tail += 1;
+	let targetIndex: number | undefined;
+	const directions: ReadonlyArray<readonly [number, number]> = [
+		[0, -1],
+		[-1, 0],
+		[1, 0],
+		[0, 1],
+		[-1, -1],
+		[1, -1],
+		[-1, 1],
+		[1, 1]
+	];
+
+	while (head < tail) {
+		const current: number = queue[head];
+		head += 1;
+
+		if (skeleton[current] === 1 && !excludedSkeletonIndices.has(current)) {
+			targetIndex = current;
+			break;
+		}
+		const currentColumn: number = current % columns;
+		const currentRow: number = Math.floor(current / columns);
+
+		for (const [dx, dy] of directions) {
+			const column: number = currentColumn + dx;
+			const row: number = currentRow + dy;
+
+			if (column < 0 || column >= columns || row < 0 || row >= rows) continue;
+			const next: number = row * columns + column;
+
+			if (mask[next] === 0 || previous[next] !== -2) continue;
+
+			if (dx !== 0 && dy !== 0) {
+				const horizontal: number = currentRow * columns + column;
+				const vertical: number = row * columns + currentColumn;
+
+				if (mask[horizontal] === 0 || mask[vertical] === 0) continue;
+			}
+			previous[next] = current;
+			queue[tail] = next;
+			tail += 1;
+		}
+	}
+
+	if (targetIndex === undefined) return undefined;
+
+	const path: number[] = [];
+
+	for (let current: number = targetIndex; current >= 0; current = previous[current]) path.push(current);
+
+	return path.reverse();
+};
+
 export const retainAnchorNetworkCore = (
 	nodeIds: Iterable<string>,
 	edges: readonly NetworkEdgeReference[],

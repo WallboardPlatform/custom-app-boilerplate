@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { closeWalkableMask, extractSkeletonNetwork, nearestSkeletonIndex, retainAnchorNetworkCore, skeletonizeWalkableMask } from './centerline.mts';
+import { closeWalkableMask, connectPointToSkeleton, extractSkeletonNetwork, nearestSkeletonIndex, retainAnchorNetworkCore, skeletonizeWalkableMask } from './centerline.mts';
 
 const maskFromRows = (rows: string[]): Uint8Array => Uint8Array.from(rows.join('').split('').map((value: string): number => value === '#' ? 1 : 0));
 
@@ -68,6 +68,28 @@ void describe('wayfinding centerline extraction', (): void => {
 
 		assert.equal(nearestSkeletonIndex(skeleton, 5, { column: 3, row: 0 }), 4);
 		assert.equal(nearestSkeletonIndex(skeleton, 5, { column: 3, row: 0 }, new Set([4])), 0);
+	});
+
+	void it('connects an entrance to a centerline without crossing blocked mask cells', (): void => {
+		const mask = maskFromRows([
+			'#######',
+			'###.###',
+			'###.###',
+			'#######'
+		]);
+		const skeleton = maskFromRows([
+			'.......',
+			'.......',
+			'......#',
+			'.......'
+		]);
+		const path = connectPointToSkeleton(mask, skeleton, 7, 4, { column: 0, row: 2 });
+
+		assert.ok(path);
+		assert.equal(path.at(-1), 2 * 7 + 6);
+		assert.ok(path.every((index: number): boolean => mask[index] === 1));
+		assert.ok(!path.includes(2 * 7 + 3));
+		assert.ok(path.some((index: number): boolean => Math.floor(index / 7) !== 2));
 	});
 
 	void it('removes dangling branches that do not terminate at destination anchors', (): void => {
