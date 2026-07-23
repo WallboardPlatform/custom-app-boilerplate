@@ -65,9 +65,9 @@ The editor page runs inside Wallboard and communicates with its parent window:
 | Wallboard -> editor | n/a | current configuration, including `configValues` |
 | Editor -> Wallboard | `customWidget_saveCustomProperty` | `customPropertyValue: {configValues}` |
 
-Preserve the complete received `configValues` object when saving; update only the property owned by the custom editor. Accept messages only from `window.parent`. The Wallboard host origin varies, so outgoing messages use `"*"`.
+Preserve the complete received `configValues` object when saving; update only the property owned by the custom editor. Ignore parent messages without `configValues`, accept messages only from `window.parent`, and keep destructive actions explicit. The Wallboard host origin varies, so outgoing messages use `"*"`.
 
-Use `templates/editor-assets/custom-settings-editor/` as the small starter. The existing layout editor is for apps that actually need its layout-builder model, not a default dependency.
+Use `templates/editor-assets/custom-settings-editor/` as the small structured-list starter. Run `npm run custom-editor:preview` or `npm run test:custom-settings-editor` to exercise it against the simulated Wallboard host before adapting it. The existing layout editor is for apps that actually need its layout-builder model, not a default dependency.
 
 **Ownership rule:** datasource for shared/dynamic/external data; custom editor for complex bundled state manually owned by this app; normal properties for simple settings.
 

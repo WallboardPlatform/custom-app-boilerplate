@@ -3,25 +3,68 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Custom app editor</title>
+	<title>Wallboard content editor</title>
 	<link rel="stylesheet" href="./style.css">
 </head>
 <body>
-	<header>
-		<div><span>WALLBOARD CUSTOM APP</span><h1>Content editor</h1></div>
-		<p id="status">Waiting for the Wallboard editor...</p>
+	<header class="app-header">
+		<div>
+			<span class="eyebrow">WALLBOARD CUSTOM APP</span>
+			<h1>Content sections</h1>
+			<p class="intro">Edit the structured content owned by this app. Other widget settings remain unchanged.</p>
+		</div>
+		<p id="status" role="status" aria-live="polite" data-state="connecting">Connecting to Wallboard...</p>
 	</header>
 	<main>
-		<section>
-			<label for="editor-value">Structured app content</label>
-			<p>Replace this starter JSON field with controls tailored to the app's content model.</p>
-			<textarea id="editor-value" spellcheck="false" disabled></textarea>
+		<section class="collection-heading" aria-labelledby="collection-title">
+			<div>
+				<label for="collection-title" class="field-label">Collection title</label>
+				<input id="collection-title" type="text" maxlength="120" disabled>
+			</div>
+			<button id="add-section" type="button" disabled>Add section</button>
 		</section>
+		<div id="empty-state" class="empty-state" hidden>
+			<strong>No sections yet</strong>
+			<span>Add the first section to begin.</span>
+		</div>
+		<section id="sections" class="section-list" aria-label="Content sections"></section>
 	</main>
 	<footer>
-		<button id="reset" type="button" class="secondary" disabled>Reset changes</button>
-		<button id="save" type="button" disabled>Save and close</button>
+		<span class="shortcut-hint">Ctrl+S saves</span>
+		<div class="footer-actions">
+			<button id="reset" type="button" class="secondary" disabled>Reset changes</button>
+			<button id="save" type="button" disabled>Save and close</button>
+		</div>
 	</footer>
+	<template id="section-template">
+		<article class="content-section">
+			<header class="section-header">
+				<div>
+					<span class="section-position"></span>
+					<strong class="section-summary"></strong>
+				</div>
+				<div class="section-actions" aria-label="Section actions">
+					<button type="button" class="icon-button" data-action="move-up" title="Move section up" aria-label="Move section up">Up</button>
+					<button type="button" class="icon-button" data-action="move-down" title="Move section down" aria-label="Move section down">Down</button>
+					<button type="button" class="icon-button danger" data-action="delete" title="Delete section" aria-label="Delete section">Delete</button>
+				</div>
+			</header>
+			<div class="section-fields">
+				<label>
+					<span class="field-label">Title</span>
+					<input type="text" data-field="title" maxlength="120">
+				</label>
+				<label>
+					<span class="field-label">Body</span>
+					<textarea data-field="body" rows="4" maxlength="800"></textarea>
+				</label>
+				<label class="checkbox-field">
+					<input type="checkbox" data-field="enabled">
+					<span>Show this section</span>
+				</label>
+			</div>
+		</article>
+	</template>
 	<script src="./editor.js"></script>
 </body>
 </html>
