@@ -167,7 +167,9 @@
 							<legend>Visitor route</legend>
 							<label>Color<input id="default-route-color" type="color"></label>
 							<label>Line width<input id="default-route-width" type="number" min="1" max="40"></label>
-							<label title="Rounds visual route corners without changing the certified route graph.">Corner rounding %<input id="default-route-rounding" type="range" min="0" max="50" step="1"><output id="default-route-rounding-value">18</output></label>
+							<label title="Rounds visual route corners independently without changing the certified route graph.">Corner rounding %<input id="default-route-rounding" type="range" min="0" max="50" step="1"><output id="default-route-rounding-value">36</output></label>
+							<label title="Moves small direction markers from the start toward the destination.">Directional flow<select id="default-route-animation"><option value="flow">On</option><option value="off">Off</option></select></label>
+							<label title="Controls how quickly direction markers travel toward the destination.">Flow speed<input id="default-route-animation-speed" type="range" min="20" max="300" step="5"><output id="default-route-animation-speed-value">90</output></label>
 						</fieldset>
 					</div>
 				</details>
@@ -182,8 +184,8 @@
 					<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
 					<hr>
 					<h3>Walkable extraction</h3>
-					<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
-					<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
+					<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"><small class="control-help">Routing grid resolution. Lower values follow narrow doors and detailed curves; higher values produce a simpler network but can miss small entrances.</small></label>
+					<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"><small class="control-help">How different a pixel may be from the sampled floor color. Raise it when extraction stops early; lower it when the mask leaks into rooms or walls.</small></label>
 					<p>Choose Sample, then tap representative pedestrian paths or crossings. Connected extraction excludes similarly colored isolated buildings.</p>
 					<div class="segmented" role="group" aria-label="Mask tool">
 						<button type="button" data-tool="pan" data-shortcut="H">Pan</button>
@@ -191,17 +193,18 @@
 						<button type="button" data-tool="include">Include</button>
 						<button type="button" data-tool="exclude">Exclude</button>
 					</div>
-					<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
-					<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
+					<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"><small class="control-help">Size of the Include and Exclude correction brush. It changes only manual mask painting, not automatic route shape.</small></label>
+					<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"><small class="control-help">Closes tiny breaks before centerline extraction. Increase only for broken crossings or door gaps; high values may incorrectly bridge obstacles.</small></label>
+					<p class="control-guidance"><strong>Good starting point:</strong> 4 / 20–35 / 18 / 1–2. These controls improve the walkable mask. Red-route detours should be corrected with Adjust active route, not by over-expanding the mask.</p>
 					<div class="commands horizontal">
 						<button id="extract-mask" type="button">Extract mask</button>
 						<button id="clear-mask" type="button" class="secondary">Clear mask</button>
-						<button id="generate-centerlines" type="button">Generate routes</button>
+						<button id="generate-centerlines" type="button">Build route network</button>
 					</div>
 					<hr>
 					<h3>Route network editing</h3>
-					<p>Place destination entrances on walkable space, then connect and inspect the route network.</p>
-					<label>Level id<input id="level-id" type="text" value="level-0"></label>
+					<p>The thin network is editable routing evidence. The red visitor route is separately shortened and rounded inside the verified walkable area.</p>
+					<label>Level id<input id="level-id" type="text" value="level-0"><small class="control-help">Stable floor identifier stored in route nodes. Leave it unchanged unless imported data uses another floor id.</small></label>
 					<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
 						<button type="button" data-tool="anchor" data-shortcut="A">Place entrance</button>
 						<button type="button" data-tool="draw" data-shortcut="E">Draw route</button>
@@ -329,7 +332,7 @@
 				<button id="route-adjust" type="button" class="route-adjust" disabled>Adjust this route</button>
 				<div id="route-adjust-panel" class="route-adjust-panel" hidden>
 					<strong>ADJUSTING THE ACTIVE ROUTE</strong>
-					<p>Only this visitor route is emphasized. Select a segment, drag its round handles, or double-click it to add a bend. Automatic Build routes replaces manual corrections, so adjust only after the final build.</p>
+					<p>The red visitor route stays visible while its editable centerline is shown underneath. Click a route section, drag a round handle, or double-click the route to add a bend. Automatic Build routes replaces manual corrections, so adjust only after the final build.</p>
 					<div class="route-actions">
 						<button id="route-adjust-add-bend" type="button" disabled>Add bend</button>
 						<button id="route-adjust-remove-bend" type="button" class="danger" disabled>Remove selected bend</button>

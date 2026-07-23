@@ -21,6 +21,17 @@
 			"height": 760,
 			"camera3d": { "azimuthDegrees": 36, "distance": 1760, "pitchDegrees": 48, "targetX": 600, "targetY": 380 },
 			"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1200 760\"></svg>",
+			"walkableMask": {
+				"cellSize": 10,
+				"columns": 120,
+				"contractVersion": 1,
+				"height": 760,
+				"mapId": "northline-campus-ground",
+				"reviewStatus": "confirmed",
+				"rows": 76,
+				"walkableRuns": [[33, 6, 113], [34, 6, 113], [35, 6, 113], [36, 6, 113], [37, 6, 113], [38, 6, 113], [39, 6, 113], [40, 6, 113], [41, 6, 113], [42, 6, 113]],
+				"width": 1200
+			},
 			"elements": [
 				{ "id": "walk-main", "type": "walkable", "geometry": [{ "x": 60, "y": 330 }, { "x": 1140, "y": 330 }, { "x": 1140, "y": 430 }, { "x": 60, "y": 430 }], "presentation": { "fillColor": "#f0eadb", "fillOpacity": 1, "extrusionHeight": 0 } },
 				{ "id": "welcome-shape", "type": "location", "destinationId": "welcome-center", "label": "Welcome Center", "geometry": [{ "x": 60, "y": 80 }, { "x": 360, "y": 80 }, { "x": 360, "y": 330 }, { "x": 60, "y": 330 }], "presentation": { "fillColor": "#7ec8b5", "fillOpacity": 1, "extrusionHeight": 36 } },
@@ -64,5 +75,8 @@
 			{ "id": "door-cafe", "from": "junction-east", "to": "destination-cafe", "kind": "walk", "accessible": true, "bidirectional": true, "distanceMeters": 5, "geometry": [{ "x": 990, "y": 380 }, { "x": 990, "y": 430 }], "reviewStatus": "confirmed", "traversal": "portal" }
 		]
 	},
-	"manifest": { "deliveryMode": "route", "projectId": "northline-spatial-wayfinding", "sourceContractVersion": 1, "targetMode": "route" }
+	"manifest": { "deliveryMode": "route", "projectId": "northline-spatial-wayfinding", "sourceContractVersion": 1, "targetMode": "route" },
+	"presentation": {
+		"route": { "animation": "flow", "animationSpeed": 90, "color": "#f0be4d", "cornerRounding": 36, "width": 11 }
+	}
 }

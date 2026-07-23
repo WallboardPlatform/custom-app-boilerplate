@@ -263,6 +263,9 @@ main {
 
 .drawing-mode .segmented { margin-top: 7px; }
 .drawing-mode small { display: block; margin-top: 6px; color: #687571; font-size: 9px; line-height: 1.35; }
+.control-help { display: block; margin-top: 5px; color: #687571; font-size: 9px; font-weight: 500; line-height: 1.4; }
+.control-guidance { padding: 9px 10px; border-left: 3px solid #168773; background: #eef7f4; color: #44514e; font-size: 9px; line-height: 1.45; }
+.control-guidance strong { color: #17201f; }
 
 .media-asset-state {
 	display: grid;

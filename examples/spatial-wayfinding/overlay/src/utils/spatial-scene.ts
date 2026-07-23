@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import type { WayfindingPoint } from '@utils/wayfinding';
+import { routeLength, routePositionAt } from '@utils/wayfinding-route-presentation';
 import type {
 	RuntimeElement,
 	RuntimeFloor,
@@ -82,6 +83,9 @@ export class SpatialScene {
 	private readonly renderer: THREE.WebGLRenderer;
 	private readonly resizeObserver: ResizeObserver;
 	private routeObject?: THREE.Object3D;
+	private readonly routeFlowMarkers: THREE.Mesh[] = [];
+	private routeFlowPoints: WayfindingPoint[] = [];
+	private routeFlowStartedAt = 0;
 	private readonly scene = new THREE.Scene();
 	private readonly selectable: THREE.Object3D[] = [];
 	private selectedDestinationId?: string;
@@ -185,8 +189,12 @@ export class SpatialScene {
 	public setRoute(points: WayfindingPoint[]): void {
 		if (this.routeObject) this.disposeObject(this.routeObject);
 		this.routeObject = undefined;
+		this.routeFlowMarkers.length = 0;
+		this.routeFlowPoints = [];
 
 		if (points.length < 2) return;
+		this.routeFlowPoints = points.map((point: WayfindingPoint): WayfindingPoint => ({ ...point }));
+		this.routeFlowStartedAt = performance.now();
 		const routePoints: THREE.Vector3[] = points.map((point: WayfindingPoint): THREE.Vector3 => centeredPoint(this.floor, point, 10));
 		const material = new THREE.MeshStandardMaterial({ color: this.options.accentColor(), emissive: this.options.accentColor(), emissiveIntensity: 0.3, roughness: 0.45 });
 		const route = new THREE.Group();
@@ -213,6 +221,13 @@ export class SpatialScene {
 			joint.castShadow = true;
 			joint.renderOrder = 12;
 			route.add(joint);
+		}
+		const flowMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', depthTest: false });
+		for (let index = 0; index < 4; index += 1) {
+			const marker = new THREE.Mesh(new THREE.SphereGeometry(8, 14, 10), flowMaterial);
+			marker.renderOrder = 18;
+			this.routeFlowMarkers.push(marker);
+			route.add(marker);
 		}
 		this.routeObject = route;
 		this.scene.add(route);
@@ -313,8 +328,17 @@ export class SpatialScene {
 	private animate(): void {
 		const frame = (time: number): void => {
 			this.controls.update();
-			const pulse: number = this.options.motionEnabled() ? 1 + Math.sin(time / 360) * 0.18 : 1;
+			const motionEnabled: boolean = this.options.motionEnabled();
+			const pulse: number = motionEnabled ? 1 + Math.sin(time / 360) * 0.18 : 1;
 			this.originPulse.scale.set(pulse, pulse, pulse);
+			const flowLength: number = routeLength(this.routeFlowPoints);
+			for (const [index, marker] of this.routeFlowMarkers.entries()) {
+				const rawDistance: number = (time - this.routeFlowStartedAt) * 0.09 - index * 52;
+				const distance: number = flowLength > 0 ? ((rawDistance % flowLength) + flowLength) % flowLength : 0;
+				const position = routePositionAt(this.routeFlowPoints, distance);
+				marker.visible = motionEnabled && Boolean(position);
+				if (position) marker.position.copy(centeredPoint(this.floor, position.point, 17));
+			}
 			this.renderer.render(this.scene, this.camera);
 			this.frameId = requestAnimationFrame(frame);
 		};

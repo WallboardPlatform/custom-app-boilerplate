@@ -13,6 +13,12 @@ import type {
 } from '@interfaces/spatial-wayfinding.interface';
 import { WayfindingGraph } from '@utils/wayfinding';
 import type { WayfindingPoint, WayfindingRouteResult } from '@utils/wayfinding';
+import {
+	presentRoutePoints,
+	routeSegmentWithinMask,
+	routeSvgPath,
+	shortcutRoutePoints
+} from '@utils/wayfinding-route-presentation';
 import { SpatialScene } from '@utils/spatial-scene';
 
 import style from '@components/wb-app/wb-app.module.scss';
@@ -23,6 +29,13 @@ const floor: RuntimeFloor = runtime.floors[0];
 const destinations: RuntimeDestination[] = runtime.destinations.Destinations.rows;
 const graph = new WayfindingGraph(runtime.graph);
 const originId = 'origin-main';
+const routePresentation = runtime.presentation?.route ?? {
+	animation: 'flow',
+	animationSpeed: 90,
+	color: '#f0be4d',
+	cornerRounding: 36,
+	width: 11
+};
 
 const polygonPoints = (points: WayfindingPoint[]): string => points.map((point: WayfindingPoint): string => `${point.x},${point.y}`).join(' ');
 
@@ -40,12 +53,42 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return node ? graph.route(originId, node.id, { mapRatio: 13 }) : undefined;
 	});
+	const presentedRoute = createMemo((): WayfindingPoint[] => {
+		const points: WayfindingPoint[] = route()?.path.filter((point): boolean => point.levelId === floor.id) ?? [];
+		const shortened: WayfindingPoint[] = floor.walkableMask
+			? shortcutRoutePoints(
+				points,
+				(left: WayfindingPoint, right: WayfindingPoint): boolean => routeSegmentWithinMask(
+					floor.walkableMask!,
+					left,
+					right,
+					Math.max(1, routePresentation.width / 2, floor.walkableMask!.cellSize * 0.6)
+				)
+			)
+			: points;
+
+		return presentRoutePoints(
+			shortened,
+			routePresentation.cornerRounding,
+			floor.walkableMask
+				? (left: WayfindingPoint, right: WayfindingPoint): boolean => routeSegmentWithinMask(
+					floor.walkableMask!,
+					left,
+					right,
+					Math.max(1, routePresentation.width / 2)
+				)
+				: undefined
+		);
+	});
+	const presentedRoutePath = createMemo((): string => routeSvgPath(presentedRoute()));
 	const themeStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-spatial-accent': settings().accentColor,
 		'--wb-spatial-background': settings().backgroundColor,
 		'--wb-spatial-panel': settings().panelColor,
 		'--wb-spatial-primary': settings().primaryTextColor,
-		'--wb-spatial-secondary': settings().secondaryTextColor
+		'--wb-spatial-secondary': settings().secondaryTextColor,
+		'--wb-spatial-route-flow-duration': `${Math.max(900, Math.round(2_400 * 90 / routePresentation.animationSpeed))}ms`,
+		'--wb-spatial-route-width': `${routePresentation.width}px`
 	}));
 
 	const chooseDestination = (destinationId: string): void => {
@@ -71,7 +114,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	createEffect((): void => {
 		const destinationId: string | undefined = selectedId();
 		scene?.selectDestination(destinationId);
-		scene?.setRoute(route()?.path.filter((point): boolean => point.levelId === floor.id) ?? []);
+		scene?.setRoute(presentedRoute());
 	});
 
 	createEffect((): void => {
@@ -90,6 +133,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-selected-destination={selectedId() ?? ''}
 			data-view={view()}
 			data-motion={settings().motionPreset}
+			data-route-flow={routePresentation.animation === 'flow' && settings().motionPreset !== 'off' ? 'on' : 'off'}
 			style={themeStyle()}
 		>
 			<header class="wb-spatial-wayfinding-header">
@@ -133,8 +177,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							)}
 						</For>
 						<Show when={route()}>
-							<polyline class="wb-spatial-wayfinding-route-shadow" points={polygonPoints(route()!.path)} />
-							<polyline class="wb-spatial-wayfinding-route" points={polygonPoints(route()!.path)} />
+							<path class="wb-spatial-wayfinding-route-shadow" d={presentedRoutePath()} />
+							<path class="wb-spatial-wayfinding-route" d={presentedRoutePath()} />
+							<path class="wb-spatial-wayfinding-route-flow" d={presentedRoutePath()} />
 						</Show>
 						<For each={floor.elements.filter((element): element is RuntimeLabel => element.type === 'label')}>
 							{(label: RuntimeLabel): JSX.Element => (

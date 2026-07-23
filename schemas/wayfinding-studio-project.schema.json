@@ -100,8 +100,10 @@
 				"route": {
 					"type": "object",
 					"additionalProperties": false,
-					"required": ["color", "cornerRounding", "width"],
+					"required": ["animation", "animationSpeed", "color", "cornerRounding", "width"],
 					"properties": {
+						"animation": { "type": "string", "enum": ["flow", "off"] },
+						"animationSpeed": { "type": "number", "minimum": 20, "maximum": 300 },
 						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
 						"cornerRounding": { "type": "number", "minimum": 0, "maximum": 50 },
 						"width": { "type": "number", "minimum": 1, "maximum": 40 }

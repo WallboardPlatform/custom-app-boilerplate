@@ -54,6 +54,8 @@ export interface WayfindingStudioPresentationDefaults {
 	};
 	polygons: Record<WayfindingStudioPolygonElement['type'], Required<WayfindingStudioPolygonPresentation>>;
 	route: {
+		animation: 'flow' | 'off';
+		animationSpeed: number;
 		color: string;
 		cornerRounding: number;
 		width: number;
@@ -203,6 +205,7 @@ export interface WayfindingRuntimeBundle {
 		name: string;
 		order: number;
 		svg: string;
+		walkableMask?: WayfindingWalkableMaskDocument;
 		width: number;
 	}>;
 	graph: WayfindingGraphDocument;
@@ -234,7 +237,7 @@ const DEFAULT_PRESENTATION: WayfindingStudioPresentationDefaults = {
 		obstacle: { extrusionHeight: 24, fillColor: '#31403d', fillOpacity: 0.76 },
 		walkable: { extrusionHeight: 0, fillColor: '#55bfa7', fillOpacity: 0.28 }
 	},
-	route: { color: '#f04438', cornerRounding: 18, width: 7 }
+	route: { animation: 'flow', animationSpeed: 90, color: '#f04438', cornerRounding: 36, width: 7 }
 };
 
 export const resolveWayfindingStudioPresentation = (
@@ -439,6 +442,10 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 	if (!Number.isFinite(presentation.route.width) || presentation.route.width < 1 || presentation.route.width > 40) issues.push({ code: 'invalid-route-width', elementIds: [], message: 'Route width must be between 1 and 40.', severity: 'error' });
 
 	if (!Number.isFinite(presentation.route.cornerRounding) || presentation.route.cornerRounding < 0 || presentation.route.cornerRounding > 50) issues.push({ code: 'invalid-route-rounding', elementIds: [], message: 'Route corner rounding must be between 0 and 50 percent.', severity: 'error' });
+
+	if (presentation.route.animation !== 'flow' && presentation.route.animation !== 'off') issues.push({ code: 'invalid-route-animation', elementIds: [], message: 'Route animation must be flow or off.', severity: 'error' });
+
+	if (!Number.isFinite(presentation.route.animationSpeed) || presentation.route.animationSpeed < 20 || presentation.route.animationSpeed > 300) issues.push({ code: 'invalid-route-animation-speed', elementIds: [], message: 'Route animation speed must be between 20 and 300 map units per second.', severity: 'error' });
 
 	for (const order of duplicateIds(project.floors.map((floor): string => String(floor.order)))) issues.push({ code: 'duplicate-floor-order', elementIds: project.floors.filter((floor): boolean => String(floor.order) === order).map((floor): string => floor.id), message: `Floor order '${order}' is duplicated.`, severity: 'error' });
 
@@ -762,6 +769,7 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 			name: floor.name,
 			order: floor.order,
 			svg: renderWayfindingFloorSvg(project, floor.id),
+			walkableMask: floor.walkableMask ? structuredClone(floor.walkableMask) : undefined,
 			width: floor.width
 		})),
 		graph: runtimeGraph,

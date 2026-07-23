@@ -9,6 +9,12 @@ import type {
 	WayfindingWalkableMaskRun
 } from '../../../src/utils/wayfinding';
 import { WayfindingGraph } from '../../../src/utils/wayfinding';
+import {
+	presentRoutePoints,
+	routeLength,
+	routePositionAt,
+	shortcutRoutePoints
+} from '../../../src/utils/wayfinding-route-presentation';
 import { addProposedEdge, addRouteNode, upsertLocationAnchor } from '../authoring.mts';
 import {
 	closeWalkableMask,
@@ -280,6 +286,9 @@ const defaultRouteColor = requireElement<HTMLInputElement>('#default-route-color
 const defaultRouteWidth = requireElement<HTMLInputElement>('#default-route-width');
 const defaultRouteRounding = requireElement<HTMLInputElement>('#default-route-rounding');
 const defaultRouteRoundingValue = requireElement<HTMLOutputElement>('#default-route-rounding-value');
+const defaultRouteAnimation = requireElement<HTMLSelectElement>('#default-route-animation');
+const defaultRouteAnimationSpeed = requireElement<HTMLInputElement>('#default-route-animation-speed');
+const defaultRouteAnimationSpeedValue = requireElement<HTMLOutputElement>('#default-route-animation-speed-value');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -315,6 +324,9 @@ let insertPointForSemanticId: string | undefined;
 let simulatedRoute: ReturnType<WayfindingGraph['route']>;
 let routeAdjustmentActive = false;
 let routeNetworkVisibleBeforeAdjustment = false;
+let routeAnimationFrameId: number | undefined;
+let routeAnimationTime = 0;
+let routeAnimationLastDraw = 0;
 let viewMode: '2d' | '3d' = '2d';
 let pendingMediaAssetId: string | undefined;
 let pendingMediaNaturalSize: { height: number; width: number } | undefined;
@@ -440,49 +452,13 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
-const roundedRoutePoints = (points: WayfindingPoint[], roundingPercent: number): WayfindingPoint[] => {
-	if (points.length < 3 || roundingPercent <= 0) return points;
-	const factor: number = Math.min(0.5, Math.max(0, roundingPercent / 100));
-	const rounded: WayfindingPoint[] = [{ ...points[0] }];
-
-	for (let index = 1; index < points.length - 1; index += 1) {
-		const previous: WayfindingPoint = points[index - 1];
-		const corner: WayfindingPoint = points[index];
-		const next: WayfindingPoint = points[index + 1];
-		const incomingLength: number = Math.hypot(corner.x - previous.x, corner.y - previous.y);
-		const outgoingLength: number = Math.hypot(next.x - corner.x, next.y - corner.y);
-		if (incomingLength === 0 || outgoingLength === 0) continue;
-		const radius: number = Math.min(incomingLength, outgoingLength) * factor;
-		const start: WayfindingPoint = {
-			x: corner.x + (previous.x - corner.x) * radius / incomingLength,
-			y: corner.y + (previous.y - corner.y) * radius / incomingLength
-		};
-		const end: WayfindingPoint = {
-			x: corner.x + (next.x - corner.x) * radius / outgoingLength,
-			y: corner.y + (next.y - corner.y) * radius / outgoingLength
-		};
-		rounded.push(start);
-		for (let step = 1; step <= 6; step += 1) {
-			const ratio: number = step / 6;
-			const inverse: number = 1 - ratio;
-			rounded.push({
-				x: inverse * inverse * start.x + 2 * inverse * ratio * corner.x + ratio * ratio * end.x,
-				y: inverse * inverse * start.y + 2 * inverse * ratio * corner.y + ratio * ratio * end.y
-			});
-		}
-	}
-	rounded.push({ ...points.at(-1)! });
-
-	return rounded;
-};
-
-function routeSegmentContained(left: WayfindingPoint, right: WayfindingPoint): boolean {
+function routeSegmentContained(left: WayfindingPoint, right: WayfindingPoint, requestedClearance?: number): boolean {
 	const length: number = Math.hypot(right.x - left.x, right.y - left.y);
 	if (length === 0) return true;
 	const samples: number = Math.max(2, Math.ceil(length / Math.max(1, cellSize() / 2)));
 	const normalX: number = -(right.y - left.y) / length;
 	const normalY: number = (right.x - left.x) / length;
-	const clearance: number = Math.max(cellSize() * 2, resolveWayfindingStudioPresentation(studioProject).route.width);
+	const clearance: number = requestedClearance ?? Math.max(cellSize() * 2, resolveWayfindingStudioPresentation(studioProject).route.width);
 
 	for (let index = 1; index < samples; index += 1) {
 		const ratio: number = index / samples;
@@ -498,40 +474,22 @@ function routeSegmentContained(left: WayfindingPoint, right: WayfindingPoint): b
 	return true;
 }
 
-const routeGeometryContained = (points: WayfindingPoint[]): boolean => points.slice(1).every((point: WayfindingPoint, index: number): boolean => routeSegmentContained(points[index], point));
-
-const simplifyCenterlineRoute = (points: WayfindingPoint[]): WayfindingPoint[] => {
-	if (points.length < 3) return points;
-	const baseTolerance: number = Math.max(1, Math.min(cellSize() * 1.5, resolveWayfindingStudioPresentation(studioProject).route.width * 0.75));
-
-	for (const factor of [1, 0.75, 0.5, 0.25, 0]) {
-		const candidate: WayfindingPoint[] = factor === 0
-			? points.map((point): WayfindingPoint => ({ ...point }))
-			: simplifyGeometry(points, baseTolerance * factor);
-
-		if (routeGeometryContained(candidate)) return candidate;
-	}
-
-	return points;
-};
-
-const safelyRoundedRoute = (points: WayfindingPoint[], roundingPercent: number): WayfindingPoint[] => {
-	for (const factor of [1, 0.75, 0.5, 0.25, 0]) {
-		const candidate: WayfindingPoint[] = roundedRoutePoints(points, roundingPercent * factor);
-
-		if (routeGeometryContained(candidate)) return candidate;
-	}
-
-	return points;
-};
-
 const simulatedRoutePoints = (): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = simulatedRoute?.path
 		.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
 		.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [];
-	const simplified: WayfindingPoint[] = simplifyCenterlineRoute(points);
+	const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
+	const shortcutClearance: number = Math.max(1, routePresentation.width / 2, cellSize() * 0.6);
+	const simplified: WayfindingPoint[] = shortcutRoutePoints(
+		points,
+		(left: WayfindingPoint, right: WayfindingPoint): boolean => routeSegmentContained(left, right, shortcutClearance)
+	);
 
-	return safelyRoundedRoute(simplified, resolveWayfindingStudioPresentation(studioProject).route.cornerRounding);
+	return presentRoutePoints(
+		simplified,
+		routePresentation.cornerRounding,
+		(left: WayfindingPoint, right: WayfindingPoint): boolean => routeSegmentContained(left, right, Math.max(1, routePresentation.width / 2))
+	);
 };
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
@@ -645,7 +603,7 @@ function enterRouteAdjustment(): void {
 	renderSemanticEditor();
 	renderRouteSimulator();
 	renderReview();
-	coverageStatus.textContent = 'Adjusting this visitor route. Drag a round handle or double-click a highlighted segment to add a bend.';
+	coverageStatus.textContent = 'Adjusting this visitor route. Click the red route section you want to change, drag a round handle, or double-click the route to add a bend.';
 	draw();
 }
 
@@ -1375,6 +1333,9 @@ const syncPresentationControls = (): void => {
 	defaultRouteWidth.value = String(defaults.route.width);
 	defaultRouteRounding.value = String(defaults.route.cornerRounding);
 	defaultRouteRoundingValue.value = String(defaults.route.cornerRounding);
+	defaultRouteAnimation.value = defaults.route.animation;
+	defaultRouteAnimationSpeed.value = String(defaults.route.animationSpeed);
+	defaultRouteAnimationSpeedValue.value = String(defaults.route.animationSpeed);
 };
 
 const renderStudioControls = (): void => {
@@ -2697,7 +2658,87 @@ const finishSemanticPolygon = (): void => {
 	commitSemanticPolygon(semanticDraft.type, semanticDraft.points);
 };
 
-const draw = (): void => {
+const drawRouteFlow = (
+	context: CanvasRenderingContext2D,
+	points: WayfindingPoint[],
+	routePresentation: WayfindingStudioPresentationDefaults['route']
+): void => {
+	if (routePresentation.animation !== 'flow' || routeAdjustmentActive || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+	const length: number = routeLength(points);
+	if (length <= 0) return;
+	const spacing: number = Math.max(routePresentation.width * 9, 76 / scale);
+	const speed: number = routePresentation.animationSpeed / Math.max(scale, 0.1);
+	const offset: number = routeAnimationTime * speed / 1_000 % spacing;
+	const markerSize: number = Math.max(routePresentation.width * 0.72, 5 / scale);
+
+	context.save();
+	context.fillStyle = '#ffffff';
+	context.strokeStyle = routePresentation.color;
+	context.lineWidth = Math.max(1.5, routePresentation.width * 0.2) / scale;
+	context.globalAlpha = 0.96;
+
+	for (let routeDistance = offset; routeDistance < length; routeDistance += spacing) {
+		const position = routePositionAt(points, routeDistance);
+		if (!position) continue;
+		context.save();
+		context.translate(position.point.x, position.point.y);
+		context.rotate(position.angle);
+		context.beginPath();
+		context.moveTo(markerSize, 0);
+		context.lineTo(-markerSize * 0.72, markerSize * 0.68);
+		context.lineTo(-markerSize * 0.28, 0);
+		context.lineTo(-markerSize * 0.72, -markerSize * 0.68);
+		context.closePath();
+		context.fill();
+		context.stroke();
+		context.restore();
+	}
+	const destination: WayfindingPoint = points.at(-1) as WayfindingPoint;
+	const pulse: number = 1 + Math.sin(routeAnimationTime / 250) * 0.16;
+	context.beginPath();
+	context.arc(destination.x, destination.y, Math.max(9, routePresentation.width * 1.3) * pulse / scale, 0, Math.PI * 2);
+	context.globalAlpha = 0.52;
+	context.lineWidth = Math.max(2, routePresentation.width * 0.4) / scale;
+	context.strokeStyle = routePresentation.color;
+	context.stroke();
+	context.restore();
+};
+
+const drawRouteAdjustmentHandles = (context: CanvasRenderingContext2D): void => {
+	if (!routeAdjustmentActive || !graph) return;
+	const activeEdgeIds: Set<string> = activeRouteEdgeIds();
+	const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
+
+	for (const edge of graph.edges) {
+		if (!activeEdgeIds.has(edge.id)) continue;
+		const points: WayfindingPoint[] = edgePoints(edge);
+		const selected: boolean = edge.id === selectedEdgeId;
+
+		if (selected) {
+			context.beginPath();
+			context.moveTo(points[0].x, points[0].y);
+			for (const point of points.slice(1)) context.lineTo(point.x, point.y);
+			context.lineCap = 'round';
+			context.lineJoin = 'round';
+			context.lineWidth = Math.max(2, routePresentation.width * 0.42) / scale;
+			context.strokeStyle = '#ffd34e';
+			context.stroke();
+		}
+
+		for (const [pointIndex, point] of points.entries()) {
+			const selectedPoint: boolean = selected && pointIndex === selectedEdgeVertexIndex;
+			context.beginPath();
+			context.arc(point.x, point.y, (selectedPoint ? 8 : selected ? 6 : 4.5) / scale, 0, Math.PI * 2);
+			context.fillStyle = selectedPoint ? '#ffd34e' : '#fff8e9';
+			context.fill();
+			context.lineWidth = (selected ? 2 : 1.5) / scale;
+			context.strokeStyle = selected ? '#17201f' : routePresentation.color;
+			context.stroke();
+		}
+	}
+};
+
+const draw = (refreshScene = true): void => {
 	const bounds: DOMRect = canvas.getBoundingClientRect();
 	context.save();
 	context.setTransform(1, 0, 0, 1, 0, 0);
@@ -2739,6 +2780,7 @@ const draw = (): void => {
 	if (graph && showRouteNetwork) {
 		const activeEdgeIds: Set<string> = activeRouteEdgeIds();
 		for (const edge of graph.edges) {
+			if (routeAdjustmentActive && !activeEdgeIds.has(edge.id)) continue;
 			const fromNode: WayfindingNode | undefined = graphNode(edge.from);
 			const toNode: WayfindingNode | undefined = graphNode(edge.to);
 			if (!fromNode || !toNode || fromNode.levelId !== currentFloorId || toNode.levelId !== currentFloorId) continue;
@@ -2756,15 +2798,17 @@ const draw = (): void => {
 			context.lineJoin = 'round';
 			const selectedEdge: boolean = edge.id === selectedEdgeId;
 			const activeEdge: boolean = activeEdgeIds.has(edge.id);
-			context.lineWidth = (selectedEdge ? 6 : routeAdjustmentActive ? activeEdge ? 4 : 1.25 : 2.5) / scale;
+			context.lineWidth = (selectedEdge ? 5 : routeAdjustmentActive ? 3.5 : 2.5) / scale;
 			context.strokeStyle = selectedEdge
 				? '#ffd34e'
 				: routeAdjustmentActive
-					? activeEdge ? '#008f77' : 'rgba(78, 96, 91, 0.35)'
+					? resolveWayfindingStudioPresentation(studioProject).route.color
 					: valid ? '#008f77' : '#e13f34';
+			context.globalAlpha = routeAdjustmentActive && activeEdge ? 0.48 : 1;
 			context.stroke();
+			context.globalAlpha = 1;
 
-			if (tool === 'graph' && selectedEdge) {
+			if (tool === 'graph' && selectedEdge && !routeAdjustmentActive) {
 				for (const [pointIndex, point] of points.entries()) {
 					context.beginPath();
 					context.arc(point.x, point.y, (pointIndex === selectedEdgeVertexIndex ? 8 : 6) / scale, 0, Math.PI * 2);
@@ -2817,10 +2861,11 @@ const draw = (): void => {
 			context.stroke();
 		}
 	}
-	if (simulatedRoute && layerVisible('route-preview') && !routeAdjustmentActive) {
+	if (simulatedRoute && layerVisible('route-preview')) {
 		const points: WayfindingPoint[] = simulatedRoutePoints();
 		if (points.length > 1) {
 			const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
+			context.save();
 			context.beginPath();
 			context.moveTo(points[0].x, points[0].y);
 			for (const point of points.slice(1)) context.lineTo(point.x, point.y);
@@ -2829,11 +2874,14 @@ const draw = (): void => {
 			context.lineJoin = 'round';
 			context.strokeStyle = routePresentation.color;
 			context.stroke();
+			drawRouteFlow(context, points, routePresentation);
+			context.restore();
 		}
 	}
+	drawRouteAdjustmentHandles(context);
 
 	context.restore();
-	refresh3d();
+	if (refreshScene) refresh3d();
 };
 
 const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
@@ -3881,7 +3929,7 @@ snapRadiusInput.addEventListener('input', (): void => {
 	snapRadiusValue.value = snapRadiusInput.value;
 });
 chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
-for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.addEventListener('change', draw);
+for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.addEventListener('change', (): void => draw());
 showAllLayers.addEventListener('click', (): void => {
 	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = true;
 	draw();
@@ -3922,6 +3970,9 @@ defaultRouteColor.addEventListener('change', (): void => updatePresentationDefau
 defaultRouteWidth.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.width = Math.min(40, Math.max(1, Number(defaultRouteWidth.value))); }));
 defaultRouteRounding.addEventListener('input', (): void => { defaultRouteRoundingValue.value = defaultRouteRounding.value; });
 defaultRouteRounding.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.cornerRounding = Math.min(50, Math.max(0, Number(defaultRouteRounding.value))); }));
+defaultRouteAnimation.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.animation = defaultRouteAnimation.value === 'off' ? 'off' : 'flow'; }));
+defaultRouteAnimationSpeed.addEventListener('input', (): void => { defaultRouteAnimationSpeedValue.value = defaultRouteAnimationSpeed.value; });
+defaultRouteAnimationSpeed.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.animationSpeed = Math.min(300, Math.max(20, Number(defaultRouteAnimationSpeed.value))); }));
 const simulateSelectedRoute = (destinationIdValue: string = routeDestination.value): boolean => {
 	const startId: string = routeStart.value;
 	if (!startId || !destinationIdValue) {
@@ -4505,9 +4556,9 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		renderReview();
 		draw();
 	} else if (tool === 'graph' && graph) {
-		const edge: WayfindingEdge | undefined = selectedEdgeId
-			? graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId)
-			: nearestEdge(imagePoint);
+		const nearest: WayfindingEdge | undefined = nearestEdge(imagePoint);
+		const edge: WayfindingEdge | undefined = nearest
+			?? graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId);
 		const vertex: number | undefined = edge ? nearestVertex(edge, imagePoint) : undefined;
 
 		if (edge && vertex !== undefined) {
@@ -4684,7 +4735,31 @@ window.addEventListener('resize', resizeCanvas);
 document.addEventListener('visibilitychange', (): void => {
 	if (document.visibilityState === 'hidden') void persistAutosave();
 });
-window.addEventListener('pagehide', (): void => { void persistAutosave(); scene3d.dispose(); });
+const animateRoutePreview = (time: number): void => {
+	routeAnimationTime = time;
+	const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
+	const shouldDraw: boolean = Boolean(
+		simulatedRoute
+		&& viewMode === '2d'
+		&& layerVisible('route-preview')
+		&& routePresentation.animation === 'flow'
+		&& !routeAdjustmentActive
+		&& document.visibilityState === 'visible'
+		&& !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	);
+
+	if (shouldDraw && time - routeAnimationLastDraw >= 40) {
+		routeAnimationLastDraw = time;
+		draw(false);
+	}
+	routeAnimationFrameId = window.requestAnimationFrame(animateRoutePreview);
+};
+routeAnimationFrameId = window.requestAnimationFrame(animateRoutePreview);
+window.addEventListener('pagehide', (): void => {
+	void persistAutosave();
+	scene3d.dispose();
+	if (routeAnimationFrameId !== undefined) window.cancelAnimationFrame(routeAnimationFrameId);
+});
 syncProjectControls();
 renderProjectAssessment();
 setActiveTool();

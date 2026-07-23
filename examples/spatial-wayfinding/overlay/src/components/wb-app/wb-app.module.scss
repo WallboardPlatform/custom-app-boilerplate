@@ -56,9 +56,17 @@
 :global(.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected) { stroke: var(--wb-spatial-accent); stroke-width: 11px; }
 :global(.wb-spatial-wayfinding-map-label) { fill: #15302b; font-size: 27px; font-weight: 800; paint-order: stroke; stroke: rgba(255, 255, 255, 0.9); stroke-width: 8px; stroke-linejoin: round; pointer-events: none; }
 :global(.wb-spatial-wayfinding-route-shadow),
-:global(.wb-spatial-wayfinding-route) { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-:global(.wb-spatial-wayfinding-route-shadow) { stroke: rgba(255, 255, 255, 0.95); stroke-width: 22px; }
-:global(.wb-spatial-wayfinding-route) { stroke: var(--wb-spatial-accent); stroke-width: 11px; }
+:global(.wb-spatial-wayfinding-route),
+:global(.wb-spatial-wayfinding-route-flow) { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+:global(.wb-spatial-wayfinding-route-shadow) { stroke: rgba(255, 255, 255, 0.95); stroke-width: calc(var(--wb-spatial-route-width) * 2); }
+:global(.wb-spatial-wayfinding-route) { stroke: var(--wb-spatial-accent); stroke-width: var(--wb-spatial-route-width); }
+:global(.wb-spatial-wayfinding-route-flow) {
+	stroke: #ffffff;
+	stroke-dasharray: 2 24;
+	stroke-width: calc(var(--wb-spatial-route-width) * 0.34);
+	animation: wb-spatial-route-flow var(--wb-spatial-route-flow-duration) linear infinite;
+}
+:global(.wb-spatial-wayfinding-root[data-route-flow='off'] .wb-spatial-wayfinding-route-flow) { display: none; animation: none; }
 :global(.wb-spatial-wayfinding-origin circle:first-child) { fill: rgba(189, 109, 29, 0.2); stroke: var(--wb-spatial-accent); stroke-width: 4px; transform-box: fill-box; transform-origin: center; animation: wb-spatial-pulse 1.8s ease-in-out infinite; }
 :global(.wb-spatial-wayfinding-origin circle:last-child) { fill: var(--wb-spatial-accent); stroke: #ffffff; stroke-width: 4px; }
 :global(.wb-spatial-wayfinding-root[data-motion='off'] .wb-spatial-wayfinding-origin circle:first-child) { animation: none; }
@@ -99,12 +107,17 @@
 	50% { opacity: 1; transform: scale(1.25); }
 }
 
+@keyframes wb-spatial-route-flow {
+	to { stroke-dashoffset: -52; }
+}
+
 @media (max-width: 900px) {
 	:global(.wb-spatial-wayfinding-directory) { flex-basis: 280px; padding: 18px; }
 	:global(.wb-spatial-wayfinding-directory-heading h2) { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-	:global(.wb-spatial-wayfinding-origin circle:first-child) { animation: none; }
+	:global(.wb-spatial-wayfinding-origin circle:first-child),
+	:global(.wb-spatial-wayfinding-route-flow) { animation: none; }
 	:global(.wb-spatial-wayfinding-zone) { transition: none; }
 }

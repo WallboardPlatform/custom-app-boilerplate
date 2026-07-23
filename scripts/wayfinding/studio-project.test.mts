@@ -132,7 +132,7 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 		{ ...confirmed, floorId: 'first', geometry: [{ x: 420, y: 350 }, { x: 500, y: 350 }, { x: 500, y: 430 }, { x: 420, y: 430 }], id: 'first-obstacle', label: 'Authoring exclusion', type: 'obstacle' }
 	);
 	assert.ok(project.presentation);
-	project.presentation.route = { color: '#cc2244', cornerRounding: 30, width: 9 };
+	project.presentation.route = { animation: 'flow', animationSpeed: 120, color: '#cc2244', cornerRounding: 30, width: 9 };
 	project.presentation.polygons.walkable.fillOpacity = 0.35;
 	const councilRoom = project.floors[1].elements.find((element): boolean => element.id === 'council-room');
 	assert.ok(councilRoom && 'geometry' in councilRoom);
@@ -152,11 +152,12 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.equal(bundle.assets[0].id, 'first-floor-plan');
 	assert.equal(bundle.floors[1].backgroundAssetId, 'first-floor-plan');
 	assert.equal(bundle.floors[1].camera3d?.pitchDegrees, 46);
+	assert.deepEqual(bundle.floors[1].walkableMask, project.floors[1].walkableMask);
 	assert.deepEqual(bundle.floors[1].elements.find((element): boolean => element.id === 'council-room'), councilRoom);
 	assert.ok(!bundle.floors[1].elements.some((element): boolean => element.type === 'walkable' || element.type === 'obstacle'));
 	assert.equal(bundle.destinations.Destinations.rows[0].name, 'Council chamber');
 	assert.equal(bundle.manifest.deliveryMode, 'route');
-	assert.deepEqual(bundle.presentation.route, { color: '#cc2244', cornerRounding: 30, width: 9 });
+	assert.deepEqual(bundle.presentation.route, { animation: 'flow', animationSpeed: 120, color: '#cc2244', cornerRounding: 30, width: 9 });
 });
 
 void test('keeps incomplete route drafts editable while blocking runtime export', () => {

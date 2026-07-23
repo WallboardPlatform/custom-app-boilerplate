@@ -1,4 +1,4 @@
-import type { WayfindingGraphDocument, WayfindingPoint } from '@utils/wayfinding';
+import type { WayfindingGraphDocument, WayfindingPoint, WayfindingWalkableMaskDocument } from '@utils/wayfinding';
 
 export interface RuntimeDestination {
 	category: string;
@@ -56,6 +56,7 @@ export interface RuntimeFloor {
 	name: string;
 	order: number;
 	svg: string;
+	walkableMask?: WayfindingWalkableMaskDocument;
 	width: number;
 }
 
@@ -69,5 +70,14 @@ export interface WayfindingRuntimeBundle {
 		projectId: string;
 		sourceContractVersion: 1;
 		targetMode: 'route';
+	};
+	presentation?: {
+		route: {
+			animation: 'flow' | 'off';
+			animationSpeed: number;
+			color: string;
+			cornerRounding: number;
+			width: number;
+		};
 	};
 }

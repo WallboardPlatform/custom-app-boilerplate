@@ -29,6 +29,11 @@ test('selects destinations and renders the same route in 3D and 2D', async ({ pa
 	await page.getByRole('button', { name: '2D', exact: true }).click();
 	await expect(root).toHaveAttribute('data-view', '2d');
 	await expect(page.locator('.wb-spatial-wayfinding-route')).toBeVisible();
+	await expect(root).toHaveAttribute('data-route-flow', 'on');
+	const flow = page.locator('.wb-spatial-wayfinding-route-flow');
+	await expect(flow).toBeVisible();
+	expect(await flow.getAttribute('d')).toMatch(/^M /u);
+	expect(await flow.evaluate((element: SVGPathElement): string => getComputedStyle(element).animationName)).toContain('wb-spatial-route-flow');
 	await expect(page.locator('.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected')).toHaveCount(1);
 });
 

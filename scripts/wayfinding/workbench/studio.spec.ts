@@ -156,6 +156,11 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 		element.dispatchEvent(new Event('input', { bubbles: true }));
 		element.dispatchEvent(new Event('change', { bubbles: true }));
 	});
+	await page.locator('#default-route-animation-speed').evaluate((element: HTMLInputElement): void => {
+		element.value = '120';
+		element.dispatchEvent(new Event('input', { bubbles: true }));
+		element.dispatchEvent(new Event('change', { bubbles: true }));
+	});
 
 	const screenshotPath: string = testInfo.outputPath('authored-studio.png');
 	await page.screenshot({ fullPage: true, path: screenshotPath });
@@ -169,7 +174,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	expect(project.floors[0].elements.map((element): string => element.type)).toEqual(['location', 'origin']);
 	expect((project.floors[0].elements[0] as WayfindingStudioPolygonElement).geometry).toHaveLength(5);
 	expect(project.presentation?.label.fontSize).toBe(32);
-	expect(project.presentation?.route).toMatchObject({ color: '#cc2244', cornerRounding: 30 });
+	expect(project.presentation?.route).toMatchObject({ animation: 'flow', animationSpeed: 120, color: '#cc2244', cornerRounding: 30 });
 	expect(errors).toEqual([]);
 });
 
@@ -513,6 +518,11 @@ test('adjusts only the active visitor route with editable bends', async ({ page 
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
 	await page.locator('#route-simulate').click();
 	await expect(page.locator('#route-result')).toContainText('min');
+	const canvas = page.locator('#stage');
+	const animatedFrame = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
+	await page.waitForTimeout(140);
+	const nextAnimatedFrame = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
+	expect(nextAnimatedFrame).not.toBe(animatedFrame);
 	await page.locator('#route-adjust').click();
 	await expect(page.locator('#route-adjust-panel')).toBeVisible();
 	await expect(page.locator('[data-layer="route-network"]')).toBeChecked();
@@ -523,7 +533,10 @@ test('adjusts only the active visitor route with editable bends', async ({ page 
 	await page.screenshot({ fullPage: true, path: adjustmentScreenshotPath });
 	await testInfo.attach('active-route-adjustment', { contentType: 'image/png', path: adjustmentScreenshotPath });
 
-	const canvas = page.locator('#stage');
+	const adjustmentFrame = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
+	await page.waitForTimeout(140);
+	const nextAdjustmentFrame = await canvas.evaluate((element: HTMLCanvasElement): string => element.toDataURL());
+	expect(nextAdjustmentFrame).toBe(adjustmentFrame);
 	const bounds = await canvas.boundingBox();
 	expect(bounds).not.toBeNull();
 	const floor = sourceProject.floors[0];
