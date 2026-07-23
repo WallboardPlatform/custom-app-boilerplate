@@ -12,16 +12,16 @@ import type {
 	WayfindingStudioPolygonElement,
 	WayfindingStudioProject
 } from '../studio-project.mts';
-
-const POLYGON_DEFAULTS: Record<WayfindingStudioPolygonElement['type'], { color: string; height: number; opacity: number }> = {
-	location: { color: '#f4c95d', height: 18, opacity: 0.72 },
-	obstacle: { color: '#31403d', height: 24, opacity: 0.76 },
-	walkable: { color: '#55bfa7', height: 0, opacity: 0.28 }
-};
+import { resolveWayfindingStudioPresentation } from '../studio-project.mts';
 
 export const wayfindingPolygonPresentationDefaults = (
-	type: WayfindingStudioPolygonElement['type']
-): { color: string; height: number; opacity: number } => ({ ...POLYGON_DEFAULTS[type] });
+	type: WayfindingStudioPolygonElement['type'],
+	project?: WayfindingStudioProject
+): { color: string; height: number; opacity: number } => {
+	const defaults = resolveWayfindingStudioPresentation(project).polygons[type];
+
+	return { color: defaults.fillColor, height: defaults.extrusionHeight, opacity: defaults.fillOpacity };
+};
 
 const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boolean => {
 	let inside = false;
@@ -36,14 +36,14 @@ const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boo
 	return inside;
 };
 
-const polygonHeight = (floor: WayfindingStudioFloor, polygon: WayfindingStudioPolygonElement): number => {
-	const visualHeight: number = polygon.presentation?.extrusionHeight ?? POLYGON_DEFAULTS[polygon.type].height;
+const polygonHeight = (project: WayfindingStudioProject, floor: WayfindingStudioFloor, polygon: WayfindingStudioPolygonElement): number => {
+	const visualHeight: number = polygon.presentation?.extrusionHeight ?? resolveWayfindingStudioPresentation(project).polygons[polygon.type].extrusionHeight;
 
 	return Math.min(floor.width, floor.height) * visualHeight / 500;
 };
 
-const polygonColor = (polygon: WayfindingStudioPolygonElement): string => polygon.presentation?.fillColor ?? POLYGON_DEFAULTS[polygon.type].color;
-const polygonOpacity = (polygon: WayfindingStudioPolygonElement): number => polygon.presentation?.fillOpacity ?? POLYGON_DEFAULTS[polygon.type].opacity;
+const polygonColor = (project: WayfindingStudioProject, polygon: WayfindingStudioPolygonElement): string => polygon.presentation?.fillColor ?? resolveWayfindingStudioPresentation(project).polygons[polygon.type].fillColor;
+const polygonOpacity = (project: WayfindingStudioProject, polygon: WayfindingStudioPolygonElement): number => polygon.presentation?.fillOpacity ?? resolveWayfindingStudioPresentation(project).polygons[polygon.type].fillOpacity;
 
 const centeredPoint = (floor: WayfindingStudioFloor, point: WayfindingPoint, elevation = 0): THREE.Vector3 => new THREE.Vector3(
 	point.x - floor.width / 2,
@@ -51,42 +51,43 @@ const centeredPoint = (floor: WayfindingStudioFloor, point: WayfindingPoint, ele
 	point.y - floor.height / 2
 );
 
-const labelElevation = (floor: WayfindingStudioFloor, elements: WayfindingStudioElement[], point: WayfindingPoint): number => {
+const labelElevation = (project: WayfindingStudioProject, floor: WayfindingStudioFloor, elements: WayfindingStudioElement[], point: WayfindingPoint): number => {
 	const polygon: WayfindingStudioPolygonElement | undefined = elements
 		.filter((element): element is WayfindingStudioPolygonElement => 'geometry' in element)
 		.reverse()
 		.find((element): boolean => pointInPolygon(point, element.geometry));
 
-	return (polygon ? polygonHeight(floor, polygon) : 0) + Math.min(floor.width, floor.height) * 0.018;
+	return (polygon ? polygonHeight(project, floor, polygon) : 0) + Math.min(floor.width, floor.height) * 0.018;
 };
 
-const createTextTexture = (label: WayfindingStudioLabelElement): { height: number; texture: THREE.CanvasTexture; width: number } => {
+const createTextTexture = (project: WayfindingStudioProject, label: WayfindingStudioLabelElement): { height: number; texture: THREE.CanvasTexture; width: number } => {
+	const defaults = resolveWayfindingStudioPresentation(project).label;
 	const fontFamily: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
 		monospace: '"Courier New", monospace',
 		'sans-serif': 'Arial, sans-serif',
 		serif: 'Georgia, serif'
 	};
-	const fontSize: number = Math.max(12, label.fontSize ?? 24);
+	const fontSize: number = Math.max(12, label.fontSize ?? defaults.fontSize);
 	const padding: number = Math.ceil(fontSize * 0.42 + (label.outlineWidth ?? 0) * 2);
 	const canvas: HTMLCanvasElement = document.createElement('canvas');
 	const context: CanvasRenderingContext2D = canvas.getContext('2d')!;
-	context.font = `${label.fontWeight ?? 600} ${fontSize}px ${fontFamily[label.fontFamily ?? 'sans-serif']}`;
+	context.font = `${label.fontWeight ?? defaults.fontWeight} ${fontSize}px ${fontFamily[label.fontFamily ?? defaults.fontFamily]}`;
 	canvas.width = Math.max(8, Math.ceil(context.measureText(label.text || ' ').width + padding * 2));
 	canvas.height = Math.max(8, Math.ceil(fontSize * 1.45 + padding * 2));
 	const drawingContext: CanvasRenderingContext2D = canvas.getContext('2d')!;
-	drawingContext.font = `${label.fontWeight ?? 600} ${fontSize}px ${fontFamily[label.fontFamily ?? 'sans-serif']}`;
+	drawingContext.font = `${label.fontWeight ?? defaults.fontWeight} ${fontSize}px ${fontFamily[label.fontFamily ?? defaults.fontFamily]}`;
 	drawingContext.textAlign = 'center';
 	drawingContext.textBaseline = 'middle';
 	drawingContext.lineJoin = 'round';
-	const outlineWidth: number = label.outlineWidth ?? 0;
+	const outlineWidth: number = label.outlineWidth ?? defaults.outlineWidth;
 
 	if (outlineWidth > 0) {
-		drawingContext.strokeStyle = label.outlineColor ?? '#ffffff';
+		drawingContext.strokeStyle = label.outlineColor ?? defaults.outlineColor;
 		drawingContext.lineWidth = outlineWidth * 2;
 		drawingContext.strokeText(label.text, canvas.width / 2, canvas.height / 2);
 	}
 
-	drawingContext.fillStyle = label.color ?? '#17201f';
+	drawingContext.fillStyle = label.color ?? defaults.color;
 	drawingContext.fillText(label.text, canvas.width / 2, canvas.height / 2);
 	const texture = new THREE.CanvasTexture(canvas);
 	texture.colorSpace = THREE.SRGBColorSpace;
@@ -259,8 +260,8 @@ export class WayfindingScene3d {
 	}
 
 	private addElement(project: WayfindingStudioProject, floor: WayfindingStudioFloor, element: WayfindingStudioElement): void {
-		if ('geometry' in element) this.addPolygon(floor, element);
-		else if (element.type === 'label') this.addLabel(floor, element);
+		if ('geometry' in element) this.addPolygon(project, floor, element);
+		else if (element.type === 'label') this.addLabel(project, floor, element);
 		else if (element.type === 'icon' || element.type === 'logo') this.addMedia(project, floor, element);
 	}
 
@@ -284,13 +285,14 @@ export class WayfindingScene3d {
 		this.scene.add(plane);
 	}
 
-	private addLabel(floor: WayfindingStudioFloor, label: WayfindingStudioLabelElement): void {
-		const { height, texture, width } = createTextTexture(label);
+	private addLabel(project: WayfindingStudioProject, floor: WayfindingStudioFloor, label: WayfindingStudioLabelElement): void {
+		const { height, texture, width } = createTextTexture(project, label);
+		const defaults = resolveWayfindingStudioPresentation(project).label;
 		const material = new THREE.SpriteMaterial({ depthTest: false, map: texture, transparent: true });
 		const sprite = new THREE.Sprite(material);
-		const worldHeight: number = Math.max(12, label.fontSize ?? 24) * 1.45;
+		const worldHeight: number = Math.max(12, label.fontSize ?? defaults.fontSize) * 1.45;
 		sprite.scale.set(worldHeight * width / height, worldHeight, 1);
-		sprite.position.copy(centeredPoint(floor, label.point, labelElevation(floor, floor.elements, label.point)));
+		sprite.position.copy(centeredPoint(floor, label.point, labelElevation(project, floor, floor.elements, label.point)));
 		sprite.userData.elementId = label.id;
 		sprite.renderOrder = 20;
 		this.selectableObjects.push(sprite);
@@ -307,7 +309,7 @@ export class WayfindingScene3d {
 		const material = new THREE.SpriteMaterial({ depthTest: false, map: texture, transparent: true });
 		const sprite = new THREE.Sprite(material);
 		const center = { x: media.point.x + media.width / 2, y: media.point.y + media.height / 2 };
-		sprite.position.copy(centeredPoint(floor, center, labelElevation(floor, floor.elements, center)));
+		sprite.position.copy(centeredPoint(floor, center, labelElevation(project, floor, floor.elements, center)));
 		sprite.scale.set(media.width, media.height, 1);
 		sprite.userData.elementId = media.id;
 		sprite.renderOrder = 19;
@@ -316,7 +318,7 @@ export class WayfindingScene3d {
 		this.scene.add(sprite);
 	}
 
-	private addPolygon(floor: WayfindingStudioFloor, polygon: WayfindingStudioPolygonElement): void {
+	private addPolygon(project: WayfindingStudioProject, floor: WayfindingStudioFloor, polygon: WayfindingStudioPolygonElement): void {
 		const shape = new THREE.Shape();
 
 		for (const [index, point] of polygon.geometry.entries()) {
@@ -328,9 +330,9 @@ export class WayfindingScene3d {
 		}
 
 		shape.closePath();
-		const height: number = polygonHeight(floor, polygon);
-		const opacity: number = polygonOpacity(polygon);
-		const topColor = new THREE.Color(polygonColor(polygon));
+		const height: number = polygonHeight(project, floor, polygon);
+		const opacity: number = polygonOpacity(project, polygon);
+		const topColor = new THREE.Color(polygonColor(project, polygon));
 		const sideColor = topColor.clone().multiplyScalar(0.72);
 		const materials = [
 			new THREE.MeshStandardMaterial({ color: sideColor, opacity, roughness: 0.82, transparent: opacity < 1 }),
@@ -352,8 +354,9 @@ export class WayfindingScene3d {
 
 	private addRoute(floor: WayfindingStudioFloor, points: WayfindingPoint[]): void {
 		if (points.length < 2) return;
+		const routePresentation = resolveWayfindingStudioPresentation(this.currentProject).route;
 		const geometry = new THREE.BufferGeometry().setFromPoints(points.map((point): THREE.Vector3 => centeredPoint(floor, point, Math.min(floor.width, floor.height) * 0.014)));
-		const material = new THREE.LineBasicMaterial({ color: '#f04438', depthTest: false, linewidth: 4 });
+		const material = new THREE.LineBasicMaterial({ color: routePresentation.color, depthTest: false, linewidth: routePresentation.width });
 		const route = new THREE.Line(geometry, material);
 		route.renderOrder = 30;
 		this.addDisposable(route);

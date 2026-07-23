@@ -27,6 +27,7 @@ import {
 	createWayfindingRuntimeBundle,
 	createWayfindingStudioProject,
 	parseWayfindingStudioProject,
+	resolveWayfindingStudioPresentation,
 	synchronizeWayfindingStudioGraph,
 	touchWayfindingStudioProject,
 	validateWayfindingStudioDelivery,
@@ -41,6 +42,7 @@ import {
 	type WayfindingStudioPointElement,
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioPolygonPresentation,
+	type WayfindingStudioPresentationDefaults,
 	type WayfindingStudioProject,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
@@ -174,6 +176,7 @@ const destinationId = requireElement<HTMLInputElement>('#destination-id');
 const destinationName = requireElement<HTMLInputElement>('#destination-name');
 const destinationEnglishName = requireElement<HTMLInputElement>('#destination-english-name');
 const destinationCategory = requireElement<HTMLInputElement>('#destination-category');
+const destinationRouteable = requireElement<HTMLSelectElement>('#destination-routeable');
 const destinationDescription = requireElement<HTMLTextAreaElement>('#destination-description');
 const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
 const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
@@ -237,6 +240,29 @@ const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
 const chooseMediaAsset = requireElement<HTMLButtonElement>('#choose-media-asset');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
+const elementInventorySummary = requireElement<HTMLElement>('#element-inventory-summary');
+const elementInventoryList = requireElement<HTMLElement>('#element-inventory-list');
+const defaultLocationColor = requireElement<HTMLInputElement>('#default-location-color');
+const defaultLocationOpacity = requireElement<HTMLInputElement>('#default-location-opacity');
+const defaultLocationHeight = requireElement<HTMLInputElement>('#default-location-height');
+const defaultWalkableColor = requireElement<HTMLInputElement>('#default-walkable-color');
+const defaultWalkableOpacity = requireElement<HTMLInputElement>('#default-walkable-opacity');
+const defaultWalkableHeight = requireElement<HTMLInputElement>('#default-walkable-height');
+const defaultObstacleColor = requireElement<HTMLInputElement>('#default-obstacle-color');
+const defaultObstacleOpacity = requireElement<HTMLInputElement>('#default-obstacle-opacity');
+const defaultObstacleHeight = requireElement<HTMLInputElement>('#default-obstacle-height');
+const defaultLabelFont = requireElement<HTMLSelectElement>('#default-label-font');
+const defaultLabelSize = requireElement<HTMLInputElement>('#default-label-size');
+const defaultLabelWeight = requireElement<HTMLSelectElement>('#default-label-weight');
+const defaultLabelColor = requireElement<HTMLInputElement>('#default-label-color');
+const defaultIconWidth = requireElement<HTMLInputElement>('#default-icon-width');
+const defaultIconHeight = requireElement<HTMLInputElement>('#default-icon-height');
+const defaultLogoWidth = requireElement<HTMLInputElement>('#default-logo-width');
+const defaultLogoHeight = requireElement<HTMLInputElement>('#default-logo-height');
+const defaultRouteColor = requireElement<HTMLInputElement>('#default-route-color');
+const defaultRouteWidth = requireElement<HTMLInputElement>('#default-route-width');
+const defaultRouteRounding = requireElement<HTMLInputElement>('#default-route-rounding');
+const defaultRouteRoundingValue = requireElement<HTMLOutputElement>('#default-route-rounding-value');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -391,9 +417,47 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
-const simulatedRoutePoints = (): WayfindingPoint[] => simulatedRoute?.path
-	.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
-	.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [];
+const roundedRoutePoints = (points: WayfindingPoint[], roundingPercent: number): WayfindingPoint[] => {
+	if (points.length < 3 || roundingPercent <= 0) return points;
+	const factor: number = Math.min(0.5, Math.max(0, roundingPercent / 100));
+	const rounded: WayfindingPoint[] = [{ ...points[0] }];
+
+	for (let index = 1; index < points.length - 1; index += 1) {
+		const previous: WayfindingPoint = points[index - 1];
+		const corner: WayfindingPoint = points[index];
+		const next: WayfindingPoint = points[index + 1];
+		const incomingLength: number = Math.hypot(corner.x - previous.x, corner.y - previous.y);
+		const outgoingLength: number = Math.hypot(next.x - corner.x, next.y - corner.y);
+		if (incomingLength === 0 || outgoingLength === 0) continue;
+		const radius: number = Math.min(incomingLength, outgoingLength) * factor;
+		const start: WayfindingPoint = {
+			x: corner.x + (previous.x - corner.x) * radius / incomingLength,
+			y: corner.y + (previous.y - corner.y) * radius / incomingLength
+		};
+		const end: WayfindingPoint = {
+			x: corner.x + (next.x - corner.x) * radius / outgoingLength,
+			y: corner.y + (next.y - corner.y) * radius / outgoingLength
+		};
+		rounded.push(start);
+		for (let step = 1; step <= 6; step += 1) {
+			const ratio: number = step / 6;
+			const inverse: number = 1 - ratio;
+			rounded.push({
+				x: inverse * inverse * start.x + 2 * inverse * ratio * corner.x + ratio * ratio * end.x,
+				y: inverse * inverse * start.y + 2 * inverse * ratio * corner.y + ratio * ratio * end.y
+			});
+		}
+	}
+	rounded.push({ ...points.at(-1)! });
+
+	return rounded;
+};
+const simulatedRoutePoints = (): WayfindingPoint[] => roundedRoutePoints(
+	simulatedRoute?.path
+		.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
+		.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [],
+	resolveWayfindingStudioPresentation(studioProject).route.cornerRounding
+);
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
 		selectedSemanticId = elementId;
@@ -404,7 +468,7 @@ const scene3d = new WayfindingScene3d(stage3dHost, {
 		scene3d.selectElement(elementId);
 	}
 });
-const layerVisible = (type: WayfindingStudioElement['type']): boolean => requireElement<HTMLInputElement>(`[data-layer="${type}"]`)?.checked ?? true;
+const layerVisible = (type: WayfindingStudioElement['type'] | 'route-network'): boolean => requireElement<HTMLInputElement>(`[data-layer="${type}"]`)?.checked ?? true;
 const nextId = (prefix: string): string => {
 	const elements: WayfindingStudioElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioElement[] => floor.elements);
 	const ids: Set<string> = new Set([
@@ -438,8 +502,8 @@ const renderProjectContext = (): void => {
 		? 'Older recovery waiting'
 		: lastLocalSaveAt ? `Saved locally ${savedTimeLabel(lastLocalSaveAt)}` : autosaveEnabled ? 'Ready' : 'Starting...';
 	projectContextPortable.textContent = portableState === 'current'
-		? 'Downloaded and current'
-		: portableState === 'dirty' ? 'Changes not downloaded' : 'Not downloaded';
+		? 'Saved and current'
+		: portableState === 'dirty' ? 'Unsaved file changes' : 'Not saved to file';
 	projectContext.dataset.portable = portableState;
 };
 
@@ -941,20 +1005,26 @@ const renderProjectAssessment = (): void => {
 
 const renderRouteSimulator = (): void => {
 	const origins: WayfindingStudioOriginElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioOriginElement[] => floor.elements.filter((element: WayfindingStudioElement): element is WayfindingStudioOriginElement => element.type === 'origin'));
-	const locationNodes: WayfindingNode[] = studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId));
+	const routeableDestinationIds = new Set(studioProject.destinations.filter((destination: DestinationRow): boolean => destination.routeable !== false).map((destination: DestinationRow): string => destination.id));
+	const locationNodes: WayfindingNode[] = studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId) && routeableDestinationIds.has(node.locationId as string));
 	const floorElements: WayfindingStudioElement[] = currentElements();
+	const floorDestinationElements = floorElements.filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement | WayfindingStudioPointElement => (element.type === 'location' || element.type === 'poi') && Boolean(element.destinationId));
+	const enabledDestinationElements = floorDestinationElements.filter((element): boolean => routeableDestinationIds.has(element.destinationId as string));
+	const enabledRooms = enabledDestinationElements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'location');
+	const linkedRoomIds = new Set(floorElements.filter((element): element is WayfindingStudioDoorElement => element.type === 'door' && Boolean(element.locationId)).map((door): string => door.locationId as string));
+	const enabledRoomsWithEntrance: number = enabledRooms.filter((room): boolean => linkedRoomIds.has(room.id)).length;
 	const floorNodeIds = new Set(studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.levelId === currentFloorId).map((node: WayfindingNode): string => node.id));
 	const hasOrigin: boolean = origins.some((origin: WayfindingStudioOriginElement): boolean => origin.floorId === currentFloorId);
 	const hasDestination: boolean = locationNodes.some((node: WayfindingNode): boolean => node.levelId === currentFloorId);
-	const hasDestinationApproach: boolean = floorElements.some((element: WayfindingStudioElement): boolean => {
-		if (element.type === 'poi' && element.destinationId) return true;
-		return element.type === 'door' && Boolean(element.locationId);
-	});
+	const hasDestinationApproach: boolean = enabledRooms.length === enabledRoomsWithEntrance;
 	const hasWalkableArea: boolean = floorElements.some((element: WayfindingStudioElement): boolean => element.type === 'walkable')
 		|| mask.some((value: number): boolean => value === 1);
 	const hasRouteNetwork: boolean = studioProject.graph.edges.some((edge: WayfindingEdge): boolean => floorNodeIds.has(edge.from) && floorNodeIds.has(edge.to));
 	const previousStart: string = routeStart.value;
 	const previousDestination: string = routeDestination.value;
+	const entranceCounts = new Map<string, number>();
+	for (const node of locationNodes) entranceCounts.set(node.locationId as string, (entranceCounts.get(node.locationId as string) ?? 0) + 1);
+	const entranceIndexes = new Map<string, number>();
 	routeStart.replaceChildren(...origins.map((origin: WayfindingStudioOriginElement): HTMLOptionElement => {
 		const option: HTMLOptionElement = document.createElement('option');
 		option.value = `semantic:${origin.id}`;
@@ -964,16 +1034,23 @@ const renderRouteSimulator = (): void => {
 	routeDestination.replaceChildren(...locationNodes.map((node: WayfindingNode): HTMLOptionElement => {
 		const option: HTMLOptionElement = document.createElement('option');
 		const destination = studioProject.destinations.find((row): boolean => row.id === node.locationId);
+		const locationId: string = node.locationId as string;
+		const entranceIndex: number = (entranceIndexes.get(locationId) ?? 0) + 1;
+		entranceIndexes.set(locationId, entranceIndex);
 		option.value = node.id;
-		option.textContent = `${destination?.name ?? node.locationId} (${node.levelId})`;
+		option.textContent = `${destination?.name ?? node.locationId}${(entranceCounts.get(locationId) ?? 0) > 1 ? ` - Entrance ${entranceIndex}` : ''} (${node.levelId})`;
 		return option;
 	}));
 	if (Array.from(routeStart.options).some((option): boolean => option.value === previousStart)) routeStart.value = previousStart;
 	if (Array.from(routeDestination.options).some((option): boolean => option.value === previousDestination)) routeDestination.value = previousDestination;
 	const setupItems: Array<[boolean, string, string]> = [
 		[hasOrigin, 'Start point', hasOrigin ? 'You are here is placed' : 'Add You are here'],
-		[hasDestination, 'Destination', hasDestination ? 'Routeable destination exists' : 'Add a room or point of interest'],
-		[hasDestinationApproach, 'Entrance', hasDestinationApproach ? 'Destination entrance is linked' : 'Add a door near the room and link it'],
+		[hasDestination, 'Route guidance', floorDestinationElements.length === 0
+			? 'Add a room or point of interest'
+			: `${enabledDestinationElements.length} of ${floorDestinationElements.length} destinations enabled for routing`],
+		[hasDestinationApproach, 'Entrances', enabledRooms.length === 0
+			? 'Enabled points of interest do not require room doors'
+			: `${enabledRoomsWithEntrance} of ${enabledRooms.length} route-enabled rooms have authored entrances`],
 		[hasWalkableArea, 'Walkable space', hasWalkableArea ? 'Walkable area is available' : 'Draw a walkable area'],
 		[hasRouteNetwork, 'Route network', hasRouteNetwork ? 'Routes are built' : 'Choose Build routes']
 	];
@@ -993,6 +1070,94 @@ const renderRouteSimulator = (): void => {
 		return item;
 	}));
 	routeClearButton.disabled = !simulatedRoute;
+};
+
+const elementTypeLabels: Record<WayfindingStudioElement['type'], string> = {
+	door: 'Door',
+	icon: 'Icon',
+	label: 'Text',
+	location: 'Location',
+	logo: 'Logo',
+	obstacle: 'Blocked area',
+	origin: 'You are here',
+	poi: 'Point of interest',
+	transition: 'Floor connection',
+	walkable: 'Walkable area'
+};
+
+const elementDisplayName = (element: WayfindingStudioElement): string => {
+	if (element.type === 'label') return element.text || element.id;
+	if (element.type === 'icon' || element.type === 'logo') return studioProject.assets.find((asset): boolean => asset.id === element.assetId)?.name ?? element.id;
+	if ('label' in element && element.label) return element.label;
+
+	return element.id;
+};
+
+const renderElementInventory = (): void => {
+	const elements: WayfindingStudioElement[] = [...currentElements()].sort((left, right): number => {
+		const typeOrder: number = elementTypeLabels[left.type].localeCompare(elementTypeLabels[right.type]);
+
+		return typeOrder || elementDisplayName(left).localeCompare(elementDisplayName(right));
+	});
+	elementInventorySummary.textContent = `${elements.length} on this floor`;
+	if (elements.length === 0) {
+		const empty: HTMLParagraphElement = document.createElement('p');
+		empty.className = 'element-inventory-empty';
+		empty.textContent = 'No authored elements on this floor yet.';
+		elementInventoryList.replaceChildren(empty);
+		return;
+	}
+	elementInventoryList.replaceChildren(...elements.map((element): HTMLButtonElement => {
+		const button: HTMLButtonElement = document.createElement('button');
+		const type: HTMLElement = document.createElement('small');
+		const name: HTMLSpanElement = document.createElement('span');
+		button.type = 'button';
+		button.classList.toggle('selected', element.id === selectedSemanticId);
+		button.dataset.elementId = element.id;
+		type.textContent = elementTypeLabels[element.type];
+		name.textContent = elementDisplayName(element);
+		button.append(type, name);
+		button.addEventListener('click', (): void => {
+			selectedSemanticId = element.id;
+			selectedDestinationId = 'destinationId' in element ? element.destinationId : undefined;
+			selectedSemanticVertexIndex = undefined;
+			insertPointForSemanticId = undefined;
+			const layer = document.querySelector<HTMLInputElement>(`[data-layer="${element.type}"]`);
+			if (layer) layer.checked = true;
+			activateTool('select');
+			renderSemanticEditor();
+			renderMetadataEditor();
+			renderElementInventory();
+			draw();
+		});
+
+		return button;
+	}));
+};
+
+const syncPresentationControls = (): void => {
+	const defaults: WayfindingStudioPresentationDefaults = resolveWayfindingStudioPresentation(studioProject);
+	defaultLocationColor.value = defaults.polygons.location.fillColor;
+	defaultLocationOpacity.value = String(Math.round(defaults.polygons.location.fillOpacity * 100));
+	defaultLocationHeight.value = String(defaults.polygons.location.extrusionHeight);
+	defaultWalkableColor.value = defaults.polygons.walkable.fillColor;
+	defaultWalkableOpacity.value = String(Math.round(defaults.polygons.walkable.fillOpacity * 100));
+	defaultWalkableHeight.value = String(defaults.polygons.walkable.extrusionHeight);
+	defaultObstacleColor.value = defaults.polygons.obstacle.fillColor;
+	defaultObstacleOpacity.value = String(Math.round(defaults.polygons.obstacle.fillOpacity * 100));
+	defaultObstacleHeight.value = String(defaults.polygons.obstacle.extrusionHeight);
+	defaultLabelFont.value = defaults.label.fontFamily;
+	defaultLabelSize.value = String(defaults.label.fontSize);
+	defaultLabelWeight.value = String(defaults.label.fontWeight);
+	defaultLabelColor.value = defaults.label.color;
+	defaultIconWidth.value = String(defaults.icon.width);
+	defaultIconHeight.value = String(defaults.icon.height);
+	defaultLogoWidth.value = String(defaults.logo.width);
+	defaultLogoHeight.value = String(defaults.logo.height);
+	defaultRouteColor.value = defaults.route.color;
+	defaultRouteWidth.value = String(defaults.route.width);
+	defaultRouteRounding.value = String(defaults.route.cornerRounding);
+	defaultRouteRoundingValue.value = String(defaults.route.cornerRounding);
 };
 
 const renderStudioControls = (): void => {
@@ -1023,6 +1188,8 @@ const renderStudioControls = (): void => {
 	summary.textContent = deliveryIssues.length === 0 ? 'Project structure and delivery evidence are valid.' : deliveryIssues.slice(0, 4).map((issue): string => humanizeEvidenceMessage(issue.message)).join(' ');
 	studioValidation.append(heading, summary);
 	renderRouteSimulator();
+	renderElementInventory();
+	syncPresentationControls();
 	renderProjectContext();
 	renderMediaAssetState();
 };
@@ -1100,6 +1267,7 @@ const deleteCurrentSelection = (): void => {
 const renderSemanticEditor = (): void => {
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	semanticEditor.replaceChildren();
+	renderElementInventory();
 	const title: HTMLHeadingElement = document.createElement('h2');
 	title.textContent = element ? ELEMENT_LABELS[element.type] : 'Semantic selection';
 	semanticEditor.append(title);
@@ -1138,13 +1306,14 @@ const renderSemanticEditor = (): void => {
 		}
 		host.append(label);
 	};
-	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
+	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string, listId?: string): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const input = document.createElement('input');
 		let before: HistoryState | undefined;
 		input.type = type;
 		input.value = value;
+		if (listId) input.setAttribute('list', listId);
 		input.addEventListener('focus', (): void => { before = captureHistoryState(); });
 		input.addEventListener('input', (): void => { update(input.value); syncStudioGraph(); renderStudioControls(); draw(); });
 		input.addEventListener('change', (): void => {
@@ -1198,8 +1367,11 @@ const renderSemanticEditor = (): void => {
 		textField('Category', stringValue(destination.category), (value): void => {
 			updateDestination('category', value);
 			if (element.type === 'poi') element.category = value || undefined;
-		});
-		textField('Directory number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); });
+		}, 'text', semanticEditor, 'Choose a common category or type a project-specific value.', 'destination-category-options');
+		textField('Map label / number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); }, 'text', semanticEditor, 'Optional short label printed on the source map or directory, such as 24, A12, or WC.');
+		selectField('Route guidance', [['true', 'Route to this destination'], ['false', 'Directory / highlight only']], destination.routeable === false ? 'false' : 'true', (value): void => {
+			updateDestination('routeable', value === 'true');
+		}, semanticEditor, 'A route-enabled room needs an authored entrance. Directory-only destinations can still be searched and highlighted.');
 		textField('Secondary / English name', stringValue(destination.englishName), (value): void => { updateDestination('englishName', value); });
 		textField('Opening hours', stringValue(destination.hours), (value): void => { updateDestination('hours', value); });
 		textField('Public status', stringValue(destination.status), (value): void => { updateDestination('status', value); });
@@ -1209,7 +1381,7 @@ const renderSemanticEditor = (): void => {
 	}
 
 	if ('geometry' in element) {
-		const defaults = wayfindingPolygonPresentationDefaults(element.type);
+		const defaults = wayfindingPolygonPresentationDefaults(element.type, studioProject);
 		const appearanceHeading: HTMLHeadingElement = document.createElement('h3');
 		appearanceHeading.className = 'public-details-heading';
 		appearanceHeading.textContent = 'Map appearance';
@@ -1306,14 +1478,15 @@ const renderSemanticEditor = (): void => {
 		selectField('Kind', [['stairs', 'Stairs'], ['elevator', 'Elevator'], ['escalator', 'Escalator']], element.kind, (value): void => { element.kind = value as WayfindingStudioTransitionElement['kind']; });
 		selectField('Accessibility', [['true', 'Step-free'], ['false', 'Not step-free']], String(element.accessible), (value): void => { element.accessible = value === 'true'; });
 	} else if (element.type === 'label') {
+		const defaults = resolveWayfindingStudioPresentation(studioProject).label;
 		textField('Text', element.text, (value): void => { element.text = value; });
-		selectField('Font family', [['sans-serif', 'Sans serif'], ['serif', 'Serif'], ['monospace', 'Monospace']], element.fontFamily ?? 'sans-serif', (value): void => { element.fontFamily = value as WayfindingStudioLabelElement['fontFamily']; });
-		textField('Font size', String(element.fontSize ?? 24), (value): void => { element.fontSize = Math.min(512, Math.max(6, Number(value) || 24)); }, 'number');
-		selectField('Weight', [['400', 'Regular'], ['600', 'Semibold'], ['700', 'Bold']], String(element.fontWeight ?? 600), (value): void => { element.fontWeight = Number(value) as WayfindingStudioLabelElement['fontWeight']; });
-		textField('Text color', element.color ?? '#17201f', (value): void => { element.color = value; }, 'color');
+		selectField('Font family', [['sans-serif', 'Sans serif'], ['serif', 'Serif'], ['monospace', 'Monospace']], element.fontFamily ?? defaults.fontFamily, (value): void => { element.fontFamily = value as WayfindingStudioLabelElement['fontFamily']; });
+		textField('Font size', String(element.fontSize ?? defaults.fontSize), (value): void => { element.fontSize = Math.min(512, Math.max(6, Number(value) || defaults.fontSize)); }, 'number');
+		selectField('Weight', [['400', 'Regular'], ['600', 'Semibold'], ['700', 'Bold']], String(element.fontWeight ?? defaults.fontWeight), (value): void => { element.fontWeight = Number(value) as WayfindingStudioLabelElement['fontWeight']; });
+		textField('Text color', element.color ?? defaults.color, (value): void => { element.color = value; }, 'color');
 		selectField('Alignment', [['start', 'Left'], ['middle', 'Center'], ['end', 'Right']], element.textAnchor ?? 'start', (value): void => { element.textAnchor = value as WayfindingStudioLabelElement['textAnchor']; });
-		textField('Outline color', element.outlineColor ?? '#ffffff', (value): void => { element.outlineColor = value; }, 'color');
-		textField('Outline width', String(element.outlineWidth ?? 0), (value): void => { element.outlineWidth = Math.min(16, Math.max(0, Number(value) || 0)); }, 'number', semanticEditor, 'Use a small outline when the map artwork makes text hard to read.');
+		textField('Outline color', element.outlineColor ?? defaults.outlineColor, (value): void => { element.outlineColor = value; }, 'color');
+		textField('Outline width', String(element.outlineWidth ?? defaults.outlineWidth), (value): void => { element.outlineWidth = Math.min(16, Math.max(0, Number(value) || 0)); }, 'number', semanticEditor, 'Use a small outline when the map artwork makes text hard to read.');
 	} else if (element.type === 'icon' || element.type === 'logo') {
 		textField('Width', String(element.width), (value): void => { element.width = Math.max(8, Number(value) || 8); }, 'number');
 		textField('Height', String(element.height), (value): void => { element.height = Math.max(8, Number(value) || 8); }, 'number');
@@ -1375,11 +1548,14 @@ const renderMetadataEditor = (): void => {
 	destinationName.value = row.name;
 	destinationEnglishName.value = stringValue(row.englishName);
 	destinationCategory.value = stringValue(row.category);
+	destinationRouteable.value = row.routeable === false ? 'false' : 'true';
 	destinationDescription.value = stringValue(row.description);
 	destinationHours.value = stringValue(row.hours);
 	destinationStatus.value = stringValue(row.status);
 	destinationAccessible.value = typeof row.accessible === 'boolean' ? String(row.accessible) : '';
-	destinationRouteStatus.value = graphLocationIds.has(row.id) ? 'Graph anchor present' : 'Listed only';
+	destinationRouteStatus.value = row.routeable === false
+		? 'Directory / highlight only'
+		: graphLocationIds.has(row.id) ? 'Graph anchor present' : 'Entrance required';
 	draw();
 };
 
@@ -1853,7 +2029,7 @@ const drawSemanticElements = (): void => {
 		if (!layerVisible(element.type)) continue;
 		const selected: boolean = element.id === selectedSemanticId;
 		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
-		const polygonDefaults = polygon ? wayfindingPolygonPresentationDefaults(polygon.type) : undefined;
+		const polygonDefaults = polygon ? wayfindingPolygonPresentationDefaults(polygon.type, studioProject) : undefined;
 		context.save();
 		context.lineWidth = (selected ? 5 : 2.5) / scale;
 		context.strokeStyle = selected ? '#ffe06c' : polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.color : colors[element.type];
@@ -1899,23 +2075,24 @@ const drawSemanticElements = (): void => {
 			context.lineTo(element.point.x + dx, element.point.y + dy);
 			context.stroke();
 		} else if (element.type === 'label') {
+			const defaults = resolveWayfindingStudioPresentation(studioProject).label;
 			const fontFamilies: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
 				monospace: '"Courier New", monospace',
 				'sans-serif': 'Arial, sans-serif',
 				serif: 'Georgia, serif'
 			};
-			const fontSize: number = element.fontSize ?? 24;
-			const outlineWidth: number = element.outlineWidth ?? 0;
-			context.font = `${element.fontWeight ?? 600} ${fontSize}px ${fontFamilies[element.fontFamily ?? 'sans-serif']}`;
+			const fontSize: number = element.fontSize ?? defaults.fontSize;
+			const outlineWidth: number = element.outlineWidth ?? defaults.outlineWidth;
+			context.font = `${element.fontWeight ?? defaults.fontWeight} ${fontSize}px ${fontFamilies[element.fontFamily ?? defaults.fontFamily]}`;
 			context.textAlign = element.textAnchor === 'middle' ? 'center' : element.textAnchor === 'end' ? 'right' : 'left';
 			context.textBaseline = 'alphabetic';
 			if (outlineWidth > 0) {
-				context.strokeStyle = element.outlineColor ?? '#ffffff';
+				context.strokeStyle = element.outlineColor ?? defaults.outlineColor;
 				context.lineWidth = outlineWidth;
 				context.lineJoin = 'round';
 				context.strokeText(element.text, element.point.x, element.point.y);
 			}
-			context.fillStyle = element.color ?? colors.label;
+			context.fillStyle = element.color ?? defaults.color;
 			context.fillText(element.text, element.point.x, element.point.y);
 			if (selected) {
 				context.beginPath();
@@ -1996,6 +2173,89 @@ const linkUnassignedDoorsToNearbyLocations = (): number => {
 	return linked;
 };
 
+interface InferredEntrance {
+	angle: number;
+	distance: number;
+	point: WayfindingPoint;
+}
+
+const nearestWalkableDistance = (pointValue: WayfindingPoint, location: WayfindingStudioPolygonElement, maximumDistance: number): number => {
+	const size: number = cellSize();
+	const centerColumn: number = Math.floor(pointValue.x / size);
+	const centerRow: number = Math.floor(pointValue.y / size);
+	const radius: number = Math.ceil(maximumDistance / size);
+	let nearest: number = Number.POSITIVE_INFINITY;
+
+	for (let row = Math.max(0, centerRow - radius); row <= Math.min(maskRows - 1, centerRow + radius); row += 1) {
+		for (let column = Math.max(0, centerColumn - radius); column <= Math.min(maskColumns - 1, centerColumn + radius); column += 1) {
+			if (mask[maskIndex(column, row)] !== 1) continue;
+			const candidate: WayfindingPoint = { x: (column + 0.5) * size, y: (row + 0.5) * size };
+			if (pointInPolygon(candidate, location.geometry)) continue;
+			nearest = Math.min(nearest, Math.hypot(candidate.x - pointValue.x, candidate.y - pointValue.y));
+		}
+	}
+
+	return nearest;
+};
+
+const inferEntranceForLocation = (location: WayfindingStudioPolygonElement): InferredEntrance | undefined => {
+	const maximumDistance: number = Math.max(24, Math.min(currentFloor().width, currentFloor().height) * 0.025);
+	let best: InferredEntrance | undefined;
+
+	for (let index = 0; index < location.geometry.length; index += 1) {
+		const start: WayfindingPoint = location.geometry[index];
+		const end: WayfindingPoint = location.geometry[(index + 1) % location.geometry.length];
+		const length: number = Math.hypot(end.x - start.x, end.y - start.y);
+		const samples: number = Math.max(2, Math.ceil(length / Math.max(4, cellSize())));
+
+		for (let sample = 1; sample < samples; sample += 1) {
+			const ratio: number = sample / samples;
+			const pointValue: WayfindingPoint = {
+				x: start.x + (end.x - start.x) * ratio,
+				y: start.y + (end.y - start.y) * ratio
+			};
+			const distance: number = nearestWalkableDistance(pointValue, location, maximumDistance);
+			if (!Number.isFinite(distance) || distance > maximumDistance || (best && distance >= best.distance)) continue;
+			best = {
+				angle: Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI,
+				distance,
+				point: pointValue
+			};
+		}
+	}
+
+	return best;
+};
+
+const suggestMissingEntrances = (): number => {
+	const routeableDestinationIds = new Set(destinationRows().filter((destination: DestinationRow): boolean => destination.routeable !== false).map((destination: DestinationRow): string => destination.id));
+	const linkedLocationIds = new Set(currentElements().filter((element): element is WayfindingStudioDoorElement => element.type === 'door' && Boolean(element.locationId)).map((door): string => door.locationId as string));
+	let suggested = 0;
+
+	for (const location of currentElements().filter((element): element is WayfindingStudioPolygonElement => element.type === 'location'
+		&& Boolean(element.destinationId)
+		&& routeableDestinationIds.has(element.destinationId as string)
+		&& !linkedLocationIds.has(element.id))) {
+		const inferred: InferredEntrance | undefined = inferEntranceForLocation(location);
+		if (!inferred) continue;
+		currentFloor().elements.push({
+			angle: inferred.angle,
+			floorId: currentFloorId,
+			id: nextId('door'),
+			length: 36,
+			locationId: location.id,
+			point: inferred.point,
+			provenance: 'ai-draft',
+			status: 'proposed',
+			type: 'door'
+		});
+		linkedLocationIds.add(location.id);
+		suggested += 1;
+	}
+
+	return suggested;
+};
+
 const rasterizeAuthoredWalkableAreas = (): boolean => {
 	const walkableAreas: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'walkable');
 	if (walkableAreas.length === 0) return false;
@@ -2046,8 +2306,9 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 			? sourceAsset
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
 		if (asset !== sourceAsset) studioProject.assets.push(asset);
-		element = { ...base, assetId: asset.id, height: 96, id: nextId(type), point: pointValue, type, width: 96 } satisfies WayfindingStudioMediaElement;
-	} else element = { ...base, color: '#17201f', fontFamily: 'sans-serif', fontSize: 24, fontWeight: 600, id: nextId('label'), outlineColor: '#ffffff', outlineWidth: 0, point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
+		const defaults = resolveWayfindingStudioPresentation(studioProject)[type];
+		element = { ...base, assetId: asset.id, height: defaults.height, id: nextId(type), point: pointValue, type, width: defaults.width } satisfies WayfindingStudioMediaElement;
+	} else element = { ...base, id: nextId('label'), point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	syncStudioGraph();
@@ -2121,7 +2382,7 @@ const draw = (): void => {
 	}
 	drawSemanticElements();
 
-	if (mask.length > 0) {
+	if (layerVisible('walkable') && mask.length > 0) {
 		context.fillStyle = 'rgba(0, 190, 158, 0.32)';
 
 		for (let row = 0; row < maskRows; row += 1) {
@@ -2131,7 +2392,7 @@ const draw = (): void => {
 		}
 	}
 
-	for (const sample of colorSamples) {
+	for (const sample of layerVisible('walkable') ? colorSamples : []) {
 		context.beginPath();
 		context.arc((sample.column + 0.5) * cellSize(), (sample.row + 0.5) * cellSize(), 7 / scale, 0, Math.PI * 2);
 		context.fillStyle = `rgb(${sample.r}, ${sample.g}, ${sample.b})`;
@@ -2141,7 +2402,8 @@ const draw = (): void => {
 		context.stroke();
 	}
 
-	if (graph) {
+	const showRouteNetwork: boolean = layerVisible('route-network') || tool === 'anchor' || tool === 'draw' || tool === 'graph';
+	if (graph && showRouteNetwork) {
 		for (const edge of graph.edges) {
 			const fromNode: WayfindingNode | undefined = graphNode(edge.from);
 			const toNode: WayfindingNode | undefined = graphNode(edge.to);
@@ -2216,15 +2478,16 @@ const draw = (): void => {
 		}
 	}
 	if (simulatedRoute) {
-		const points = simulatedRoute.path.filter((routePoint): boolean => routePoint.levelId === currentFloorId);
+		const points: WayfindingPoint[] = simulatedRoutePoints();
 		if (points.length > 1) {
+			const routePresentation = resolveWayfindingStudioPresentation(studioProject).route;
 			context.beginPath();
 			context.moveTo(points[0].x, points[0].y);
 			for (const point of points.slice(1)) context.lineTo(point.x, point.y);
-			context.lineWidth = 7 / scale;
+			context.lineWidth = routePresentation.width / scale;
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
-			context.strokeStyle = '#f04438';
+			context.strokeStyle = routePresentation.color;
 			context.stroke();
 		}
 	}
@@ -2686,7 +2949,7 @@ const saveStudioProject = (): void => {
 	portableSnapshot = JSON.stringify(studioProject);
 	downloadText(`${studioProject.projectId}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
 	renderProjectContext();
-	coverageStatus.textContent = 'Downloaded a portable project file containing the current work.';
+	coverageStatus.textContent = 'Saved an editable project file containing the current Studio work.';
 };
 
 const downloadJson = (filename: string, value: unknown): void => {
@@ -2767,7 +3030,7 @@ const geometryContained = (points: WayfindingPoint[]): boolean => {
 };
 
 const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[] => {
-	for (const toleranceFactor of [0.75, 0.5, 0.25]) {
+	for (const toleranceFactor of [6, 4, 2, 1, 0.5]) {
 		const simplified: WayfindingPoint[] = simplifyGeometry(points, cellSize() * toleranceFactor);
 
 		if (geometryContained(simplified)) return simplified;
@@ -2778,7 +3041,6 @@ const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[]
 
 const generateCenterlineGraph = (): boolean => {
 	const before: HistoryState = captureHistoryState();
-	const linkedDoors: number = linkUnassignedDoorsToNearbyLocations();
 	synchronizeWayfindingStudioGraph(studioProject);
 	graph = studioProject.graph;
 	const usedAuthoredAreas: boolean = rasterizeAuthoredWalkableAreas();
@@ -2788,18 +3050,37 @@ const generateCenterlineGraph = (): boolean => {
 		renderStudioControls();
 		return false;
 	}
+	const linkedDoors: number = linkUnassignedDoorsToNearbyLocations();
+	const suggestedDoors: number = suggestMissingEntrances();
+	synchronizeWayfindingStudioGraph(studioProject);
+	graph = studioProject.graph;
 
 	const elementsById = new Map(currentElements().map((element: WayfindingStudioElement): [string, WayfindingStudioElement] => [element.id, element]));
+	const routeableDestinationIds = new Set(destinationRows().filter((destination: DestinationRow): boolean => destination.routeable !== false).map((destination: DestinationRow): string => destination.id));
 	const linkedLocationIds = new Set(currentElements()
-		.filter((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door' && Boolean(element.locationId))
+		.filter((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => {
+			if (element.type !== 'door' || !element.locationId) return false;
+			const location: WayfindingStudioElement | undefined = elementsById.get(element.locationId);
+
+			return location?.type === 'location' && Boolean(location.destinationId) && routeableDestinationIds.has(location.destinationId as string);
+		})
 		.map((door: WayfindingStudioDoorElement): string => door.locationId as string));
 	const anchorNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => {
 		if (node.levelId !== currentFloorId || !node.semanticElementId) return false;
 		const element: WayfindingStudioElement | undefined = elementsById.get(node.semanticElementId);
 		if (!element) return false;
-		if (element.type === 'origin' || element.type === 'transition' || element.type === 'poi') return true;
+		if (element.type === 'origin' || element.type === 'transition') return true;
+		if (element.type === 'poi') return Boolean(element.destinationId) && routeableDestinationIds.has(element.destinationId as string);
+		if (element.type === 'door' && element.locationId) {
+			const location: WayfindingStudioElement | undefined = elementsById.get(element.locationId);
 
-		return element.type === 'location' && linkedLocationIds.has(element.id);
+			return location?.type === 'location' && Boolean(location.destinationId) && routeableDestinationIds.has(location.destinationId as string);
+		}
+
+		return element.type === 'location'
+			&& Boolean(element.destinationId)
+			&& routeableDestinationIds.has(element.destinationId as string)
+			&& linkedLocationIds.has(element.id);
 	});
 	const startNodes: WayfindingNode[] = anchorNodes.filter((node: WayfindingNode): boolean => elementsById.get(node.semanticElementId ?? '')?.type === 'origin');
 	const destinationNodes: WayfindingNode[] = anchorNodes.filter((node: WayfindingNode): boolean => node.kind === 'location');
@@ -2904,8 +3185,9 @@ const generateCenterlineGraph = (): boolean => {
 	syncStudioGraph();
 	recordHistory(before);
 	const linkedCopy: string = linkedDoors > 0 ? ` Auto-linked ${linkedDoors} nearby door${linkedDoors === 1 ? '' : 's'}.` : '';
-	coverageStatus.textContent = `Built ${retainedEdges.length} route segment${retainedEdges.length === 1 ? '' : 's'} connecting the start and destinations.${linkedCopy}`;
-	routeResult.textContent = 'Routes are ready to simulate. They remain proposed until the walkable area is reviewed.';
+	const suggestedCopy: string = suggestedDoors > 0 ? ` Proposed ${suggestedDoors} missing entrance${suggestedDoors === 1 ? '' : 's'} from room boundaries; review their placement.` : '';
+	coverageStatus.textContent = `Built ${retainedEdges.length} route segment${retainedEdges.length === 1 ? '' : 's'} connecting the start and enabled destinations.${linkedCopy}${suggestedCopy}`;
+	routeResult.textContent = 'Routes are ready to simulate. The construction network is hidden by default and remains proposed until the walkable area is reviewed.';
 	renderReview();
 	renderStudioControls();
 	draw();
@@ -3166,6 +3448,38 @@ hideAllLayers.addEventListener('click', (): void => {
 	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = false;
 	draw();
 });
+const updatePresentationDefaults = (update: (defaults: WayfindingStudioPresentationDefaults) => void): void => {
+	const before: HistoryState = captureHistoryState();
+	const defaults: WayfindingStudioPresentationDefaults = resolveWayfindingStudioPresentation(studioProject);
+	update(defaults);
+	studioProject.presentation = defaults;
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	syncPresentationControls();
+	renderSemanticEditor();
+	draw();
+};
+defaultLocationColor.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.location.fillColor = defaultLocationColor.value; }));
+defaultLocationOpacity.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.location.fillOpacity = Math.min(1, Math.max(0, Number(defaultLocationOpacity.value) / 100)); }));
+defaultLocationHeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.location.extrusionHeight = Math.min(100, Math.max(0, Number(defaultLocationHeight.value))); }));
+defaultWalkableColor.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.walkable.fillColor = defaultWalkableColor.value; }));
+defaultWalkableOpacity.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.walkable.fillOpacity = Math.min(1, Math.max(0, Number(defaultWalkableOpacity.value) / 100)); }));
+defaultWalkableHeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.walkable.extrusionHeight = Math.min(100, Math.max(0, Number(defaultWalkableHeight.value))); }));
+defaultObstacleColor.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.obstacle.fillColor = defaultObstacleColor.value; }));
+defaultObstacleOpacity.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.obstacle.fillOpacity = Math.min(1, Math.max(0, Number(defaultObstacleOpacity.value) / 100)); }));
+defaultObstacleHeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.polygons.obstacle.extrusionHeight = Math.min(100, Math.max(0, Number(defaultObstacleHeight.value))); }));
+defaultLabelFont.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.label.fontFamily = defaultLabelFont.value as NonNullable<WayfindingStudioLabelElement['fontFamily']>; }));
+defaultLabelSize.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.label.fontSize = Math.min(512, Math.max(6, Number(defaultLabelSize.value))); }));
+defaultLabelWeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.label.fontWeight = Number(defaultLabelWeight.value) as NonNullable<WayfindingStudioLabelElement['fontWeight']>; }));
+defaultLabelColor.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.label.color = defaultLabelColor.value; }));
+defaultIconWidth.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.icon.width = Math.max(8, Number(defaultIconWidth.value)); }));
+defaultIconHeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.icon.height = Math.max(8, Number(defaultIconHeight.value)); }));
+defaultLogoWidth.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.logo.width = Math.max(8, Number(defaultLogoWidth.value)); }));
+defaultLogoHeight.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.logo.height = Math.max(8, Number(defaultLogoHeight.value)); }));
+defaultRouteColor.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.color = defaultRouteColor.value; }));
+defaultRouteWidth.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.width = Math.min(40, Math.max(1, Number(defaultRouteWidth.value))); }));
+defaultRouteRounding.addEventListener('input', (): void => { defaultRouteRoundingValue.value = defaultRouteRounding.value; });
+defaultRouteRounding.addEventListener('change', (): void => updatePresentationDefaults((defaults): void => { defaults.route.cornerRounding = Math.min(50, Math.max(0, Number(defaultRouteRounding.value))); }));
 requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (): void => {
 	syncStudioGraph();
 	const startId: string = routeStart.value;
@@ -3326,6 +3640,13 @@ for (const [input, field] of [
 
 destinationAccessible.addEventListener('change', (): void => {
 	updateSelectedDestination('accessible', destinationAccessible.value === '' ? undefined : destinationAccessible.value === 'true');
+});
+
+destinationRouteable.addEventListener('change', (): void => {
+	updateSelectedDestination('routeable', destinationRouteable.value === 'true');
+	syncStudioGraph();
+	renderStudioControls();
+	renderMetadataEditor();
 });
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {

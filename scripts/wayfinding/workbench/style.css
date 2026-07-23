@@ -203,6 +203,31 @@ main {
 .project-context dd { margin: 0; overflow-wrap: anywhere; color: #33413e; font-weight: 750; }
 .project-context[data-portable="dirty"] { border-color: #d19021; background: #fff8e5; }
 .project-context[data-portable="missing"] { border-color: #b8c2be; background: #f3f6f4; }
+.project-file-action {
+	display: grid;
+	margin-top: 13px;
+	padding: 11px;
+	border: 1px solid #c8d2ce;
+	background: #eef3f1;
+	grid-template-columns: minmax(0, 1fr) 104px;
+	gap: 10px;
+	align-items: center;
+}
+.project-file-action strong,
+.project-file-action span { display: block; }
+.project-file-action strong { color: #26322f; font-size: 10px; }
+.project-file-action span { margin-top: 3px; color: #687571; font-size: 9px; line-height: 1.35; }
+.project-file-action button,
+.runtime-export {
+	min-height: 36px;
+	border: 1px solid #18826f;
+	background: #ffffff;
+	color: #126b5c;
+	font-size: 10px;
+	font-weight: 800;
+}
+.export-explanation { margin: 0 0 11px !important; padding: 10px; border-left: 3px solid #18826f; background: #eef4f1; }
+.runtime-export { width: 100%; background: #18826f; color: #ffffff; }
 
 .controls input[type="range"] { width: 100%; margin-top: 7px; accent-color: #18826f; }
 
@@ -326,6 +351,66 @@ main {
 .layer-panel-heading span { margin-top: 2px; color: #687571; font-size: 9px; }
 .layer-toggles { display: grid; margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 8px; }
 .layer-toggles label { margin-top: 7px; font-size: 10px; }
+.layer-toggles label[title] { cursor: help; }
+.element-inventory,
+.project-defaults {
+	margin-top: 13px;
+	border: 1px solid #c8d2ce;
+	background: #ffffff;
+}
+.element-inventory > summary,
+.project-defaults > summary {
+	display: flex;
+	padding: 11px;
+	cursor: pointer;
+	list-style: none;
+	justify-content: space-between;
+	gap: 10px;
+}
+.element-inventory > summary::-webkit-details-marker,
+.project-defaults > summary::-webkit-details-marker { display: none; }
+.element-inventory > summary span,
+.project-defaults > summary span { color: #26322f; font-size: 11px; font-weight: 800; }
+.element-inventory > summary small,
+.project-defaults > summary small { color: #687571; font-size: 9px; text-align: right; }
+.element-inventory-list {
+	max-height: 240px;
+	overflow: auto;
+	border-top: 1px solid #d8dfdc;
+}
+.element-inventory-list button {
+	display: grid;
+	width: 100%;
+	min-height: 38px;
+	padding: 8px 10px;
+	border: 0;
+	border-bottom: 1px solid #e3e8e6;
+	background: #ffffff;
+	color: #26322f;
+	grid-template-columns: 78px minmax(0, 1fr);
+	text-align: left;
+}
+.element-inventory-list button:hover,
+.element-inventory-list button.selected { background: #e4f2ee; }
+.element-inventory-list button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.element-inventory-list button small { color: #687571; font-size: 8px; font-weight: 800; text-transform: uppercase; }
+.element-inventory-empty { margin: 0; padding: 12px; color: #687571; font-size: 9px; }
+.project-default-fields { padding: 0 10px 10px; border-top: 1px solid #d8dfdc; }
+.project-default-fields fieldset {
+	display: grid;
+	margin: 10px 0 0;
+	padding: 9px;
+	border: 1px solid #d8dfdc;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+.project-default-fields legend { padding: 0 4px; color: #26322f; font-size: 9px; font-weight: 800; }
+.project-default-fields label { margin: 0; font-size: 9px; }
+.project-default-fields input,
+.project-default-fields select { min-width: 0; }
+.project-default-fields input[type="color"] { min-height: 32px; padding: 2px; }
+.project-default-fields input[type="range"] { grid-column: 1 / -1; }
+.project-default-fields output { display: block; margin-top: 3px; color: #52605c; font-size: 9px; }
 
 .segmented button,
 .commands button {

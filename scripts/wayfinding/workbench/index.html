@@ -35,7 +35,7 @@
 					<dl>
 						<div><dt>Opened from</dt><dd id="project-context-source">New browser draft</dd></div>
 						<div><dt>Browser recovery</dt><dd id="project-context-recovery">Starting...</dd></div>
-						<div><dt>Portable file</dt><dd id="project-context-portable">Not downloaded</dd></div>
+						<div><dt>Editable file</dt><dd id="project-context-portable">Not saved to file</dd></div>
 					</dl>
 				</div>
 				<div class="commands horizontal project-start-actions">
@@ -52,8 +52,10 @@
 				<div class="commands horizontal">
 					<button id="studio-add-floor" type="button">Add floor</button>
 					<button id="studio-delete-floor" type="button" class="danger">Delete floor</button>
-					<button id="studio-export-project" type="button" class="secondary" title="Download a portable project file (Ctrl+S)">Download project</button>
-					<button id="studio-export-runtime" type="button" class="secondary">Runtime bundle</button>
+				</div>
+				<div class="project-file-action">
+					<div><strong>Editable project file</strong><span>Save your complete Studio work so it can be reopened and changed later.</span></div>
+					<button id="studio-export-project" type="button" class="secondary" title="Save the editable project file (Ctrl+S)">Save project</button>
 				</div>
 				<div id="local-recovery" class="local-recovery" hidden>
 					<strong>Local recovery found</strong>
@@ -108,7 +110,7 @@
 					<div class="layer-panel-heading"><div><strong>Layer visibility</strong><span>Hide busy layers without deleting them.</span></div><div class="layer-actions"><button id="show-all-layers" type="button">Show all</button><button id="hide-all-layers" type="button">Hide all</button></div></div>
 					<div class="layer-toggles">
 					<label class="check"><input type="checkbox" data-layer="location" checked> Locations</label>
-					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable</label>
+					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable + mask</label>
 					<label class="check"><input type="checkbox" data-layer="obstacle" checked> Obstacles</label>
 					<label class="check"><input type="checkbox" data-layer="door" checked> Doors</label>
 					<label class="check"><input type="checkbox" data-layer="poi" checked> POIs</label>
@@ -117,8 +119,56 @@
 					<label class="check"><input type="checkbox" data-layer="label" checked> Labels</label>
 					<label class="check"><input type="checkbox" data-layer="icon" checked> Icons</label>
 					<label class="check"><input type="checkbox" data-layer="logo" checked> Logos</label>
+					<label class="check" title="The generated construction graph used by the route engine. It is hidden during normal map editing."><input type="checkbox" data-layer="route-network"> Route network</label>
 					</div>
 				</div>
+				<details class="element-inventory" open>
+					<summary><span>Authored elements</span><small id="element-inventory-summary">0 on this floor</small></summary>
+					<div id="element-inventory-list" class="element-inventory-list"></div>
+				</details>
+				<details class="project-defaults">
+					<summary><span>Project appearance defaults</span><small>Used when an element has no custom override</small></summary>
+					<div class="project-default-fields">
+						<fieldset>
+							<legend>Rooms / locations</legend>
+							<label>Color<input id="default-location-color" type="color"></label>
+							<label>Opacity %<input id="default-location-opacity" type="number" min="0" max="100"></label>
+							<label>3D height<input id="default-location-height" type="number" min="0" max="100"></label>
+						</fieldset>
+						<fieldset>
+							<legend>Walkable areas</legend>
+							<label>Color<input id="default-walkable-color" type="color"></label>
+							<label>Opacity %<input id="default-walkable-opacity" type="number" min="0" max="100"></label>
+							<label>3D height<input id="default-walkable-height" type="number" min="0" max="100"></label>
+						</fieldset>
+						<fieldset>
+							<legend>Blocked areas</legend>
+							<label>Color<input id="default-obstacle-color" type="color"></label>
+							<label>Opacity %<input id="default-obstacle-opacity" type="number" min="0" max="100"></label>
+							<label>3D height<input id="default-obstacle-height" type="number" min="0" max="100"></label>
+						</fieldset>
+						<fieldset>
+							<legend>Text labels</legend>
+							<label>Font<select id="default-label-font"><option value="sans-serif">Sans serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></label>
+							<label>Size<input id="default-label-size" type="number" min="6" max="512"></label>
+							<label>Weight<select id="default-label-weight"><option value="400">Regular</option><option value="600">Semibold</option><option value="700">Bold</option></select></label>
+							<label>Color<input id="default-label-color" type="color"></label>
+						</fieldset>
+						<fieldset>
+							<legend>New image assets</legend>
+							<label>Icon width<input id="default-icon-width" type="number" min="8"></label>
+							<label>Icon height<input id="default-icon-height" type="number" min="8"></label>
+							<label>Logo width<input id="default-logo-width" type="number" min="8"></label>
+							<label>Logo height<input id="default-logo-height" type="number" min="8"></label>
+						</fieldset>
+						<fieldset>
+							<legend>Visitor route</legend>
+							<label>Color<input id="default-route-color" type="color"></label>
+							<label>Line width<input id="default-route-width" type="number" min="1" max="40"></label>
+							<label title="Rounds visual route corners without changing the certified route graph.">Corner rounding %<input id="default-route-rounding" type="range" min="0" max="50" step="1"><output id="default-route-rounding-value">18</output></label>
+						</fieldset>
+					</div>
+				</details>
 			</section>
 			<details class="control-disclosure">
 				<summary><span>Advanced tools</span><small>Imports, walkable extraction, and route network editing</small></summary>
@@ -189,6 +239,10 @@
 				<div id="evidence-list" class="evidence-list"></div>
 				<div id="project-assessment" class="project-assessment"></div>
 				<hr>
+				<h3>Runtime export</h3>
+				<p class="export-explanation"><strong>For the finished experience.</strong> This compact package is consumed by the custom app. It is not an editable Studio project and remains blocked until required delivery evidence is approved.</p>
+				<button id="studio-export-runtime" type="button" class="runtime-export">Export runtime package</button>
+				<hr>
 				<h3>Specialist exports</h3>
 				<label class="check"><input id="mask-confirmed" type="checkbox"> Mask reviewed against source</label>
 				<div class="commands horizontal">
@@ -203,13 +257,32 @@
 				<h2>Public destination details</h2>
 				<p id="metadata-summary">Visitor-facing directory content for locations and points of interest. It can later be replaced by a TABLE datasource.</p>
 				<label title="Choose which visitor-facing destination record to edit.">Destination<select id="destination-select"></select></label>
-				<div class="field-pair">
-					<label title="Optional human-facing number printed on the map or directory.">Map number<input id="destination-map-number" type="text"></label>
-					<label title="Permanent machine key used to connect geometry, routes, and datasource rows.">Stable id<input id="destination-id" type="text" readonly></label>
-				</div>
 				<label>Primary name<input id="destination-name" type="text"></label>
 				<label>Secondary / translated name<input id="destination-english-name" type="text"></label>
-				<label title="Used for directory filtering, such as Services, Dining, or Restrooms.">Category<input id="destination-category" type="text"></label>
+				<label title="Used for directory filtering. Choose a common value or type a project-specific category.">Category<input id="destination-category" type="text" list="destination-category-options"></label>
+				<datalist id="destination-category-options">
+					<option value="Accessibility"></option>
+					<option value="Administration"></option>
+					<option value="Attractions"></option>
+					<option value="Dining"></option>
+					<option value="Education"></option>
+					<option value="Emergency"></option>
+					<option value="Entertainment"></option>
+					<option value="Facilities"></option>
+					<option value="Healthcare"></option>
+					<option value="Information"></option>
+					<option value="Parking"></option>
+					<option value="Restrooms"></option>
+					<option value="Retail"></option>
+					<option value="Services"></option>
+					<option value="Transportation"></option>
+					<option value="Other"></option>
+				</datalist>
+				<div class="field-pair">
+					<label title="Optional short label already printed on the source map or directory, such as 24, A12, or WC.">Map label / number<input id="destination-map-number" type="text"><span class="field-note">Optional source-map label. Leave blank when the map has none.</span></label>
+					<label title="Permanent machine key used to connect geometry, routes, and datasource rows.">Stable id<input id="destination-id" type="text" readonly><span class="field-note">Generated identity used by routes and data.</span></label>
+				</div>
+				<label title="Controls whether the route builder must connect this destination. Directory-only destinations can still be searched and highlighted.">Route guidance<select id="destination-routeable"><option value="true">Route to this destination</option><option value="false">Directory / highlight only</option></select><span class="field-note">Enable this only when the destination has a real visitor entrance.</span></label>
 				<label title="Optional public details shown when a visitor opens this destination.">Description<textarea id="destination-description" rows="4"></textarea></label>
 				<div class="field-pair">
 					<label>Hours<input id="destination-hours" type="text"></label>
@@ -240,7 +313,7 @@
 			</div>
 			<div class="selected-edge route-simulator">
 				<h2>Route simulator</h2>
-				<p class="route-intro">Draw the walkable area, add a start and destination entrance, then build the route network.</p>
+				<p class="route-intro">Draw the walkable area, add a start and destination entrance, then build and simulate a visitor route. The full construction graph stays hidden unless you enable its layer.</p>
 				<ul id="route-setup-checklist" class="route-setup-checklist"></ul>
 				<button id="route-build" type="button" class="route-build">Build routes</button>
 				<label>Start<select id="route-start"></select></label>
@@ -252,7 +325,7 @@
 				</div>
 				<p id="route-result">Add an origin and a destination entrance, then connect them to the graph.</p>
 			</div>
-			<div class="review-summary"><span>ROUTE REVIEW</span><strong id="edge-summary">0 route segments</strong><small id="edge-failures">No route network loaded</small></div>
+			<div class="review-summary"><span>ROUTE NETWORK REVIEW</span><strong id="edge-summary">0 route segments</strong><small id="edge-failures">No route network loaded</small></div>
 			<div id="selected-edge" class="selected-edge"><p>Select a route segment on the map to inspect it.</p></div>
 			<div id="edge-list" class="edge-list"></div>
 		</aside>

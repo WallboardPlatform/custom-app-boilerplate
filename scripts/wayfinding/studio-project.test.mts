@@ -101,6 +101,21 @@ void test('creates a portable project and migrates the evidence-only contract', 
 	assert.equal(parseWayfindingStudioProjectSource(fs.readFileSync(path.resolve('examples', 'veszprem-wayfinding', 'veszprem-downtown.wbwayfinding'), 'utf8')).destinations.length, 36);
 });
 
+void test('keeps every authored entrance for a multi-door destination', () => {
+	const project = createWayfindingStudioProject('multi-entrance');
+	const floor = project.floors[0];
+	floor.elements = [
+		{ ...confirmed, destinationId: 'auditorium', floorId: floor.id, geometry: [{ x: 200, y: 100 }, { x: 600, y: 100 }, { x: 600, y: 400 }, { x: 200, y: 400 }], id: 'auditorium-shape', label: 'Auditorium', type: 'location' },
+		{ ...confirmed, angle: 0, floorId: floor.id, id: 'auditorium-west-door', length: 36, locationId: 'auditorium-shape', point: { x: 200, y: 240 }, type: 'door' },
+		{ ...confirmed, angle: 0, floorId: floor.id, id: 'auditorium-east-door', length: 36, locationId: 'auditorium-shape', point: { x: 600, y: 240 }, type: 'door' }
+	];
+	project.destinations = [{ floor: floor.id, id: 'auditorium', name: 'Auditorium', routeable: true }];
+	synchronizeWayfindingStudioGraph(project);
+	const entrances = project.graph.nodes.filter((node): boolean => node.kind === 'location' && node.locationId === 'auditorium');
+	assert.deepEqual(entrances.map((node): string => node.id), ['semantic:auditorium-shape', 'semantic:auditorium-east-door']);
+	assert.deepEqual(entrances.map((node): number => node.x), [200, 600]);
+});
+
 void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	const project = multiFloorProject();
 	project.assets.push({
@@ -112,6 +127,9 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	});
 	project.floors[1].backgroundAssetId = 'first-floor-plan';
 	project.floors[1].camera3d = { azimuthDegrees: 32, distance: 780, pitchDegrees: 46, targetX: 450, targetY: 300 };
+	assert.ok(project.presentation);
+	project.presentation.route = { color: '#cc2244', cornerRounding: 30, width: 9 };
+	project.presentation.polygons.walkable.fillOpacity = 0.35;
 	const councilRoom = project.floors[1].elements.find((element): boolean => element.id === 'council-room');
 	assert.ok(councilRoom && 'geometry' in councilRoom);
 	councilRoom.presentation = { extrusionHeight: 42, fillColor: '#336699', fillOpacity: 0.84 };
@@ -119,6 +137,7 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	const bundle = createWayfindingRuntimeBundle(project);
 	assert.match(svg, /<g id="Background">/u);
 	assert.match(svg, /<g id="Locations"/u);
+	assert.match(svg, /<g id="Walkable" fill="#55bfa7" fill-opacity="0.35"/u);
 	assert.match(svg, /data-wayfinding-location-id="council"/u);
 	assert.match(svg, /data-extrusion-height="42" fill="#336699" fill-opacity="0.84"/u);
 	assert.match(svg, /<g id="Doors"/u);
@@ -131,6 +150,7 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.deepEqual(bundle.floors[1].elements.find((element): boolean => element.id === 'council-room'), councilRoom);
 	assert.equal(bundle.destinations.Destinations.rows[0].name, 'Council chamber');
 	assert.equal(bundle.manifest.deliveryMode, 'route');
+	assert.deepEqual(bundle.presentation.route, { color: '#cc2244', cornerRounding: 30, width: 9 });
 });
 
 void test('keeps incomplete route drafts editable while blocking runtime export', () => {
