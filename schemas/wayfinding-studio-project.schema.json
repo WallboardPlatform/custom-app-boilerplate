@@ -102,7 +102,11 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
-				"type": { "const": "label" }, "point": { "$ref": "#/$defs/point" }, "text": { "type": "string" }
+				"type": { "const": "label" }, "point": { "$ref": "#/$defs/point" }, "text": { "type": "string" },
+				"fontFamily": { "enum": ["sans-serif", "serif", "monospace"] }, "fontSize": { "type": "number", "minimum": 6, "maximum": 512 },
+				"fontWeight": { "enum": [400, 600, 700] }, "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+				"textAnchor": { "enum": ["start", "middle", "end"] }, "outlineColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+				"outlineWidth": { "type": "number", "minimum": 0, "maximum": 16 }
 			}
 		},
 		"mediaElement": {

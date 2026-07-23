@@ -175,6 +175,11 @@ const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file
 const undoButton = requireElement<HTMLButtonElement>('#undo');
 const redoButton = requireElement<HTMLButtonElement>('#redo');
 const deleteSelectionButton = requireElement<HTMLButtonElement>('#delete-selection');
+const fitViewButton = requireElement<HTMLButtonElement>('#fit-view');
+const shortcutHelpButton = requireElement<HTMLButtonElement>('#shortcut-help');
+const footerShortcutHelpButton = requireElement<HTMLButtonElement>('#footer-shortcut-help');
+const shortcutDialog = requireElement<HTMLDialogElement>('#shortcut-dialog');
+const shortcutCloseButton = requireElement<HTMLButtonElement>('#shortcut-close');
 const toolTitle = requireElement<HTMLElement>('#tool-title');
 const toolHelp = requireElement<HTMLElement>('#tool-help');
 
@@ -211,6 +216,7 @@ let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
 let dragHistoryState: HistoryState | undefined;
 let dragMutated = false;
 let restoringHistory = false;
+let toolBeforeTemporaryPan: Tool | undefined;
 const undoStack: HistoryState[] = [];
 const redoStack: HistoryState[] = [];
 const HISTORY_LIMIT = 30;
@@ -263,6 +269,37 @@ const TOOL_COPY: Record<Tool, { description: string; label: string }> = {
 	select: { description: 'Click an item to edit it. Drag the item or one of its corners to reposition it.', label: 'Select & move' },
 	transition: { description: 'Click a stair, elevator, or escalator that connects floors.', label: 'Add floor connection' },
 	walkable: { description: 'Click each corner of a verified walkable area, then choose Finish.', label: 'Draw walkable area' }
+};
+
+const ELEMENT_LABELS: Record<WayfindingStudioElement['type'], string> = {
+	door: 'Door',
+	icon: 'Icon',
+	label: 'Text label',
+	location: 'Room / area',
+	logo: 'Logo',
+	obstacle: 'Blocked area',
+	origin: 'You are here',
+	poi: 'Point of interest',
+	transition: 'Floor connection',
+	walkable: 'Walkable area'
+};
+
+const TOOL_SHORTCUTS: Partial<Record<string, Tool>> = {
+	a: 'anchor',
+	b: 'obstacle',
+	d: 'door',
+	e: 'draw',
+	g: 'logo',
+	h: 'pan',
+	i: 'icon',
+	l: 'label',
+	p: 'poi',
+	r: 'location',
+	t: 'transition',
+	v: 'select',
+	w: 'walkable',
+	x: 'graph',
+	y: 'origin'
 };
 
 let studioProject: WayfindingStudioProject = createWayfindingStudioProject();
@@ -724,7 +761,7 @@ const renderSemanticEditor = (): void => {
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	semanticEditor.replaceChildren();
 	const title: HTMLHeadingElement = document.createElement('h2');
-	title.textContent = element ? `${element.type.toUpperCase()} / ${element.id}` : 'Semantic selection';
+	title.textContent = element ? ELEMENT_LABELS[element.type] : 'Semantic selection';
 	semanticEditor.append(title);
 	if (!element) {
 		const empty: HTMLParagraphElement = document.createElement('p');
@@ -733,8 +770,12 @@ const renderSemanticEditor = (): void => {
 		updateEditActions();
 		return;
 	}
+	const identity: HTMLElement = document.createElement('span');
+	identity.className = 'selection-id';
+	identity.textContent = element.id;
+	semanticEditor.append(identity);
 
-	const selectField = (labelText: string, values: Array<[string, string]>, value: string, update: (next: string) => void): void => {
+	const selectField = (labelText: string, values: Array<[string, string]>, value: string, update: (next: string) => void, host: HTMLElement = semanticEditor): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const select = document.createElement('select');
@@ -749,9 +790,9 @@ const renderSemanticEditor = (): void => {
 			draw();
 		});
 		label.append(select);
-		semanticEditor.append(label);
+		host.append(label);
 	};
-	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'number' | 'text' = 'text'): void => {
+	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const input = document.createElement('input');
@@ -765,25 +806,64 @@ const renderSemanticEditor = (): void => {
 			before = undefined;
 		});
 		label.append(input);
-		semanticEditor.append(label);
+		if (note) {
+			const hint: HTMLElement = document.createElement('span');
+			hint.className = 'field-note';
+			hint.textContent = note;
+			label.append(hint);
+		}
+		host.append(label);
+	};
+	const textAreaField = (labelText: string, value: string, update: (next: string) => void, host: HTMLElement = semanticEditor): void => {
+		const label = document.createElement('label');
+		label.textContent = labelText;
+		const textarea = document.createElement('textarea');
+		let before: HistoryState | undefined;
+		textarea.rows = 3;
+		textarea.value = value;
+		textarea.addEventListener('focus', (): void => { before = captureHistoryState(); });
+		textarea.addEventListener('input', (): void => { update(textarea.value); syncStudioGraph(); renderStudioControls(); draw(); });
+		textarea.addEventListener('change', (): void => {
+			if (before) recordHistory(before);
+			before = undefined;
+		});
+		label.append(textarea);
+		host.append(label);
+	};
+	const destination: DestinationRow | undefined = (element.type === 'location' || element.type === 'poi') && element.destinationId
+		? destinationRows().find((row: DestinationRow): boolean => row.id === element.destinationId)
+		: undefined;
+	const updateDestination = (field: keyof DestinationRow, value: unknown): void => {
+		if (!destination) return;
+		if (value === undefined || value === '') delete destination[field];
+		else destination[field] = value as never;
 	};
 
-	selectField('Review status', [['proposed', 'Proposed'], ['confirmed', 'Confirmed']], element.status, (value): void => { element.status = value as WayfindingStudioElement['status']; });
-	if ('label' in element && typeof element.label === 'string') textField('Label', element.label, (value): void => {
+	if (destination && (element.type === 'location' || element.type === 'poi')) {
+		const heading: HTMLHeadingElement = document.createElement('h3');
+		heading.className = 'public-details-heading';
+		heading.textContent = 'Public details';
+		semanticEditor.append(heading);
+		textField('Name', destination.name, (value): void => {
+			destination.name = value || destination.id;
+			element.label = value || destination.id;
+		});
+		textAreaField('Description', stringValue(destination.description), (value): void => { updateDestination('description', value); });
+		textField('Category', stringValue(destination.category), (value): void => {
+			updateDestination('category', value);
+			if (element.type === 'poi') element.category = value || undefined;
+		});
+		textField('Directory number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); });
+		textField('Secondary / English name', stringValue(destination.englishName), (value): void => { updateDestination('englishName', value); });
+		textField('Opening hours', stringValue(destination.hours), (value): void => { updateDestination('hours', value); });
+		textField('Public status', stringValue(destination.status), (value): void => { updateDestination('status', value); });
+		selectField('Accessibility', [['', 'Unverified'], ['true', 'Step-free verified'], ['false', 'Not step-free']], typeof destination.accessible === 'boolean' ? String(destination.accessible) : '', (value): void => {
+			updateDestination('accessible', value === '' ? undefined : value === 'true');
+		});
+	}
+
+	if (!destination && 'label' in element && typeof element.label === 'string') textField('Label', element.label, (value): void => {
 		element.label = value;
-		if ((element.type === 'location' || element.type === 'poi') && element.destinationId) {
-			const destination: DestinationRow | undefined = destinationRows().find((row: DestinationRow): boolean => row.id === element.destinationId);
-			if (destination) destination.name = value || destination.id;
-		}
-	});
-	if ('destinationId' in element) textField('Destination id', element.destinationId ?? '', (value): void => {
-		const previousId: string | undefined = element.destinationId;
-		const nextIdValue: string | undefined = value.trim() || undefined;
-		element.destinationId = nextIdValue;
-		if (previousId && nextIdValue && previousId !== nextIdValue) {
-			const destination: DestinationRow | undefined = destinationRows().find((row: DestinationRow): boolean => row.id === previousId);
-			if (destination) destination.id = nextIdValue;
-		}
 	});
 	if (element.type === 'door') {
 		const locations: WayfindingStudioPolygonElement[] = currentElements().filter((item: WayfindingStudioElement): item is WayfindingStudioPolygonElement => item.type === 'location');
@@ -800,12 +880,33 @@ const renderSemanticEditor = (): void => {
 		selectField('Accessibility', [['true', 'Step-free'], ['false', 'Not step-free']], String(element.accessible), (value): void => { element.accessible = value === 'true'; });
 	} else if (element.type === 'label') {
 		textField('Text', element.text, (value): void => { element.text = value; });
-	} else if (element.type === 'poi') {
-		textField('Category', element.category ?? '', (value): void => { element.category = value || undefined; });
+		selectField('Font family', [['sans-serif', 'Sans serif'], ['serif', 'Serif'], ['monospace', 'Monospace']], element.fontFamily ?? 'sans-serif', (value): void => { element.fontFamily = value as WayfindingStudioLabelElement['fontFamily']; });
+		textField('Font size', String(element.fontSize ?? 24), (value): void => { element.fontSize = Math.min(512, Math.max(6, Number(value) || 24)); }, 'number');
+		selectField('Weight', [['400', 'Regular'], ['600', 'Semibold'], ['700', 'Bold']], String(element.fontWeight ?? 600), (value): void => { element.fontWeight = Number(value) as WayfindingStudioLabelElement['fontWeight']; });
+		textField('Text color', element.color ?? '#17201f', (value): void => { element.color = value; }, 'color');
+		selectField('Alignment', [['start', 'Left'], ['middle', 'Center'], ['end', 'Right']], element.textAnchor ?? 'start', (value): void => { element.textAnchor = value as WayfindingStudioLabelElement['textAnchor']; });
+		textField('Outline color', element.outlineColor ?? '#ffffff', (value): void => { element.outlineColor = value; }, 'color');
+		textField('Outline width', String(element.outlineWidth ?? 0), (value): void => { element.outlineWidth = Math.min(16, Math.max(0, Number(value) || 0)); }, 'number', semanticEditor, 'Use a small outline when the map artwork makes text hard to read.');
 	} else if (element.type === 'icon' || element.type === 'logo') {
 		textField('Width', String(element.width), (value): void => { element.width = Math.max(8, Number(value) || 8); }, 'number');
 		textField('Height', String(element.height), (value): void => { element.height = Math.max(8, Number(value) || 8); }, 'number');
 	}
+	const advanced: HTMLDetailsElement = document.createElement('details');
+	const advancedSummary: HTMLElement = document.createElement('summary');
+	advancedSummary.textContent = 'Advanced identity and review';
+	advanced.append(advancedSummary);
+	selectField('Review status', [['proposed', 'Proposed'], ['confirmed', 'Confirmed']], element.status, (value): void => { element.status = value as WayfindingStudioElement['status']; }, advanced);
+	if ('destinationId' in element) textField('Destination id', element.destinationId ?? '', (value): void => {
+		const previousId: string | undefined = element.destinationId;
+		const nextIdValue: string | undefined = value.trim() || undefined;
+		element.destinationId = nextIdValue;
+		if (previousId && nextIdValue && previousId !== nextIdValue) {
+			const linkedDestination: DestinationRow | undefined = destinationRows().find((row: DestinationRow): boolean => row.id === previousId);
+			if (linkedDestination) linkedDestination.id = nextIdValue;
+			if (selectedDestinationId === previousId) selectedDestinationId = nextIdValue;
+		}
+	}, 'text', advanced, 'Used by datasources and routes. Change only when integrating an existing project.');
+	semanticEditor.append(advanced);
 	const remove: HTMLButtonElement = document.createElement('button');
 	remove.className = 'danger';
 	remove.textContent = 'Delete semantic element';
@@ -895,6 +996,27 @@ const fitImage = (): void => {
 	scale = Math.min(bounds.width / width, bounds.height / height) * 0.96;
 	offsetX = (bounds.width - width * scale) / 2;
 	offsetY = (bounds.height - height * scale) / 2;
+};
+
+const fitView = (): void => {
+	fitImage();
+	draw();
+};
+
+const nudgeSelectedSemantic = (dx: number, dy: number): void => {
+	const element: WayfindingStudioElement | undefined = semanticElement();
+	if (!element) return;
+	const before: HistoryState = captureHistoryState();
+	if ('geometry' in element) {
+		element.geometry = element.geometry.map((point: WayfindingPoint): WayfindingPoint => ({ x: point.x + dx, y: point.y + dy }));
+	} else {
+		element.point = { x: element.point.x + dx, y: element.point.y + dy };
+	}
+	element.status = 'proposed';
+	syncStudioGraph();
+	recordHistory(before);
+	renderStudioControls();
+	draw();
 };
 
 const eventPoint = (event: MouseEvent | PointerEvent | WheelEvent): WayfindingPoint => {
@@ -1107,9 +1229,30 @@ const drawSemanticElements = (): void => {
 			context.lineTo(element.point.x + dx, element.point.y + dy);
 			context.stroke();
 		} else if (element.type === 'label') {
-			context.fillStyle = colors.label;
-			context.font = `${Math.max(14, 18 / scale)}px Arial`;
+			const fontFamilies: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
+				monospace: '"Courier New", monospace',
+				'sans-serif': 'Arial, sans-serif',
+				serif: 'Georgia, serif'
+			};
+			const fontSize: number = element.fontSize ?? 24;
+			const outlineWidth: number = element.outlineWidth ?? 0;
+			context.font = `${element.fontWeight ?? 600} ${fontSize}px ${fontFamilies[element.fontFamily ?? 'sans-serif']}`;
+			context.textAlign = element.textAnchor === 'middle' ? 'center' : element.textAnchor === 'end' ? 'right' : 'left';
+			context.textBaseline = 'alphabetic';
+			if (outlineWidth > 0) {
+				context.strokeStyle = element.outlineColor ?? '#ffffff';
+				context.lineWidth = outlineWidth;
+				context.lineJoin = 'round';
+				context.strokeText(element.text, element.point.x, element.point.y);
+			}
+			context.fillStyle = element.color ?? colors.label;
 			context.fillText(element.text, element.point.x, element.point.y);
+			if (selected) {
+				context.beginPath();
+				context.arc(element.point.x, element.point.y, 6 / scale, 0, Math.PI * 2);
+				context.fillStyle = '#ffe06c';
+				context.fill();
+			}
 		} else {
 			context.beginPath();
 			context.arc(element.point.x, element.point.y, (selected ? 12 : 8) / scale, 0, Math.PI * 2);
@@ -1178,7 +1321,7 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
 		if (asset !== sourceAsset) studioProject.assets.push(asset);
 		element = { ...base, assetId: asset.id, height: 96, id: nextId(type), point: pointValue, type, width: 96 } satisfies WayfindingStudioMediaElement;
-	} else element = { ...base, id: nextId('label'), point: pointValue, text: 'Label', type: 'label' } satisfies WayfindingStudioLabelElement;
+	} else element = { ...base, color: '#17201f', fontFamily: 'sans-serif', fontSize: 24, fontWeight: 600, id: nextId('label'), outlineColor: '#ffffff', outlineWidth: 0, point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	syncStudioGraph();
@@ -1683,6 +1826,30 @@ const setActiveTool = (): void => {
 	canvas.style.cursor = tool === 'pan' ? 'grab' : tool === 'graph' || tool === 'select' ? 'default' : 'crosshair';
 };
 
+const activateTool = (nextTool: Tool): void => {
+	if (tool === 'draw' && nextTool !== 'draw') cancelEdgeDraft();
+	if (semanticDraft && nextTool !== semanticDraft.type) {
+		semanticDraft = undefined;
+		semanticDraftHost.hidden = true;
+	}
+	tool = nextTool;
+	setActiveTool();
+	draw();
+};
+
+const restoreTemporaryPan = (): void => {
+	if (!toolBeforeTemporaryPan) return;
+	tool = toolBeforeTemporaryPan;
+	toolBeforeTemporaryPan = undefined;
+	setActiveTool();
+	draw();
+};
+
+const saveStudioProject = (): void => {
+	syncStudioGraph();
+	downloadText(`${studioProject.projectId}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
+};
+
 const downloadJson = (filename: string, value: unknown): void => {
 	const link: HTMLAnchorElement = document.createElement('a');
 	link.download = filename;
@@ -1944,10 +2111,7 @@ requireElement<HTMLButtonElement>('#studio-delete-floor').addEventListener('clic
 	recordHistory(before);
 	await activateFloor(studioProject.floors[0].id);
 });
-requireElement<HTMLButtonElement>('#studio-export-project').addEventListener('click', (): void => {
-	syncStudioGraph();
-	downloadText(`${studioProject.projectId}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
-});
+requireElement<HTMLButtonElement>('#studio-export-project').addEventListener('click', saveStudioProject);
 requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('click', (): void => {
 	syncStudioGraph();
 	const errors = validateWayfindingStudioDelivery(studioProject).filter((issue): boolean => issue.severity === 'error');
@@ -2072,24 +2236,30 @@ destinationAccessible.addEventListener('change', (): void => {
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 	button.addEventListener('click', (): void => {
-		if (tool === 'draw' && button.dataset.tool !== 'draw') cancelEdgeDraft();
-		if (semanticDraft && button.dataset.tool !== semanticDraft.type) {
-			semanticDraft = undefined;
-			semanticDraftHost.hidden = true;
-		}
-		tool = button.dataset.tool as Tool;
-		setActiveTool();
-		draw();
+		activateTool(button.dataset.tool as Tool);
 	});
 }
 
 undoButton.addEventListener('click', (): void => { void undo(); });
 redoButton.addEventListener('click', (): void => { void redo(); });
 deleteSelectionButton.addEventListener('click', deleteCurrentSelection);
+fitViewButton.addEventListener('click', fitView);
+const showShortcutHelp = (): void => { if (!shortcutDialog.open) shortcutDialog.showModal(); };
+shortcutHelpButton.addEventListener('click', showShortcutHelp);
+footerShortcutHelpButton.addEventListener('click', showShortcutHelp);
+shortcutCloseButton.addEventListener('click', (): void => { shortcutDialog.close(); });
+shortcutDialog.addEventListener('click', (event: MouseEvent): void => {
+	if (event.target === shortcutDialog) shortcutDialog.close();
+});
 
 window.addEventListener('keydown', (event: KeyboardEvent): void => {
 	const target: EventTarget | null = event.target;
 	const isEditingText: boolean = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || (target instanceof HTMLElement && target.isContentEditable);
+	if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+		event.preventDefault();
+		saveStudioProject();
+		return;
+	}
 	if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
 		if (isEditingText) return;
 		event.preventDefault();
@@ -2109,6 +2279,10 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 		return;
 	}
 	if (event.key === 'Escape' && !isEditingText) {
+		if (shortcutDialog.open) {
+			shortcutDialog.close();
+			return;
+		}
 		if (semanticDraft) {
 			semanticDraft = undefined;
 			semanticDraftHost.hidden = true;
@@ -2121,8 +2295,61 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 		}
 		updateEditActions();
 		draw();
+		return;
+	}
+	if (isEditingText || event.ctrlKey || event.metaKey || event.altKey) return;
+	if (event.key === '?' || (event.key === '/' && event.shiftKey)) {
+		event.preventDefault();
+		showShortcutHelp();
+		return;
+	}
+	if (event.key === ' ' && !event.repeat && tool !== 'pan') {
+		event.preventDefault();
+		toolBeforeTemporaryPan = tool;
+		tool = 'pan';
+		setActiveTool();
+		draw();
+		return;
+	}
+	if (event.key === 'Enter') {
+		if (semanticDraft?.points.length && semanticDraft.points.length >= 3) {
+			event.preventDefault();
+			finishSemanticPolygon();
+		} else if (edgeDraft?.points.length && edgeDraft.points.length >= 2) {
+			event.preventDefault();
+			finishEdgeAtJunction();
+		}
+		return;
+	}
+	if (event.key.toLowerCase() === 'f') {
+		event.preventDefault();
+		fitView();
+		return;
+	}
+	const nudgeByKey: Partial<Record<string, WayfindingPoint>> = {
+		ArrowDown: { x: 0, y: 1 },
+		ArrowLeft: { x: -1, y: 0 },
+		ArrowRight: { x: 1, y: 0 },
+		ArrowUp: { x: 0, y: -1 }
+	};
+	const nudge: WayfindingPoint | undefined = nudgeByKey[event.key];
+	if (nudge && semanticElement()) {
+		event.preventDefault();
+		const distance: number = event.shiftKey ? 10 : 1;
+		nudgeSelectedSemantic(nudge.x * distance, nudge.y * distance);
+		return;
+	}
+	const shortcutTool: Tool | undefined = TOOL_SHORTCUTS[event.key.toLowerCase()];
+	if (shortcutTool) {
+		event.preventDefault();
+		activateTool(shortcutTool);
 	}
 });
+
+window.addEventListener('keyup', (event: KeyboardEvent): void => {
+	if (event.key === ' ') restoreTemporaryPan();
+});
+window.addEventListener('blur', restoreTemporaryPan);
 
 finishJunctionButton.addEventListener('click', finishEdgeAtJunction);
 cancelEdgeButton.addEventListener('click', cancelEdgeDraft);
