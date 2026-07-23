@@ -1,0 +1,110 @@
+.wb-app {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--wb-spatial-background);
+	color: var(--wb-spatial-primary);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+:global(.wb-spatial-wayfinding-root) {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	background: var(--wb-spatial-background);
+}
+
+:global(.wb-spatial-wayfinding-header) {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 78px;
+	padding: 18px 24px;
+	border-bottom: 1px solid rgba(102, 121, 115, 0.28);
+}
+
+:global(.wb-spatial-wayfinding-brand span),
+:global(.wb-spatial-wayfinding-brand strong) { display: block; }
+:global(.wb-spatial-wayfinding-brand) { min-width: 0; max-width: 52vw; }
+:global(.wb-spatial-wayfinding-brand span) { color: var(--wb-spatial-accent); font-size: 11px; font-weight: 800; }
+:global(.wb-spatial-wayfinding-brand strong) { box-sizing: content-box; width: 100%; margin-top: 4px; padding-bottom: 2px; overflow: hidden; font-size: 25px; line-height: 1.16; text-overflow: ellipsis; white-space: nowrap; }
+:global(.wb-spatial-wayfinding-header-actions) { display: flex; align-items: center; margin-left: 18px; }
+:global(.wb-spatial-wayfinding-header-actions > * + *) { margin-left: 8px; }
+:global(.wb-spatial-wayfinding-header button) { min-height: 42px; border: 1px solid rgba(102, 121, 115, 0.45); background: transparent; color: var(--wb-spatial-primary); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+:global(.wb-spatial-wayfinding-view-switcher) { display: flex; }
+:global(.wb-spatial-wayfinding-view-switcher button) { min-width: 54px; }
+:global(.wb-spatial-wayfinding-view-switcher button.wb-spatial-wayfinding-active) { border-color: var(--wb-spatial-accent); background: var(--wb-spatial-accent); color: #111817; }
+:global(.wb-spatial-wayfinding-reset) { padding: 0 18px; }
+
+:global(.wb-spatial-wayfinding-main) { display: flex; flex: 1 1 auto; min-width: 0; min-height: 0; }
+:global(.wb-spatial-wayfinding-map) { position: relative; flex: 1 1 auto; min-width: 0; min-height: 0; overflow: hidden; }
+:global(.wb-spatial-wayfinding-scene),
+:global(.wb-spatial-wayfinding-flat-map) { position: absolute; inset: 0; width: 100%; height: 100%; }
+:global(.wb-spatial-wayfinding-flat-map) { overflow: hidden; }
+:global(.wb-spatial-wayfinding-scene.wb-spatial-wayfinding-hidden),
+:global(.wb-spatial-wayfinding-flat-map.wb-spatial-wayfinding-hidden) { visibility: hidden; pointer-events: none; }
+:global(.wb-spatial-wayfinding-canvas) { display: block; width: 100%; height: 100%; touch-action: none; }
+:global(.wb-spatial-wayfinding-floor) { fill: #f3f0e7; }
+:global(.wb-spatial-wayfinding-zone) { stroke: rgba(21, 48, 43, 0.42); stroke-width: 3px; cursor: pointer; transition: opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease; }
+:global(.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-walkable) { stroke: none; pointer-events: none; }
+:global(.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected) { stroke: var(--wb-spatial-accent); stroke-width: 11px; }
+:global(.wb-spatial-wayfinding-map-label) { fill: #15302b; font-size: 27px; font-weight: 800; paint-order: stroke; stroke: rgba(255, 255, 255, 0.9); stroke-width: 8px; stroke-linejoin: round; pointer-events: none; }
+:global(.wb-spatial-wayfinding-route-shadow),
+:global(.wb-spatial-wayfinding-route) { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+:global(.wb-spatial-wayfinding-route-shadow) { stroke: rgba(255, 255, 255, 0.95); stroke-width: 22px; }
+:global(.wb-spatial-wayfinding-route) { stroke: var(--wb-spatial-accent); stroke-width: 11px; }
+:global(.wb-spatial-wayfinding-origin circle:first-child) { fill: rgba(189, 109, 29, 0.2); stroke: var(--wb-spatial-accent); stroke-width: 4px; transform-box: fill-box; transform-origin: center; animation: wb-spatial-pulse 1.8s ease-in-out infinite; }
+:global(.wb-spatial-wayfinding-origin circle:last-child) { fill: var(--wb-spatial-accent); stroke: #ffffff; stroke-width: 4px; }
+:global(.wb-spatial-wayfinding-root[data-motion='off'] .wb-spatial-wayfinding-origin circle:first-child) { animation: none; }
+:global(.wb-spatial-wayfinding-map-caption) { position: absolute; left: 24px; bottom: 20px; padding: 10px 13px; background: var(--wb-spatial-panel); box-shadow: 0 8px 22px rgba(12, 24, 21, 0.14); pointer-events: none; }
+:global(.wb-spatial-wayfinding-map-caption span),
+:global(.wb-spatial-wayfinding-map-caption strong) { display: block; }
+:global(.wb-spatial-wayfinding-map-caption span) { color: var(--wb-spatial-accent); font-size: 11px; font-weight: 900; }
+:global(.wb-spatial-wayfinding-map-caption strong) { margin-top: 3px; font-size: 11px; }
+
+:global(.wb-spatial-wayfinding-directory) { display: flex; flex: 0 0 340px; flex-direction: column; min-width: 0; min-height: 0; padding: 24px; background: var(--wb-spatial-panel); }
+:global(.wb-spatial-wayfinding-directory-heading span) { color: var(--wb-spatial-accent); font-size: 11px; font-weight: 900; }
+:global(.wb-spatial-wayfinding-directory-heading h2) { max-width: 290px; margin: 7px 0 0; font-size: 27px; line-height: 1.08; }
+:global(.wb-spatial-wayfinding-destinations) { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; margin-top: 20px; overflow-y: auto; }
+:global(.wb-spatial-wayfinding-destination) { display: block; flex: 0 0 auto; width: 100%; min-height: 58px; padding: 9px 12px; border: 0; border-top: 1px solid rgba(102, 121, 115, 0.28); background: transparent; color: var(--wb-spatial-primary); text-align: left; cursor: pointer; }
+:global(.wb-spatial-wayfinding-destination:last-child) { border-bottom: 1px solid rgba(102, 121, 115, 0.28); }
+:global(.wb-spatial-wayfinding-destination span),
+:global(.wb-spatial-wayfinding-destination strong) { display: block; }
+:global(.wb-spatial-wayfinding-destination span) { color: var(--wb-spatial-secondary); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+:global(.wb-spatial-wayfinding-destination strong) { margin-top: 3px; font-size: 15px; }
+:global(.wb-spatial-wayfinding-destination.wb-spatial-wayfinding-selected) { background: var(--wb-spatial-accent); color: #111817; }
+:global(.wb-spatial-wayfinding-destination.wb-spatial-wayfinding-selected span) { color: rgba(17, 24, 23, 0.72); }
+:global(.wb-spatial-wayfinding-idle),
+:global(.wb-spatial-wayfinding-details) { flex: 0 0 auto; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--wb-spatial-accent); }
+:global(.wb-spatial-wayfinding-idle strong),
+:global(.wb-spatial-wayfinding-idle span) { display: block; }
+:global(.wb-spatial-wayfinding-idle strong) { font-size: 17px; }
+:global(.wb-spatial-wayfinding-idle span) { margin-top: 5px; color: var(--wb-spatial-secondary); font-size: 11px; line-height: 1.45; }
+:global(.wb-spatial-wayfinding-details > span) { color: var(--wb-spatial-accent); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+:global(.wb-spatial-wayfinding-details h3) { margin: 5px 0 0; font-size: 23px; line-height: 1.1; }
+:global(.wb-spatial-wayfinding-details p) { margin: 7px 0 0; color: var(--wb-spatial-secondary); font-size: 11px; line-height: 1.45; }
+:global(.wb-spatial-wayfinding-details > div) { display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; }
+:global(.wb-spatial-wayfinding-details > div > * + *) { margin-left: 12px; }
+:global(.wb-spatial-wayfinding-details > div strong) { font-size: 24px; }
+:global(.wb-spatial-wayfinding-details > div span) { color: var(--wb-spatial-secondary); font-size: 11px; }
+
+@keyframes wb-spatial-pulse {
+	0%, 100% { opacity: 0.4; transform: scale(0.9); }
+	50% { opacity: 1; transform: scale(1.25); }
+}
+
+@media (max-width: 900px) {
+	:global(.wb-spatial-wayfinding-directory) { flex-basis: 280px; padding: 18px; }
+	:global(.wb-spatial-wayfinding-directory-heading h2) { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:global(.wb-spatial-wayfinding-origin circle:first-child) { animation: none; }
+	:global(.wb-spatial-wayfinding-zone) { transition: none; }
+}

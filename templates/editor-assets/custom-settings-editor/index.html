@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Custom app editor</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<header>
+		<div><span>WALLBOARD CUSTOM APP</span><h1>Content editor</h1></div>
+		<p id="status">Waiting for the Wallboard editor...</p>
+	</header>
+	<main>
+		<section>
+			<label for="editor-value">Structured app content</label>
+			<p>Replace this starter JSON field with controls tailored to the app's content model.</p>
+			<textarea id="editor-value" spellcheck="false" disabled></textarea>
+		</section>
+	</main>
+	<footer>
+		<button id="reset" type="button" class="secondary" disabled>Reset changes</button>
+		<button id="save" type="button" disabled>Save and close</button>
+	</footer>
+	<script src="./editor.js"></script>
+</body>
+</html>

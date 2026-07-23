@@ -103,15 +103,32 @@ void test('creates a portable project and migrates the evidence-only contract', 
 
 void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	const project = multiFloorProject();
+	project.assets.push({
+		dataUrl: 'data:image/png;base64,iVBORw0KGgo=',
+		id: 'first-floor-plan',
+		kind: 'background',
+		mimeType: 'image/png',
+		name: 'First floor plan'
+	});
+	project.floors[1].backgroundAssetId = 'first-floor-plan';
+	project.floors[1].camera3d = { azimuthDegrees: 32, distance: 780, pitchDegrees: 46, targetX: 450, targetY: 300 };
+	const councilRoom = project.floors[1].elements.find((element): boolean => element.id === 'council-room');
+	assert.ok(councilRoom && 'geometry' in councilRoom);
+	councilRoom.presentation = { extrusionHeight: 42, fillColor: '#336699', fillOpacity: 0.84 };
 	const svg = renderWayfindingFloorSvg(project, 'first');
 	const bundle = createWayfindingRuntimeBundle(project);
 	assert.match(svg, /<g id="Background">/u);
 	assert.match(svg, /<g id="Locations"/u);
 	assert.match(svg, /data-wayfinding-location-id="council"/u);
+	assert.match(svg, /data-extrusion-height="42" fill="#336699" fill-opacity="0.84"/u);
 	assert.match(svg, /<g id="Doors"/u);
 	assert.match(svg, /<g id="Labels"/u);
 	assert.match(svg, /fill="#264653" font-family="Georgia, serif" font-size="32" font-weight="700" text-anchor="middle" stroke="#ffffff" stroke-width="2"/u);
 	assert.equal(bundle.floors.length, 2);
+	assert.equal(bundle.assets[0].id, 'first-floor-plan');
+	assert.equal(bundle.floors[1].backgroundAssetId, 'first-floor-plan');
+	assert.equal(bundle.floors[1].camera3d?.pitchDegrees, 46);
+	assert.deepEqual(bundle.floors[1].elements.find((element): boolean => element.id === 'council-room'), councilRoom);
 	assert.equal(bundle.destinations.Destinations.rows[0].name, 'Council chamber');
 	assert.equal(bundle.manifest.deliveryMode, 'route');
 });

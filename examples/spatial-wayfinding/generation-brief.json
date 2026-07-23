@@ -1,0 +1,127 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "Prove that a portable Wayfinding Studio runtime artifact can power a polished interactive Wallboard custom app in both 2D and 3D.",
+		"audience": "Visitors using a landscape touch display at a modern campus.",
+		"primaryGoal": "Let a visitor select a destination and inspect a reviewed route while rotating, panning, and zooming the same semantic map in 3D."
+	},
+	"assumptions": [
+		"The Northline campus data is synthetic and license-safe.",
+		"The bundled runtime JSON represents the exact portable contract emitted by Wayfinding Studio.",
+		"The primary surfaces are Full HD and 1366x768 landscape touch displays."
+	],
+	"app": { "mode": "replacement", "name": "Northline Spatial Wayfinding", "version": "1" },
+	"surfaceStrategy": {
+		"mode": "bounded",
+		"rationale": "The map and touch directory form a deliberate landscape kiosk composition."
+	},
+	"surfaces": [
+		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary landscape campus kiosk.", "minimumContentCoverage": { "width": 99, "height": 97 } },
+		{ "id": "compact", "width": 1366, "height": 768, "role": "required", "purpose": "Smaller landscape touch display.", "minimumContentCoverage": { "width": 98, "height": 96 } }
+	],
+	"data": { "mode": "static", "bindings": [] },
+	"ownership": [
+		{ "id": "runtime-artifact", "area": "content", "owner": "locked", "targets": ["campus.runtime.json"], "rationale": "Reviewed geometry, graph topology, labels, and presentation travel together as one Studio runtime artifact." },
+		{ "id": "kiosk-settings", "area": "presentation", "owner": "setting", "targets": ["title", "defaultView", "showViewSwitcher", "motionPreset", "themePreset", "backgroundColor", "panelColor", "primaryTextColor", "secondaryTextColor", "accentColor"], "rationale": "Operators control kiosk identity and safe presentation choices without changing reviewed geometry." },
+		{ "id": "visitor-session", "area": "state", "owner": "interaction", "targets": ["selectedDestination", "view", "camera"], "rationale": "Selection and camera movement belong to the active visitor session." }
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "3d-map", "purpose": "Rotate, pan, zoom, select extruded spaces, and inspect the route." },
+			{ "id": "2d-map", "purpose": "Use the same artifact as a flat accessible fallback." }
+		],
+		"inputs": [
+			{ "id": "touch-map", "type": "touch", "action": "Rotate, pan, zoom, and select destinations." },
+			{ "id": "touch-directory", "type": "touch", "action": "Select a destination or reset the view." }
+		],
+		"session": { "reset": "manual", "expectation": "Reset clears destination selection and restores the authored 3D camera." }
+	},
+	"outputs": [],
+	"rendering": { "mode": "reflow", "letterbox": "background", "rationale": "The map owns all available space beside a fixed, readable directory." },
+	"motion": { "default": "subtle", "transition": "custom", "techniques": ["custom"], "presetProperty": "motionPreset", "rationale": "The current position pulses while visitor camera movement remains direct and touch-controlled." },
+	"media": [],
+	"branding": { "source": "settings", "editable": true, "provenance": "Northline is a fictional campus identity controlled through safe operator settings.", "fallback": "Use the coordinated default palette." },
+	"presentation": {
+		"themes": ["light", "dark", "custom"],
+		"density": "balanced",
+		"viewingDistance": "near",
+		"textRoles": [
+			{ "role": "primary", "selectors": [".wb-spatial-wayfinding-brand strong", ".wb-spatial-wayfinding-directory-heading h2"] },
+			{ "role": "secondary", "selectors": [".wb-spatial-wayfinding-destination strong", ".wb-spatial-wayfinding-details h3"] },
+			{ "role": "metadata", "selectors": [".wb-spatial-wayfinding-destination span"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "title", "purpose": "Public campus name." },
+		{ "property": "defaultView", "purpose": "Selects the initial 2D or 3D presentation.", "effect": "default-view" },
+		{ "property": "showViewSwitcher", "purpose": "Allows visitors to switch between the two renderers." },
+		{ "property": "motionPreset", "purpose": "Controls current-position pulse without changing direct visitor camera control.", "effect": "motion-preset" },
+		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom palette.", "effect": "theme-preset" },
+		{ "property": "backgroundColor", "purpose": "Custom outer background." },
+		{ "property": "panelColor", "purpose": "Custom directory panel." },
+		{ "property": "primaryTextColor", "purpose": "Custom primary text." },
+		{ "property": "secondaryTextColor", "purpose": "Custom supporting text." },
+		{ "property": "accentColor", "purpose": "Custom route and selection color." }
+	],
+	"dynamicText": [
+		{
+			"id": "campus-title",
+			"role": "primary",
+			"source": { "type": "setting", "properties": ["title"] },
+			"selectors": [".wb-spatial-wayfinding-brand strong"],
+			"strategy": "ellipsis",
+			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
+			"fallback": "Keep the complete name where space permits and use one-line ellipsis only after the readable floor.",
+			"rationale": "The kiosk identity must stay readable without changing header height.",
+			"evidenceScenario": "compact"
+		},
+		{
+			"id": "destination-names",
+			"role": "secondary",
+			"source": { "type": "computed", "properties": ["runtimeArtifact"] },
+			"selectors": [".wb-spatial-wayfinding-destination strong"],
+			"strategy": "wrap",
+			"limits": { "minimumFontSize": 15, "maximumLines": 2 },
+			"fallback": "Wrap names to two lines and scroll the directory instead of shrinking below the touch-readable floor.",
+			"rationale": "Destination identity is essential.",
+			"evidenceScenario": "app-default"
+		}
+	],
+	"states": [
+		{ "scenario": "app-default", "expectation": "The nonblank 3D map, complete directory, and authored camera fill the Full-HD kiosk." },
+		{ "scenario": "compact", "expectation": "The same interaction remains readable at 1366x768." },
+		{ "scenario": "flat-map", "expectation": "The 2D renderer uses the same zones, labels, origin, and graph route." },
+		{ "scenario": "dark-theme", "expectation": "The coordinated dark interface keeps the 3D scene and directory legible." }
+	],
+	"behaviors": [
+		{ "id": "webgl-runtime", "expectation": "The packaged custom app renders nonblank WebGL from the Studio artifact.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "shared-route", "expectation": "Destination selection drives the same graph route in 3D and 2D.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "session-reset", "expectation": "Reset clears selection and restores the authored camera without recreating the app.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{ "id": "runtime-artifact", "source": "packaged", "path": "src/assets/campus.runtime.json", "required": true }
+	],
+	"visualDirection": {
+		"source": "creative-led",
+		"summary": "A warm architectural model rather than a dashboard: clean extruded campus spaces, persistent billboard labels, and one compact directory.",
+		"references": [],
+		"signatureChoices": [
+			"The semantic floor model is the full-bleed primary object rather than a card.",
+			"Each destination has a distinct architectural color and Studio-authored height."
+		],
+		"avoid": ["Generic KPI cards", "Decorative perspective that blocks route inspection", "Auto-zoom after destination selection"]
+	},
+	"visualReview": {
+		"intent": "A convincing real custom-app proof that Studio output can become a touch-controlled spatial wayfinding product.",
+		"focus": [
+			"Verify the WebGL canvas is nonblank and correctly framed.",
+			"Verify labels float above their matching extrusions without clipping.",
+			"Verify route and selection remain obvious in both 2D and 3D.",
+			"Verify no control or directory text overlaps at either accepted surface."
+		]
+	}
+}

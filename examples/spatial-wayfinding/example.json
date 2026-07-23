@@ -1,0 +1,16 @@
+{
+	"title": "Spatial Wayfinding",
+	"description": "Interactive 2D/3D campus wayfinding rendered from the portable Wayfinding Studio runtime contract.",
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json", "overlay/src/assets/campus.runtime.json"],
+	"referenceScreenshots": [
+		"spatial-wayfinding-3d.png",
+		"spatial-wayfinding-2d.png"
+	]
+}

@@ -21,6 +21,20 @@ export type WayfindingTransitionKind = 'elevator' | 'escalator' | 'stairs';
 export type WayfindingStudioFontFamily = 'monospace' | 'sans-serif' | 'serif';
 export type WayfindingStudioTextAnchor = 'end' | 'middle' | 'start';
 
+export interface WayfindingStudioCamera3d {
+	azimuthDegrees: number;
+	distance: number;
+	pitchDegrees: number;
+	targetX: number;
+	targetY: number;
+}
+
+export interface WayfindingStudioPolygonPresentation {
+	extrusionHeight?: number;
+	fillColor?: string;
+	fillOpacity?: number;
+}
+
 export interface WayfindingStudioAsset {
 	dataUrl: string;
 	id: string;
@@ -39,6 +53,7 @@ export interface WayfindingStudioElementBase {
 export interface WayfindingStudioPolygonElement extends WayfindingStudioElementBase {
 	geometry: WayfindingPoint[];
 	label?: string;
+	presentation?: WayfindingStudioPolygonPresentation;
 	type: 'location' | 'obstacle' | 'walkable';
 	destinationId?: string;
 }
@@ -109,6 +124,7 @@ export type WayfindingStudioElement =
 
 export interface WayfindingStudioFloor {
 	backgroundAssetId?: string;
+	camera3d?: WayfindingStudioCamera3d;
 	elements: WayfindingStudioElement[];
 	height: number;
 	id: string;
@@ -149,9 +165,20 @@ export interface WayfindingStudioIssue {
 }
 
 export interface WayfindingRuntimeBundle {
+	assets: WayfindingStudioAsset[];
 	contractVersion: 1;
 	destinations: { Destinations: { rows: WayfindingStudioDestination[] } };
-	floors: Array<{ height: number; id: string; name: string; order: number; svg: string; width: number }>;
+	floors: Array<{
+		backgroundAssetId?: string;
+		camera3d?: WayfindingStudioCamera3d;
+		elements: WayfindingStudioElement[];
+		height: number;
+		id: string;
+		name: string;
+		order: number;
+		svg: string;
+		width: number;
+	}>;
 	graph: WayfindingGraphDocument;
 	manifest: {
 		deliveryMode: WayfindingGuidanceMode;
@@ -248,7 +275,7 @@ export const migrateWayfindingArtifacts = (
 	project.destinations = structuredClone(destinations);
 	project.name = delivery.projectId;
 
-return project;
+	return project;
 };
 
 export const importAnnotatedWayfindingSvg = (
@@ -283,7 +310,7 @@ export const importAnnotatedWayfindingSvg = (
 			const geometry: WayfindingPoint[] = attributes.points.trim().split(/\s+/u).map((pair: string): WayfindingPoint => {
 				const [x, y] = pair.split(',').map(Number);
 
-return { x, y };
+				return { x, y };
 			}).filter((pointValue: WayfindingPoint): boolean => Number.isFinite(pointValue.x) && Number.isFinite(pointValue.y));
 
 			if (geometry.length >= 3) {
@@ -293,7 +320,7 @@ return { x, y };
 		}
 	}
 
-return imported;
+	return imported;
 };
 
 const duplicateIds = (ids: string[]): string[] => [...new Set(ids.filter((id: string, index: number): boolean => ids.indexOf(id) !== index))];
@@ -340,6 +367,17 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 		if (floor.backgroundAssetId && !assetIds.has(floor.backgroundAssetId)) issues.push({ code: 'missing-background', elementIds: [floor.id], message: `Floor '${floor.id}' references a missing background asset.`, severity: 'error' });
 
+		if (floor.camera3d && (
+			!Number.isFinite(floor.camera3d.azimuthDegrees)
+			|| !Number.isFinite(floor.camera3d.distance)
+			|| floor.camera3d.distance <= 0
+			|| !Number.isFinite(floor.camera3d.pitchDegrees)
+			|| floor.camera3d.pitchDegrees < 5
+			|| floor.camera3d.pitchDegrees > 85
+			|| !Number.isFinite(floor.camera3d.targetX)
+			|| !Number.isFinite(floor.camera3d.targetY)
+		)) issues.push({ code: 'invalid-3d-camera', elementIds: [floor.id], message: `Floor '${floor.id}' has invalid 3D camera settings.`, severity: 'error' });
+
 		for (const element of floor.elements) {
 			if (element.floorId !== floor.id) issues.push({ code: 'floor-mismatch', elementIds: [element.id], message: `Element '${element.id}' belongs to '${element.floorId}' but is stored on '${floor.id}'.`, severity: 'error' });
 
@@ -347,11 +385,21 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 			if ('geometry' in element && element.geometry.some((value: WayfindingPoint): boolean => !pointInFloor(value, floor))) issues.push({ code: 'polygon-outside-floor', elementIds: [element.id], message: `Polygon '${element.id}' contains an invalid or out-of-bounds point.`, severity: 'error' });
 
+			if ('geometry' in element && element.presentation) {
+				if (!validColor(element.presentation.fillColor)) issues.push({ code: 'invalid-polygon-color', elementIds: [element.id], message: `Polygon '${element.id}' fill color must use a six-digit hex value.`, severity: 'error' });
+
+				if (element.presentation.fillOpacity !== undefined && (!Number.isFinite(element.presentation.fillOpacity) || element.presentation.fillOpacity < 0 || element.presentation.fillOpacity > 1)) issues.push({ code: 'invalid-polygon-opacity', elementIds: [element.id], message: `Polygon '${element.id}' fill opacity must be between 0 and 1.`, severity: 'error' });
+
+				if (element.presentation.extrusionHeight !== undefined && (!Number.isFinite(element.presentation.extrusionHeight) || element.presentation.extrusionHeight < 0 || element.presentation.extrusionHeight > 100)) issues.push({ code: 'invalid-polygon-height', elementIds: [element.id], message: `Polygon '${element.id}' visual height must be between 0 and 100.`, severity: 'error' });
+			}
+
 			if ('point' in element && !pointInFloor(element.point, floor)) issues.push({ code: 'element-outside-floor', elementIds: [element.id], message: `Element '${element.id}' has an invalid or out-of-bounds point.`, severity: 'error' });
 
 			if (element.type === 'label') {
 				if (element.fontSize !== undefined && (!Number.isFinite(element.fontSize) || element.fontSize < 6 || element.fontSize > 512)) issues.push({ code: 'invalid-label-font-size', elementIds: [element.id], message: `Text label '${element.id}' font size must be between 6 and 512.`, severity: 'error' });
+
 				if (element.outlineWidth !== undefined && (!Number.isFinite(element.outlineWidth) || element.outlineWidth < 0 || element.outlineWidth > 16)) issues.push({ code: 'invalid-label-outline-width', elementIds: [element.id], message: `Text label '${element.id}' outline width must be between 0 and 16.`, severity: 'error' });
+
 				if (!validColor(element.color) || !validColor(element.outlineColor)) issues.push({ code: 'invalid-label-color', elementIds: [element.id], message: `Text label '${element.id}' colors must use six-digit hex values.`, severity: 'error' });
 			}
 
@@ -428,7 +476,7 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 	if (!assessment.deliveryAllowed || assessment.deliveryMode === 'blocked') {
 		issues.push({ code: 'delivery-evidence-blocked', elementIds: [], message: assessment.issues.filter((issue): boolean => issue.severity === 'blocker').map((issue): string => issue.message).join(' ') || 'Confirmed evidence does not support a runtime delivery mode.', severity: 'error' });
 
-return issues;
+		return issues;
 	}
 
 	for (const issue of assessment.issues.filter((candidate): boolean => candidate.severity === 'warning')) issues.push({ code: issue.code, elementIds: [], message: issue.message, severity: 'warning' });
@@ -529,12 +577,50 @@ export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floor
 	if (!floor) throw new Error(`Floor '${floorId}' does not exist.`);
 	const assetById = new Map(project.assets.map((asset): [string, WayfindingStudioAsset] => [asset.id, asset]));
 	const elements = (type: WayfindingStudioElement['type']): WayfindingStudioElement[] => floor.elements.filter((element): boolean => element.type === type);
-	const polygon = (element: WayfindingStudioPolygonElement): string => `<polygon ${attrs(element)}${element.destinationId ? ` data-wayfinding-location-id="${escapeXml(element.destinationId)}"` : ''} points="${element.geometry.map(point).join(' ')}"/>`;
+	const polygon = (element: WayfindingStudioPolygonElement): string => {
+		const presentation = element.presentation;
+		const presentationAttributes = [
+			presentation?.extrusionHeight !== undefined ? ` data-extrusion-height="${number(presentation.extrusionHeight)}"` : '',
+			presentation?.fillColor ? ` fill="${escapeXml(presentation.fillColor)}"` : '',
+			presentation?.fillOpacity !== undefined ? ` fill-opacity="${number(presentation.fillOpacity)}"` : ''
+		].join('');
+
+		return `<polygon ${attrs(element)}${element.destinationId ? ` data-wayfinding-location-id="${escapeXml(element.destinationId)}"` : ''}${presentationAttributes} points="${element.geometry.map(point).join(' ')}"/>`;
+	};
 	const background: WayfindingStudioAsset | undefined = floor.backgroundAssetId ? assetById.get(floor.backgroundAssetId) : undefined;
 	const media = (element: WayfindingStudioMediaElement): string => {
 		const asset: WayfindingStudioAsset | undefined = assetById.get(element.assetId);
 
-return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}"/>` : '';
+		return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}"/>` : '';
+	};
+	const door = (item: WayfindingStudioElement): string => {
+		const value = item as WayfindingStudioDoorElement;
+		const radians = value.angle * Math.PI / 180;
+		const dx = Math.cos(radians) * value.length / 2;
+		const dy = Math.sin(radians) * value.length / 2;
+
+		return `<line ${attrs(value)} x1="${number(value.point.x - dx)}" y1="${number(value.point.y - dy)}" x2="${number(value.point.x + dx)}" y2="${number(value.point.y + dy)}"/>`;
+	};
+	const poi = (item: WayfindingStudioElement): string => {
+		const value = item as WayfindingStudioPointElement;
+
+		return `<circle ${attrs(value)}${value.destinationId ? ` data-wayfinding-location-id="${escapeXml(value.destinationId)}"` : ''} cx="${number(value.point.x)}" cy="${number(value.point.y)}" r="9"/>`;
+	};
+	const origin = (item: WayfindingStudioElement): string => {
+		const value = item as WayfindingStudioOriginElement;
+
+		return `<g ${attrs(value)} data-screen-id="${escapeXml(value.screenId)}" data-facing-degrees="${number(value.facingDegrees)}"><circle cx="${number(value.point.x)}" cy="${number(value.point.y)}" r="14"/><path d="M ${number(value.point.x)} ${number(value.point.y - 26)} l -8 14 h 16 z" transform="rotate(${number(value.facingDegrees)} ${number(value.point.x)} ${number(value.point.y)})"/></g>`;
+	};
+	const transition = (item: WayfindingStudioElement): string => {
+		const value = item as WayfindingStudioTransitionElement;
+
+		return `<circle ${attrs(value)} data-connection-id="${escapeXml(value.connectionId)}" data-transition-kind="${value.kind}" cx="${number(value.point.x)}" cy="${number(value.point.y)}" r="12"/>`;
+	};
+	const label = (item: WayfindingStudioElement): string => {
+		const value = item as WayfindingStudioLabelElement;
+		const outlineWidth = value.outlineWidth ?? 0;
+
+		return `<text ${attrs(value)} x="${number(value.point.x)}" y="${number(value.point.y)}" fill="${escapeXml(value.color ?? '#17201f')}" font-family="${escapeXml(labelFontFamilies[value.fontFamily ?? 'sans-serif'])}" font-size="${number(value.fontSize ?? 24)}" font-weight="${value.fontWeight ?? 600}" text-anchor="${value.textAnchor ?? 'start'}"${outlineWidth > 0 ? ` stroke="${escapeXml(value.outlineColor ?? '#ffffff')}" stroke-width="${number(outlineWidth)}" stroke-linejoin="round" paint-order="stroke fill"` : ''}>${escapeXml(value.text)}</text>`;
 	};
 
 	return [
@@ -543,21 +629,11 @@ return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="$
 		`<g id="Walkable" fill="#66c2a5" fill-opacity="0.18" stroke="#16836f">${elements('walkable').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Obstacles" fill="#151c1b" fill-opacity="0.22" stroke="#151c1b">${elements('obstacle').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Locations" fill="#f4c95d" fill-opacity="0.2" stroke="#c88716">${elements('location').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
-		`<g id="Doors" stroke="#17201f" stroke-width="4">${elements('door').map((item): string => { const door = item as WayfindingStudioDoorElement; const radians = door.angle * Math.PI / 180; const dx = Math.cos(radians) * door.length / 2; const dy = Math.sin(radians) * door.length / 2;
-
-return `<line ${attrs(door)} x1="${number(door.point.x - dx)}" y1="${number(door.point.y - dy)}" x2="${number(door.point.x + dx)}" y2="${number(door.point.y + dy)}"/>`; }).join('')}</g>`,
-		`<g id="POIs" fill="#2b6cb0">${elements('poi').map((item): string => { const poi = item as WayfindingStudioPointElement;
-
-return `<circle ${attrs(poi)}${poi.destinationId ? ` data-wayfinding-location-id="${escapeXml(poi.destinationId)}"` : ''} cx="${number(poi.point.x)}" cy="${number(poi.point.y)}" r="9"/>`; }).join('')}</g>`,
-		`<g id="Origins" fill="#138b75">${elements('origin').map((item): string => { const origin = item as WayfindingStudioOriginElement;
-
-return `<g ${attrs(origin)} data-screen-id="${escapeXml(origin.screenId)}" data-facing-degrees="${number(origin.facingDegrees)}"><circle cx="${number(origin.point.x)}" cy="${number(origin.point.y)}" r="14"/><path d="M ${number(origin.point.x)} ${number(origin.point.y - 26)} l -8 14 h 16 z" transform="rotate(${number(origin.facingDegrees)} ${number(origin.point.x)} ${number(origin.point.y)})"/></g>`; }).join('')}</g>`,
-		`<g id="Transitions" fill="#ffffff" stroke="#17201f">${elements('transition').map((item): string => { const transition = item as WayfindingStudioTransitionElement;
-
-return `<circle ${attrs(transition)} data-connection-id="${escapeXml(transition.connectionId)}" data-transition-kind="${transition.kind}" cx="${number(transition.point.x)}" cy="${number(transition.point.y)}" r="12"/>`; }).join('')}</g>`,
-		`<g id="Labels">${elements('label').map((item): string => { const label = item as WayfindingStudioLabelElement; const outlineWidth = label.outlineWidth ?? 0;
-
-return `<text ${attrs(label)} x="${number(label.point.x)}" y="${number(label.point.y)}" fill="${escapeXml(label.color ?? '#17201f')}" font-family="${escapeXml(labelFontFamilies[label.fontFamily ?? 'sans-serif'])}" font-size="${number(label.fontSize ?? 24)}" font-weight="${label.fontWeight ?? 600}" text-anchor="${label.textAnchor ?? 'start'}"${outlineWidth > 0 ? ` stroke="${escapeXml(label.outlineColor ?? '#ffffff')}" stroke-width="${number(outlineWidth)}" stroke-linejoin="round" paint-order="stroke fill"` : ''}>${escapeXml(label.text)}</text>`; }).join('')}</g>`,
+		`<g id="Doors" stroke="#17201f" stroke-width="4">${elements('door').map(door).join('')}</g>`,
+		`<g id="POIs" fill="#2b6cb0">${elements('poi').map(poi).join('')}</g>`,
+		`<g id="Origins" fill="#138b75">${elements('origin').map(origin).join('')}</g>`,
+		`<g id="Transitions" fill="#ffffff" stroke="#17201f">${elements('transition').map(transition).join('')}</g>`,
+		`<g id="Labels">${elements('label').map(label).join('')}</g>`,
 		`<g id="Icons">${elements('icon').map((item): string => media(item as WayfindingStudioMediaElement)).join('')}</g>`,
 		`<g id="Logos">${elements('logo').map((item): string => media(item as WayfindingStudioMediaElement)).join('')}</g>`,
 		'</svg>'
@@ -575,25 +651,29 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 		? structuredClone(project.graph)
 		: { contractVersion: 2, edges: [], graphId: `${project.graph.graphId}:${assessment.deliveryMode}`, nodes: [] };
 
-return {
-	contractVersion: 1,
-	destinations: { Destinations: { rows: structuredClone(project.destinations) } },
-	floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
-		height: floor.height,
-		id: floor.id,
-		name: floor.name,
-		order: floor.order,
-		svg: renderWayfindingFloorSvg(project, floor.id),
-		width: floor.width
-	})),
-	graph: runtimeGraph,
-	manifest: {
-		deliveryMode: assessment.deliveryMode,
-		generatedAt: project.updatedAt,
-		projectId: project.projectId,
-		sourceContractVersion: project.contractVersion,
-		targetMode: assessment.targetMode
-	}
+	return {
+		assets: structuredClone(project.assets),
+		contractVersion: 1,
+		destinations: { Destinations: { rows: structuredClone(project.destinations) } },
+		floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
+			backgroundAssetId: floor.backgroundAssetId,
+			camera3d: floor.camera3d ? structuredClone(floor.camera3d) : undefined,
+			elements: structuredClone(floor.elements),
+			height: floor.height,
+			id: floor.id,
+			name: floor.name,
+			order: floor.order,
+			svg: renderWayfindingFloorSvg(project, floor.id),
+			width: floor.width
+		})),
+		graph: runtimeGraph,
+		manifest: {
+			deliveryMode: assessment.deliveryMode,
+			generatedAt: project.updatedAt,
+			projectId: project.projectId,
+			sourceContractVersion: project.contractVersion,
+			targetMode: assessment.targetMode
+		}
 	};
 };
 
@@ -630,7 +710,7 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 			const leftOrder: number = project.floors.find((floor): boolean => floor.id === left.floorId)?.order ?? 0;
 			const rightOrder: number = project.floors.find((floor): boolean => floor.id === right.floorId)?.order ?? 0;
 
-return leftOrder - rightOrder;
+			return leftOrder - rightOrder;
 		});
 
 		for (let index = 1; index < ordered.length; index += 1) {

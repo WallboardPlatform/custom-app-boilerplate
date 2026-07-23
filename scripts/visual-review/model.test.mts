@@ -39,6 +39,21 @@ void describe('visual review model', (): void => {
 		assert.equal(review.screenshots[0]?.status, 'pending');
 	});
 
+	void it('accepts an intent-only seed review without completed evidence arrays', (context): void => {
+		const projectDirectory: string = createProject();
+		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
+		const seedReview = {
+			intent: 'Inspect the generated signage composition.',
+			focus: ['Legibility', 'Framing']
+		} as unknown as VisualReview;
+
+		const review: VisualReview = createPendingVisualReview(projectDirectory, seedReview);
+
+		assert.deepEqual(review.criteria.map((criterion) => criterion.id), VISUAL_REVIEW_CRITERIA);
+		assert.deepEqual(review.screenshots.map((screenshot) => screenshot.file), ['app-default-1x1.png']);
+		assert.ok(review.criteria.every((criterion) => criterion.status === 'pending'));
+	});
+
 	void it('invalidates completed review evidence when visual source changes', (context): void => {
 		const projectDirectory: string = createProject();
 		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
