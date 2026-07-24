@@ -168,7 +168,8 @@ const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
-const STUDIO_VERSION = '0.13';
+const STUDIO_VERSION = '0.14';
+const OBJECT_EXPLORER_STORAGE_KEY = 'wallboard-wayfinding-studio:layers-open';
 
 const requireElement = <T extends Element>(selector: string): T => {
 	const element: T | null = document.querySelector<T>(selector);
@@ -294,9 +295,17 @@ const drawingModePoints = requireElement<HTMLButtonElement>('#drawing-mode-point
 const drawingModeLasso = requireElement<HTMLButtonElement>('#drawing-mode-lasso');
 const drawingModeSmart = requireElement<HTMLButtonElement>('#drawing-mode-smart');
 const drawingModeHelp = requireElement<HTMLElement>('#drawing-mode-help');
+const snapEnabledControl = requireElement<HTMLElement>('#snap-enabled-control');
+const snapRadiusControl = requireElement<HTMLElement>('#snap-radius-control');
 const snapToEdgesInput = requireElement<HTMLInputElement>('#snap-to-edges');
 const snapRadiusInput = requireElement<HTMLInputElement>('#snap-radius');
 const snapRadiusValue = requireElement<HTMLOutputElement>('#snap-radius-value');
+const detectDetailControl = requireElement<HTMLElement>('#detect-detail-control');
+const detectDetailInput = requireElement<HTMLInputElement>('#detect-detail');
+const detectDetailValue = requireElement<HTMLOutputElement>('#detect-detail-value');
+const detectOpeningControl = requireElement<HTMLElement>('#detect-opening-control');
+const detectOpeningInput = requireElement<HTMLInputElement>('#detect-opening');
+const detectOpeningValue = requireElement<HTMLOutputElement>('#detect-opening-value');
 const detectGapControl = requireElement<HTMLElement>('#detect-gap-control');
 const detectGapInput = requireElement<HTMLInputElement>('#detect-gap');
 const detectGapValue = requireElement<HTMLOutputElement>('#detect-gap-value');
@@ -310,6 +319,7 @@ const mediaAssetLibrary = requireElement<HTMLElement>('#media-asset-library');
 const builtinIconLibrary = requireElement<HTMLElement>('#builtin-icon-library');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
+const objectExplorerPanel = requireElement<HTMLDetailsElement>('#object-explorer-panel');
 const objectCount = requireElement<HTMLElement>('#object-count');
 const objectList = requireElement<HTMLElement>('#object-list');
 const defaultLocationOpacityInput = requireElement<HTMLInputElement>('#default-location-opacity');
@@ -327,6 +337,11 @@ const defaultRouteAnimationInput = requireElement<HTMLSelectElement>('#default-r
 const defaultRouteSpeedInput = requireElement<HTMLInputElement>('#default-route-speed');
 const defaultRouteSpeedValue = requireElement<HTMLOutputElement>('#default-route-speed-value');
 const cursorPosition = requireElement<HTMLOutputElement>('#cursor-position');
+const confirmDialog = requireElement<HTMLDialogElement>('#confirm-dialog');
+const confirmTitle = requireElement<HTMLElement>('#confirm-title');
+const confirmMessage = requireElement<HTMLElement>('#confirm-message');
+const confirmCancel = requireElement<HTMLButtonElement>('#confirm-cancel');
+const confirmAccept = requireElement<HTMLButtonElement>('#confirm-accept');
 const projectLanguageList = requireElement<HTMLElement>('#project-language-list');
 const projectLanguageCode = requireElement<HTMLInputElement>('#project-language-code');
 const projectLanguageLabel = requireElement<HTMLInputElement>('#project-language-label');
@@ -642,8 +657,12 @@ const renderProjectCollections = (): void => {
 		remove.type = 'button';
 		remove.className = 'text-action danger-text';
 		remove.textContent = 'Remove';
-		remove.addEventListener('click', (): void => {
-			if (usageCount > 0 && !window.confirm(`Remove "${category}" from the category list and ${usageCount} destination${usageCount === 1 ? '' : 's'}?`)) return;
+		remove.addEventListener('click', async (): Promise<void> => {
+			if (usageCount > 0 && !await confirmAction(
+				`Remove "${category}" from the category list and ${usageCount} destination${usageCount === 1 ? '' : 's'}?`,
+				'Remove category?',
+				'Remove'
+			)) return;
 			const before: HistoryState = captureHistoryState();
 			studioProject.categories = (studioProject.categories ?? []).filter((candidate: string): boolean => candidate !== category);
 			for (const destination of destinationRows()) if (destination.category === category) delete destination.category;
@@ -709,8 +728,12 @@ const renderDrawingMode = (): void => {
 		: lasso
 			? 'Keep dragging around the boundary, then release to create an editable polygon.'
 			: 'Tap each corner. Finish after at least three points.';
-	traceAssist.hidden = !lasso;
+	traceAssist.hidden = !lasso && !smart;
+	snapEnabledControl.hidden = !lasso;
+	snapRadiusControl.hidden = !lasso;
 	snapRadiusInput.disabled = !snapToEdgesInput.checked || !lasso;
+	detectDetailControl.hidden = !smart;
+	detectOpeningControl.hidden = !smart;
 	detectGapControl.hidden = !smart;
 };
 
@@ -779,11 +802,43 @@ const renderMediaAssetState = (): void => {
 };
 
 const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 'recovery' | 'error', title: string): void => {
-	autosaveStatus.textContent = label;
+	const stableLabels: Record<typeof state, string> = {
+		error: 'SAVE ERROR',
+		ready: 'AUTOSAVE',
+		recovery: 'RECOVERY',
+		saved: 'SAVED',
+		saving: 'SAVING'
+	};
+	autosaveStatus.textContent = stableLabels[state];
 	autosaveStatus.dataset.state = state;
+	autosaveStatus.dataset.detail = label;
 	autosaveStatus.title = title;
 	renderProjectContext();
 };
+
+const confirmAction = (message: string, title = 'Continue?', acceptLabel = 'Continue'): Promise<boolean> => new Promise((resolve): void => {
+	confirmTitle.textContent = title;
+	confirmMessage.textContent = message;
+	confirmAccept.textContent = acceptLabel;
+	const finish = (accepted: boolean): void => {
+		confirmAccept.removeEventListener('click', accept);
+		confirmCancel.removeEventListener('click', cancel);
+		confirmDialog.removeEventListener('cancel', dismiss);
+		if (confirmDialog.open) confirmDialog.close();
+		resolve(accepted);
+	};
+	const accept = (): void => { finish(true); };
+	const cancel = (): void => { finish(false); };
+	const dismiss = (event: Event): void => {
+		event.preventDefault();
+		finish(false);
+	};
+	confirmAccept.addEventListener('click', accept);
+	confirmCancel.addEventListener('click', cancel);
+	confirmDialog.addEventListener('cancel', dismiss);
+	confirmDialog.showModal();
+	confirmCancel.focus();
+});
 
 let noticeTimer: number | undefined;
 const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning'): void => {
@@ -835,6 +890,10 @@ const setViewMode = (mode: '2d' | '3d'): void => {
 		coverageStatus.textContent = workspaceMode === 'route-preview'
 			? '3D route preview: click a destination to draw guidance from the selected start.'
 			: '3D preview: drag to rotate, wheel to zoom, and select a shape to edit it.';
+	} else {
+		window.requestAnimationFrame((): void => {
+			resizeCanvas();
+		});
 	}
 };
 
@@ -1754,22 +1813,57 @@ const renderSemanticEditor = (): void => {
 	const destination: DestinationRow | undefined = (element.type === 'location' || element.type === 'poi') && element.destinationId
 		? destinationRows().find((row: DestinationRow): boolean => row.id === element.destinationId)
 		: undefined;
-	const updateDestination = (field: keyof DestinationRow, value: unknown): void => {
-		if (!destination) return;
-		if (value === undefined || value === '') delete destination[field];
-		else destination[field] = value as never;
-	};
+		const updateDestination = (field: keyof DestinationRow, value: unknown): void => {
+			if (!destination) return;
+			if (value === undefined || value === '') delete destination[field];
+			else destination[field] = value as never;
+		};
+		const updateTranslation = (languageCode: string, field: keyof WayfindingStudioTranslation, value: string): void => {
+			if (!destination) return;
+			destination.translations ??= {};
+			destination.translations[languageCode] ??= {};
+			if (value.trim()) destination.translations[languageCode][field] = value;
+			else {
+				delete destination.translations[languageCode][field];
+				if (Object.keys(destination.translations[languageCode]).length === 0) delete destination.translations[languageCode];
+				if (Object.keys(destination.translations).length === 0) delete destination.translations;
+			}
+		};
 
 	if (destination && (element.type === 'location' || element.type === 'poi')) {
 		const heading: HTMLHeadingElement = document.createElement('h3');
 		heading.className = 'public-details-heading';
 		heading.textContent = 'Public details';
 		semanticEditor.append(heading);
-		textField('Name', destination.name, (value): void => {
-			destination.name = value || destination.id;
-			element.label = value || destination.id;
-		});
-		textAreaField('Description', stringValue(destination.description), (value): void => { updateDestination('description', value); });
+			textField('Name', destination.name, (value): void => {
+				destination.name = value || destination.id;
+				element.label = value || destination.id;
+			});
+			textAreaField('Description', stringValue(destination.description), (value): void => { updateDestination('description', value); });
+			const translationLanguages: WayfindingStudioLanguage[] = projectLanguages()
+				.filter((language: WayfindingStudioLanguage): boolean => language.code !== studioProject.defaultLanguage);
+			if (translationLanguages.length > 0) {
+				const translations: HTMLDetailsElement = document.createElement('details');
+				const translationSummary: HTMLElement = document.createElement('summary');
+				const translationFields: HTMLDivElement = document.createElement('div');
+				translations.className = 'translation-editor';
+				translationSummary.textContent = `Translations (${translationLanguages.length})`;
+				translationFields.className = 'translation-fields';
+				for (const language of translationLanguages) {
+					const languageHeading: HTMLHeadingElement = document.createElement('h4');
+					const current: WayfindingStudioTranslation | undefined = destination.translations?.[language.code];
+					languageHeading.textContent = `${language.label} (${language.code})`;
+					translationFields.append(languageHeading);
+					textField('Name', current?.name ?? '', (value): void => {
+						updateTranslation(language.code, 'name', value);
+					}, 'text', translationFields);
+					textAreaField('Description', current?.description ?? '', (value): void => {
+						updateTranslation(language.code, 'description', value);
+					}, translationFields);
+				}
+				translations.append(translationSummary, translationFields);
+				semanticEditor.append(translations);
+			}
 		const categoryInput: HTMLInputElement = textField('Category', stringValue(destination.category), (value): void => {
 			updateDestination('category', value);
 			if (element.type === 'poi') element.category = value || undefined;
@@ -1799,11 +1893,10 @@ const renderSemanticEditor = (): void => {
 			});
 			categoryChips.append(chip);
 		}
-		categoryManager.append(categorySummary, categoryChips);
-		semanticEditor.append(categoryManager);
-		textField('Directory number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); });
-		textField('Secondary / English name', stringValue(destination.englishName), (value): void => { updateDestination('englishName', value); });
-		textField('Opening hours', stringValue(destination.hours), (value): void => { updateDestination('hours', value); });
+			categoryManager.append(categorySummary, categoryChips);
+			semanticEditor.append(categoryManager);
+			textField('Directory number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); });
+			textField('Opening hours', stringValue(destination.hours), (value): void => { updateDestination('hours', value); });
 		textField('Public status', stringValue(destination.status), (value): void => { updateDestination('status', value); });
 		selectField('Accessibility', [['', 'Unverified'], ['true', 'Step-free verified'], ['false', 'Not step-free']], typeof destination.accessible === 'boolean' ? String(destination.accessible) : '', (value): void => {
 			updateDestination('accessible', value === '' ? undefined : value === 'true');
@@ -2110,7 +2203,9 @@ const edgePoints = (edge: WayfindingEdge): WayfindingPoint[] => {
 };
 
 const resizeCanvas = (): void => {
+	if (canvas.classList.contains('view-hidden')) return;
 	const bounds: DOMRect = canvas.getBoundingClientRect();
+	if (bounds.width < 2 || bounds.height < 2) return;
 	const ratio: number = window.devicePixelRatio || 1;
 	canvas.width = Math.max(1, Math.round(bounds.width * ratio));
 	canvas.height = Math.max(1, Math.round(bounds.height * ratio));
@@ -2268,14 +2363,14 @@ const lineProjection = (point: WayfindingPoint, start: WayfindingPoint, end: Way
 	return lengthSquared === 0 ? 0 : ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared;
 };
 
-const removeShallowBoundaryDetails = (points: WayfindingPoint[], gridSize: number): WayfindingPoint[] => {
-	if (points.length < 6) return points;
+const removeShallowBoundaryDetails = (points: WayfindingPoint[], gridSize: number, cleanupDistance: number): WayfindingPoint[] => {
+	if (points.length < 6 || cleanupDistance <= 0) return points;
 	const xs: number[] = points.map((point: WayfindingPoint): number => point.x);
 	const ys: number[] = points.map((point: WayfindingPoint): number => point.y);
 	const minimumDimension: number = Math.max(gridSize, Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)));
-	const maximumChord: number = Math.max(gridSize * 8, Math.min(96, minimumDimension * 0.2));
-	const maximumDepth: number = Math.max(gridSize * 4, Math.min(48, minimumDimension * 0.11));
-	const lineTolerance: number = Math.max(gridSize * 2.5, minimumDimension * 0.008);
+	const maximumChord: number = Math.max(gridSize * 8, cleanupDistance * 8, Math.min(96, minimumDimension * 0.2));
+	const maximumDepth: number = Math.max(gridSize * 4, cleanupDistance * 2, Math.min(48, minimumDimension * 0.11));
+	const lineTolerance: number = Math.max(gridSize * 2.5, cleanupDistance, minimumDimension * 0.008);
 	const cleaned: WayfindingPoint[] = [...points];
 	let changed = true;
 	let pass = 0;
@@ -2332,6 +2427,59 @@ const removeRedundantPolygonPoints = (points: WayfindingPoint[], toleranceValue:
 	return cleaned;
 };
 
+const morphRegionMask = (
+	source: Uint8Array,
+	columns: number,
+	rows: number,
+	radius: number,
+	operation: 'dilate' | 'erode'
+): Uint8Array => {
+	if (radius <= 0) return source.slice();
+	const result = new Uint8Array(source.length);
+	const offsets: Array<[number, number]> = [];
+	for (let dy = -radius; dy <= radius; dy += 1) {
+		for (let dx = -radius; dx <= radius; dx += 1) {
+			if (dx * dx + dy * dy <= radius * radius) offsets.push([dx, dy]);
+		}
+	}
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			const index: number = row * columns + column;
+			if (operation === 'dilate' && source[index] !== 1) continue;
+			if (operation === 'erode' && source[index] !== 1) continue;
+			if (operation === 'dilate') {
+				for (const [dx, dy] of offsets) {
+					const targetColumn: number = column + dx;
+					const targetRow: number = row + dy;
+					if (targetColumn < 0 || targetRow < 0 || targetColumn >= columns || targetRow >= rows) continue;
+					result[targetRow * columns + targetColumn] = 1;
+				}
+				continue;
+			}
+			let survives = true;
+			for (const [dx, dy] of offsets) {
+				const targetColumn: number = column + dx;
+				const targetRow: number = row + dy;
+				if (targetColumn < 0 || targetRow < 0 || targetColumn >= columns || targetRow >= rows
+					|| source[targetRow * columns + targetColumn] !== 1) {
+					survives = false;
+					break;
+				}
+			}
+			if (survives) result[index] = 1;
+		}
+	}
+
+	return result;
+};
+
+const closeRegionMask = (source: Uint8Array, columns: number, rows: number, gapCells: number): Uint8Array => {
+	const radius: number = Math.max(0, Math.ceil(gapCells / 2));
+	if (radius === 0) return source.slice();
+
+	return morphRegionMask(morphRegionMask(source, columns, rows, radius, 'dilate'), columns, rows, radius, 'erode');
+};
+
 const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | undefined => {
 	if (!sourceImage || !sourcePixels) return undefined;
 	const gridSize: number = Math.max(2, Math.round(Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight) / 900));
@@ -2341,53 +2489,62 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | unde
 	const seedRow: number = Math.max(0, Math.min(rows - 1, Math.floor(point.y / gridSize)));
 	const seedColor = pixelColorAt((seedColumn + 0.5) * gridSize, (seedRow + 0.5) * gridSize);
 	if (!seedColor) return undefined;
-	const region = new Uint8Array(columns * rows);
-	const queued = new Uint8Array(columns * rows);
-	const queue: Array<[number, number]> = [[seedColumn, seedRow]];
-	queued[seedRow * columns + seedColumn] = 1;
+	const candidate = new Uint8Array(columns * rows);
 	const threshold: number = Math.max(8, tolerance());
-	const gapCells: number = Math.max(0, Math.ceil(Number(detectGapInput.value) / gridSize));
+	for (let row = 0; row < rows; row += 1) {
+		for (let column = 0; column < columns; column += 1) {
+			const color = pixelColorAt((column + 0.5) * gridSize, (row + 0.5) * gridSize);
+			if (color && colorDistance(color, seedColor) <= threshold) candidate[row * columns + column] = 1;
+		}
+	}
+	const minimumOpeningCells: number = Math.max(0, Math.ceil(Number(detectOpeningInput.value) / gridSize));
+	const openingRadius: number = Math.max(0, Math.floor((minimumOpeningCells - 1) / 2));
+	const traversable: Uint8Array = openingRadius > 0
+		? morphRegionMask(candidate, columns, rows, openingRadius, 'erode')
+		: candidate.slice();
+	let floodSeedColumn: number = seedColumn;
+	let floodSeedRow: number = seedRow;
+	if (traversable[seedRow * columns + seedColumn] !== 1) {
+		let nearestDistance = Number.POSITIVE_INFINITY;
+		const searchRadius: number = Math.max(2, minimumOpeningCells + 1);
+		for (let row = Math.max(0, seedRow - searchRadius); row <= Math.min(rows - 1, seedRow + searchRadius); row += 1) {
+			for (let column = Math.max(0, seedColumn - searchRadius); column <= Math.min(columns - 1, seedColumn + searchRadius); column += 1) {
+				if (traversable[row * columns + column] !== 1) continue;
+				const distance: number = (column - seedColumn) ** 2 + (row - seedRow) ** 2;
+				if (distance >= nearestDistance) continue;
+				nearestDistance = distance;
+				floodSeedColumn = column;
+				floodSeedRow = row;
+			}
+		}
+		if (!Number.isFinite(nearestDistance)) return undefined;
+	}
+	let region: Uint8Array = new Uint8Array(columns * rows);
+	const queued = new Uint8Array(columns * rows);
+	const queue: Array<[number, number]> = [[floodSeedColumn, floodSeedRow]];
+	queued[floodSeedRow * columns + floodSeedColumn] = 1;
 
 	for (let cursor = 0; cursor < queue.length; cursor += 1) {
 		const [column, row] = queue[cursor];
 		const index: number = row * columns + column;
-		const color = pixelColorAt((column + 0.5) * gridSize, (row + 0.5) * gridSize);
-		if (!color || colorDistance(color, seedColor) > threshold) continue;
+		if (traversable[index] !== 1) continue;
 		region[index] = 1;
 		for (const [nextColumn, nextRow] of [[column - 1, row], [column + 1, row], [column, row - 1], [column, row + 1]] as Array<[number, number]>) {
 			if (nextColumn < 0 || nextRow < 0 || nextColumn >= columns || nextRow >= rows) continue;
 			const nextIndex: number = nextRow * columns + nextColumn;
-			if (queued[nextIndex] === 1) continue;
+			if (queued[nextIndex] === 1 || traversable[nextIndex] !== 1) continue;
 			queued[nextIndex] = 1;
 			queue.push([nextColumn, nextRow]);
 		}
-		if (gapCells === 0) continue;
-		for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>) {
-			const immediateColumn: number = column + dx;
-			const immediateRow: number = row + dy;
-			if (immediateColumn < 0 || immediateRow < 0 || immediateColumn >= columns || immediateRow >= rows) continue;
-			const immediateColor = pixelColorAt((immediateColumn + 0.5) * gridSize, (immediateRow + 0.5) * gridSize);
-			if (immediateColor && colorDistance(immediateColor, seedColor) <= threshold) continue;
-			for (let distance = 2; distance <= gapCells + 1; distance += 1) {
-				const targetColumn: number = column + dx * distance;
-				const targetRow: number = row + dy * distance;
-				if (targetColumn < 0 || targetRow < 0 || targetColumn >= columns || targetRow >= rows) break;
-				const targetColor = pixelColorAt((targetColumn + 0.5) * gridSize, (targetRow + 0.5) * gridSize);
-				if (!targetColor || colorDistance(targetColor, seedColor) > threshold) continue;
-				for (let bridge = 1; bridge <= distance; bridge += 1) {
-					const bridgeColumn: number = column + dx * bridge;
-					const bridgeRow: number = row + dy * bridge;
-					const bridgeIndex: number = bridgeRow * columns + bridgeColumn;
-					region[bridgeIndex] = 1;
-					if (queued[bridgeIndex] === 0) {
-						queued[bridgeIndex] = 1;
-						queue.push([bridgeColumn, bridgeRow]);
-					}
-				}
-				break;
-			}
+	}
+	if (openingRadius > 0) {
+		const restored: Uint8Array = morphRegionMask(region, columns, rows, openingRadius, 'dilate');
+		for (let index = 0; index < region.length; index += 1) {
+			region[index] = restored[index] === 1 && candidate[index] === 1 ? 1 : 0;
 		}
 	}
+	const gapCells: number = Math.max(0, Math.ceil(Number(detectGapInput.value) / gridSize));
+	region = closeRegionMask(region, columns, rows, gapCells);
 
 	const regionSize: number = region.reduce((sum: number, value: number): number => sum + value, 0);
 	if (regionSize < 12 || regionSize > columns * rows * 0.48) return undefined;
@@ -2439,13 +2596,14 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | unde
 		if (loop.length >= 4) loops.push(loop);
 	}
 
-	const outer: WayfindingPoint[] | undefined = loops.sort((left, right): number => Math.abs(polygonArea(right)) - Math.abs(polygonArea(left)))[0];
-	if (!outer) return undefined;
-	const simplified: WayfindingPoint[] = simplifyGeometry(outer.slice(0, -1), Math.max(gridSize * 1.5, 3));
-	const cleaned: WayfindingPoint[] = removeRedundantPolygonPoints(
-		removeShallowBoundaryDetails(simplified, gridSize),
-		Math.max(1, gridSize * 1.25)
-	);
+		const outer: WayfindingPoint[] | undefined = loops.sort((left, right): number => Math.abs(polygonArea(right)) - Math.abs(polygonArea(left)))[0];
+		if (!outer) return undefined;
+		const cleanupDistance: number = Number(detectDetailInput.value);
+		const simplified: WayfindingPoint[] = simplifyGeometry(outer.slice(0, -1), Math.max(gridSize * 1.5, cleanupDistance * 0.55, 3));
+		const cleaned: WayfindingPoint[] = removeRedundantPolygonPoints(
+			removeShallowBoundaryDetails(simplified, gridSize, cleanupDistance),
+			Math.max(1, gridSize * 1.25, cleanupDistance * 0.35)
+		);
 
 	return cleaned.length >= 3 ? { color: colorToHex(averageColor), geometry: cleaned } : undefined;
 };
@@ -3389,15 +3547,15 @@ const renderReview = (): void => {
 	const selected: WayfindingEdge | undefined = edges.find((edge: WayfindingEdge): boolean => edge.id === selectedEdgeId);
 
 	maskStatus.textContent = !hasWalkableMask
-		? project.guidance.targetMode === 'route' ? 'NO PEDESTRIAN AREA' : 'PEDESTRIAN AREA OPTIONAL'
-		: maskReviewStatus === 'confirmed' ? 'PEDESTRIAN AREA READY' : 'PEDESTRIAN AREA DRAFT';
+		? project.guidance.targetMode === 'route' ? 'NO WALKABLE AREA' : 'WALKABLE OPTIONAL'
+		: maskReviewStatus === 'confirmed' ? 'WALKABLE READY' : 'WALKABLE DRAFT';
 	maskStatus.title = !hasWalkableMask
 		? project.guidance.targetMode === 'route'
 			? 'Draw a walkable area before building a routed map.'
 			: 'Highlight-only projects do not require a walkable area.'
 		: maskReviewStatus === 'confirmed'
-			? 'The authored pedestrian area has been reviewed.'
-			: 'The pedestrian area is usable for editing but still needs review before routed delivery.';
+			? 'The authored walkable area has been reviewed.'
+			: 'The walkable area is usable for editing but still needs review before routed delivery.';
 	maskStatus.dataset.confirmed = String(hasWalkableMask && maskReviewStatus === 'confirmed');
 	edgeSummary.textContent = `${edges.length} route segment${edges.length === 1 ? '' : 's'}`;
 	edgeFailures.textContent = !hasWalkableMask
@@ -4056,7 +4214,7 @@ const generateCenterlineGraph = (): boolean => {
 	return true;
 };
 
-const requestRouteRegeneration = (): boolean => {
+const requestRouteRegeneration = async (): Promise<boolean> => {
 	const currentGraph: WayfindingGraphDocument = graph ?? studioProject.graph;
 	const currentNodeIds = new Set(currentGraph.nodes
 		.filter((node: WayfindingNode): boolean => node.levelId === currentFloorId)
@@ -4065,8 +4223,10 @@ const requestRouteRegeneration = (): boolean => {
 		currentNodeIds.has(edge.from) || currentNodeIds.has(edge.to)
 	);
 
-	if (currentEdges.length > 0 && !window.confirm(
-		`Rebuild routes for ${currentFloor().name}? This replaces ${currentEdges.length} existing route segment${currentEdges.length === 1 ? '' : 's'}, including manual adjustments.`
+	if (currentEdges.length > 0 && !await confirmAction(
+		`This replaces ${currentEdges.length} existing route segment${currentEdges.length === 1 ? '' : 's'} on ${currentFloor().name}, including manual adjustments.`,
+		'Rebuild this floor’s routes?',
+		'Rebuild routes'
 	)) return false;
 
 	return generateCenterlineGraph();
@@ -4192,7 +4352,11 @@ const startNewProject = async (): Promise<void> => {
 	const hasAuthoredWork: boolean = studioProject.assets.length > 0
 		|| studioProject.destinations.length > 0
 		|| studioProject.floors.some((floor: WayfindingStudioFloor): boolean => floor.elements.length > 0);
-	if (hasAuthoredWork && !window.confirm('Start a new project? Download the current project first if you need a portable copy. Browser recovery for the current project will be replaced.')) return;
+	if (hasAuthoredWork && !await confirmAction(
+		'The current browser recovery will be replaced. Save the project first if you need a portable copy.',
+		'Start a new project?',
+		'Start new project'
+	)) return;
 	if (autosaveDatabase) await deleteAutosaveRecord(autosaveDatabase);
 	pendingRecovery = undefined;
 	localRecovery.hidden = true;
@@ -4384,6 +4548,12 @@ snapToEdgesInput.addEventListener('change', renderDrawingMode);
 snapRadiusInput.addEventListener('input', (): void => {
 	snapRadiusValue.value = snapRadiusInput.value;
 });
+detectDetailInput.addEventListener('input', (): void => {
+	detectDetailValue.value = detectDetailInput.value;
+});
+detectOpeningInput.addEventListener('input', (): void => {
+	detectOpeningValue.value = `${detectOpeningInput.value} px`;
+});
 detectGapInput.addEventListener('input', (): void => {
 	detectGapValue.value = detectGapInput.value;
 });
@@ -4406,6 +4576,7 @@ projectLanguageAdd.addEventListener('click', (): void => {
 	recordHistory(before);
 	renderStudioControls();
 	renderMetadataEditor();
+	renderSemanticEditor();
 });
 projectCategoryAdd.addEventListener('click', (): void => {
 	const category: string = projectCategoryName.value.trim();
@@ -4518,6 +4689,19 @@ stopMediaPlacement.addEventListener('click', (): void => {
 	coverageStatus.textContent = 'Image placement finished. Select an item to move, resize, duplicate, or delete it.';
 });
 for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.addEventListener('change', draw);
+try {
+	const storedExplorerState: string | null = window.localStorage.getItem(OBJECT_EXPLORER_STORAGE_KEY);
+	if (storedExplorerState !== null) objectExplorerPanel.open = storedExplorerState === 'true';
+} catch {
+	// The editor remains usable when storage is unavailable.
+}
+objectExplorerPanel.addEventListener('toggle', (): void => {
+	try {
+		window.localStorage.setItem(OBJECT_EXPLORER_STORAGE_KEY, String(objectExplorerPanel.open));
+	} catch {
+		// The collapsed state is a convenience, not project data.
+	}
+});
 showAllLayers.addEventListener('click', (): void => {
 	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = true;
 	draw();
@@ -4852,8 +5036,8 @@ cellSizeInput.addEventListener('change', (): void => { resetMaskGrid(); renderRe
 toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
-requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', requestRouteRegeneration);
-routeBuildButton.addEventListener('click', requestRouteRegeneration);
+requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', (): void => { void requestRouteRegeneration(); });
+routeBuildButton.addEventListener('click', (): void => { void requestRouteRegeneration(); });
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
