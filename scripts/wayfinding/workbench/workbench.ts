@@ -168,7 +168,7 @@ const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
-const STUDIO_VERSION = '0.14';
+const STUDIO_VERSION = '0.15';
 const OBJECT_EXPLORER_STORAGE_KEY = 'wallboard-wayfinding-studio:layers-open';
 
 const requireElement = <T extends Element>(selector: string): T => {
@@ -283,6 +283,7 @@ const shortcutDialog = requireElement<HTMLDialogElement>('#shortcut-dialog');
 const shortcutCloseButton = requireElement<HTMLButtonElement>('#shortcut-close');
 const toolTitle = requireElement<HTMLElement>('#tool-title');
 const toolHelp = requireElement<HTMLElement>('#tool-help');
+const projectPanel = requireElement<HTMLElement>('.project-panel');
 const projectContext = requireElement<HTMLElement>('#project-context');
 const projectContextName = requireElement<HTMLElement>('#project-context-name');
 const projectContextSource = requireElement<HTMLElement>('#project-context-source');
@@ -706,6 +707,12 @@ const renderProjectContext = (): void => {
 		? openedProjectFileName ? `Saved to ${openedProjectFileName}` : 'Saved copy is current'
 		: portableState === 'dirty' ? 'Unsaved file changes' : 'Not saved to file';
 	projectContext.dataset.portable = portableState;
+	projectPanel.dataset.hasContent = String(Boolean(
+		floor?.backgroundAssetId
+		|| floor?.elements.length
+		|| studioProject.assets.length
+		|| studioProject.destinations.length
+	));
 };
 
 const renderDrawingMode = (): void => {

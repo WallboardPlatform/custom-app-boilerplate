@@ -10,7 +10,7 @@
 	<header class="topbar">
 		<div class="product-title">
 			<div class="brand-mark" aria-hidden="true">W</div>
-			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.14</small></div>
+			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.15</small></div>
 		</div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
 			<div class="toolbar-group">
@@ -53,7 +53,7 @@
 					<div><span>WORKING ON</span><strong id="project-context-name">Wayfinding project / Level 0</strong></div>
 					<dl>
 						<div><dt>Opened from</dt><dd id="project-context-source">New browser draft</dd></div>
-						<div><dt>Crash recovery</dt><dd id="project-context-recovery">Starting...</dd></div>
+						<div><dt>Local backup</dt><dd id="project-context-recovery">Starting...</dd></div>
 						<div><dt>Project file</dt><dd id="project-context-portable">Not saved to file</dd></div>
 					</dl>
 				</div>
@@ -61,6 +61,14 @@
 					<button id="studio-new-project" type="button">New project</button>
 					<button id="studio-open-project" type="button" class="secondary">Open project</button>
 				</div>
+				<details id="project-onboarding" class="onboarding-guide" open>
+					<summary><span>Start a map</span><small>Three steps from artwork to a testable route</small></summary>
+					<ol>
+						<li><strong>Add a floor plan</strong><span>Upload the background for the current floor.</span></li>
+						<li><strong>Trace visitor-facing areas</strong><span>Draw rooms, walkable space, doors, and a You are here point.</span></li>
+						<li><strong>Build and preview routes</strong><span>Use Route edit, then verify destinations in Route preview.</span></li>
+					</ol>
+				</details>
 				<input id="studio-project-file" type="file" accept="application/json,.json,.wbwayfinding" hidden>
 				<label>Project name<input id="studio-project-name" type="text" value="Wayfinding project"></label>
 				<details class="floor-manager" open>
@@ -78,50 +86,60 @@
 				<details class="project-defaults">
 					<summary><span>Project settings</span><small>Languages, categories, and shared appearance</small></summary>
 					<div class="disclosure-body defaults-grid">
-						<h3>Languages</h3>
-						<p class="field-note">The default language is required. Add every visitor-facing language used by destinations.</p>
-						<div id="project-language-list" class="settings-list"></div>
-						<div class="inline-add">
-							<input id="project-language-code" type="text" maxlength="12" placeholder="Code, e.g. hu" aria-label="Language code">
-							<input id="project-language-label" type="text" placeholder="Language name" aria-label="Language name">
-							<button id="project-language-add" type="button" class="secondary">Add</button>
-						</div>
-						<h3>Destination categories</h3>
-						<div id="project-category-list" class="settings-list"></div>
-						<div class="inline-add">
-							<input id="project-category-name" type="text" placeholder="New category" aria-label="New destination category">
-							<button id="project-category-add" type="button" class="secondary">Add</button>
-						</div>
-						<h3>Rooms and areas</h3>
-						<div class="field-pair">
-							<label>Room opacity %<input id="default-location-opacity" type="number" min="0" max="100" step="1"></label>
-							<label>Room 3D height<input id="default-location-height" type="number" min="0" max="100" step="1"></label>
-						</div>
-						<div class="field-pair">
-							<label>Walkable opacity %<input id="default-walkable-opacity" type="number" min="0" max="100" step="1"></label>
-							<label>Blocked opacity %<input id="default-obstacle-opacity" type="number" min="0" max="100" step="1"></label>
-						</div>
-						<button id="randomize-location-colors" type="button" class="secondary">Give existing rooms distinct colors</button>
-						<h3>Labels and images</h3>
-						<div class="field-pair">
-							<label>Label font<select id="default-label-font"><option value="sans-serif">Sans serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></label>
-							<label>Label size<input id="default-label-size" type="number" min="6" max="512" step="1"></label>
-						</div>
-						<div class="field-pair">
-							<label>Icon size<input id="default-icon-size" type="number" min="8" max="1024" step="1"></label>
-							<label>Logo size<input id="default-logo-size" type="number" min="8" max="1024" step="1"></label>
-						</div>
-						<h3>Route appearance</h3>
-						<div class="field-pair">
-							<label>Route color<input id="default-route-color" type="color"></label>
-							<label>Route width<input id="default-route-width" type="number" min="1" max="64" step="1"></label>
-						</div>
-						<div class="field-pair">
-							<label>Corner rounding<input id="default-route-radius" type="number" min="0" max="200" step="1"></label>
-							<label>Animation<select id="default-route-animation"><option value="flow">Flow to destination</option><option value="pulse">Pulse</option><option value="none">None</option></select></label>
-						</div>
-						<label>Animation speed<input id="default-route-speed" type="range" min="1" max="300" step="1"><output id="default-route-speed-value"></output></label>
-						<p class="field-note">Defaults apply to new items. Existing items keep their explicit overrides.</p>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>Languages</h3><span>Visitor-facing content</span></div>
+							<p class="field-note">Add every language that destinations will use. Edit translated names and descriptions on each destination.</p>
+							<div id="project-language-list" class="settings-list"></div>
+							<div class="inline-add language-add">
+								<input id="project-language-code" type="text" maxlength="12" placeholder="Code" aria-label="Language code">
+								<input id="project-language-label" type="text" placeholder="Language name" aria-label="Language name">
+								<button id="project-language-add" type="button" class="secondary">Add</button>
+							</div>
+						</section>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>Destination categories</h3><span>Directory filters</span></div>
+							<div id="project-category-list" class="settings-list category-list"></div>
+							<div class="inline-add category-add">
+								<input id="project-category-name" type="text" placeholder="New category" aria-label="New destination category">
+								<button id="project-category-add" type="button" class="secondary">Add</button>
+							</div>
+						</section>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>Rooms and areas</h3><span>Default map geometry</span></div>
+							<div class="field-pair">
+								<label>Room opacity<input id="default-location-opacity" type="number" min="0" max="100" step="1"><span class="unit">%</span></label>
+								<label>3D height<input id="default-location-height" type="number" min="0" max="100" step="1"></label>
+							</div>
+							<div class="field-pair">
+								<label>Walkable opacity<input id="default-walkable-opacity" type="number" min="0" max="100" step="1"><span class="unit">%</span></label>
+								<label>Blocked opacity<input id="default-obstacle-opacity" type="number" min="0" max="100" step="1"><span class="unit">%</span></label>
+							</div>
+							<button id="randomize-location-colors" type="button" class="secondary full-width-action">Give rooms distinct colors</button>
+						</section>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>Labels and images</h3><span>Default asset sizing</span></div>
+							<div class="field-pair">
+								<label>Label font<select id="default-label-font"><option value="sans-serif">Sans serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></label>
+								<label>Label size<input id="default-label-size" type="number" min="6" max="512" step="1"></label>
+							</div>
+							<div class="field-pair">
+								<label>Icon size<input id="default-icon-size" type="number" min="8" max="1024" step="1"></label>
+								<label>Logo size<input id="default-logo-size" type="number" min="8" max="1024" step="1"></label>
+							</div>
+						</section>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>Route appearance</h3><span>Preview and runtime defaults</span></div>
+							<div class="field-pair">
+								<label>Route color<input id="default-route-color" type="color"></label>
+								<label>Route width<input id="default-route-width" type="number" min="1" max="64" step="1"></label>
+							</div>
+							<div class="field-pair">
+								<label>Corner rounding<input id="default-route-radius" type="number" min="0" max="200" step="1"></label>
+								<label>Animation<select id="default-route-animation"><option value="flow">Flow to destination</option><option value="pulse">Pulse</option><option value="none">None</option></select></label>
+							</div>
+							<label class="range-field">Animation speed <output id="default-route-speed-value"></output><input id="default-route-speed" type="range" min="1" max="300" step="1"></label>
+							<p class="field-note">These defaults apply to new items. Existing overrides stay unchanged.</p>
+						</section>
 					</div>
 				</details>
 				<div id="local-recovery" class="local-recovery" hidden>
@@ -247,10 +265,11 @@
 				</div>
 				<div class="route-editor-step">
 					<h3>3. Manual adjustments</h3>
+					<p class="concise-help">Select a segment to move its points, draw only the missing connection, or reposition a destination endpoint.</p>
 					<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
-						<button type="button" data-tool="anchor" data-shortcut="A" title="Move or create the route endpoint for a selected destination">Place endpoint</button>
-						<button type="button" data-tool="draw" data-shortcut="E" title="Draw a missing route segment between existing or new route points">Draw segment</button>
 						<button type="button" data-tool="graph" data-shortcut="X" title="Select route segments and drag their points">Edit network</button>
+						<button type="button" data-tool="draw" data-shortcut="E" title="Draw a missing route segment between existing or new route points">Draw segment</button>
+						<button type="button" data-tool="anchor" data-shortcut="A" title="Move or create the route endpoint for a selected destination">Place endpoint</button>
 					</div>
 					<div id="edge-draft" class="edge-draft" hidden>
 						<strong>ROUTE DRAFT</strong>

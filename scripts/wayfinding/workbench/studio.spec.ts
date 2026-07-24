@@ -146,7 +146,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.14');
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.15');
 	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview']);
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
@@ -191,6 +191,41 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	expect(project.floors[0].elements.map((element): string => element.type)).toEqual(['location', 'origin']);
 	expect(project.floors[0].elements[0].geometry).toHaveLength(5);
 	expect(errors).toEqual([]);
+});
+
+test('keeps first-time guidance and authoring controls cohesive at the sidebar width', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.locator('#project-onboarding')).toBeVisible();
+
+	await page.locator('.project-defaults > summary').click();
+	await page.locator('.builtin-icon-picker > summary').click();
+	await page.locator('.layer-panel > summary').click();
+
+	const overflowingControls = await page.locator(
+		'.project-defaults button, .project-defaults input, .project-defaults select, .builtin-icon span, .layer-actions button, #autosave-status, #mask-status'
+	).evaluateAll((elements): string[] => elements
+		.filter((element): boolean => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1)
+		.map((element): string => `${element.tagName.toLowerCase()}#${element.id}.${element.className}:${element.textContent?.trim() ?? ''}`));
+	expect(overflowingControls).toEqual([]);
+	await expect(page.locator('.builtin-icon[title="Place Restroom"] span')).toHaveText('Restroom');
+	await expect(page.locator('.layer-actions button')).toHaveText(['Show all', 'Hide all']);
+
+	const canvas = page.locator('#stage');
+	await page.locator('[data-tool="location"]').click();
+	await canvas.click({ position: { x: 220, y: 280 } });
+	await canvas.click({ position: { x: 420, y: 280 } });
+	await canvas.click({ position: { x: 420, y: 440 } });
+	await canvas.click({ position: { x: 220, y: 440 } });
+	await page.locator('#semantic-finish').click();
+	await expect(page.locator('#project-onboarding')).toBeHidden();
+
+	await page.locator('#workspace-route-edit').click();
+	await expect(page.locator('.authoring-tools button')).toHaveText(['Edit network', 'Draw segment', 'Place endpoint']);
+	await expect(page.locator('.route-editor-step h3')).toHaveText([
+		'1. Confirm pedestrian space',
+		'2. Build routes',
+		'3. Manual adjustments'
+	]);
 });
 
 test('saves back to an opened project file handle and keeps Save as separate', async ({ page }) => {
