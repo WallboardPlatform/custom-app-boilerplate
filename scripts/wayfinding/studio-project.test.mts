@@ -10,6 +10,7 @@ import {
 	importAnnotatedWayfindingSvg,
 	migrateWayfindingArtifacts,
 	parseWayfindingStudioProject,
+	repairWayfindingStudioProject,
 	renderWayfindingFloorSvg,
 	synchronizeWayfindingStudioGraph,
 	validateWayfindingStudioDelivery,
@@ -99,6 +100,66 @@ void test('creates a portable project and migrates the evidence-only contract', 
 	assert.equal(migrated.destinations[0].id, 'gallery');
 	assert.equal(parseWayfindingStudioProjectSource(fs.readFileSync(path.resolve('templates', 'wayfinding-studio-project.json'), 'utf8')).floors[0].id, 'level-0');
 	assert.equal(parseWayfindingStudioProjectSource(fs.readFileSync(path.resolve('examples', 'veszprem-wayfinding', 'veszprem-downtown.wbwayfinding'), 'utf8')).destinations.length, 36);
+});
+
+void test('recovers bounded geometry without resizing the floor or discarding valid project data', () => {
+	const project = createWayfindingStudioProject('recoverable');
+	project.floors[0].width = 100;
+	project.floors[0].height = 80;
+	project.floors[0].elements.push({
+		...confirmed,
+		floorId: 'level-0',
+		geometry: [{ x: 20, y: 20 }, { x: 120, y: 20 }, { x: 120, y: 70 }, { x: 20, y: 70 }],
+		id: 'walkable-overflow',
+		type: 'walkable'
+	});
+	project.graph.nodes.push({ id: 'valid-node', kind: 'route', levelId: 'level-0', x: 40, y: 40 });
+
+	assert.throws((): void => { parseWayfindingStudioProject(JSON.parse(JSON.stringify(project))); }, /out-of-bounds/);
+	const recovered = repairWayfindingStudioProject(JSON.parse(JSON.stringify(project)));
+	const polygon = recovered.project.floors[0].elements[0];
+	assert.equal(recovered.project.floors[0].width, 100);
+	assert.equal(recovered.project.graph.nodes[0].id, 'valid-node');
+	assert.equal(recovered.repairs.length, 1);
+	assert.equal(recovered.repairs[0].code, 'clipped-polygon');
+	assert.equal(polygon.type, 'walkable');
+
+	if (!('geometry' in polygon)) assert.fail('Expected polygon geometry');
+	assert.equal(Math.max(...polygon.geometry.map((point): number => point.x)), 100);
+	assert.equal(polygon.status, 'proposed');
+	assert.equal(parseWayfindingStudioProject(recovered.project).projectId, 'recoverable');
+});
+
+void test('preserves door route anchors and their connected segments during synchronization', () => {
+	const project = createWayfindingStudioProject('door-routing');
+	project.floors[0].elements.push({
+		...confirmed,
+		angle: 0,
+		floorId: 'level-0',
+		id: 'meeting-room-door',
+		length: 32,
+		point: { x: 80, y: 60 },
+		type: 'door'
+	});
+	project.graph.nodes.push(
+		{ id: 'corridor', kind: 'route', levelId: 'level-0', x: 30, y: 60 },
+		{ id: 'semantic:meeting-room-door', kind: 'route', levelId: 'level-0', semanticElementId: 'meeting-room-door', x: 80, y: 60 }
+	);
+	project.graph.edges.push({
+		bidirectional: true,
+		from: 'corridor',
+		geometry: [{ x: 30, y: 60 }, { x: 80, y: 60 }],
+		id: 'corridor-to-door',
+		kind: 'walk',
+		reviewStatus: 'proposed',
+		to: 'semantic:meeting-room-door',
+		traversal: 'indoor-corridor'
+	});
+
+	synchronizeWayfindingStudioGraph(project);
+
+	assert.ok(project.graph.nodes.some((node): boolean => node.id === 'semantic:meeting-room-door'));
+	assert.ok(project.graph.edges.some((edge): boolean => edge.id === 'corridor-to-door'));
 });
 
 void test('generates stable semantic SVG layers and a runtime bundle', () => {

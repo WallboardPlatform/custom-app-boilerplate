@@ -164,6 +164,12 @@ export interface WayfindingStudioIssue {
 	severity: 'error' | 'warning';
 }
 
+export interface WayfindingStudioRepair {
+	code: 'clipped-polygon' | 'clamped-element' | 'clamped-graph-node' | 'clipped-edge';
+	elementIds: string[];
+	message: string;
+}
+
 export interface WayfindingRuntimeBundle {
 	assets: WayfindingStudioAsset[];
 	contractVersion: 1;
@@ -230,7 +236,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 
 const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
-export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioProject => {
+const assertWayfindingStudioProjectShape: (value: unknown) => asserts value is WayfindingStudioProject = (value: unknown): asserts value is WayfindingStudioProject => {
 	if (!isRecord(value)
 		|| value.contractVersion !== 1
 		|| !Array.isArray(value.assets)
@@ -246,13 +252,131 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 		|| !isRecord(value.delivery.evidence)) {
 		throw new Error('The selected file is not a Wallboard Wayfinding Studio project.');
 	}
+};
 
-	const project: WayfindingStudioProject = value as unknown as WayfindingStudioProject;
+export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioProject => {
+	assertWayfindingStudioProjectShape(value);
+
+	const project: WayfindingStudioProject = value;
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
 
 	return project;
+};
+
+const clampPointToFloor = (point: WayfindingPoint, floor: WayfindingStudioFloor): WayfindingPoint => ({
+	x: Math.max(0, Math.min(floor.width, point.x)),
+	y: Math.max(0, Math.min(floor.height, point.y))
+});
+
+const clipPolygonBoundary = (
+	points: WayfindingPoint[],
+	inside: (point: WayfindingPoint) => boolean,
+	intersection: (left: WayfindingPoint, right: WayfindingPoint) => WayfindingPoint
+): WayfindingPoint[] => {
+	const output: WayfindingPoint[] = [];
+
+	for (let index = 0; index < points.length; index += 1) {
+		const current: WayfindingPoint = points[index];
+		const previous: WayfindingPoint = points[(index - 1 + points.length) % points.length];
+		const currentInside: boolean = inside(current);
+		const previousInside: boolean = inside(previous);
+
+		if (currentInside) {
+			if (!previousInside) output.push(intersection(previous, current));
+			output.push(current);
+		} else if (previousInside) output.push(intersection(previous, current));
+	}
+
+	return output;
+};
+
+const clipPolygonToFloor = (points: WayfindingPoint[], floor: WayfindingStudioFloor): WayfindingPoint[] => {
+	let clipped: WayfindingPoint[] = points.filter(finitePoint);
+	const verticalIntersection = (x: number) => (left: WayfindingPoint, right: WayfindingPoint): WayfindingPoint => {
+		const ratio: number = (x - left.x) / (right.x - left.x);
+
+		return { x, y: left.y + (right.y - left.y) * ratio };
+	};
+	const horizontalIntersection = (y: number) => (left: WayfindingPoint, right: WayfindingPoint): WayfindingPoint => {
+		const ratio: number = (y - left.y) / (right.y - left.y);
+
+		return { x: left.x + (right.x - left.x) * ratio, y };
+	};
+
+	clipped = clipPolygonBoundary(clipped, (point): boolean => point.x >= 0, verticalIntersection(0));
+	clipped = clipPolygonBoundary(clipped, (point): boolean => point.x <= floor.width, verticalIntersection(floor.width));
+	clipped = clipPolygonBoundary(clipped, (point): boolean => point.y >= 0, horizontalIntersection(0));
+	clipped = clipPolygonBoundary(clipped, (point): boolean => point.y <= floor.height, horizontalIntersection(floor.height));
+
+	return clipped.filter((point: WayfindingPoint, index: number): boolean => {
+		const previous: WayfindingPoint | undefined = clipped[(index - 1 + clipped.length) % clipped.length];
+
+		return !previous || point.x !== previous.x || point.y !== previous.y;
+	});
+};
+
+export const repairWayfindingStudioProject = (value: unknown): { project: WayfindingStudioProject; repairs: WayfindingStudioRepair[] } => {
+	assertWayfindingStudioProjectShape(value);
+	const project: WayfindingStudioProject = JSON.parse(JSON.stringify(value)) as WayfindingStudioProject;
+	const repairs: WayfindingStudioRepair[] = [];
+
+	for (const floor of project.floors) {
+		for (const element of floor.elements) {
+			if ('geometry' in element && element.geometry.some((point: WayfindingPoint): boolean => !pointInFloor(point, floor))) {
+				const clipped: WayfindingPoint[] = clipPolygonToFloor(element.geometry, floor);
+
+				if (clipped.length < 3) throw new Error(`Polygon '${element.id}' lies outside floor '${floor.id}' and cannot be recovered automatically.`);
+				element.geometry = clipped;
+				element.status = 'proposed';
+				repairs.push({
+					code: 'clipped-polygon',
+					elementIds: [element.id],
+					message: `Clipped '${element.id}' to the ${floor.name} boundary. Review its edge before delivery.`
+				});
+			} else if ('point' in element && !pointInFloor(element.point, floor)) {
+				element.point = clampPointToFloor(element.point, floor);
+				element.status = 'proposed';
+				repairs.push({
+					code: 'clamped-element',
+					elementIds: [element.id],
+					message: `Moved '${element.id}' to the nearest point inside ${floor.name}.`
+				});
+			}
+		}
+
+		for (const node of project.graph.nodes.filter((candidate: WayfindingNode): boolean => candidate.levelId === floor.id)) {
+			if (pointInFloor(node, floor)) continue;
+			Object.assign(node, clampPointToFloor(node, floor));
+			repairs.push({
+				code: 'clamped-graph-node',
+				elementIds: [node.id],
+				message: `Moved route node '${node.id}' inside ${floor.name}.`
+			});
+		}
+
+		for (const edge of project.graph.edges) {
+			if (!edge.geometry?.some((point: WayfindingPoint): boolean => !pointInFloor(point, floor))) continue;
+			const from: WayfindingNode | undefined = project.graph.nodes.find((node: WayfindingNode): boolean => node.id === edge.from);
+			const to: WayfindingNode | undefined = project.graph.nodes.find((node: WayfindingNode): boolean => node.id === edge.to);
+
+			if (from?.levelId !== floor.id || to?.levelId !== floor.id) continue;
+			edge.geometry = edge.geometry.map((point: WayfindingPoint): WayfindingPoint => clampPointToFloor(point, floor));
+			edge.reviewStatus = 'proposed';
+			repairs.push({
+				code: 'clipped-edge',
+				elementIds: [edge.id],
+				message: `Clipped route segment '${edge.id}' to ${floor.name}.`
+			});
+		}
+	}
+
+	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
+
+	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
+
+	return { project, repairs };
 };
 
 export const migrateWayfindingArtifacts = (
@@ -690,6 +814,8 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 			managedNodes.push({ id: managedNodeId(element.id), kind: 'transition', levelId: element.floorId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
 		} else if (element.type === 'poi' && element.destinationId) {
 			managedNodes.push({ id: managedNodeId(element.id), kind: 'location', levelId: element.floorId, locationId: element.destinationId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
+		} else if (element.type === 'door') {
+			managedNodes.push({ id: managedNodeId(element.id), kind: 'route', levelId: element.floorId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
 		} else if (element.type === 'location' && element.destinationId) {
 			const door: WayfindingStudioDoorElement | undefined = elements.find((candidate: WayfindingStudioElement): candidate is WayfindingStudioDoorElement => candidate.type === 'door' && candidate.locationId === element.id);
 			const anchor: WayfindingPoint = door?.point ?? element.geometry[0] ?? { x: 0, y: 0 };

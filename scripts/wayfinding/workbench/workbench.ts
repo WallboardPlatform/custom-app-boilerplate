@@ -27,6 +27,7 @@ import {
 	createWayfindingRuntimeBundle,
 	createWayfindingStudioProject,
 	parseWayfindingStudioProject,
+	repairWayfindingStudioProject,
 	synchronizeWayfindingStudioGraph,
 	touchWayfindingStudioProject,
 	validateWayfindingStudioDelivery,
@@ -42,6 +43,7 @@ import {
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioPolygonPresentation,
 	type WayfindingStudioProject,
+	type WayfindingStudioRepair,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
 import { WayfindingScene3d, wayfindingPolygonPresentationDefaults } from './scene3d';
@@ -50,6 +52,7 @@ type SemanticPolygonTool = 'location' | 'obstacle' | 'walkable';
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph' | 'select' | SemanticPolygonTool | 'door' | 'poi' | 'origin' | 'transition' | 'label' | 'icon' | 'logo';
 type DrawingMode = 'lasso' | 'points' | 'smart';
 type ProjectOrigin = 'local-recovery' | 'new' | 'portable-file';
+type WorkspaceMode = 'map' | 'route-edit' | 'route-preview';
 
 interface ColorSample {
 	b: number;
@@ -201,6 +204,10 @@ const routeProfile = requireElement<HTMLSelectElement>('#route-profile');
 const routeResult = requireElement<HTMLElement>('#route-result');
 const routeBuildButton = requireElement<HTMLButtonElement>('#route-build');
 const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
+const studioNotice = requireElement<HTMLElement>('#studio-notice');
+const workspaceMapButton = requireElement<HTMLButtonElement>('#workspace-map');
+const workspaceRoutePreviewButton = requireElement<HTMLButtonElement>('#workspace-route-preview');
+const workspaceRouteEditButton = requireElement<HTMLButtonElement>('#workspace-route-edit');
 const routeSetupChecklist = requireElement<HTMLElement>('#route-setup-checklist');
 const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file');
 const undoButton = requireElement<HTMLButtonElement>('#undo');
@@ -269,6 +276,7 @@ let selectedSemanticVertexIndex: number | undefined;
 let insertPointForSemanticId: string | undefined;
 let simulatedRoute: ReturnType<WayfindingGraph['route']>;
 let viewMode: '2d' | '3d' = '2d';
+let workspaceMode: WorkspaceMode = 'map';
 let pendingMediaAssetId: string | undefined;
 let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
 let dragHistoryState: HistoryState | undefined;
@@ -391,11 +399,18 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
-const simulatedRoutePoints = (): WayfindingPoint[] => simulatedRoute?.path
+const simulatedRoutePoints = (): WayfindingPoint[] => simplifyRouteForDisplay(simulatedRoute?.path
 	.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
-	.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y })) ?? [];
+	.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y }))
+	.reduce((points: WayfindingPoint[], point: WayfindingPoint): WayfindingPoint[] => {
+		const previous: WayfindingPoint | undefined = points[points.length - 1];
+		if (!previous || previous.x !== point.x || previous.y !== point.y) points.push(point);
+
+		return points;
+	}, []) ?? []);
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
+		if (workspaceMode === 'route-preview' && routeToSemanticElement(elementId)) return;
 		selectedSemanticId = elementId;
 		selectedSemanticVertexIndex = undefined;
 		selectedEdgeId = undefined;
@@ -482,6 +497,15 @@ const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 
 	renderProjectContext();
 };
 
+let noticeTimer: number | undefined;
+const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning'): void => {
+	studioNotice.textContent = message;
+	studioNotice.dataset.kind = kind;
+	studioNotice.hidden = false;
+	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
+	noticeTimer = window.setTimeout((): void => { studioNotice.hidden = true; }, kind === 'error' ? 14_000 : 10_000);
+};
+
 const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
 	simulatedRoute = undefined;
 	routeResult.textContent = message;
@@ -510,8 +534,34 @@ const setViewMode = (mode: '2d' | '3d'): void => {
 	if (showing3d) {
 		stageEmpty.classList.add('hidden');
 		refresh3d();
-		coverageStatus.textContent = '3D preview: drag to rotate, wheel to zoom, and select a shape to edit it.';
+		coverageStatus.textContent = workspaceMode === 'route-preview'
+			? '3D route preview: click a destination to draw guidance from the selected start.'
+			: '3D preview: drag to rotate, wheel to zoom, and select a shape to edit it.';
 	}
+};
+
+const setWorkspaceMode = (mode: WorkspaceMode): void => {
+	workspaceMode = mode;
+	document.body.dataset.workspace = mode;
+	for (const [button, value] of [
+		[workspaceMapButton, 'map'],
+		[workspaceRoutePreviewButton, 'route-preview'],
+		[workspaceRouteEditButton, 'route-edit']
+	] as const) {
+		const active: boolean = mode === value;
+		button.classList.toggle('active', active);
+		button.setAttribute('aria-pressed', String(active));
+	}
+	if (mode === 'route-edit' && viewMode === '3d') setViewMode('2d');
+	if (mode === 'route-preview') {
+		coverageStatus.textContent = 'Route preview: choose a destination or click one directly on the map.';
+	} else if (mode === 'route-edit') {
+		coverageStatus.textContent = 'Route edit: define walkable space, build the network, then inspect or adjust segments.';
+	} else {
+		coverageStatus.textContent = 'Map edit: add, select, and style map elements.';
+	}
+	renderReview();
+	draw();
 };
 
 const openAutosaveDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject): void => {
@@ -1966,6 +2016,66 @@ const nearestSemantic = (pointValue: WayfindingPoint): WayfindingStudioElement |
 	return Math.hypot(element.point.x - pointValue.x, element.point.y - pointValue.y) <= 18 / scale;
 });
 
+function routeDestinationAt(pointValue: WayfindingPoint): WayfindingStudioElement | undefined {
+	return [...currentElements()].reverse().find((element: WayfindingStudioElement): boolean => {
+		if (!((element.type === 'location' || element.type === 'poi') && element.destinationId)) return false;
+		if (element.type === 'location') return pointInPolygon(pointValue, element.geometry);
+		if (element.type !== 'poi') return false;
+
+		return Math.hypot(element.point.x - pointValue.x, element.point.y - pointValue.y) <= Math.max(24, 24 / scale);
+	});
+}
+
+function simulateSelectedRoute(): boolean {
+	syncStudioGraph();
+	const startId: string = routeStart.value;
+	const destinationNodeId: string = routeDestination.value;
+	if (!startId || !destinationNodeId) {
+		routeResult.textContent = 'Add an origin and a routeable destination entrance first.';
+		routeClearButton.disabled = true;
+		return false;
+	}
+	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationNodeId, { profile: routeProfile.value as 'standard' | 'step-free' });
+	if (!simulatedRoute) {
+		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
+		routeClearButton.disabled = true;
+		draw();
+		return false;
+	}
+	const floors: string[] = [...new Set(simulatedRoute.nodeIds
+		.map((id: string): string => studioProject.graph.nodes.find((node: WayfindingNode): boolean => node.id === id)?.levelId ?? ''))]
+		.filter(Boolean);
+	routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${floors.join(' -> ')}`;
+	routeClearButton.disabled = false;
+	draw();
+
+	return true;
+}
+
+function routeToSemanticElement(elementId: string): boolean {
+	const element: WayfindingStudioElement | undefined = studioProject.floors
+		.flatMap((floor: WayfindingStudioFloor): WayfindingStudioElement[] => floor.elements)
+		.find((candidate: WayfindingStudioElement): boolean => candidate.id === elementId);
+	if (!element || !((element.type === 'location' || element.type === 'poi') && element.destinationId)) return false;
+	const destinationNode: WayfindingNode | undefined = studioProject.graph.nodes.find((node: WayfindingNode): boolean =>
+		node.kind === 'location' && (node.semanticElementId === element.id || node.locationId === element.destinationId)
+	);
+	if (!destinationNode) {
+		routeResult.textContent = 'This destination has no route entrance yet. Add or link a door in Route edit.';
+		return false;
+	}
+	const matchingOption: HTMLOptionElement | undefined = Array.from(routeDestination.options).find((option: HTMLOptionElement): boolean => option.value === destinationNode.id);
+	if (!matchingOption) renderRouteSimulator();
+	routeDestination.value = destinationNode.id;
+	selectedDestinationId = element.destinationId;
+	selectedSemanticId = element.id;
+	selectedSemanticVertexIndex = undefined;
+	selectedEdgeId = undefined;
+	scene3d.selectElement(element.id);
+
+	return simulateSelectedRoute();
+}
+
 const distanceToPolygonBoundary = (pointValue: WayfindingPoint, geometry: WayfindingPoint[]): number => {
 	return geometry.reduce((minimum: number, vertex: WayfindingPoint, index: number): number => {
 		return Math.min(minimum, distanceToSegment(pointValue, vertex, geometry[(index + 1) % geometry.length]));
@@ -2121,7 +2231,7 @@ const draw = (): void => {
 	}
 	drawSemanticElements();
 
-	if (mask.length > 0) {
+	if (workspaceMode === 'route-edit' && mask.length > 0) {
 		context.fillStyle = 'rgba(0, 190, 158, 0.32)';
 
 		for (let row = 0; row < maskRows; row += 1) {
@@ -2131,17 +2241,19 @@ const draw = (): void => {
 		}
 	}
 
-	for (const sample of colorSamples) {
-		context.beginPath();
-		context.arc((sample.column + 0.5) * cellSize(), (sample.row + 0.5) * cellSize(), 7 / scale, 0, Math.PI * 2);
-		context.fillStyle = `rgb(${sample.r}, ${sample.g}, ${sample.b})`;
-		context.fill();
-		context.lineWidth = 2 / scale;
-		context.strokeStyle = '#ffffff';
-		context.stroke();
+	if (workspaceMode === 'route-edit') {
+		for (const sample of colorSamples) {
+			context.beginPath();
+			context.arc((sample.column + 0.5) * cellSize(), (sample.row + 0.5) * cellSize(), 7 / scale, 0, Math.PI * 2);
+			context.fillStyle = `rgb(${sample.r}, ${sample.g}, ${sample.b})`;
+			context.fill();
+			context.lineWidth = 2 / scale;
+			context.strokeStyle = '#ffffff';
+			context.stroke();
+		}
 	}
 
-	if (graph) {
+	if (graph && workspaceMode === 'route-edit') {
 		for (const edge of graph.edges) {
 			const fromNode: WayfindingNode | undefined = graphNode(edge.from);
 			const toNode: WayfindingNode | undefined = graphNode(edge.to);
@@ -2215,12 +2327,11 @@ const draw = (): void => {
 			context.stroke();
 		}
 	}
-	if (simulatedRoute) {
-		const points = simulatedRoute.path.filter((routePoint): boolean => routePoint.levelId === currentFloorId);
+	if (simulatedRoute && workspaceMode === 'route-preview') {
+		const points: WayfindingPoint[] = simulatedRoutePoints();
 		if (points.length > 1) {
 			context.beginPath();
-			context.moveTo(points[0].x, points[0].y);
-			for (const point of points.slice(1)) context.lineTo(point.x, point.y);
+			traceRoundedRoute(context, points, 18);
 			context.lineWidth = 7 / scale;
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
@@ -2776,6 +2887,53 @@ const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[]
 	return points;
 };
 
+function simplifyRouteForDisplay(points: WayfindingPoint[]): WayfindingPoint[] {
+	const simplified: WayfindingPoint[] = points.map((point: WayfindingPoint): WayfindingPoint => ({ ...point }));
+	let changed = true;
+
+	while (changed && simplified.length > 2) {
+		changed = false;
+
+		for (let index = 1; index < simplified.length - 1; index += 1) {
+			if (!geometryContained([simplified[index - 1], simplified[index + 1]])) continue;
+			simplified.splice(index, 1);
+			changed = true;
+			break;
+		}
+	}
+
+	return simplified;
+}
+
+function traceRoundedRoute(target: CanvasRenderingContext2D, points: WayfindingPoint[], radius: number): void {
+	target.moveTo(points[0].x, points[0].y);
+
+	for (let index = 1; index < points.length - 1; index += 1) {
+		const previous: WayfindingPoint = points[index - 1];
+		const current: WayfindingPoint = points[index];
+		const next: WayfindingPoint = points[index + 1];
+		const incomingLength: number = Math.hypot(current.x - previous.x, current.y - previous.y);
+		const outgoingLength: number = Math.hypot(next.x - current.x, next.y - current.y);
+		const cornerRadius: number = Math.min(radius, incomingLength / 2, outgoingLength / 2);
+		const incomingRatio: number = incomingLength === 0 ? 0 : cornerRadius / incomingLength;
+		const outgoingRatio: number = outgoingLength === 0 ? 0 : cornerRadius / outgoingLength;
+		const entry: WayfindingPoint = {
+			x: current.x - (current.x - previous.x) * incomingRatio,
+			y: current.y - (current.y - previous.y) * incomingRatio
+		};
+		const exit: WayfindingPoint = {
+			x: current.x + (next.x - current.x) * outgoingRatio,
+			y: current.y + (next.y - current.y) * outgoingRatio
+		};
+
+		target.lineTo(entry.x, entry.y);
+		target.quadraticCurveTo(current.x, current.y, exit.x, exit.y);
+	}
+
+	const end: WayfindingPoint = points[points.length - 1];
+	target.lineTo(end.x, end.y);
+}
+
 const generateCenterlineGraph = (): boolean => {
 	const before: HistoryState = captureHistoryState();
 	const linkedDoors: number = linkUnassignedDoorsToNearbyLocations();
@@ -2956,8 +3114,9 @@ const insertSemanticVertex = (element: WayfindingStudioPolygonElement, point: Wa
 	return segment;
 };
 
-const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Promise<void> => {
-	studioProject = parseWayfindingStudioProject(loaded);
+const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Promise<WayfindingStudioRepair[]> => {
+	const recovered = repairWayfindingStudioProject(loaded);
+	studioProject = recovered.project;
 	project = studioProject.delivery;
 	graph = studioProject.graph;
 	destinationDocument = destinationDatasource();
@@ -2980,6 +3139,8 @@ const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Pr
 	renderProjectAssessment();
 	renderMetadataEditor();
 	await activateFloor(preferredFloorId ?? studioProject.floors[0].id);
+
+	return recovered.repairs;
 };
 
 const adoptCurrentProjectForAutosave = (savedAt?: string): void => {
@@ -3045,20 +3206,33 @@ const startNewProject = async (): Promise<void> => {
 };
 
 studioProjectFile.addEventListener('change', async (): Promise<void> => {
-	const loaded: unknown = await loadJsonFile<unknown>(studioProjectFile);
-	if (!loaded) return;
+	const file: File | undefined = studioProjectFile.files?.[0];
+	if (!file) return;
 	try {
-		await openStudioProject(loaded);
+		const loaded: unknown = JSON.parse(await file.text()) as unknown;
+		const repairs: WayfindingStudioRepair[] = await openStudioProject(loaded);
 		projectOrigin = 'portable-file';
-		openedProjectFileName = studioProjectFile.files?.[0]?.name;
-		portableSnapshot = JSON.stringify(studioProject);
+		openedProjectFileName = file.name;
+		portableSnapshot = repairs.length === 0 ? JSON.stringify(studioProject) : undefined;
 		lastLocalSaveAt = undefined;
 		adoptCurrentProjectForAutosave();
-		coverageStatus.textContent = `Opened ${studioProject.name}`;
+		if (repairs.length > 0) {
+			const details: string = repairs.map((repair: WayfindingStudioRepair): string => repair.message).join(' ');
+			showStudioNotice(`Opened with ${repairs.length} automatic repair${repairs.length === 1 ? '' : 's'}. ${details}`);
+			coverageStatus.textContent = 'Project recovered. Review the repaired geometry, then download a new portable project.';
+		} else {
+			showStudioNotice(`Opened ${studioProject.name}.`);
+			coverageStatus.textContent = `Opened ${studioProject.name}`;
+		}
 		renderProjectContext();
 	} catch (error) {
-		studioValidation.textContent = error instanceof Error ? error.message : 'The Studio project could not be opened.';
+		const detail: string = error instanceof Error ? error.message : 'The Studio project could not be opened.';
+		studioValidation.textContent = detail;
 		studioValidation.dataset.allowed = 'false';
+		showStudioNotice(detail, 'error');
+		coverageStatus.textContent = detail;
+	} finally {
+		studioProjectFile.value = '';
 	}
 });
 newProjectButton.addEventListener('click', (): void => { void startNewProject(); });
@@ -3166,27 +3340,7 @@ hideAllLayers.addEventListener('click', (): void => {
 	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = false;
 	draw();
 });
-requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (): void => {
-	syncStudioGraph();
-	const startId: string = routeStart.value;
-	const destinationIdValue: string = routeDestination.value;
-	if (!startId || !destinationIdValue) {
-		routeResult.textContent = 'Add an origin and a routeable destination entrance first.';
-		routeClearButton.disabled = true;
-		return;
-	}
-	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationIdValue, { profile: routeProfile.value as 'standard' | 'step-free' });
-	if (!simulatedRoute) {
-		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
-		routeClearButton.disabled = true;
-	}
-	else {
-		const floors: string[] = [...new Set(simulatedRoute.nodeIds.map((id: string): string => studioProject.graph.nodes.find((node: WayfindingNode): boolean => node.id === id)?.levelId ?? ''))].filter(Boolean);
-		routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${floors.join(' -> ')}`;
-		routeClearButton.disabled = false;
-	}
-	draw();
-});
+requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (): void => { simulateSelectedRoute(); });
 routeClearButton.addEventListener('click', (): void => {
 	clearSimulatedRoute('Route preview cleared. Choose Simulate route to draw it again.');
 });
@@ -3340,6 +3494,9 @@ deleteSelectionButton.addEventListener('click', deleteCurrentSelection);
 fitViewButton.addEventListener('click', fitView);
 view2dButton.addEventListener('click', (): void => { setViewMode('2d'); });
 view3dButton.addEventListener('click', (): void => { setViewMode('3d'); });
+workspaceMapButton.addEventListener('click', (): void => { setWorkspaceMode('map'); });
+workspaceRoutePreviewButton.addEventListener('click', (): void => { setWorkspaceMode('route-preview'); });
+workspaceRouteEditButton.addEventListener('click', (): void => { setWorkspaceMode('route-edit'); });
 reset3dViewButton.addEventListener('click', (): void => {
 	scene3d.resetCamera();
 	coverageStatus.textContent = currentFloor().camera3d ? 'Restored the saved 3D camera for this floor.' : 'Restored the default 3D camera.';
@@ -3538,6 +3695,15 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 
 	const floor: WayfindingStudioFloor = currentFloor();
 	if (imagePoint.x < 0 || imagePoint.y < 0 || imagePoint.x > floor.width || imagePoint.y > floor.height) {
+		pointerDown = false;
+		canvas.releasePointerCapture(event.pointerId);
+		return;
+	}
+
+	if (workspaceMode === 'route-preview') {
+		const destination: WayfindingStudioElement | undefined = routeDestinationAt(imagePoint);
+		if (destination) routeToSemanticElement(destination.id);
+		else routeResult.textContent = 'Click a room or point of interest, or choose a destination from the list.';
 		pointerDown = false;
 		canvas.releasePointerCapture(event.pointerId);
 		return;
@@ -3767,6 +3933,7 @@ destinationTableName = 'Destinations';
 canvas.classList.add('ready');
 stageEmpty.classList.add('hidden');
 setViewMode('2d');
+setWorkspaceMode('map');
 renderSemanticEditor();
 void (async (): Promise<void> => {
 	await activateFloor(currentFloorId);
