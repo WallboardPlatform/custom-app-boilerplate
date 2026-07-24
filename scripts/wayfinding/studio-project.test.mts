@@ -195,6 +195,40 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.equal(bundle.manifest.deliveryMode, 'route');
 });
 
+void test('preserves project languages, categories, and translated destination metadata in runtime output', () => {
+	const project = createWayfindingStudioProject('multilingual-directory');
+	project.categories = ['Dining', 'Services'];
+	project.defaultLanguage = 'en';
+	project.delivery.evidence.destinationMetadata.status = 'confirmed';
+	project.delivery.guidance.targetMode = 'directory';
+	project.languages = [
+		{ code: 'en', label: 'English' },
+		{ code: 'hu', label: 'Magyar' }
+	];
+	project.destinations = [{
+		category: 'Services',
+		description: 'Visitor information and ticketing.',
+		floor: 'level-0',
+		id: 'visitor-information',
+		name: 'Visitor information',
+		routeable: false,
+		translations: {
+			hu: {
+				description: 'Turisztikai információ és jegyértékesítés.',
+				name: 'Tourinform'
+			}
+		}
+	}];
+
+	const parsed = parseWayfindingStudioProject(JSON.parse(JSON.stringify(project)));
+	const bundle = createWayfindingRuntimeBundle(parsed);
+	assert.deepEqual(parsed.languages, project.languages);
+	assert.deepEqual(bundle.categories, ['Dining', 'Services']);
+	assert.equal(bundle.defaultLanguage, 'en');
+	assert.deepEqual(bundle.languages, project.languages);
+	assert.equal(bundle.destinations.Destinations.rows[0].translations?.hu?.name, 'Tourinform');
+});
+
 void test('keeps incomplete route drafts editable while blocking runtime export', () => {
 	const project = createWayfindingStudioProject('route-draft');
 	project.delivery.guidance.targetMode = 'route';

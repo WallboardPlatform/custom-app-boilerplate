@@ -55,14 +55,19 @@ Workflow:
 
 1. Create/open a `.wbwayfinding` project.
 2. Add floors and optional background artwork. Backgrounds may be customer-supplied, manually redrawn, or AI-produced; they are references, not topology.
-3. Draw locations, walkable areas, obstacles, doors, POIs, origins, transitions, labels, icons, and logos. Select mode moves items and polygon vertices. Select a vertex to nudge or delete it; double-click an edge or use **Add point on edge** to insert a projected point.
-4. Give paired cross-floor transitions the same `connectionId`; set type and accessibility from verified venue facts.
-5. Connect origin, transition, route, and location entrance nodes using explicit graph edges. Confirm each edge after source/site review.
-6. Simulate standard and step-free routes across floors. Clear the preview when comparing another route; changing map geometry invalidates the current preview automatically. Fix unreachable states, missing entrance-side doors, unintended shortcuts, and proposed corridor edges.
-7. Mark AI/imported elements `proposed`. Only a reviewer changes them to `confirmed`.
-8. Studio autosaves a local recovery draft in IndexedDB after edits. A reload offers explicit restore/discard actions and never silently replaces a project opened from disk. **Save project** still downloads the portable source of truth and is required for transfer, backup, or review. Runtime export is a separate acceptance gate: it blocks unsupported evidence, disconnected origins/destinations, missing confirmed room entrances or masks, routes leaving walkable space, missing required step-free paths, and unreviewed route elements/edges.
+3. In **Map**, draw and describe locations, walkable areas, obstacles, doors, POIs, origins, transitions, labels, icons, and logos. Use project settings for languages, categories, presentation defaults, and route appearance.
+4. In **Route edit**, build the initial centerline from reviewed pedestrian space and linked doors, then inspect or adjust individual segments. Rebuilding replaces manual route edits and requires confirmation.
+5. In **Route preview**, click a route-ready destination or choose it from the directory. Rooms without a linked public entrance are labeled unavailable instead of failing with an unexplained route error.
+6. Give paired cross-floor transitions the same `connectionId`; set type and accessibility from verified venue facts. Confirm imported or AI-proposed semantics only after review.
+7. Studio autosaves a recovery draft in IndexedDB. **Save** writes back to the opened file when the browser grants a file handle; **Save as** creates a portable copy. Runtime export is a separate acceptance gate and never replaces the editable project.
 
-`npm run wayfinding:workbench` remains an alias for the same Studio. Separate project/graph/mask/TABLE imports are available when consolidating existing artifacts.
+`npm run wayfinding:workbench` remains an alias for the same Studio.
+
+### Host boundary
+
+Wayfinding Studio is the complete standalone authoring product and canonical editor for `.wbwayfinding`. It owns project/file lifecycle, floors, background and reusable assets, semantic geometry, route generation and repair, validation, recovery, and runtime export.
+
+Keep the model, renderer, routing, and inspector logic host-neutral. A future Wallboard custom editor may embed a constrained host for editing an existing project property through the Wallboard message bridge, but it must not duplicate the full Studio or become the only way to author maps. Embedded editing excludes project creation, arbitrary file management, migration, and bulk asset workflows unless the host gains explicit platform support.
 
 ### 3D presentation
 

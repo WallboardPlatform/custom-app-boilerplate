@@ -11,10 +11,12 @@
 		"name": { "$ref": "#/$defs/nonEmptyString" },
 		"createdAt": { "$ref": "#/$defs/nonEmptyString" },
 		"updatedAt": { "$ref": "#/$defs/nonEmptyString" },
+		"defaultLanguage": { "$ref": "#/$defs/nonEmptyString" },
 		"defaults": { "$ref": "#/$defs/projectDefaults" },
 		"delivery": { "$ref": "wayfinding-project.schema.json" },
 		"assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
 		"categories": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
+		"languages": { "type": "array", "items": { "$ref": "#/$defs/language" } },
 		"floors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/floor" } },
 		"graph": {
 			"type": "object",
@@ -56,6 +58,15 @@
 				"extrusionHeight": { "type": "number", "minimum": 0, "maximum": 100 },
 				"fillColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
 				"fillOpacity": { "type": "number", "minimum": 0, "maximum": 1 }
+			}
+		},
+		"language": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["code", "label"],
+			"properties": {
+				"code": { "$ref": "#/$defs/nonEmptyString" },
+				"label": { "$ref": "#/$defs/nonEmptyString" }
 			}
 		},
 		"projectDefaults": {
@@ -214,7 +225,18 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"name": { "$ref": "#/$defs/nonEmptyString" },
-				"photoAssetIds": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true }
+				"photoAssetIds": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
+				"translations": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "object",
+						"additionalProperties": false,
+						"properties": {
+							"name": { "type": "string" },
+							"description": { "type": "string" }
+						}
+					}
+				}
 			}
 		}
 	}

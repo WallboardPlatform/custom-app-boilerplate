@@ -10,7 +10,7 @@
 	<header class="topbar">
 		<div class="product-title">
 			<div class="brand-mark" aria-hidden="true">W</div>
-			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.12</small></div>
+			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.13</small></div>
 		</div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
 			<div class="toolbar-group">
@@ -43,6 +43,7 @@
 			<span id="autosave-status" data-state="ready" title="Local recovery is ready">AUTOSAVE READY</span>
 			<span id="mask-status">NO MASK</span>
 			<strong id="coverage-status">Project ready</strong>
+			<output id="cursor-position" title="Pointer position in map pixels">x -, y -</output>
 		</div>
 	</header>
 	<main>
@@ -76,8 +77,22 @@
 					</div>
 				</details>
 				<details class="project-defaults">
-					<summary><span>Project defaults</span><small>Appearance for newly placed items and routes</small></summary>
+					<summary><span>Project settings</span><small>Languages, categories, and shared appearance</small></summary>
 					<div class="disclosure-body defaults-grid">
+						<h3>Languages</h3>
+						<p class="field-note">The default language is required. Add every visitor-facing language used by destinations.</p>
+						<div id="project-language-list" class="settings-list"></div>
+						<div class="inline-add">
+							<input id="project-language-code" type="text" maxlength="12" placeholder="Code, e.g. hu" aria-label="Language code">
+							<input id="project-language-label" type="text" placeholder="Language name" aria-label="Language name">
+							<button id="project-language-add" type="button" class="secondary">Add</button>
+						</div>
+						<h3>Destination categories</h3>
+						<div id="project-category-list" class="settings-list"></div>
+						<div class="inline-add">
+							<input id="project-category-name" type="text" placeholder="New category" aria-label="New destination category">
+							<button id="project-category-add" type="button" class="secondary">Add</button>
+						</div>
 						<h3>Rooms and areas</h3>
 						<div class="field-pair">
 							<label>Room opacity %<input id="default-location-opacity" type="number" min="0" max="100" step="1"></label>
@@ -87,6 +102,7 @@
 							<label>Walkable opacity %<input id="default-walkable-opacity" type="number" min="0" max="100" step="1"></label>
 							<label>Blocked opacity %<input id="default-obstacle-opacity" type="number" min="0" max="100" step="1"></label>
 						</div>
+						<button id="randomize-location-colors" type="button" class="secondary">Give existing rooms distinct colors</button>
 						<h3>Labels and images</h3>
 						<div class="field-pair">
 							<label>Label font<select id="default-label-font"><option value="sans-serif">Sans serif</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select></label>
@@ -134,6 +150,7 @@
 					<div class="trace-assist" id="trace-assist">
 						<label class="check" title="Moves authored points to a nearby strong color edge in the background image. Disable it for illustrated or text-heavy sources."><input id="snap-to-edges" type="checkbox" checked> Snap points to nearby image edges</label>
 						<label>Snap distance <output id="snap-radius-value">14</output><input id="snap-radius" type="range" min="4" max="32" step="2" value="14"></label>
+						<label id="detect-gap-control" hidden title="Bridges small breaks in an otherwise continuous detected border. Keep this low so neighboring rooms do not merge.">Detection gap tolerance <output id="detect-gap-value">3</output><input id="detect-gap" type="range" min="0" max="12" step="1" value="3"></label>
 					</div>
 				</div>
 				<div class="tool-grid" role="group" aria-label="Semantic authoring tool">
@@ -155,6 +172,10 @@
 						<button id="choose-media-asset" type="button" class="secondary">Choose image</button>
 						<button id="stop-media-placement" type="button" class="secondary" hidden>Stop placing</button>
 					</div>
+					<details class="builtin-icon-picker">
+						<summary><span>Built-in map symbols</span><small>Vector, offline, and reusable</small></summary>
+						<div id="builtin-icon-library" class="builtin-icon-library" aria-label="Built-in map symbols"></div>
+					</details>
 					<div id="media-asset-library" class="media-asset-library" aria-label="Reusable icon and logo assets"></div>
 					<input id="semantic-media-file" type="file" accept="image/*" hidden>
 				</div>
@@ -162,8 +183,9 @@
 					<strong>POLYGON DRAFT</strong><span id="semantic-draft-help">Tap each corner. Finish after at least three points.</span>
 					<div class="commands horizontal"><button id="semantic-finish" type="button">Finish</button><button id="semantic-cancel" type="button" class="secondary">Cancel</button></div>
 				</div>
-				<div class="layer-panel">
-					<div class="layer-panel-heading"><div><strong>Layer visibility</strong><span>Hide busy layers without deleting them.</span></div><div class="layer-actions"><button id="show-all-layers" type="button">Show all</button><button id="hide-all-layers" type="button">Hide all</button></div></div>
+				<details class="layer-panel" open>
+					<summary class="layer-panel-heading"><div><strong>Layer visibility</strong><span>Hide busy layers without deleting them.</span></div></summary>
+					<div class="layer-actions"><button id="show-all-layers" type="button">Show all</button><button id="hide-all-layers" type="button">Hide all</button></div>
 					<div class="layer-toggles">
 					<label class="check"><input type="checkbox" data-layer="location" checked> Locations</label>
 					<label class="check"><input type="checkbox" data-layer="walkable" checked> Walkable</label>
@@ -176,7 +198,7 @@
 					<label class="check"><input type="checkbox" data-layer="icon" checked> Icons</label>
 					<label class="check"><input type="checkbox" data-layer="logo" checked> Logos</label>
 					</div>
-				</div>
+				</details>
 			</section>
 			<section class="workflow-step workspace-panel route-editor-panel" data-workspace-panel="route-edit">
 				<span class="step-number">2</span><h2>Route network</h2>
@@ -217,7 +239,8 @@
 				<div class="route-editor-step">
 					<h3>2. Build routes</h3>
 					<p class="concise-help">Doors linked to rooms become route endpoints. The builder connects each endpoint to the nearest valid corridor centerline.</p>
-					<button id="route-build" type="button" class="route-build">Build routes to every linked door</button>
+					<button id="route-build" type="button" class="route-build">Rebuild routes to every linked door</button>
+					<small class="destructive-note">Replaces the current generated network, including manual route adjustments.</small>
 					<button id="generate-centerlines" type="button" hidden>Build route network</button>
 					<input id="level-id" type="hidden" value="level-0">
 				</div>
@@ -281,8 +304,12 @@
 					<label title="Permanent machine key used to connect geometry, routes, and datasource rows.">Stable id<input id="destination-id" type="text" readonly></label>
 				</div>
 				<label>Primary name<input id="destination-name" type="text"></label>
-				<label>Secondary / translated name<input id="destination-english-name" type="text"></label>
-				<label title="Used for directory filtering, such as Services, Dining, or Restrooms.">Category<input id="destination-category" type="text"></label>
+				<div class="translation-editor">
+					<label>Translation language<select id="destination-language"></select></label>
+					<label>Translated name<input id="destination-translated-name" type="text"></label>
+					<label>Translated description<textarea id="destination-translated-description" rows="3"></textarea></label>
+				</div>
+				<label title="Used for directory filtering, such as Services, Dining, or Restrooms.">Category<select id="destination-category"></select></label>
 				<label title="Optional public details shown when a visitor opens this destination.">Description<textarea id="destination-description" rows="4"></textarea></label>
 				<div class="field-pair">
 					<label>Hours<input id="destination-hours" type="text"></label>
