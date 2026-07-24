@@ -55,6 +55,12 @@ export interface WayfindingStudioProjectDefaults {
 	};
 	logoSize: number;
 	obstacle: Required<WayfindingStudioPolygonPresentation>;
+	origin: {
+		animation2d: 'none' | 'pulse' | 'radar';
+		animation3d: 'bounce' | 'none' | 'pulse';
+		animationSpeed: number;
+		color: string;
+	};
 	route: {
 		animation: 'flow' | 'none' | 'pulse';
 		animationSpeed: number;
@@ -264,6 +270,12 @@ export const createWayfindingStudioProjectDefaults = (): WayfindingStudioProject
 	locationColor: { fixedColor: '#f4c95d', mode: 'inherited' },
 	logoSize: 96,
 	obstacle: { extrusionHeight: 24, fillColor: '#31403d', fillOpacity: 0.76 },
+	origin: {
+		animation2d: 'radar',
+		animation3d: 'bounce',
+		animationSpeed: 48,
+		color: '#138b75'
+	},
 	route: {
 		animation: 'flow',
 		animationSpeed: 48,
@@ -285,6 +297,7 @@ export const wayfindingStudioProjectDefaults = (project: WayfindingStudioProject
 		locationColor: { ...fallback.locationColor, ...defaults.locationColor },
 		logoSize: defaults.logoSize ?? fallback.logoSize,
 		obstacle: { ...fallback.obstacle, ...defaults.obstacle },
+		origin: { ...fallback.origin, ...defaults.origin },
 		route: { ...fallback.route, ...defaults.route },
 		walkable: { ...fallback.walkable, ...defaults.walkable }
 	};

@@ -95,6 +95,12 @@ void test('creates a portable project and migrates the evidence-only contract', 
 	const schemaParsed = parseWayfindingStudioProjectSource(JSON.stringify(original));
 	const migrated = migrateWayfindingArtifacts(original.delivery, undefined, [{ id: 'gallery', name: 'Gallery' }]);
 	assert.equal(parsed.projectId, 'museum');
+	assert.deepEqual(parsed.defaults?.origin, {
+		animation2d: 'radar',
+		animation3d: 'bounce',
+		animationSpeed: 48,
+		color: '#138b75'
+	});
 	assert.equal(schemaParsed.projectId, 'museum');
 	assert.equal(migrated.floors.length, 1);
 	assert.equal(migrated.destinations[0].id, 'gallery');

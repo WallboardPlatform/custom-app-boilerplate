@@ -58,7 +58,7 @@ type SemanticPolygonTool = 'location' | 'obstacle' | 'walkable';
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph' | 'select' | SemanticPolygonTool | 'door' | 'poi' | 'origin' | 'transition' | 'label' | 'icon' | 'logo';
 type DrawingMode = 'lasso' | 'points' | 'smart';
 type ProjectOrigin = 'local-recovery' | 'new' | 'portable-file';
-type WorkspaceMode = 'map' | 'route-edit' | 'route-preview';
+type WorkspaceMode = 'map' | 'route-edit' | 'route-preview' | 'runtime-preview';
 
 interface ColorSample {
 	b: number;
@@ -170,7 +170,7 @@ const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
-const STUDIO_VERSION = '0.15';
+const STUDIO_VERSION = '0.16';
 const OBJECT_EXPLORER_STORAGE_KEY = 'wallboard-wayfinding-studio:layers-open';
 
 const requireElement = <T extends Element>(selector: string): T => {
@@ -265,6 +265,21 @@ const studioNotice = requireElement<HTMLElement>('#studio-notice');
 const workspaceMapButton = requireElement<HTMLButtonElement>('#workspace-map');
 const workspaceRoutePreviewButton = requireElement<HTMLButtonElement>('#workspace-route-preview');
 const workspaceRouteEditButton = requireElement<HTMLButtonElement>('#workspace-route-edit');
+const workspaceRuntimePreviewButton = requireElement<HTMLButtonElement>('#workspace-runtime-preview');
+const toggleLeftPanelButton = requireElement<HTMLButtonElement>('#toggle-left-panel');
+const toggleRightPanelButton = requireElement<HTMLButtonElement>('#toggle-right-panel');
+const runtimePreview = requireElement<HTMLElement>('#runtime-preview');
+const runtimePreviewSearch = requireElement<HTMLInputElement>('#runtime-preview-search');
+const runtimePreviewIcons = requireElement<HTMLInputElement>('#runtime-preview-icons');
+const runtimePreviewLabels = requireElement<HTMLInputElement>('#runtime-preview-labels');
+const runtimePreviewResults = requireElement<HTMLElement>('#runtime-preview-results');
+const runtimePreviewDetails = requireElement<HTMLElement>('#runtime-preview-details');
+const runtimePreviewDetailsClose = requireElement<HTMLButtonElement>('#runtime-preview-details-close');
+const runtimePreviewCategory = requireElement<HTMLElement>('#runtime-preview-category');
+const runtimePreviewName = requireElement<HTMLElement>('#runtime-preview-name');
+const runtimePreviewDescription = requireElement<HTMLElement>('#runtime-preview-description');
+const runtimePreviewFacts = requireElement<HTMLElement>('#runtime-preview-facts');
+const runtimePreviewPhotos = requireElement<HTMLElement>('#runtime-preview-photos');
 const routeSetupChecklist = requireElement<HTMLElement>('#route-setup-checklist');
 const semanticMediaFile = requireElement<HTMLInputElement>('#semantic-media-file');
 const undoButton = requireElement<HTMLButtonElement>('#undo');
@@ -276,7 +291,6 @@ const view3dButton = requireElement<HTMLButtonElement>('#view-3d');
 const reset3dViewButton = requireElement<HTMLButtonElement>('#reset-3d-view');
 const save3dViewButton = requireElement<HTMLButtonElement>('#save-3d-view');
 const shortcutHelpButton = requireElement<HTMLButtonElement>('#shortcut-help');
-const footerShortcutHelpButton = requireElement<HTMLButtonElement>('#footer-shortcut-help');
 const shortcutDialog = requireElement<HTMLDialogElement>('#shortcut-dialog');
 const shortcutCloseButton = requireElement<HTMLButtonElement>('#shortcut-close');
 const toolTitle = requireElement<HTMLElement>('#tool-title');
@@ -335,6 +349,10 @@ const defaultRouteRadiusInput = requireElement<HTMLInputElement>('#default-route
 const defaultRouteAnimationInput = requireElement<HTMLSelectElement>('#default-route-animation');
 const defaultRouteSpeedInput = requireElement<HTMLInputElement>('#default-route-speed');
 const defaultRouteSpeedValue = requireElement<HTMLOutputElement>('#default-route-speed-value');
+const defaultOriginColorInput = requireElement<HTMLInputElement>('#default-origin-color');
+const defaultOriginSpeedInput = requireElement<HTMLInputElement>('#default-origin-speed');
+const defaultOriginAnimation2dInput = requireElement<HTMLSelectElement>('#default-origin-animation-2d');
+const defaultOriginAnimation3dInput = requireElement<HTMLSelectElement>('#default-origin-animation-3d');
 const cursorPosition = requireElement<HTMLOutputElement>('#cursor-position');
 const confirmDialog = requireElement<HTMLDialogElement>('#confirm-dialog');
 const confirmTitle = requireElement<HTMLElement>('#confirm-title');
@@ -412,6 +430,10 @@ let lastLocalSaveAt: string | undefined;
 let routeAnimationFrame: number | undefined;
 let routeAnimationPhase = 0;
 let routeAnimationPreviousTime = 0;
+let originAnimationFrame: number | undefined;
+let originAnimationPhase = 0;
+let originAnimationPreviousTime = 0;
+let runtimePreviewDestinationId: string | undefined;
 const undoStack: HistoryState[] = [];
 const redoStack: HistoryState[] = [];
 const HISTORY_LIMIT = 30;
@@ -562,6 +584,7 @@ const simulatedRoutePoints = (): WayfindingPoint[] => {
 };
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
+		if (workspaceMode === 'runtime-preview' && openRuntimePreviewDetails(elementId)) return;
 		if (workspaceMode === 'route-preview' && routeToSemanticElement(elementId)) return;
 		selectedSemanticId = elementId;
 		selectedSemanticVertexIndex = undefined;
@@ -908,22 +931,29 @@ const confirmAction = (message: string, title = 'Continue?', acceptLabel = 'Cont
 });
 
 let noticeTimer: number | undefined;
-const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning'): void => {
-	studioNotice.textContent = message;
+const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning', title?: string): void => {
+	const heading: HTMLElement = document.createElement('strong');
+	const copy: HTMLSpanElement = document.createElement('span');
+	const dismiss: HTMLButtonElement = document.createElement('button');
+	heading.textContent = title ?? (kind === 'error' ? 'Action needed' : 'Studio update');
+	copy.textContent = message;
+	dismiss.type = 'button';
+	dismiss.className = 'studio-notice-dismiss';
+	dismiss.setAttribute('aria-label', 'Dismiss message');
+	dismiss.textContent = '\u00d7';
+	dismiss.addEventListener('click', (): void => {
+		studioNotice.hidden = true;
+		if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
+		noticeTimer = undefined;
+	});
+	studioNotice.replaceChildren(heading, copy, dismiss);
 	studioNotice.dataset.kind = kind;
-	studioNotice.title = 'Click to dismiss';
 	studioNotice.hidden = false;
 	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
 	noticeTimer = kind === 'warning'
 		? window.setTimeout((): void => { studioNotice.hidden = true; }, 10_000)
 		: undefined;
 };
-
-studioNotice.addEventListener('click', (): void => {
-	studioNotice.hidden = true;
-	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
-	noticeTimer = undefined;
-});
 
 const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
 	simulatedRoute = undefined;
@@ -989,24 +1019,44 @@ const setWorkspaceMode = (mode: WorkspaceMode): void => {
 	document.body.dataset.workspace = mode;
 	for (const [button, value] of [
 		[workspaceMapButton, 'map'],
+		[workspaceRouteEditButton, 'route-edit'],
 		[workspaceRoutePreviewButton, 'route-preview'],
-		[workspaceRouteEditButton, 'route-edit']
+		[workspaceRuntimePreviewButton, 'runtime-preview']
 	] as const) {
 		const active: boolean = mode === value;
 		button.classList.toggle('active', active);
 		button.setAttribute('aria-pressed', String(active));
 	}
+	runtimePreview.hidden = mode !== 'runtime-preview';
 	if (mode === 'route-edit' && viewMode === '3d') setViewMode('2d');
 	if (mode === 'route-preview') {
 		coverageStatus.textContent = 'Route preview: choose a destination or click one directly on the map.';
 	} else if (mode === 'route-edit') {
 		coverageStatus.textContent = 'Route edit: define walkable space, build the network, then inspect or adjust segments.';
+	} else if (mode === 'runtime-preview') {
+		coverageStatus.textContent = 'Visitor preview: search destinations, open details, and verify the public map experience.';
+		renderRuntimePreview();
 	} else {
 		coverageStatus.textContent = 'Map edit: add, select, and style map elements.';
 	}
 	renderPedestrianSourceControls();
 	renderReview();
 	draw();
+};
+
+const setPanelOpen = (side: 'left' | 'right', open: boolean): void => {
+	document.body.dataset[side === 'left' ? 'leftPanel' : 'rightPanel'] = open ? 'open' : 'closed';
+	const button: HTMLButtonElement = side === 'left' ? toggleLeftPanelButton : toggleRightPanelButton;
+	const panelName: string = side === 'left' ? 'authoring controls' : 'properties';
+	button.setAttribute('aria-pressed', String(open));
+	button.setAttribute('aria-label', `${open ? 'Hide' : 'Show'} ${panelName}`);
+	button.title = `${open ? 'Hide' : 'Show'} ${panelName}`;
+	button.innerHTML = side === 'left'
+		? (open ? '&#9665;' : '&#9655;')
+		: (open ? '&#9655;' : '&#9665;');
+	window.requestAnimationFrame((): void => {
+		if (viewMode === '2d') resizeCanvas();
+	});
 };
 
 const openAutosaveDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject): void => {
@@ -1589,6 +1639,10 @@ const syncProjectDefaultControls = (): void => {
 	defaultRouteAnimationInput.value = defaults.route.animation;
 	defaultRouteSpeedInput.value = String(defaults.route.animationSpeed);
 	defaultRouteSpeedValue.value = String(defaults.route.animationSpeed);
+	defaultOriginColorInput.value = defaults.origin.color;
+	defaultOriginSpeedInput.value = String(defaults.origin.animationSpeed);
+	defaultOriginAnimation2dInput.value = defaults.origin.animation2d;
+	defaultOriginAnimation3dInput.value = defaults.origin.animation3d;
 	defaultLocationFixedColorInput.value = defaults.locationColor.fixedColor;
 	defaultLocationFixedColorControl.hidden = defaults.locationColor.mode !== 'fixed';
 	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-location-color-mode]')) {
@@ -2854,6 +2908,11 @@ const drawSemanticElements = (): void => {
 	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
 	for (const element of currentElements()) {
 		if (!layerVisible(element.type)) continue;
+		if (workspaceMode === 'runtime-preview') {
+			if (element.type === 'walkable' || element.type === 'obstacle' || element.type === 'door') continue;
+			if ((element.type === 'icon' || element.type === 'logo') && !runtimePreviewIcons.checked) continue;
+			if (element.type === 'label' && !runtimePreviewLabels.checked) continue;
+		}
 		const selected: boolean = element.id === selectedSemanticId;
 		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
 		const polygonDefaults = polygon ? defaults[polygon.type] : undefined;
@@ -2876,7 +2935,7 @@ const drawSemanticElements = (): void => {
 			context.globalAlpha = element.presentation?.fillOpacity ?? polygonDefaults?.fillOpacity ?? 0.2;
 			context.fill();
 			context.globalAlpha = 1;
-			if (workspaceMode !== 'route-preview' || selected) {
+			if ((workspaceMode !== 'route-preview' && workspaceMode !== 'runtime-preview') || selected) {
 				context.lineJoin = 'round';
 				context.lineWidth = (selected ? 6 : 4) / scale;
 				context.strokeStyle = selected ? '#ffe06c' : 'rgba(255, 255, 255, 0.94)';
@@ -2954,6 +3013,22 @@ const drawSemanticElements = (): void => {
 			context.fill();
 			context.stroke();
 			if (element.type === 'origin') {
+				const animation: WayfindingStudioProjectDefaults['origin']['animation2d'] = defaults.origin.animation2d;
+				if (animation !== 'none') {
+					const cycle: number = (originAnimationPhase % 100) / 100;
+					const radius: number = (animation === 'radar'
+						? 18 + cycle * 30
+						: 20 + (Math.sin(originAnimationPhase / 9) + 1) * 8) / scale;
+					context.beginPath();
+					context.arc(element.point.x, element.point.y, radius, 0, Math.PI * 2);
+					context.strokeStyle = defaults.origin.color;
+					context.globalAlpha = animation === 'radar'
+						? 0.7 * (1 - cycle)
+						: 0.3 + (Math.sin(originAnimationPhase / 9) + 1) * 0.2;
+					context.lineWidth = 3 / scale;
+					context.stroke();
+					context.globalAlpha = 1;
+				}
 				context.beginPath();
 				context.moveTo(element.point.x, element.point.y);
 				const radians: number = (element.facingDegrees - 90) * Math.PI / 180;
@@ -2999,6 +3074,119 @@ function routeDestinationAt(pointValue: WayfindingPoint): WayfindingStudioElemen
 
 		return Math.hypot(element.point.x - pointValue.x, element.point.y - pointValue.y) <= Math.max(24, 24 / scale);
 	});
+}
+
+const runtimePreviewDestination = (elementId: string): { destination: DestinationRow; element: WayfindingStudioElement } | undefined => {
+	const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === elementId);
+	if (!element || !((element.type === 'location' || element.type === 'poi') && element.destinationId)) return undefined;
+	const destination: DestinationRow | undefined = destinationRows().find((candidate: DestinationRow): boolean => candidate.id === element.destinationId);
+
+	return destination ? { destination, element } : undefined;
+};
+
+const runtimePreviewDisplayName = (destination: DestinationRow): string => {
+	const languageCode: string | undefined = studioProject.defaultLanguage;
+	const translated: string | undefined = languageCode ? destination.translations?.[languageCode]?.name : undefined;
+
+	return translated?.trim() || destination.name?.trim() || destination.id;
+};
+
+const runtimePreviewDisplayDescription = (destination: DestinationRow): string => {
+	const languageCode: string | undefined = studioProject.defaultLanguage;
+	const translated: string | undefined = languageCode ? destination.translations?.[languageCode]?.description : undefined;
+
+	return translated?.trim() || destination.description?.trim() || 'No visitor description has been added yet.';
+};
+
+function openRuntimePreviewDetails(elementId: string): boolean {
+	const resolved = runtimePreviewDestination(elementId);
+	if (!resolved) return false;
+	const { destination, element } = resolved;
+	runtimePreviewDestinationId = destination.id;
+	selectedSemanticId = element.id;
+	selectedSemanticVertexIndex = undefined;
+	selectedEdgeId = undefined;
+	runtimePreviewCategory.textContent = destination.category?.trim() || 'Destination';
+	runtimePreviewName.textContent = runtimePreviewDisplayName(destination);
+	runtimePreviewDescription.textContent = runtimePreviewDisplayDescription(destination);
+	const facts: Array<[string, string | undefined]> = [
+		['Floor', destination.floor || currentFloor().name],
+		['Directory', destination.mapNumber],
+		['Hours', destination.hours],
+		['Status', destination.status],
+		['Access', destination.accessible === true ? 'Accessible' : destination.accessible === false ? 'Accessibility not confirmed' : undefined]
+	];
+	runtimePreviewFacts.replaceChildren(...facts
+		.filter((fact): fact is [string, string] => Boolean(fact[1]))
+		.flatMap(([label, value]): HTMLElement[] => {
+			const term: HTMLElement = document.createElement('dt');
+			const description: HTMLElement = document.createElement('dd');
+			term.textContent = label;
+			description.textContent = value;
+
+			return [term, description];
+		}));
+	runtimePreviewPhotos.replaceChildren(...(destination.photoAssetIds ?? [])
+		.map((assetId: string): WayfindingStudioAsset | undefined => studioProject.assets.find((asset: WayfindingStudioAsset): boolean => asset.id === assetId))
+		.filter((asset): asset is WayfindingStudioAsset => Boolean(asset?.dataUrl))
+		.map((asset: WayfindingStudioAsset): HTMLImageElement => {
+			const image: HTMLImageElement = new Image();
+			image.src = asset.dataUrl;
+			image.alt = asset.name || runtimePreviewDisplayName(destination);
+
+			return image;
+		}));
+	runtimePreviewDetails.hidden = false;
+	renderRuntimePreview();
+	draw();
+
+	return true;
+}
+
+function renderRuntimePreview(): void {
+	if (workspaceMode !== 'runtime-preview') return;
+	runtimePreviewDetails.hidden = runtimePreviewDestinationId === undefined;
+	const query: string = runtimePreviewSearch.value.trim().toLocaleLowerCase();
+	const rows: DestinationRow[] = destinationRows()
+		.filter((destination: DestinationRow): boolean => destination.routeable !== false)
+		.filter((destination: DestinationRow): boolean => {
+			if (!query) return true;
+			return [
+				runtimePreviewDisplayName(destination),
+				runtimePreviewDisplayDescription(destination),
+				destination.category,
+				destination.hours,
+				destination.status
+			].some((value: string | undefined): boolean => value?.toLocaleLowerCase().includes(query) ?? false);
+		})
+		.sort((left: DestinationRow, right: DestinationRow): number => runtimePreviewDisplayName(left).localeCompare(runtimePreviewDisplayName(right)));
+	if (rows.length === 0) {
+		const empty: HTMLParagraphElement = document.createElement('p');
+		empty.className = 'runtime-preview-empty';
+		empty.textContent = query ? 'No destinations match this search.' : 'No public destinations are available on this floor.';
+		runtimePreviewResults.replaceChildren(empty);
+		return;
+	}
+	runtimePreviewResults.replaceChildren(...rows.map((destination: DestinationRow): HTMLButtonElement => {
+		const button: HTMLButtonElement = document.createElement('button');
+		const name: HTMLElement = document.createElement('strong');
+		const detail: HTMLSpanElement = document.createElement('span');
+		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean =>
+			(candidate.type === 'location' || candidate.type === 'poi') && candidate.destinationId === destination.id
+		);
+		button.type = 'button';
+		button.className = 'runtime-preview-result';
+		button.classList.toggle('active', destination.id === runtimePreviewDestinationId);
+		button.disabled = !element;
+		name.textContent = runtimePreviewDisplayName(destination);
+		detail.textContent = [destination.category, destination.floor || currentFloor().name].filter(Boolean).join(' / ');
+		button.append(name, detail);
+		button.addEventListener('click', (): void => {
+			if (element) openRuntimePreviewDetails(element.id);
+		});
+
+		return button;
+	}));
 }
 
 function simulateSelectedRoute(): boolean {
@@ -3311,6 +3499,9 @@ const draw = (): void => {
 	canvas.dataset.viewOffsetY = String(offsetY);
 	canvas.dataset.semanticDraftPointCount = String(semanticDraft?.points.length ?? 0);
 	canvas.dataset.routeNetworkVisible = String(showRouteNetwork);
+	canvas.setAttribute('data-origin-animation-2d', projectDefaults().origin.animation2d);
+	canvas.dataset.runtimeIconsVisible = String(runtimePreviewIcons.checked);
+	canvas.dataset.runtimeLabelsVisible = String(runtimePreviewLabels.checked);
 	context.save();
 	context.setTransform(1, 0, 0, 1, 0, 0);
 	context.fillStyle = '#323b39';
@@ -3456,6 +3647,7 @@ const draw = (): void => {
 	context.restore();
 	refresh3d();
 	scheduleRouteAnimation();
+	scheduleOriginAnimation();
 };
 
 const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
@@ -4230,6 +4422,29 @@ const routeAnimationActive = (): boolean => Boolean(
 	&& projectDefaults().route.animation !== 'none'
 );
 
+const originAnimationActive = (): boolean => Boolean(
+	viewMode === '2d'
+	&& projectDefaults().origin.animation2d !== 'none'
+	&& currentElements().some((element: WayfindingStudioElement): boolean => element.type === 'origin' && layerVisible('origin'))
+);
+
+const scheduleOriginAnimation = (): void => {
+	if (!originAnimationActive()) {
+		if (originAnimationFrame !== undefined) window.cancelAnimationFrame(originAnimationFrame);
+		originAnimationFrame = undefined;
+		originAnimationPreviousTime = 0;
+		return;
+	}
+	if (originAnimationFrame !== undefined) return;
+	originAnimationFrame = window.requestAnimationFrame((time: number): void => {
+		originAnimationFrame = undefined;
+		const elapsed: number = originAnimationPreviousTime === 0 ? 0 : Math.min(50, time - originAnimationPreviousTime);
+		originAnimationPreviousTime = time;
+		originAnimationPhase += elapsed * projectDefaults().origin.animationSpeed / 1000;
+		draw();
+	});
+};
+
 const scheduleRouteAnimation = (): void => {
 	if (!routeAnimationActive()) {
 		if (routeAnimationFrame !== undefined) window.cancelAnimationFrame(routeAnimationFrame);
@@ -4618,10 +4833,17 @@ const openStudioProjectFile = async (file: File, handle?: StudioFileHandle): Pro
 		renderProjectContext();
 	} catch (error) {
 		const detail: string = error instanceof Error ? error.message : 'The Studio project could not be opened.';
-		studioValidation.textContent = detail;
+		const friendlyDetail: string = detail.includes('invalid or out-of-bounds point')
+			? 'This project contains damaged polygon coordinates that the Studio could not safely repair. Open the last known-good project or recovery copy, then save it again with the current Studio.'
+			: detail.includes('destinationCategory')
+				? 'This project was created by an incompatible development build. Its destination categories could not be migrated automatically. Open an earlier project copy or contact support with the file so it can be repaired without losing map work.'
+				: error instanceof SyntaxError
+					? 'This file is not a valid Wayfinding Studio project. Choose the original .wbwayfinding file rather than a runtime bundle or datasource export.'
+					: `The project could not be opened. ${detail}`;
+		studioValidation.textContent = friendlyDetail;
 		studioValidation.dataset.allowed = 'false';
-		showStudioNotice(detail, 'error');
-		coverageStatus.textContent = detail;
+		showStudioNotice(friendlyDetail, 'error', 'Project could not be opened');
+		coverageStatus.textContent = 'Project opening failed. Review the message above and keep the current project open.';
 	}
 };
 
@@ -4892,6 +5114,22 @@ defaultRouteSpeedInput.addEventListener('input', (): void => {
 defaultRouteSpeedInput.addEventListener('change', (): void => {
 	updateRouteDefaults((route): void => { route.animationSpeed = Number(defaultRouteSpeedInput.value); });
 });
+defaultOriginColorInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.origin.color = defaultOriginColorInput.value; });
+});
+defaultOriginSpeedInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.origin.animationSpeed = Number(defaultOriginSpeedInput.value); });
+});
+defaultOriginAnimation2dInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => {
+		defaults.origin.animation2d = defaultOriginAnimation2dInput.value as WayfindingStudioProjectDefaults['origin']['animation2d'];
+	});
+});
+defaultOriginAnimation3dInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => {
+		defaults.origin.animation3d = defaultOriginAnimation3dInput.value as WayfindingStudioProjectDefaults['origin']['animation3d'];
+	});
+});
 chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
 stopMediaPlacement.addEventListener('click', (): void => {
 	pendingMediaAssetId = undefined;
@@ -5108,6 +5346,27 @@ view3dButton.addEventListener('click', (): void => { setViewMode('3d'); });
 workspaceMapButton.addEventListener('click', (): void => { setWorkspaceMode('map'); });
 workspaceRoutePreviewButton.addEventListener('click', (): void => { setWorkspaceMode('route-preview'); });
 workspaceRouteEditButton.addEventListener('click', (): void => { setWorkspaceMode('route-edit'); });
+workspaceRuntimePreviewButton.addEventListener('click', (): void => { setWorkspaceMode('runtime-preview'); });
+toggleLeftPanelButton.addEventListener('click', (): void => {
+	setPanelOpen('left', document.body.dataset.leftPanel === 'closed');
+});
+toggleRightPanelButton.addEventListener('click', (): void => {
+	setPanelOpen('right', document.body.dataset.rightPanel === 'closed');
+});
+runtimePreviewSearch.addEventListener('input', renderRuntimePreview);
+runtimePreviewIcons.addEventListener('change', draw);
+runtimePreviewLabels.addEventListener('change', draw);
+runtimePreviewDetails.addEventListener('click', (event: MouseEvent): void => {
+	event.stopPropagation();
+});
+runtimePreviewDetailsClose.addEventListener('pointerdown', (event: PointerEvent): void => {
+	event.preventDefault();
+	event.stopPropagation();
+	runtimePreviewDestinationId = undefined;
+	selectedSemanticId = undefined;
+	renderRuntimePreview();
+	draw();
+});
 reset3dViewButton.addEventListener('click', (): void => {
 	scene3d.resetCamera();
 	coverageStatus.textContent = currentFloor().camera3d ? 'Restored the saved 3D camera for this floor.' : 'Restored the default 3D camera.';
@@ -5124,7 +5383,6 @@ save3dViewButton.addEventListener('click', (): void => {
 });
 const showShortcutHelp = (): void => { if (!shortcutDialog.open) shortcutDialog.showModal(); };
 shortcutHelpButton.addEventListener('click', showShortcutHelp);
-footerShortcutHelpButton.addEventListener('click', showShortcutHelp);
 shortcutCloseButton.addEventListener('click', (): void => { shortcutDialog.close(); });
 shortcutDialog.addEventListener('click', (event: MouseEvent): void => {
 	if (event.target === shortcutDialog) shortcutDialog.close();

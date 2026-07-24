@@ -72,7 +72,7 @@
 		"projectDefaults": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["iconSize", "label", "location", "locationColor", "logoSize", "obstacle", "route", "walkable"],
+			"required": ["iconSize", "label", "location", "locationColor", "logoSize", "obstacle", "origin", "route", "walkable"],
 			"properties": {
 				"iconSize": { "type": "number", "minimum": 8, "maximum": 1024 },
 				"logoSize": { "type": "number", "minimum": 8, "maximum": 1024 },
@@ -87,6 +87,17 @@
 					}
 				},
 				"obstacle": { "$ref": "#/$defs/requiredPolygonPresentation" },
+				"origin": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["animation2d", "animation3d", "animationSpeed", "color"],
+					"properties": {
+						"animation2d": { "enum": ["none", "pulse", "radar"] },
+						"animation3d": { "enum": ["bounce", "none", "pulse"] },
+						"animationSpeed": { "type": "number", "minimum": 1, "maximum": 300 },
+						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+					}
+				},
 				"walkable": { "$ref": "#/$defs/requiredPolygonPresentation" },
 				"label": {
 					"type": "object",

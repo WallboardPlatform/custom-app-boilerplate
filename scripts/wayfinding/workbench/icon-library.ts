@@ -28,5 +28,10 @@ export const BUILTIN_MAP_ICONS: BuiltinMapIcon[] = [
 	icon('security', 'Security', '<path d="M32 7l21 8v14c0 14-9 23-21 28C20 52 11 43 11 29V15zM23 32l6 6 13-14"/>'),
 	icon('bus', 'Bus', '<rect x="10" y="8" width="44" height="43" rx="7"/><path d="M16 17h32v17H16zM16 51v6M48 51v6M19 42h.01M45 42h.01"/>'),
 	icon('train', 'Train', '<path d="M16 8h32a6 6 0 0 1 6 6v29a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V14a6 6 0 0 1 6-6zM15 16h34v19H15zM20 51l-7 7M44 51l7 7M21 43h.01M43 43h.01"/>'),
-	icon('meeting', 'Meeting room', '<circle cx="20" cy="19" r="7"/><circle cx="44" cy="19" r="7"/><path d="M7 52c1-13 6-20 13-20s12 7 13 20M31 52c1-13 6-20 13-20s12 7 13 20"/>')
+	icon('meeting', 'Meeting room', '<circle cx="20" cy="19" r="7"/><circle cx="44" cy="19" r="7"/><path d="M7 52c1-13 6-20 13-20s12 7 13 20M31 52c1-13 6-20 13-20s12 7 13 20"/>'),
+	icon('payment-terminal', 'Payment terminal', '<rect x="13" y="7" width="38" height="50" rx="5"/><path d="M20 16h24v15H20zM21 40h4m7 0h4m7 0h1M21 48h4m7 0h4m7 0h1"/>'),
+	icon('entrance', 'Entrance', '<path d="M13 57V9h30v48M43 32h14M51 26l6 6-6 6M21 18h14v39"/>'),
+	icon('wifi', 'Wi-Fi', '<path d="M7 24c14-12 36-12 50 0M15 34c10-8 24-8 34 0M24 44c5-4 11-4 16 0"/><circle cx="32" cy="53" r="2" fill="#17201f" stroke="none"/>'),
+	icon('pets', 'Pets allowed', '<circle cx="15" cy="20" r="6"/><circle cx="28" cy="12" r="6"/><circle cx="49" cy="20" r="6"/><circle cx="36" cy="12" r="6"/><path d="M32 25c-11 0-19 10-17 20 2 8 10 8 17 4 7 4 15 4 17-4 2-10-6-20-17-20z"/>'),
+	icon('luggage-storage', 'Luggage storage', '<rect x="10" y="19" width="44" height="36" rx="5"/><path d="M24 19v-7h16v7M20 29v16M44 29v16M10 37h44"/>')
 ];
