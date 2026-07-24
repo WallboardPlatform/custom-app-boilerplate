@@ -72,11 +72,20 @@
 		"projectDefaults": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["iconSize", "label", "location", "logoSize", "obstacle", "route", "walkable"],
+			"required": ["iconSize", "label", "location", "locationColor", "logoSize", "obstacle", "route", "walkable"],
 			"properties": {
 				"iconSize": { "type": "number", "minimum": 8, "maximum": 1024 },
 				"logoSize": { "type": "number", "minimum": 8, "maximum": 1024 },
 				"location": { "$ref": "#/$defs/requiredPolygonPresentation" },
+				"locationColor": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["fixedColor", "mode"],
+					"properties": {
+						"fixedColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+						"mode": { "enum": ["fixed", "inherited", "random"] }
+					}
+				},
 				"obstacle": { "$ref": "#/$defs/requiredPolygonPresentation" },
 				"walkable": { "$ref": "#/$defs/requiredPolygonPresentation" },
 				"label": {
@@ -211,6 +220,7 @@
 				"width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 },
 				"backgroundAssetId": { "$ref": "#/$defs/nonEmptyString" },
 				"camera3d": { "$ref": "#/$defs/camera3d" },
+				"pedestrianSpaceSource": { "enum": ["mask", "polygons"] },
 				"walkableMask": { "$ref": "wayfinding-walkable-mask.schema.json" },
 				"elements": { "type": "array", "items": { "oneOf": [
 					{ "$ref": "#/$defs/polygonElement" }, { "$ref": "#/$defs/doorElement" }, { "$ref": "#/$defs/poiElement" },

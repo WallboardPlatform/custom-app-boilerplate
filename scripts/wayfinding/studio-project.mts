@@ -35,6 +35,9 @@ export interface WayfindingStudioPolygonPresentation {
 	fillOpacity?: number;
 }
 
+export type WayfindingStudioLocationColorMode = 'fixed' | 'inherited' | 'random';
+export type WayfindingStudioPedestrianSpaceSource = 'mask' | 'polygons';
+
 export interface WayfindingStudioProjectDefaults {
 	iconSize: number;
 	label: {
@@ -46,6 +49,10 @@ export interface WayfindingStudioProjectDefaults {
 		outlineWidth: number;
 	};
 	location: Required<WayfindingStudioPolygonPresentation>;
+	locationColor: {
+		fixedColor: string;
+		mode: WayfindingStudioLocationColorMode;
+	};
 	logoSize: number;
 	obstacle: Required<WayfindingStudioPolygonPresentation>;
 	route: {
@@ -165,6 +172,7 @@ export interface WayfindingStudioFloor {
 	id: string;
 	name: string;
 	order: number;
+	pedestrianSpaceSource?: WayfindingStudioPedestrianSpaceSource;
 	walkableMask?: WayfindingWalkableMaskDocument;
 	width: number;
 }
@@ -253,6 +261,7 @@ export const createWayfindingStudioProjectDefaults = (): WayfindingStudioProject
 		outlineWidth: 0
 	},
 	location: { extrusionHeight: 18, fillColor: '#f4c95d', fillOpacity: 0.72 },
+	locationColor: { fixedColor: '#f4c95d', mode: 'inherited' },
 	logoSize: 96,
 	obstacle: { extrusionHeight: 24, fillColor: '#31403d', fillOpacity: 0.76 },
 	route: {
@@ -273,6 +282,7 @@ export const wayfindingStudioProjectDefaults = (project: WayfindingStudioProject
 		iconSize: defaults.iconSize ?? fallback.iconSize,
 		label: { ...fallback.label, ...defaults.label },
 		location: { ...fallback.location, ...defaults.location },
+		locationColor: { ...fallback.locationColor, ...defaults.locationColor },
 		logoSize: defaults.logoSize ?? fallback.logoSize,
 		obstacle: { ...fallback.obstacle, ...defaults.obstacle },
 		route: { ...fallback.route, ...defaults.route },
@@ -312,7 +322,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 		},
 		categories: ['Accessibility', 'Dining', 'Events', 'Parking', 'Restrooms', 'Services', 'Shopping'],
 		destinations: [],
-		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, width: 1920 }],
+		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, pedestrianSpaceSource: 'polygons', width: 1920 }],
 		graph: { contractVersion: 2, edges: [], graphId: `${projectId}-graph`, nodes: [] },
 		languages: [{ code: 'en', label: 'English' }],
 		name: 'Wayfinding project',
@@ -375,6 +385,15 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 			};
 		}
 		delete destination.englishName;
+	}
+	project.defaults = wayfindingStudioProjectDefaults(project);
+
+	for (const floor of project.floors) {
+		if (floor.pedestrianSpaceSource !== 'mask' && floor.pedestrianSpaceSource !== 'polygons') {
+			floor.pedestrianSpaceSource = floor.elements.some((element): boolean => element.type === 'walkable')
+				? 'polygons'
+				: floor.walkableMask ? 'mask' : 'polygons';
+		}
 	}
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
 
@@ -574,6 +593,75 @@ const pointInFloor = (value: WayfindingPoint, floor: WayfindingStudioFloor): boo
 	&& value.y >= 0
 	&& value.x <= floor.width
 	&& value.y <= floor.height;
+const pointOnSegment = (pointValue: WayfindingPoint, start: WayfindingPoint, end: WayfindingPoint): boolean => {
+	const lengthSquared: number = (end.x - start.x) ** 2 + (end.y - start.y) ** 2;
+
+	if (lengthSquared === 0) return Math.hypot(pointValue.x - start.x, pointValue.y - start.y) <= 0.5;
+	const ratio: number = Math.max(0, Math.min(1, (
+		(pointValue.x - start.x) * (end.x - start.x)
+		+ (pointValue.y - start.y) * (end.y - start.y)
+	) / lengthSquared));
+
+	return Math.hypot(
+		pointValue.x - (start.x + ratio * (end.x - start.x)),
+		pointValue.y - (start.y + ratio * (end.y - start.y))
+	) <= 0.5;
+};
+const pointInPolygon = (pointValue: WayfindingPoint, polygon: WayfindingPoint[]): boolean => {
+	let inside = false;
+
+	for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+		const start: WayfindingPoint = polygon[previous];
+		const end: WayfindingPoint = polygon[index];
+
+		if (pointOnSegment(pointValue, start, end)) return true;
+
+		if ((end.y > pointValue.y) !== (start.y > pointValue.y)
+			&& pointValue.x < ((start.x - end.x) * (pointValue.y - end.y)) / (start.y - end.y) + end.x) inside = !inside;
+	}
+
+	return inside;
+};
+const pointInPolygonalPedestrianSpace = (
+	pointValue: WayfindingPoint,
+	walkableAreas: WayfindingStudioPolygonElement[],
+	obstacles: WayfindingStudioPolygonElement[]
+): boolean => walkableAreas.some((area): boolean => pointInPolygon(pointValue, area.geometry))
+	&& !obstacles.some((area): boolean => pointInPolygon(pointValue, area.geometry));
+const routeLeavesPolygonalPedestrianSpace = (
+	points: WayfindingPoint[],
+	corridorWidth: number,
+	walkableAreas: WayfindingStudioPolygonElement[],
+	obstacles: WayfindingStudioPolygonElement[]
+): boolean => {
+	const halfWidth: number = Math.max(0, corridorWidth / 2);
+	const step: number = Math.max(1, Math.min(8, corridorWidth > 0 ? corridorWidth / 2 : 4));
+
+	for (let index = 1; index < points.length; index += 1) {
+		const start: WayfindingPoint = points[index - 1];
+		const end: WayfindingPoint = points[index];
+		const dx: number = end.x - start.x;
+		const dy: number = end.y - start.y;
+		const length: number = Math.hypot(dx, dy);
+		const sampleCount: number = Math.max(1, Math.ceil(length / step));
+		const normalX: number = length === 0 ? 0 : -dy / length;
+		const normalY: number = length === 0 ? 0 : dx / length;
+
+		for (let sampleIndex = 0; sampleIndex <= sampleCount; sampleIndex += 1) {
+			const ratio: number = sampleIndex / sampleCount;
+			const center: WayfindingPoint = { x: start.x + dx * ratio, y: start.y + dy * ratio };
+
+			for (const offset of [0, -halfWidth, halfWidth]) {
+				if (!pointInPolygonalPedestrianSpace({
+					x: center.x + normalX * offset,
+					y: center.y + normalY * offset
+				}, walkableAreas, obstacles)) return true;
+			}
+		}
+	}
+
+	return false;
+};
 
 export const validateWayfindingStudioProject = (project: WayfindingStudioProject): WayfindingStudioIssue[] => {
 	const issues: WayfindingStudioIssue[] = [];
@@ -594,6 +682,14 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 	if (project.delivery.source.levels !== project.floors.length) issues.push({ code: 'source-level-count-mismatch', elementIds: [], message: `Delivery metadata declares ${project.delivery.source.levels} level(s), but the project contains ${project.floors.length}.`, severity: 'error' });
 
+	if (project.defaults) {
+		const locationColor = project.defaults.locationColor;
+
+		if (locationColor && !['fixed', 'inherited', 'random'].includes(locationColor.mode)) issues.push({ code: 'invalid-location-color-mode', elementIds: [], message: 'New-room color mode must be inherited, random, or fixed.', severity: 'error' });
+
+		if (locationColor && !validColor(locationColor.fixedColor)) issues.push({ code: 'invalid-location-fixed-color', elementIds: [], message: 'New-room fixed color must use a six-digit hex value.', severity: 'error' });
+	}
+
 	for (const order of duplicateIds(project.floors.map((floor): string => String(floor.order)))) issues.push({ code: 'duplicate-floor-order', elementIds: project.floors.filter((floor): boolean => String(floor.order) === order).map((floor): string => floor.id), message: `Floor order '${order}' is duplicated.`, severity: 'error' });
 
 	for (const id of duplicateIds(project.destinations.map((destination): string => destination.id))) issues.push({ code: 'duplicate-destination-id', elementIds: [id], message: `Destination id '${id}' is duplicated.`, severity: 'error' });
@@ -613,6 +709,8 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 	for (const floor of project.floors) {
 		if (!(floor.width > 0) || !(floor.height > 0)) issues.push({ code: 'invalid-floor-size', elementIds: [floor.id], message: `Floor '${floor.id}' needs a positive coordinate size.`, severity: 'error' });
+
+		if (floor.pedestrianSpaceSource !== undefined && floor.pedestrianSpaceSource !== 'mask' && floor.pedestrianSpaceSource !== 'polygons') issues.push({ code: 'invalid-pedestrian-space-source', elementIds: [floor.id], message: `Floor '${floor.id}' has an invalid pedestrian-space source.`, severity: 'error' });
 
 		if (floor.backgroundAssetId && !assetIds.has(floor.backgroundAssetId)) issues.push({ code: 'missing-background', elementIds: [floor.id], message: `Floor '${floor.id}' references a missing background asset.`, severity: 'error' });
 
@@ -794,14 +892,37 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 			if (!from || !to || from.levelId !== to.levelId) continue;
 			const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === from.levelId);
 
-			if (!floor?.walkableMask) {
-				issues.push({ code: 'missing-route-mask', elementIds: [edge.id, from.levelId], message: `Route edge '${edge.id}' requires a confirmed walkable-space mask for floor '${from.levelId}'.`, severity: 'error' });
+			if (!floor) continue;
+			const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [from, to];
+			const source: WayfindingStudioPedestrianSpaceSource = floor.pedestrianSpaceSource
+				?? (floor.elements.some((element): boolean => element.type === 'walkable') ? 'polygons' : 'mask');
+
+			if (source === 'polygons') {
+				const walkableAreas: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'walkable');
+				const obstacles: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
+
+				if (walkableAreas.length === 0) {
+					issues.push({ code: 'missing-route-pedestrian-area', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' requires an authored pedestrian area on floor '${floor.id}'.`, severity: 'error' });
+
+					continue;
+				}
+
+				for (const area of [...walkableAreas, ...obstacles]) requireConfirmedElement(area);
+
+				if (routeLeavesPolygonalPedestrianSpace(points, edge.corridorWidth ?? 0, walkableAreas, obstacles)) {
+					issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the authored pedestrian area.`, severity: 'error' });
+				}
 
 				continue;
 			}
 
-			if (floor.walkableMask.reviewStatus !== 'confirmed') issues.push({ code: 'unconfirmed-route-mask', elementIds: [edge.id, floor.id], message: `Walkable-space mask for floor '${floor.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
-			const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [from, to];
+			if (!floor.walkableMask) {
+				issues.push({ code: 'missing-route-mask', elementIds: [edge.id, from.levelId], message: `Route edge '${edge.id}' requires a saved painted pedestrian mask for floor '${from.levelId}'.`, severity: 'error' });
+
+				continue;
+			}
+
+			if (floor.walkableMask.reviewStatus !== 'confirmed') issues.push({ code: 'unconfirmed-route-mask', elementIds: [edge.id, floor.id], message: `Painted pedestrian space for floor '${floor.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
 
 			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, edge.corridorWidth ?? floor.walkableMask.cellSize).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the confirmed walkable-space mask.`, severity: 'error' });
 		}

@@ -287,9 +287,30 @@ void test('requires confirmed entrance geometry for routeable room polygons', ()
 
 void test('requires an independently confirmed walkable mask for every routed floor', () => {
 	const project = multiFloorProject();
+	project.floors[1].pedestrianSpaceSource = 'mask';
 	delete project.floors[1].walkableMask;
 	const issues = validateWayfindingStudioDelivery(project);
 	assert.ok(issues.some((issue): boolean => issue.code === 'missing-route-mask' && issue.elementIds.includes('first-council')));
+});
+
+void test('validates polygon-authored pedestrian space without consulting a stale painted mask', () => {
+	const project = multiFloorProject();
+	const floor = project.floors[1];
+	floor.pedestrianSpaceSource = 'polygons';
+	floor.elements.unshift({
+		...confirmed,
+		floorId: floor.id,
+		geometry: [{ x: 0, y: 0 }, { x: 900, y: 0 }, { x: 900, y: 600 }, { x: 0, y: 600 }],
+		id: 'first-floor-pedestrian-space',
+		type: 'walkable'
+	});
+	floor.walkableMask = {
+		...fullMask('stale-mask', floor.width, floor.height),
+		walkableRuns: [[0, 0, 0]]
+	};
+	const issues = validateWayfindingStudioDelivery(project);
+	assert.ok(!issues.some((issue): boolean => issue.code === 'missing-route-mask'));
+	assert.ok(!issues.some((issue): boolean => issue.code === 'route-leaves-walkable-space'));
 });
 
 void test('rejects duplicate ids and warns about unpaired transitions', () => {
