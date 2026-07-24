@@ -11,6 +11,7 @@
 		"name": { "$ref": "#/$defs/nonEmptyString" },
 		"createdAt": { "$ref": "#/$defs/nonEmptyString" },
 		"updatedAt": { "$ref": "#/$defs/nonEmptyString" },
+		"defaults": { "$ref": "#/$defs/projectDefaults" },
 		"delivery": { "$ref": "wayfinding-project.schema.json" },
 		"assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
 		"categories": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
@@ -51,6 +52,53 @@
 		"polygonPresentation": {
 			"type": "object",
 			"additionalProperties": false,
+			"properties": {
+				"extrusionHeight": { "type": "number", "minimum": 0, "maximum": 100 },
+				"fillColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+				"fillOpacity": { "type": "number", "minimum": 0, "maximum": 1 }
+			}
+		},
+		"projectDefaults": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["iconSize", "label", "location", "logoSize", "obstacle", "route", "walkable"],
+			"properties": {
+				"iconSize": { "type": "number", "minimum": 8, "maximum": 1024 },
+				"logoSize": { "type": "number", "minimum": 8, "maximum": 1024 },
+				"location": { "$ref": "#/$defs/requiredPolygonPresentation" },
+				"obstacle": { "$ref": "#/$defs/requiredPolygonPresentation" },
+				"walkable": { "$ref": "#/$defs/requiredPolygonPresentation" },
+				"label": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["color", "fontFamily", "fontSize", "fontWeight", "outlineColor", "outlineWidth"],
+					"properties": {
+						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+						"fontFamily": { "enum": ["sans-serif", "serif", "monospace"] },
+						"fontSize": { "type": "number", "minimum": 6, "maximum": 512 },
+						"fontWeight": { "enum": [400, 600, 700] },
+						"outlineColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+						"outlineWidth": { "type": "number", "minimum": 0, "maximum": 16 }
+					}
+				},
+				"route": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["animation", "animationSpeed", "color", "cornerRadius", "lineWidth"],
+					"properties": {
+						"animation": { "enum": ["flow", "none", "pulse"] },
+						"animationSpeed": { "type": "number", "minimum": 1, "maximum": 300 },
+						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+						"cornerRadius": { "type": "number", "minimum": 0, "maximum": 200 },
+						"lineWidth": { "type": "number", "minimum": 1, "maximum": 64 }
+					}
+				}
+			}
+		},
+		"requiredPolygonPresentation": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["extrusionHeight", "fillColor", "fillOpacity"],
 			"properties": {
 				"extrusionHeight": { "type": "number", "minimum": 0, "maximum": 100 },
 				"fillColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },

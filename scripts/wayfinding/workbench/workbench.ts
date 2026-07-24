@@ -31,6 +31,7 @@ import {
 	touchWayfindingStudioProject,
 	validateWayfindingStudioDelivery,
 	validateWayfindingStudioProject,
+	wayfindingStudioProjectDefaults,
 	type WayfindingStudioAsset,
 	type WayfindingStudioDoorElement,
 	type WayfindingStudioElement,
@@ -42,10 +43,11 @@ import {
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioPolygonPresentation,
 	type WayfindingStudioProject,
+	type WayfindingStudioProjectDefaults,
 	type WayfindingStudioRepair,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
-import { WayfindingScene3d, wayfindingPolygonPresentationDefaults } from './scene3d';
+import { WayfindingScene3d } from './scene3d';
 
 type SemanticPolygonTool = 'location' | 'obstacle' | 'walkable';
 type Tool = 'pan' | 'sample' | 'include' | 'exclude' | 'anchor' | 'draw' | 'graph' | 'select' | SemanticPolygonTool | 'door' | 'poi' | 'origin' | 'transition' | 'label' | 'icon' | 'logo';
@@ -112,6 +114,11 @@ interface DetectedRegion {
 interface HistoryState {
 	currentFloorId: string;
 	project: WayfindingStudioProject;
+	view: {
+		offsetX: number;
+		offsetY: number;
+		scale: number;
+	};
 }
 
 interface AutosaveRecord {
@@ -121,11 +128,29 @@ interface AutosaveRecord {
 	savedAt: string;
 }
 
+interface StudioWritableFile {
+	close(): Promise<void>;
+	write(data: Blob | string): Promise<void>;
+}
+
+interface StudioFileHandle {
+	createWritable(): Promise<StudioWritableFile>;
+	getFile(): Promise<File>;
+	name: string;
+	queryPermission?(options: { mode: 'readwrite' }): Promise<PermissionState>;
+	requestPermission?(options: { mode: 'readwrite' }): Promise<PermissionState>;
+}
+
+interface StudioFilePickerWindow extends Window {
+	showOpenFilePicker?(options: Record<string, unknown>): Promise<StudioFileHandle[]>;
+	showSaveFilePicker?(options: Record<string, unknown>): Promise<StudioFileHandle>;
+}
+
 const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
-const STUDIO_VERSION = '0.10';
+const STUDIO_VERSION = '0.12';
 
 const requireElement = <T extends Element>(selector: string): T => {
 	const element: T | null = document.querySelector<T>(selector);
@@ -210,6 +235,13 @@ const routeProfile = requireElement<HTMLSelectElement>('#route-profile');
 const routeResult = requireElement<HTMLElement>('#route-result');
 const routeBuildButton = requireElement<HTMLButtonElement>('#route-build');
 const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
+const routeInspectButton = requireElement<HTMLButtonElement>('#route-inspect');
+const routePreviewNetworkInput = requireElement<HTMLInputElement>('#route-preview-network');
+const routePreviewAnimationInput = requireElement<HTMLSelectElement>('#route-preview-animation');
+const routePreviewSpeedInput = requireElement<HTMLInputElement>('#route-preview-speed');
+const routePreviewSpeedValue = requireElement<HTMLOutputElement>('#route-preview-speed-value');
+const routePreviewColorInput = requireElement<HTMLInputElement>('#route-preview-color');
+const routePreviewWidthInput = requireElement<HTMLInputElement>('#route-preview-width');
 const studioNotice = requireElement<HTMLElement>('#studio-notice');
 const workspaceMapButton = requireElement<HTMLButtonElement>('#workspace-map');
 const workspaceRoutePreviewButton = requireElement<HTMLButtonElement>('#workspace-route-preview');
@@ -237,6 +269,7 @@ const projectContextRecovery = requireElement<HTMLElement>('#project-context-rec
 const projectContextPortable = requireElement<HTMLElement>('#project-context-portable');
 const newProjectButton = requireElement<HTMLButtonElement>('#studio-new-project');
 const openProjectButton = requireElement<HTMLButtonElement>('#studio-open-project');
+const saveAsButton = requireElement<HTMLButtonElement>('#studio-save-as');
 const drawingModePoints = requireElement<HTMLButtonElement>('#drawing-mode-points');
 const drawingModeLasso = requireElement<HTMLButtonElement>('#drawing-mode-lasso');
 const drawingModeSmart = requireElement<HTMLButtonElement>('#drawing-mode-smart');
@@ -244,6 +277,7 @@ const drawingModeHelp = requireElement<HTMLElement>('#drawing-mode-help');
 const snapToEdgesInput = requireElement<HTMLInputElement>('#snap-to-edges');
 const snapRadiusInput = requireElement<HTMLInputElement>('#snap-radius');
 const snapRadiusValue = requireElement<HTMLOutputElement>('#snap-radius-value');
+const traceAssist = requireElement<HTMLElement>('#trace-assist');
 const semanticDraftHelp = requireElement<HTMLElement>('#semantic-draft-help');
 const mediaAssetState = requireElement<HTMLElement>('#media-asset-state');
 const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
@@ -252,6 +286,22 @@ const stopMediaPlacement = requireElement<HTMLButtonElement>('#stop-media-placem
 const mediaAssetLibrary = requireElement<HTMLElement>('#media-asset-library');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
+const objectCount = requireElement<HTMLElement>('#object-count');
+const objectList = requireElement<HTMLElement>('#object-list');
+const defaultLocationOpacityInput = requireElement<HTMLInputElement>('#default-location-opacity');
+const defaultLocationHeightInput = requireElement<HTMLInputElement>('#default-location-height');
+const defaultWalkableOpacityInput = requireElement<HTMLInputElement>('#default-walkable-opacity');
+const defaultObstacleOpacityInput = requireElement<HTMLInputElement>('#default-obstacle-opacity');
+const defaultLabelFontInput = requireElement<HTMLSelectElement>('#default-label-font');
+const defaultLabelSizeInput = requireElement<HTMLInputElement>('#default-label-size');
+const defaultIconSizeInput = requireElement<HTMLInputElement>('#default-icon-size');
+const defaultLogoSizeInput = requireElement<HTMLInputElement>('#default-logo-size');
+const defaultRouteColorInput = requireElement<HTMLInputElement>('#default-route-color');
+const defaultRouteWidthInput = requireElement<HTMLInputElement>('#default-route-width');
+const defaultRouteRadiusInput = requireElement<HTMLInputElement>('#default-route-radius');
+const defaultRouteAnimationInput = requireElement<HTMLSelectElement>('#default-route-animation');
+const defaultRouteSpeedInput = requireElement<HTMLInputElement>('#default-route-speed');
+const defaultRouteSpeedValue = requireElement<HTMLOutputElement>('#default-route-speed-value');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -279,6 +329,7 @@ let offsetX = 0;
 let offsetY = 0;
 let currentFloorId = 'level-0';
 let semanticDraft: { points: WayfindingPoint[]; type: SemanticPolygonTool } | undefined;
+const semanticDraftRedo: WayfindingPoint[] = [];
 let selectedSemanticId: string | undefined;
 let selectedSemanticVertexIndex: number | undefined;
 let insertPointForSemanticId: string | undefined;
@@ -302,8 +353,12 @@ let drawingMode: DrawingMode = 'points';
 let lassoDrawing = false;
 let projectOrigin: ProjectOrigin = 'new';
 let openedProjectFileName: string | undefined;
+let projectFileHandle: StudioFileHandle | undefined;
 let portableSnapshot: string | undefined;
 let lastLocalSaveAt: string | undefined;
+let routeAnimationFrame: number | undefined;
+let routeAnimationPhase = 0;
+let routeAnimationPreviousTime = 0;
 const undoStack: HistoryState[] = [];
 const redoStack: HistoryState[] = [];
 const HISTORY_LIMIT = 30;
@@ -408,15 +463,23 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
-const simulatedRoutePoints = (): WayfindingPoint[] => simplifyRouteForDisplay(simulatedRoute?.path
-	.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
-	.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y }))
-	.reduce((points: WayfindingPoint[], point: WayfindingPoint): WayfindingPoint[] => {
-		const previous: WayfindingPoint | undefined = points[points.length - 1];
-		if (!previous || previous.x !== point.x || previous.y !== point.y) points.push(point);
+const simulatedRoutePoints = (): WayfindingPoint[] => {
+	const points: WayfindingPoint[] = simulatedRoute?.path
+		.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
+		.map((routePoint): WayfindingPoint => ({ x: routePoint.x, y: routePoint.y }))
+		.reduce((result: WayfindingPoint[], point: WayfindingPoint): WayfindingPoint[] => {
+			const previous: WayfindingPoint | undefined = result[result.length - 1];
+			if (!previous || previous.x !== point.x || previous.y !== point.y) result.push(point);
 
-		return points;
-	}, []) ?? []);
+			return result;
+		}, []) ?? [];
+	const generatedRoute: boolean = simulatedRoute?.edgeIds.every((edgeId: string): boolean =>
+		edgeId.startsWith('centerline:') || edgeId.startsWith('approach:')
+	) ?? false;
+	const routeClearance: number = Math.max(cellSize() * 1.5, projectDefaults().route.lineWidth * 1.25);
+
+	return generatedRoute && points.length > 2 && mask.length > 0 ? simplifyContainedGeometry(points, routeClearance) : points;
+};
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
 		if (workspaceMode === 'route-preview' && routeToSemanticElement(elementId)) return;
@@ -473,7 +536,7 @@ const renderProjectContext = (): void => {
 	const sourceLabels: Record<ProjectOrigin, string> = {
 		'local-recovery': 'Browser recovery draft',
 		'new': 'New browser draft',
-		'portable-file': openedProjectFileName ? `Portable file: ${openedProjectFileName}` : 'Portable project file'
+		'portable-file': openedProjectFileName ? `Project file: ${openedProjectFileName}` : 'Project file'
 	};
 	projectContextName.textContent = `${studioProject.name} / ${floor?.name ?? currentFloorId}`;
 	projectContextSource.textContent = sourceLabels[projectOrigin];
@@ -481,8 +544,8 @@ const renderProjectContext = (): void => {
 		? 'Older recovery waiting'
 		: lastLocalSaveAt ? `Saved locally ${savedTimeLabel(lastLocalSaveAt)}` : autosaveEnabled ? 'Ready' : 'Starting...';
 	projectContextPortable.textContent = portableState === 'current'
-		? 'Downloaded and current'
-		: portableState === 'dirty' ? 'Changes not downloaded' : 'Not downloaded';
+		? openedProjectFileName ? `Saved to ${openedProjectFileName}` : 'Saved copy is current'
+		: portableState === 'dirty' ? 'Unsaved file changes' : 'Not saved to file';
 	projectContext.dataset.portable = portableState;
 };
 
@@ -506,7 +569,8 @@ const renderDrawingMode = (): void => {
 		: lasso
 			? 'Keep dragging around the boundary, then release to create an editable polygon.'
 			: 'Tap each corner. Finish after at least three points.';
-	snapRadiusInput.disabled = !snapToEdgesInput.checked || smart;
+	traceAssist.hidden = !lasso;
+	snapRadiusInput.disabled = !snapToEdgesInput.checked || !lasso;
 };
 
 const renderMediaAssetState = (): void => {
@@ -560,6 +624,7 @@ const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
 	simulatedRoute = undefined;
 	routeResult.textContent = message;
 	routeClearButton.disabled = true;
+	routeInspectButton.disabled = true;
 	draw();
 };
 
@@ -594,6 +659,7 @@ const resetWorkspaceInteraction = (mode: WorkspaceMode): void => {
 	pointerDown = false;
 	lassoDrawing = false;
 	semanticDraft = undefined;
+	semanticDraftRedo.length = 0;
 	edgeDraft = undefined;
 	draggedSemantic = undefined;
 	draggedDoorRotation = undefined;
@@ -696,10 +762,10 @@ async function persistAutosave(force = false): Promise<void> {
 		await autosaveWrite;
 		autosaveSnapshot = snapshot;
 		lastLocalSaveAt = savedAt;
-		setAutosaveStatus(`SAVED ${savedTimeLabel(savedAt)}`, 'saved', `Local recovery saved at ${new Date(savedAt).toLocaleString()}. Use Save project for a portable file.`);
+		setAutosaveStatus(`SAVED ${savedTimeLabel(savedAt)}`, 'saved', `Crash recovery updated at ${new Date(savedAt).toLocaleString()}. Use Save to update the project file.`);
 	} catch (error) {
 		const detail: string = error instanceof Error ? error.message : 'Unknown storage error';
-		setAutosaveStatus('AUTOSAVE FAILED', 'error', `${detail} Use Save project to download a portable copy.`);
+		setAutosaveStatus('AUTOSAVE FAILED', 'error', `${detail} Use Save to preserve the project file.`);
 	}
 }
 
@@ -733,12 +799,16 @@ const cloneStudioProject = (value: WayfindingStudioProject): WayfindingStudioPro
 const captureHistoryState = (): HistoryState => {
 	synchronizeStudioState();
 
-	return { currentFloorId, project: cloneStudioProject(studioProject) };
+	return {
+		currentFloorId,
+		project: cloneStudioProject(studioProject),
+		view: { offsetX, offsetY, scale }
+	};
 };
 
 const updateEditActions = (): void => {
-	undoButton.disabled = undoStack.length === 0 || restoringHistory;
-	redoButton.disabled = redoStack.length === 0 || restoringHistory;
+	undoButton.disabled = (undoStack.length === 0 && !semanticDraft?.points.length) || restoringHistory;
+	redoButton.disabled = (redoStack.length === 0 && semanticDraftRedo.length === 0) || restoringHistory;
 	deleteSelectionButton.disabled = (!selectedSemanticId && !selectedEdgeId) || restoringHistory;
 };
 
@@ -754,6 +824,7 @@ const recordHistory = (before: HistoryState): void => {
 const clearHistory = (): void => {
 	undoStack.length = 0;
 	redoStack.length = 0;
+	semanticDraftRedo.length = 0;
 	updateEditActions();
 };
 
@@ -770,6 +841,7 @@ const restoreHistoryState = async (state: HistoryState): Promise<void> => {
 	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
 	semanticDraft = undefined;
+	semanticDraftRedo.length = 0;
 	edgeDraft = undefined;
 	insertPointForEdge = undefined;
 	insertPointForSemanticId = undefined;
@@ -782,12 +854,25 @@ const restoreHistoryState = async (state: HistoryState): Promise<void> => {
 	renderProjectAssessment();
 	renderMetadataEditor();
 	await activateFloor(state.currentFloorId);
+	scale = state.view.scale;
+	offsetX = state.view.offsetX;
+	offsetY = state.view.offsetY;
+	draw();
 	restoringHistory = false;
 	updateEditActions();
 };
 
 const undo = async (): Promise<void> => {
 	if (restoringHistory) return;
+	if (semanticDraft?.points.length) {
+		const point: WayfindingPoint | undefined = semanticDraft.points.pop();
+		if (point) semanticDraftRedo.push(point);
+		semanticDraftHost.hidden = false;
+		updateEditActions();
+		draw();
+		coverageStatus.textContent = 'Removed the last polygon point.';
+		return;
+	}
 	const previous: HistoryState | undefined = undoStack.pop();
 	if (!previous) return;
 	redoStack.push(captureHistoryState());
@@ -797,6 +882,14 @@ const undo = async (): Promise<void> => {
 
 const redo = async (): Promise<void> => {
 	if (restoringHistory) return;
+	if (semanticDraft && semanticDraftRedo.length > 0) {
+		const point: WayfindingPoint | undefined = semanticDraftRedo.pop();
+		if (point) semanticDraft.points.push(point);
+		updateEditActions();
+		draw();
+		coverageStatus.textContent = 'Restored the polygon point.';
+		return;
+	}
 	const next: HistoryState | undefined = redoStack.pop();
 	if (!next) return;
 	undoStack.push(captureHistoryState());
@@ -1119,6 +1212,112 @@ const renderRouteSimulator = (): void => {
 		return item;
 	}));
 	routeClearButton.disabled = !simulatedRoute;
+	routeInspectButton.disabled = !simulatedRoute;
+};
+
+const projectDefaults = (): WayfindingStudioProjectDefaults => {
+	studioProject.defaults = wayfindingStudioProjectDefaults(studioProject);
+
+	return studioProject.defaults;
+};
+
+const syncProjectDefaultControls = (): void => {
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
+	defaultLocationOpacityInput.value = String(Math.round(defaults.location.fillOpacity * 100));
+	defaultLocationHeightInput.value = String(defaults.location.extrusionHeight);
+	defaultWalkableOpacityInput.value = String(Math.round(defaults.walkable.fillOpacity * 100));
+	defaultObstacleOpacityInput.value = String(Math.round(defaults.obstacle.fillOpacity * 100));
+	defaultLabelFontInput.value = defaults.label.fontFamily;
+	defaultLabelSizeInput.value = String(defaults.label.fontSize);
+	defaultIconSizeInput.value = String(defaults.iconSize);
+	defaultLogoSizeInput.value = String(defaults.logoSize);
+	defaultRouteColorInput.value = defaults.route.color;
+	defaultRouteWidthInput.value = String(defaults.route.lineWidth);
+	defaultRouteRadiusInput.value = String(defaults.route.cornerRadius);
+	defaultRouteAnimationInput.value = defaults.route.animation;
+	defaultRouteSpeedInput.value = String(defaults.route.animationSpeed);
+	defaultRouteSpeedValue.value = String(defaults.route.animationSpeed);
+	routePreviewAnimationInput.value = defaults.route.animation;
+	routePreviewSpeedInput.value = String(defaults.route.animationSpeed);
+	routePreviewSpeedValue.value = String(defaults.route.animationSpeed);
+	routePreviewColorInput.value = defaults.route.color;
+	routePreviewWidthInput.value = String(defaults.route.lineWidth);
+};
+
+const objectName = (element: WayfindingStudioElement): string => {
+	if (element.type === 'location' || element.type === 'poi' || element.type === 'origin' || element.type === 'transition') {
+		return element.label?.trim() || element.id;
+	}
+	if (element.type === 'label') return element.text.trim() || element.id;
+	if (element.type === 'icon' || element.type === 'logo') {
+		return studioProject.assets.find((asset: WayfindingStudioAsset): boolean => asset.id === element.assetId)?.name ?? element.id;
+	}
+	if (element.type === 'door') return element.locationId ? `Door to ${element.locationId}` : element.id;
+
+	return element.id;
+};
+
+const renderObjectExplorer = (): void => {
+	const elements: WayfindingStudioElement[] = currentElements();
+	objectCount.textContent = `${elements.length} item${elements.length === 1 ? '' : 's'}`;
+	objectList.replaceChildren();
+	if (elements.length === 0) {
+		const empty: HTMLParagraphElement = document.createElement('p');
+		empty.className = 'object-list-empty';
+		empty.textContent = 'No map objects on this floor yet.';
+		objectList.append(empty);
+		return;
+	}
+
+	const typeLabels: Record<WayfindingStudioElement['type'], string> = {
+		door: 'Doors',
+		icon: 'Icons',
+		label: 'Labels',
+		location: 'Rooms and areas',
+		logo: 'Logos',
+		obstacle: 'Blocked areas',
+		origin: 'You are here',
+		poi: 'Points of interest',
+		transition: 'Floor connections',
+		walkable: 'Walkable areas'
+	};
+	const groups = new Map<WayfindingStudioElement['type'], WayfindingStudioElement[]>();
+	for (const element of elements) groups.set(element.type, [...(groups.get(element.type) ?? []), element]);
+	for (const [type, items] of groups) {
+		const section: HTMLElement = document.createElement('section');
+		const heading: HTMLButtonElement = document.createElement('button');
+		const list: HTMLDivElement = document.createElement('div');
+		heading.type = 'button';
+		heading.className = 'object-group-heading';
+		heading.textContent = `${typeLabels[type]} (${items.length})`;
+		list.className = 'object-group-items';
+		for (const element of items) {
+			const button: HTMLButtonElement = document.createElement('button');
+			const name: HTMLSpanElement = document.createElement('span');
+			const status: HTMLElement = document.createElement('small');
+			button.type = 'button';
+			button.className = 'object-item';
+			button.classList.toggle('active', element.id === selectedSemanticId);
+			button.dataset.type = element.type;
+			name.textContent = objectName(element);
+			status.textContent = element.status;
+			button.append(name, status);
+			button.addEventListener('click', (): void => {
+				selectedSemanticId = element.id;
+				selectedSemanticVertexIndex = undefined;
+				selectedEdgeId = undefined;
+				activateTool('select');
+				renderSemanticEditor();
+				renderReview();
+				renderObjectExplorer();
+				draw();
+			});
+			list.append(button);
+		}
+		heading.addEventListener('click', (): void => { list.hidden = !list.hidden; });
+		section.append(heading, list);
+		objectList.append(section);
+	}
 };
 
 const renderStudioControls = (): void => {
@@ -1151,6 +1350,8 @@ const renderStudioControls = (): void => {
 	renderRouteSimulator();
 	renderProjectContext();
 	renderMediaAssetState();
+	syncProjectDefaultControls();
+	renderObjectExplorer();
 };
 
 const selectedSemanticPolygon = (): WayfindingStudioPolygonElement | undefined => {
@@ -1224,6 +1425,7 @@ const deleteCurrentSelection = (): void => {
 };
 
 const renderSemanticEditor = (): void => {
+	renderObjectExplorer();
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	semanticEditor.replaceChildren();
 	const title: HTMLHeadingElement = document.createElement('h2');
@@ -1444,21 +1646,21 @@ const renderSemanticEditor = (): void => {
 	}
 
 	if ('geometry' in element) {
-		const defaults = wayfindingPolygonPresentationDefaults(element.type);
+		const defaults = projectDefaults()[element.type];
 		const appearanceHeading: HTMLHeadingElement = document.createElement('h3');
 		appearanceHeading.className = 'public-details-heading';
 		appearanceHeading.textContent = 'Map appearance';
 		const appearanceFields: HTMLDivElement = document.createElement('div');
 		appearanceFields.className = 'appearance-fields';
-		textField('Fill color', element.presentation?.fillColor ?? defaults.color, (value): void => {
+		textField('Fill color', element.presentation?.fillColor ?? defaults.fillColor, (value): void => {
 			element.presentation ??= {};
 			element.presentation.fillColor = value;
 		}, 'color', appearanceFields);
-		textField('Opacity %', String(Math.round((element.presentation?.fillOpacity ?? defaults.opacity) * 100)), (value): void => {
+		textField('Opacity %', String(Math.round((element.presentation?.fillOpacity ?? defaults.fillOpacity) * 100)), (value): void => {
 			element.presentation ??= {};
 			element.presentation.fillOpacity = Math.min(1, Math.max(0, (Number(value) || 0) / 100));
 		}, 'number', appearanceFields);
-		textField('3D visual height', String(element.presentation?.extrusionHeight ?? defaults.height), (value): void => {
+		textField('3D visual height', String(element.presentation?.extrusionHeight ?? defaults.extrusionHeight), (value): void => {
 			element.presentation ??= {};
 			element.presentation.extrusionHeight = Math.min(100, Math.max(0, Number(value) || 0));
 		}, 'number', appearanceFields, '0 is flat; 100 is the tallest visual profile. This is a design scale, not metres.');
@@ -2046,6 +2248,19 @@ const pointWalkable = (point: WayfindingPoint): boolean => {
 	return cellInBounds(column, row) && mask[maskIndex(column, row)] === 1;
 };
 
+const pointWalkableWithClearance = (point: WayfindingPoint, clearance: number): boolean => {
+	if (!pointWalkable(point)) return false;
+	if (clearance <= 0) return true;
+	for (const angle of [0, Math.PI / 4, Math.PI / 2, Math.PI * 3 / 4, Math.PI, Math.PI * 5 / 4, Math.PI * 3 / 2, Math.PI * 7 / 4]) {
+		if (!pointWalkable({
+			x: point.x + Math.cos(angle) * clearance,
+			y: point.y + Math.sin(angle) * clearance
+		})) return false;
+	}
+
+	return true;
+};
+
 const edgeFailuresFor = (edge: WayfindingEdge): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = edgePoints(edge);
 	const failures: WayfindingPoint[] = [];
@@ -2094,15 +2309,16 @@ const drawSemanticElements = (): void => {
 	const colors: Record<string, string> = {
 		door: '#17201f', label: '#17201f', location: '#d9981c', obstacle: '#a83c32', origin: '#138b75', poi: '#2b6cb0', transition: '#7b4bc4', walkable: '#17a886'
 	};
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
 	for (const element of currentElements()) {
 		if (!layerVisible(element.type)) continue;
 		const selected: boolean = element.id === selectedSemanticId;
 		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
-		const polygonDefaults = polygon ? wayfindingPolygonPresentationDefaults(polygon.type) : undefined;
+		const polygonDefaults = polygon ? defaults[polygon.type] : undefined;
 		context.save();
 		context.lineWidth = (selected ? 5 : 2.5) / scale;
-		context.strokeStyle = selected ? '#ffe06c' : polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.color : colors[element.type];
-		context.fillStyle = polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.color : colors[element.type];
+		context.strokeStyle = selected ? '#ffe06c' : polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.fillColor : colors[element.type];
+		context.fillStyle = polygonDefaults ? polygon?.presentation?.fillColor ?? polygonDefaults.fillColor : colors[element.type];
 		if (element.type === 'icon' || element.type === 'logo') {
 			const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === element.assetId);
 			if (asset) {
@@ -2115,10 +2331,18 @@ const drawSemanticElements = (): void => {
 			context.moveTo(element.geometry[0].x, element.geometry[0].y);
 			for (const vertex of element.geometry.slice(1)) context.lineTo(vertex.x, vertex.y);
 			context.closePath();
-			context.globalAlpha = element.presentation?.fillOpacity ?? polygonDefaults?.opacity ?? 0.2;
+			context.globalAlpha = element.presentation?.fillOpacity ?? polygonDefaults?.fillOpacity ?? 0.2;
 			context.fill();
 			context.globalAlpha = 1;
-			context.stroke();
+			if (workspaceMode !== 'route-preview' || selected) {
+				context.lineJoin = 'round';
+				context.lineWidth = (selected ? 6 : 4) / scale;
+				context.strokeStyle = selected ? '#ffe06c' : 'rgba(255, 255, 255, 0.94)';
+				context.stroke();
+				context.lineWidth = (selected ? 2.5 : 1.5) / scale;
+				context.strokeStyle = selected ? '#17201f' : '#087d6b';
+				context.stroke();
+			}
 			if (selected) {
 				context.fillStyle = '#fffdf6';
 				for (const [index, vertex] of element.geometry.entries()) {
@@ -2163,18 +2387,18 @@ const drawSemanticElements = (): void => {
 				'sans-serif': 'Arial, sans-serif',
 				serif: 'Georgia, serif'
 			};
-			const fontSize: number = element.fontSize ?? 24;
-			const outlineWidth: number = element.outlineWidth ?? 0;
-			context.font = `${element.fontWeight ?? 600} ${fontSize}px ${fontFamilies[element.fontFamily ?? 'sans-serif']}`;
+			const fontSize: number = element.fontSize ?? defaults.label.fontSize;
+			const outlineWidth: number = element.outlineWidth ?? defaults.label.outlineWidth;
+			context.font = `${element.fontWeight ?? defaults.label.fontWeight} ${fontSize}px ${fontFamilies[element.fontFamily ?? defaults.label.fontFamily]}`;
 			context.textAlign = element.textAnchor === 'middle' ? 'center' : element.textAnchor === 'end' ? 'right' : 'left';
 			context.textBaseline = 'alphabetic';
 			if (outlineWidth > 0) {
-				context.strokeStyle = element.outlineColor ?? '#ffffff';
+				context.strokeStyle = element.outlineColor ?? defaults.label.outlineColor;
 				context.lineWidth = outlineWidth;
 				context.lineJoin = 'round';
 				context.strokeText(element.text, element.point.x, element.point.y);
 			}
-			context.fillStyle = element.color ?? colors.label;
+			context.fillStyle = element.color ?? defaults.label.color;
 			context.fillText(element.text, element.point.x, element.point.y);
 			if (selected) {
 				context.beginPath();
@@ -2242,20 +2466,23 @@ function simulateSelectedRoute(): boolean {
 	if (!startId || !destinationNodeId) {
 		routeResult.textContent = 'Add an origin and a routeable destination entrance first.';
 		routeClearButton.disabled = true;
+		routeInspectButton.disabled = true;
 		return false;
 	}
 	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationNodeId, { profile: routeProfile.value as 'standard' | 'step-free' });
 	if (!simulatedRoute) {
 		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
 		routeClearButton.disabled = true;
+		routeInspectButton.disabled = true;
 		draw();
 		return false;
 	}
 	const floors: string[] = [...new Set(simulatedRoute.nodeIds
 		.map((id: string): string => studioProject.graph.nodes.find((node: WayfindingNode): boolean => node.id === id)?.levelId ?? ''))]
 		.filter(Boolean);
-	routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${floors.join(' -> ')}`;
+	routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${simulatedRoute.edgeIds.length} network segment${simulatedRoute.edgeIds.length === 1 ? '' : 's'}, ${floors.join(' -> ')}`;
 	routeClearButton.disabled = false;
+	routeInspectButton.disabled = false;
 	draw();
 
 	return true;
@@ -2338,9 +2565,14 @@ const rasterizeAuthoredWalkableAreas = (): boolean => {
 	return mask.some((value: number): boolean => value === 1);
 };
 
-const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'graph' | 'include' | 'location' | 'obstacle' | 'pan' | 'sample' | 'select' | 'walkable'>, pointValue: WayfindingPoint): void => {
-	const before: HistoryState = captureHistoryState();
+const addSemanticPoint = (
+	type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'graph' | 'include' | 'location' | 'obstacle' | 'pan' | 'sample' | 'select' | 'walkable'>,
+	pointValue: WayfindingPoint,
+	options: { before?: HistoryState; deferHistory?: boolean } = {}
+): WayfindingStudioElement | undefined => {
+	const before: HistoryState = options.before ?? captureHistoryState();
 	const base = { floorId: currentFloorId, provenance: 'reviewer-authored' as const, status: 'proposed' as const };
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
 	let element: WayfindingStudioElement;
 	if (type === 'door') {
 		const location: WayfindingStudioPolygonElement | undefined = nearestLocationForDoor(pointValue);
@@ -2357,17 +2589,18 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 	} else if (type === 'icon' || type === 'logo') {
 		if (!pendingMediaAssetId) {
 			coverageStatus.textContent = 'Choose an icon or logo asset before placing it.';
-			return;
+			return undefined;
 		}
 		const sourceAsset: WayfindingStudioAsset | undefined = studioProject.assets.find((asset: WayfindingStudioAsset): boolean => asset.id === pendingMediaAssetId);
-		if (!sourceAsset) return;
+		if (!sourceAsset) return undefined;
 		const asset: WayfindingStudioAsset = sourceAsset.kind === type
 			? sourceAsset
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
 		if (asset !== sourceAsset) studioProject.assets.push(asset);
 		const naturalWidth: number = asset.naturalWidth ?? 96;
 		const naturalHeight: number = asset.naturalHeight ?? 96;
-		const ratio: number = 96 / Math.max(naturalWidth, naturalHeight);
+		const targetSize: number = type === 'icon' ? defaults.iconSize : defaults.logoSize;
+		const ratio: number = targetSize / Math.max(naturalWidth, naturalHeight);
 		const width: number = Math.max(12, naturalWidth * ratio);
 		const height: number = Math.max(12, naturalHeight * ratio);
 		const floor: WayfindingStudioFloor = currentFloor();
@@ -2376,11 +2609,11 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 			y: Math.max(0, Math.min(floor.height - height, pointValue.y - height / 2))
 		};
 		element = { ...base, assetId: asset.id, height, id: nextId(type), point, type, width } satisfies WayfindingStudioMediaElement;
-	} else element = { ...base, color: '#17201f', fontFamily: 'sans-serif', fontSize: 24, fontWeight: 600, id: nextId('label'), outlineColor: '#ffffff', outlineWidth: 0, point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
+	} else element = { ...base, ...defaults.label, id: nextId('label'), point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	syncStudioGraph();
-	recordHistory(before);
+	if (!options.deferHistory) recordHistory(before);
 	if (element.type === 'door') {
 		const linkedLocation: WayfindingStudioPolygonElement | undefined = element.locationId
 			? currentElements().find((candidate: WayfindingStudioElement): candidate is WayfindingStudioPolygonElement => candidate.type === 'location' && candidate.id === element.locationId)
@@ -2392,6 +2625,8 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 	renderSemanticEditor();
 	renderStudioControls();
 	draw();
+
+	return element;
 };
 
 const commitSemanticPolygon = (
@@ -2402,12 +2637,13 @@ const commitSemanticPolygon = (
 	if (points.length < 3) return;
 	const before: HistoryState = captureHistoryState();
 	const id: string = nextId(type);
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
 	const element: WayfindingStudioPolygonElement = {
 		floorId: currentFloorId,
 		geometry: points,
 		id,
 		label: type === 'location' ? `Location ${id.split('-').at(-1)}` : undefined,
-		presentation,
+		presentation: { ...defaults[type], ...presentation },
 		provenance: 'reviewer-authored',
 		status: 'proposed',
 		type
@@ -2419,6 +2655,7 @@ const commitSemanticPolygon = (
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
 	semanticDraft = undefined;
+	semanticDraftRedo.length = 0;
 	semanticDraftHost.hidden = true;
 	syncStudioGraph();
 	recordHistory(before);
@@ -2434,6 +2671,13 @@ const finishSemanticPolygon = (): void => {
 
 const draw = (): void => {
 	const bounds: DOMRect = canvas.getBoundingClientRect();
+	const showRouteNetwork: boolean = workspaceMode === 'route-edit'
+		|| (workspaceMode === 'route-preview' && routePreviewNetworkInput.checked);
+	canvas.dataset.viewScale = String(scale);
+	canvas.dataset.viewOffsetX = String(offsetX);
+	canvas.dataset.viewOffsetY = String(offsetY);
+	canvas.dataset.semanticDraftPointCount = String(semanticDraft?.points.length ?? 0);
+	canvas.dataset.routeNetworkVisible = String(showRouteNetwork);
 	context.save();
 	context.setTransform(1, 0, 0, 1, 0, 0);
 	context.fillStyle = '#323b39';
@@ -2472,7 +2716,7 @@ const draw = (): void => {
 		}
 	}
 
-	if (graph && workspaceMode === 'route-edit') {
+	if (graph && showRouteNetwork) {
 		for (const edge of graph.edges) {
 			const fromNode: WayfindingNode | undefined = graphNode(edge.from);
 			const toNode: WayfindingNode | undefined = graphNode(edge.to);
@@ -2489,11 +2733,14 @@ const draw = (): void => {
 
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
-			context.lineWidth = (edge.id === selectedEdgeId ? 5 : 2.5) / scale;
-			context.strokeStyle = edge.id === selectedEdgeId ? '#ffd34e' : valid ? '#008f77' : '#e13f34';
+			const selectedInEditor: boolean = workspaceMode === 'route-edit' && edge.id === selectedEdgeId;
+			context.lineWidth = (selectedInEditor ? 5 : workspaceMode === 'route-preview' ? 2 : 2.5) / scale;
+			context.strokeStyle = selectedInEditor
+				? '#ffd34e'
+				: valid ? workspaceMode === 'route-preview' ? 'rgba(0, 112, 94, 0.58)' : '#008f77' : '#e13f34';
 			context.stroke();
 
-			if (tool === 'graph' && edge.id === selectedEdgeId) {
+			if (workspaceMode === 'route-edit' && tool === 'graph' && edge.id === selectedEdgeId) {
 				for (const point of points) {
 					context.beginPath();
 					context.arc(point.x, point.y, 6 / scale, 0, Math.PI * 2);
@@ -2506,7 +2753,7 @@ const draw = (): void => {
 			}
 		}
 
-		if (tool === 'anchor' || tool === 'draw') {
+		if (workspaceMode === 'route-edit' && (tool === 'anchor' || tool === 'draw')) {
 			for (const node of graph.nodes) {
 				if (node.levelId !== currentFloorId) continue;
 				context.beginPath();
@@ -2519,7 +2766,7 @@ const draw = (): void => {
 			}
 		}
 
-		if (edgeDraft && edgeDraft.points.length > 0) {
+		if (workspaceMode === 'route-edit' && edgeDraft && edgeDraft.points.length > 0) {
 			context.beginPath();
 			context.moveTo(edgeDraft.points[0].x, edgeDraft.points[0].y);
 
@@ -2534,7 +2781,9 @@ const draw = (): void => {
 			context.setLineDash([]);
 		}
 
-		const selectedNode: WayfindingNode | undefined = graph.nodes.find((node: WayfindingNode): boolean => node.levelId === currentFloorId && node.locationId === selectedDestinationId);
+		const selectedNode: WayfindingNode | undefined = workspaceMode === 'route-edit'
+			? graph.nodes.find((node: WayfindingNode): boolean => node.levelId === currentFloorId && node.locationId === selectedDestinationId)
+			: undefined;
 
 		if (selectedNode) {
 			context.beginPath();
@@ -2546,21 +2795,34 @@ const draw = (): void => {
 			context.stroke();
 		}
 	}
-	if (simulatedRoute && workspaceMode === 'route-preview') {
+	if (simulatedRoute && workspaceMode !== 'map') {
 		const points: WayfindingPoint[] = simulatedRoutePoints();
+		const routeDefaults: WayfindingStudioProjectDefaults['route'] = projectDefaults().route;
+		canvas.dataset.previewRoutePointCount = String(points.length);
+		canvas.dataset.routeAnimation = routeDefaults.animation;
 		if (points.length > 1) {
 			context.beginPath();
-			traceRoundedRoute(context, points, 18);
-			context.lineWidth = 7 / scale;
+			traceRoundedRoute(context, points, routeDefaults.cornerRadius);
+			context.lineWidth = routeDefaults.lineWidth / scale;
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
-			context.strokeStyle = '#f04438';
+			context.strokeStyle = routeDefaults.color;
+			if (routeDefaults.animation === 'flow') {
+				context.setLineDash([18 / scale, 12 / scale]);
+				context.lineDashOffset = -routeAnimationPhase / scale;
+			} else if (routeDefaults.animation === 'pulse') {
+				context.globalAlpha = 0.68 + (Math.sin(routeAnimationPhase / 8) + 1) * 0.16;
+				context.lineWidth = (routeDefaults.lineWidth + (Math.sin(routeAnimationPhase / 8) + 1) * 1.5) / scale;
+			}
 			context.stroke();
+			context.setLineDash([]);
+			context.globalAlpha = 1;
 		}
-	}
+	} else canvas.dataset.previewRoutePointCount = '0';
 
 	context.restore();
 	refresh3d();
+	scheduleRouteAnimation();
 };
 
 const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
@@ -2986,6 +3248,7 @@ const activateTool = (nextTool: Tool): void => {
 	if (tool === 'draw' && nextTool !== 'draw') cancelEdgeDraft();
 	if (semanticDraft && nextTool !== semanticDraft.type) {
 		semanticDraft = undefined;
+		semanticDraftRedo.length = 0;
 		lassoDrawing = false;
 		semanticDraftHost.hidden = true;
 	}
@@ -3010,13 +3273,84 @@ const restoreTemporaryPan = (): void => {
 	draw();
 };
 
-const saveStudioProject = (): void => {
+const serializeStudioProject = (): string => {
 	syncStudioGraph();
 	void persistAutosave(true);
+
+	return `${JSON.stringify(studioProject, null, 2)}\n`;
+};
+
+const markProjectFileSaved = (filename: string, handle?: StudioFileHandle): void => {
+	projectFileHandle = handle;
+	openedProjectFileName = filename;
 	portableSnapshot = JSON.stringify(studioProject);
-	downloadText(`${portableProjectBaseName()}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
+	projectOrigin = 'portable-file';
 	renderProjectContext();
-	coverageStatus.textContent = 'Downloaded a portable project file containing the current work.';
+};
+
+const ensureWritePermission = async (handle: StudioFileHandle): Promise<boolean> => {
+	if (!handle.queryPermission || !handle.requestPermission) return true;
+	const options = { mode: 'readwrite' as const };
+	const current: PermissionState = await handle.queryPermission(options);
+
+	return current === 'granted' || await handle.requestPermission(options) === 'granted';
+};
+
+const writeStudioProject = async (handle: StudioFileHandle, value: string): Promise<void> => {
+	if (!await ensureWritePermission(handle)) throw new Error('Write access to the project file was not granted.');
+	const writable: StudioWritableFile = await handle.createWritable();
+	await writable.write(value);
+	await writable.close();
+	markProjectFileSaved(handle.name, handle);
+	coverageStatus.textContent = `Saved ${handle.name}`;
+	showStudioNotice(`Saved ${handle.name}.`);
+};
+
+const saveStudioProjectAs = async (): Promise<void> => {
+	const value: string = serializeStudioProject();
+	const filename = `${portableProjectBaseName()}.wbwayfinding`;
+	const picker = (window as StudioFilePickerWindow).showSaveFilePicker;
+
+	if (picker) {
+		try {
+			const handle: StudioFileHandle = await picker.call(window, {
+				suggestedName: filename,
+				types: [{
+					accept: { 'application/json': ['.wbwayfinding'] },
+					description: 'Wallboard Wayfinding project'
+				}]
+			});
+			await writeStudioProject(handle, value);
+			return;
+		} catch (error) {
+			if (error instanceof DOMException && error.name === 'AbortError') return;
+			const detail: string = error instanceof Error ? error.message : 'The project file could not be saved.';
+			showStudioNotice(`${detail} Use Save as to choose another file.`, 'error');
+			coverageStatus.textContent = detail;
+			return;
+		}
+	}
+
+	downloadText(filename, value);
+	markProjectFileSaved(filename);
+	coverageStatus.textContent = `Downloaded ${filename}. This browser cannot overwrite downloaded files; Save will download an updated copy.`;
+};
+
+const saveStudioProject = async (): Promise<void> => {
+	const value: string = serializeStudioProject();
+
+	if (projectFileHandle) {
+		try {
+			await writeStudioProject(projectFileHandle, value);
+		} catch (error) {
+			const detail: string = error instanceof Error ? error.message : 'The opened project file could not be updated.';
+			showStudioNotice(`${detail} Use Save as to choose another file.`, 'error');
+			coverageStatus.textContent = detail;
+		}
+		return;
+	}
+
+	await saveStudioProjectAs();
 };
 
 const downloadJson = (filename: string, value: unknown): void => {
@@ -3167,7 +3501,7 @@ const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): Wa
 	return [...left.slice(0, -1), ...right];
 };
 
-const geometryContained = (points: WayfindingPoint[]): boolean => {
+const geometryContained = (points: WayfindingPoint[], clearance = 0): boolean => {
 	const step: number = Math.max(1, cellSize() / 2);
 
 	for (let index = 1; index < points.length; index += 1) {
@@ -3179,40 +3513,25 @@ const geometryContained = (points: WayfindingPoint[]): boolean => {
 		for (let sampleIndex = 0; sampleIndex <= samples; sampleIndex += 1) {
 			const ratio: number = sampleIndex / samples;
 
-			if (!pointWalkable({ x: left.x + (right.x - left.x) * ratio, y: left.y + (right.y - left.y) * ratio })) return false;
+			if (!pointWalkableWithClearance(
+				{ x: left.x + (right.x - left.x) * ratio, y: left.y + (right.y - left.y) * ratio },
+				clearance
+			)) return false;
 		}
 	}
 
 	return true;
 };
 
-const simplifyContainedGeometry = (points: WayfindingPoint[]): WayfindingPoint[] => {
-	for (const toleranceFactor of [0.75, 0.5, 0.25]) {
+const simplifyContainedGeometry = (points: WayfindingPoint[], clearance = 0): WayfindingPoint[] => {
+	for (const toleranceFactor of [8, 6, 4, 3, 2, 1, 0.75, 0.5, 0.25]) {
 		const simplified: WayfindingPoint[] = simplifyGeometry(points, cellSize() * toleranceFactor);
 
-		if (geometryContained(simplified)) return simplified;
+		if (geometryContained(simplified, clearance)) return simplified;
 	}
 
 	return points;
 };
-
-function simplifyRouteForDisplay(points: WayfindingPoint[]): WayfindingPoint[] {
-	const simplified: WayfindingPoint[] = points.map((point: WayfindingPoint): WayfindingPoint => ({ ...point }));
-	let changed = true;
-
-	while (changed && simplified.length > 2) {
-		changed = false;
-
-		for (let index = 1; index < simplified.length - 1; index += 1) {
-			if (!geometryContained([simplified[index - 1], simplified[index + 1]])) continue;
-			simplified.splice(index, 1);
-			changed = true;
-			break;
-		}
-	}
-
-	return simplified;
-}
 
 function traceRoundedRoute(target: CanvasRenderingContext2D, points: WayfindingPoint[], radius: number): void {
 	target.moveTo(points[0].x, points[0].y);
@@ -3242,6 +3561,30 @@ function traceRoundedRoute(target: CanvasRenderingContext2D, points: WayfindingP
 	const end: WayfindingPoint = points[points.length - 1];
 	target.lineTo(end.x, end.y);
 }
+
+const routeAnimationActive = (): boolean => Boolean(
+	simulatedRoute
+	&& workspaceMode !== 'map'
+	&& viewMode === '2d'
+	&& projectDefaults().route.animation !== 'none'
+);
+
+const scheduleRouteAnimation = (): void => {
+	if (!routeAnimationActive()) {
+		if (routeAnimationFrame !== undefined) window.cancelAnimationFrame(routeAnimationFrame);
+		routeAnimationFrame = undefined;
+		routeAnimationPreviousTime = 0;
+		return;
+	}
+	if (routeAnimationFrame !== undefined) return;
+	routeAnimationFrame = window.requestAnimationFrame((time: number): void => {
+		routeAnimationFrame = undefined;
+		const elapsed: number = routeAnimationPreviousTime === 0 ? 0 : Math.min(50, time - routeAnimationPreviousTime);
+		routeAnimationPreviousTime = time;
+		routeAnimationPhase += elapsed * projectDefaults().route.animationSpeed / 1000;
+		draw();
+	});
+};
 
 const generateCenterlineGraph = (): boolean => {
 	const before: HistoryState = captureHistoryState();
@@ -3343,7 +3686,7 @@ const generateCenterlineGraph = (): boolean => {
 			bidirectional: true,
 			corridorWidth: cellSize(),
 			from,
-			geometry: simplifyContainedGeometry(chain.indices.map(pointForMaskIndex)),
+			geometry: simplifyContainedGeometry(chain.indices.map(pointForMaskIndex), cellSize() * 0.75),
 			id: `centerline:${currentFloorId}:${String(edgeIndex + 1).padStart(4, '0')}`,
 			kind: 'walk',
 			reviewStatus: 'proposed',
@@ -3468,6 +3811,7 @@ const openStudioProject = async (loaded: unknown, preferredFloorId?: string): Pr
 	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
 	semanticDraft = undefined;
+	semanticDraftRedo.length = 0;
 	edgeDraft = undefined;
 	insertPointForEdge = undefined;
 	insertPointForSemanticId = undefined;
@@ -3496,14 +3840,14 @@ const adoptCurrentProjectForAutosave = (savedAt?: string): void => {
 		setAutosaveStatus(`SAVED ${savedTimeLabel(savedAt)}`, 'saved', `Recovered local work saved at ${new Date(savedAt).toLocaleString()}.`);
 	}
 	else {
-		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Changes are saved locally after a short pause. Use Save project for a portable file.');
+		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Crash recovery updates locally after a short pause. Use Save to update the project file.');
 		void persistAutosave(true);
 	}
 };
 
 const initializeAutosave = async (): Promise<void> => {
 	if (typeof indexedDB === 'undefined') {
-		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', 'This browser does not provide local recovery storage. Use Save project frequently.');
+		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', 'This browser does not provide local recovery storage. Use Save frequently.');
 		return;
 	}
 	try {
@@ -3519,10 +3863,10 @@ const initializeAutosave = async (): Promise<void> => {
 		autosaveEnabled = true;
 		synchronizeStudioState();
 		autosaveSnapshot = JSON.stringify(studioProject);
-		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Changes are saved locally after a short pause. Use Save project for a portable file.');
+		setAutosaveStatus('AUTOSAVE READY', 'ready', 'Crash recovery updates locally after a short pause. Use Save to update the project file.');
 	} catch (error) {
 		const detail: string = error instanceof Error ? error.message : 'Unknown storage error';
-		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', `${detail} Use Save project frequently.`);
+		setAutosaveStatus('AUTOSAVE UNAVAILABLE', 'error', `${detail} Use Save frequently.`);
 	}
 };
 
@@ -3538,6 +3882,7 @@ const startNewProject = async (): Promise<void> => {
 	await openStudioProject(createWayfindingStudioProject('wayfinding-project'));
 	projectOrigin = 'new';
 	openedProjectFileName = undefined;
+	projectFileHandle = undefined;
 	portableSnapshot = undefined;
 	lastLocalSaveAt = undefined;
 	studioProjectFile.value = '';
@@ -3547,21 +3892,20 @@ const startNewProject = async (): Promise<void> => {
 	renderProjectContext();
 };
 
-studioProjectFile.addEventListener('change', async (): Promise<void> => {
-	const file: File | undefined = studioProjectFile.files?.[0];
-	if (!file) return;
+const openStudioProjectFile = async (file: File, handle?: StudioFileHandle): Promise<void> => {
 	try {
 		const loaded: unknown = JSON.parse(await file.text()) as unknown;
 		const repairs: WayfindingStudioRepair[] = await openStudioProject(loaded);
 		projectOrigin = 'portable-file';
 		openedProjectFileName = file.name;
+		projectFileHandle = handle;
 		portableSnapshot = repairs.length === 0 ? JSON.stringify(studioProject) : undefined;
 		lastLocalSaveAt = undefined;
 		adoptCurrentProjectForAutosave();
 		if (repairs.length > 0) {
 			const details: string = repairs.map((repair: WayfindingStudioRepair): string => repair.message).join(' ');
 			showStudioNotice(`Opened with ${repairs.length} automatic repair${repairs.length === 1 ? '' : 's'}. ${details}`);
-			coverageStatus.textContent = 'Project recovered. Review the repaired geometry, then download a new portable project.';
+			coverageStatus.textContent = 'Project recovered. Review the repaired geometry, then save the project file.';
 		} else {
 			showStudioNotice(`Opened ${studioProject.name}.`);
 			coverageStatus.textContent = `Opened ${studioProject.name}`;
@@ -3573,12 +3917,43 @@ studioProjectFile.addEventListener('change', async (): Promise<void> => {
 		studioValidation.dataset.allowed = 'false';
 		showStudioNotice(detail, 'error');
 		coverageStatus.textContent = detail;
-	} finally {
-		studioProjectFile.value = '';
 	}
+};
+
+studioProjectFile.addEventListener('change', async (): Promise<void> => {
+	const file: File | undefined = studioProjectFile.files?.[0];
+	if (!file) return;
+	await openStudioProjectFile(file);
+	studioProjectFile.value = '';
 });
+
+const chooseStudioProject = async (): Promise<void> => {
+	const picker = (window as StudioFilePickerWindow).showOpenFilePicker;
+	if (!picker) {
+		studioProjectFile.click();
+		return;
+	}
+	try {
+		const handles: StudioFileHandle[] = await picker.call(window, {
+			multiple: false,
+			types: [{
+				accept: { 'application/json': ['.json', '.wbwayfinding'] },
+				description: 'Wallboard Wayfinding project'
+			}]
+		});
+		const handle: StudioFileHandle | undefined = handles[0];
+		if (!handle) return;
+		await openStudioProjectFile(await handle.getFile(), handle);
+	} catch (error) {
+		if (error instanceof DOMException && error.name === 'AbortError') return;
+		const detail: string = error instanceof Error ? error.message : 'The Studio project could not be opened.';
+		showStudioNotice(detail, 'error');
+		coverageStatus.textContent = detail;
+	}
+};
+
 newProjectButton.addEventListener('click', (): void => { void startNewProject(); });
-openProjectButton.addEventListener('click', (): void => { studioProjectFile.click(); });
+openProjectButton.addEventListener('click', (): void => { void chooseStudioProject(); });
 
 semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 	const file: File | undefined = semanticMediaFile.files?.[0];
@@ -3651,7 +4026,8 @@ requireElement<HTMLButtonElement>('#studio-delete-floor').addEventListener('clic
 	recordHistory(before);
 	await activateFloor(studioProject.floors[0].id);
 });
-requireElement<HTMLButtonElement>('#studio-export-project').addEventListener('click', saveStudioProject);
+requireElement<HTMLButtonElement>('#studio-export-project').addEventListener('click', (): void => { void saveStudioProject(); });
+saveAsButton.addEventListener('click', (): void => { void saveStudioProjectAs(); });
 requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('click', (): void => {
 	syncStudioGraph();
 	const errors = validateWayfindingStudioDelivery(studioProject).filter((issue): boolean => issue.severity === 'error');
@@ -3664,6 +4040,7 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 requireElement<HTMLButtonElement>('#semantic-finish').addEventListener('click', finishSemanticPolygon);
 requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => {
 	semanticDraft = undefined;
+	semanticDraftRedo.length = 0;
 	lassoDrawing = false;
 	semanticDraftHost.hidden = true;
 	draw();
@@ -3684,6 +4061,69 @@ snapToEdgesInput.addEventListener('change', renderDrawingMode);
 snapRadiusInput.addEventListener('input', (): void => {
 	snapRadiusValue.value = snapRadiusInput.value;
 });
+const updateProjectDefaults = (mutate: (defaults: WayfindingStudioProjectDefaults) => void): void => {
+	const before: HistoryState = captureHistoryState();
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
+	mutate(defaults);
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	syncProjectDefaultControls();
+	draw();
+};
+defaultLocationOpacityInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.location.fillOpacity = Number(defaultLocationOpacityInput.value) / 100; });
+});
+defaultLocationHeightInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.location.extrusionHeight = Number(defaultLocationHeightInput.value); });
+});
+defaultWalkableOpacityInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.walkable.fillOpacity = Number(defaultWalkableOpacityInput.value) / 100; });
+});
+defaultObstacleOpacityInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.obstacle.fillOpacity = Number(defaultObstacleOpacityInput.value) / 100; });
+});
+defaultLabelFontInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.label.fontFamily = defaultLabelFontInput.value as WayfindingStudioProjectDefaults['label']['fontFamily']; });
+});
+defaultLabelSizeInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.label.fontSize = Number(defaultLabelSizeInput.value); });
+});
+defaultIconSizeInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.iconSize = Number(defaultIconSizeInput.value); });
+});
+defaultLogoSizeInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.logoSize = Number(defaultLogoSizeInput.value); });
+});
+const updateRouteDefaults = (mutate: (route: WayfindingStudioProjectDefaults['route']) => void): void => {
+	updateProjectDefaults((defaults): void => { mutate(defaults.route); });
+};
+for (const input of [defaultRouteColorInput, routePreviewColorInput]) {
+	input.addEventListener('change', (): void => {
+		updateRouteDefaults((route): void => { route.color = input.value; });
+	});
+}
+for (const input of [defaultRouteWidthInput, routePreviewWidthInput]) {
+	input.addEventListener('change', (): void => {
+		updateRouteDefaults((route): void => { route.lineWidth = Number(input.value); });
+	});
+}
+defaultRouteRadiusInput.addEventListener('change', (): void => {
+	updateRouteDefaults((route): void => { route.cornerRadius = Number(defaultRouteRadiusInput.value); });
+});
+for (const input of [defaultRouteAnimationInput, routePreviewAnimationInput]) {
+	input.addEventListener('change', (): void => {
+		updateRouteDefaults((route): void => { route.animation = input.value as WayfindingStudioProjectDefaults['route']['animation']; });
+	});
+}
+for (const input of [defaultRouteSpeedInput, routePreviewSpeedInput]) {
+	input.addEventListener('input', (): void => {
+		defaultRouteSpeedValue.value = input.value;
+		routePreviewSpeedValue.value = input.value;
+	});
+	input.addEventListener('change', (): void => {
+		updateRouteDefaults((route): void => { route.animationSpeed = Number(input.value); });
+	});
+}
 chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
 stopMediaPlacement.addEventListener('click', (): void => {
 	pendingMediaAssetId = undefined;
@@ -3704,6 +4144,20 @@ requireElement<HTMLButtonElement>('#route-simulate').addEventListener('click', (
 routeClearButton.addEventListener('click', (): void => {
 	clearSimulatedRoute('Route preview cleared. Choose Simulate route to draw it again.');
 });
+routePreviewNetworkInput.addEventListener('change', draw);
+routeInspectButton.addEventListener('click', (): void => {
+	if (!simulatedRoute) return;
+	const currentFloorEdgeId: string | undefined = simulatedRoute.edgeIds.find((edgeId: string): boolean => {
+		const edge: WayfindingEdge | undefined = studioProject.graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === edgeId);
+		return edge ? graphNode(edge.from)?.levelId === currentFloorId : false;
+	});
+	setWorkspaceMode('route-edit');
+	selectedEdgeId = currentFloorEdgeId ?? simulatedRoute.edgeIds[0];
+	activateTool('graph');
+	renderReview();
+	draw();
+	coverageStatus.textContent = 'Inspecting the exact network segments used by the preview route.';
+});
 for (const input of [routeStart, routeDestination, routeProfile]) {
 	input.addEventListener('change', (): void => {
 		if (simulatedRoute) clearSimulatedRoute('Route selection changed. Choose Simulate route to draw the new route.');
@@ -3716,6 +4170,7 @@ restoreAutosaveButton.addEventListener('click', async (): Promise<void> => {
 		await openStudioProject(record.project, record.currentFloorId);
 		projectOrigin = 'local-recovery';
 		openedProjectFileName = undefined;
+		projectFileHandle = undefined;
 		portableSnapshot = undefined;
 		adoptCurrentProjectForAutosave(record.savedAt);
 		coverageStatus.textContent = `Restored local work for ${studioProject.name}`;
@@ -3884,7 +4339,8 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 	const isEditingText: boolean = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || (target instanceof HTMLElement && target.isContentEditable);
 	if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
 		event.preventDefault();
-		saveStudioProject();
+		if (event.shiftKey) void saveStudioProjectAs();
+		else void saveStudioProject();
 		return;
 	}
 	if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
@@ -3912,6 +4368,7 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 		}
 		if (semanticDraft) {
 			semanticDraft = undefined;
+			semanticDraftRedo.length = 0;
 			lassoDrawing = false;
 			semanticDraftHost.hidden = true;
 		} else if (edgeDraft) cancelEdgeDraft();
@@ -4053,6 +4510,8 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	canvas.setPointerCapture(event.pointerId);
 	const imagePoint: ImagePoint = toImagePoint(previousPointer);
 
+	if (tool === 'pan') return;
+
 	const floor: WayfindingStudioFloor = currentFloor();
 	if (imagePoint.x < 0 || imagePoint.y < 0 || imagePoint.x > floor.width || imagePoint.y > floor.height) {
 		pointerDown = false;
@@ -4127,16 +4586,29 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 			pointerDown = false;
 			canvas.releasePointerCapture(event.pointerId);
 		} else if (drawingMode === 'lasso') {
-			semanticDraft = { points: [snapPointToSourceEdge(imagePoint)], type: tool };
+			const point: WayfindingPoint = snapToEdgesInput.checked ? snapPointToSourceEdge(imagePoint) : imagePoint;
+			semanticDraft = { points: [point], type: tool };
+			semanticDraftRedo.length = 0;
 			lassoDrawing = true;
 		} else {
 			semanticDraft ??= { points: [], type: tool };
-			semanticDraft.points.push(snapPointToSourceEdge(imagePoint));
+			semanticDraft.points.push(imagePoint);
+			semanticDraftRedo.length = 0;
 		}
 		semanticDraftHost.hidden = drawingMode === 'smart';
+		updateEditActions();
 		draw();
 	} else if (tool === 'door' || tool === 'poi' || tool === 'origin' || tool === 'transition' || tool === 'label' || tool === 'icon' || tool === 'logo') {
-		addSemanticPoint(tool, imagePoint);
+		if (tool === 'door') {
+			const before: HistoryState = captureHistoryState();
+			const element: WayfindingStudioElement | undefined = addSemanticPoint(tool, imagePoint, { before, deferHistory: true });
+			if (element?.type === 'door') {
+				draggedDoorRotation = { elementId: element.id };
+				dragHistoryState = before;
+				dragMutated = true;
+				coverageStatus.textContent = 'Drag to set the door angle, then release. Hold Shift to snap to 15-degree increments.';
+			}
+		} else addSemanticPoint(tool, imagePoint);
 	} else if (tool === 'select') {
 		const currentSelection: WayfindingStudioElement | undefined = semanticElement();
 		if (currentSelection?.type === 'door') {
@@ -4202,7 +4674,7 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 		if (imagePoint.x >= 0 && imagePoint.y >= 0 && imagePoint.x <= floor.width && imagePoint.y <= floor.height) {
 			const previous: WayfindingPoint = semanticDraft.points.at(-1) as WayfindingPoint;
 			if (Math.hypot(imagePoint.x - previous.x, imagePoint.y - previous.y) >= Math.max(3, 6 / scale)) {
-				semanticDraft.points.push(snapPointToSourceEdge(imagePoint));
+				semanticDraft.points.push(snapToEdgesInput.checked ? snapPointToSourceEdge(imagePoint) : imagePoint);
 				draw();
 			}
 		}
@@ -4210,7 +4682,7 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 		moveVertex(draggedVertex, imagePoint);
 		dragMutated = true;
 		draw();
-	} else if (tool === 'select' && draggedDoorRotation) {
+	} else if (draggedDoorRotation) {
 		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === draggedDoorRotation?.elementId);
 		if (element?.type !== 'door') return;
 		let angle: number = Math.atan2(imagePoint.y - element.point.y, imagePoint.x - element.point.x) * 180 / Math.PI;
@@ -4245,6 +4717,7 @@ canvas.addEventListener('pointerup', (): void => {
 		if (semanticDraft.points.length >= 3) finishSemanticPolygon();
 		else {
 			semanticDraft = undefined;
+			semanticDraftRedo.length = 0;
 			semanticDraftHost.hidden = true;
 			coverageStatus.textContent = 'The freehand trace was too short. Drag around a complete area.';
 			draw();
