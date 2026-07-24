@@ -87,6 +87,18 @@ const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
 const create3dTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('three-dimensional-preview');
 	const floor = project.floors[0];
+	project.defaults!.route.animation = 'flow';
+	project.defaults!.route.animationSpeed = 120;
+	project.defaults!.route.lineWidth = 13;
+	project.assets.push({
+		dataUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Ccircle cx="32" cy="32" r="24" fill="%2318826f"/%3E%3Cpath d="M19 34h26v6H19zM29 18h6v26h-6z" fill="white"/%3E%3C/svg%3E',
+		id: 'builtin:test-information',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Test information',
+		naturalHeight: 64,
+		naturalWidth: 64
+	});
 	floor.width = 900;
 	floor.height = 600;
 	floor.elements = [
@@ -101,7 +113,8 @@ const create3dTestProject = (): WayfindingStudioProject => {
 			provenance: 'reviewer-authored',
 			status: 'confirmed',
 			type: 'location'
-		}
+		},
+		{ assetId: 'builtin:test-information', floorId: floor.id, height: 64, id: 'information-icon', point: { x: 418, y: 226 }, provenance: 'reviewer-authored', status: 'confirmed', type: 'icon', width: 64 }
 	];
 	project.destinations = [{ floor: floor.id, id: 'exhibition-hall', name: 'Exhibition hall', routeable: true }];
 	synchronizeWayfindingStudioGraph(project);
@@ -133,7 +146,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.13');
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.14');
 	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview']);
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
@@ -336,7 +349,7 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	const downloadPath: string = await download.path() as string;
 	const detectedProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	const detectedRoom = detectedProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location');
-	expect(detectedRoom?.geometry).toHaveLength(4);
+	expect(detectedRoom?.geometry).toHaveLength(8);
 	expect(detectedRoom?.presentation?.fillColor).toBe('#9ed7cd');
 
 	const layerToggles = page.locator('[data-layer]');
@@ -345,17 +358,61 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).not.toBeChecked();
 	await page.locator('#show-all-layers').click();
 	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).toBeChecked();
+	await expect(page.locator('#object-explorer-panel')).toHaveAttribute('open', '');
+	await page.locator('#object-explorer-panel > summary').click();
+	await expect(page.locator('#object-explorer-panel')).not.toHaveAttribute('open', '');
+	await page.locator('#object-explorer-panel > summary').click();
+	await expect(page.locator('#object-explorer-panel')).toHaveAttribute('open', '');
+	expect(await page.locator('#cursor-position').evaluate((element): boolean => element.parentElement?.classList.contains('stage-shell') ?? false)).toBe(true);
 
-	page.once('dialog', async (dialog): Promise<void> => {
-		expect(dialog.type()).toBe('confirm');
-		await dialog.accept();
-	});
 	await page.locator('#studio-new-project').click();
+	await expect(page.locator('#confirm-dialog')).toBeVisible();
+	await page.locator('#confirm-accept').click();
 	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
 	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
 	await expect(page.locator('#studio-project-name')).toHaveValue('Wayfinding project');
 	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
 	await expect(page.locator('#coverage-status')).toContainText('New project ready');
+	expect(errors).toEqual([]);
+});
+
+test('detect area does not escape through an opening narrower than its configured minimum', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+	await page.locator('#image-file').setInputFiles({
+		name: 'narrow-opening.svg',
+		mimeType: 'image/svg+xml',
+		buffer: Buffer.from(`
+			<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+				<rect width="800" height="600" fill="#f8f6ef"/>
+				<rect x="100" y="120" width="250" height="360" fill="#9ed7cd"/>
+				<rect x="354" y="120" width="346" height="360" fill="#9ed7cd"/>
+				<rect x="350" y="298" width="4" height="4" fill="#9ed7cd"/>
+			</svg>
+		`)
+	});
+	await page.locator('#drawing-mode-smart').click();
+	await page.locator('[data-tool="location"]').click();
+	await expect(page.locator('#detect-opening')).toBeVisible();
+	await expect(page.locator('#detect-opening')).toHaveValue('5');
+	const canvas = page.locator('#stage');
+	const view = await canvas.evaluate((element: HTMLCanvasElement): { offsetX: number; offsetY: number; scale: number } => ({
+		offsetX: Number(element.dataset.viewOffsetX),
+		offsetY: Number(element.dataset.viewOffsetY),
+		scale: Number(element.dataset.viewScale)
+	}));
+	await canvas.click({ position: { x: view.offsetX + 220 * view.scale, y: view.offsetY + 300 * view.scale } });
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	const room = project.floors[0].elements.find((element): element is WayfindingStudioPolygonElement => element.type === 'location');
+	expect(Math.max(...(room?.geometry ?? []).map((point): number => point.x))).toBeLessThan(400);
 	expect(errors).toEqual([]);
 });
 
@@ -539,6 +596,9 @@ test('renders, rotates, selects, and saves a nonblank 3D floor preview', async (
 	await expect(preview).toBeVisible();
 	await expect(webglCanvas).toBeVisible();
 	await expect(page.locator('#view-3d')).toHaveAttribute('aria-pressed', 'true');
+	await expect(preview).toHaveAttribute('data-media-count', '1');
+	await expect(preview).toHaveAttribute('data-rendered-media-count', '1');
+	await expect(preview).toHaveAttribute('data-ready-media-count', '1');
 	await page.waitForTimeout(250);
 
 	const pixelEvidence = await webglCanvas.evaluate((canvas: HTMLCanvasElement): { colors: number; opaqueSamples: number } => {
@@ -566,9 +626,25 @@ test('renders, rotates, selects, and saves a nonblank 3D floor preview', async (
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 	await expect(page.locator('#semantic-editor').getByLabel('Fill color')).toHaveValue('#e18b4f');
 	await expect(page.locator('#semantic-editor').getByLabel('3D visual height')).toHaveValue('52');
+	const fillColor = page.locator('#semantic-editor').getByLabel('Fill color');
+	await fillColor.fill('#d17a45');
+	await fillColor.blur();
+	await expect(page.locator('#undo')).toBeEnabled();
 	await page.locator('#workspace-route-preview').click();
 	await page.mouse.click((bounds?.x ?? 0) + (bounds?.width ?? 0) / 2, (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2);
 	await expect(page.locator('#route-result')).toContainText('min');
+	await expect(preview).toHaveAttribute('data-route-animation', 'flow');
+	await expect(preview).toHaveAttribute('data-route-width', '13');
+	const firstProgress: string | null = await preview.getAttribute('data-route-progress');
+	await expect.poll(async (): Promise<string | null> => preview.getAttribute('data-route-progress')).not.toBe(firstProgress);
+	const routeScreenshotPath: string = testInfo.outputPath('three-dimensional-route-preview.png');
+	await preview.screenshot({ path: routeScreenshotPath });
+	await testInfo.attach('three-dimensional-route-preview', { contentType: 'image/png', path: routeScreenshotPath });
+	await page.locator('#view-2d').click();
+	await expect(page.locator('#stage')).toBeVisible();
+	await page.locator('#undo').click();
+	await page.locator('#view-3d').click();
+	await expect(webglCanvas).toBeVisible();
 	await page.locator('#workspace-map').click();
 
 	await page.mouse.move((bounds?.x ?? 0) + (bounds?.width ?? 0) * 0.58, (bounds?.y ?? 0) + (bounds?.height ?? 0) * 0.5);
@@ -595,14 +671,17 @@ test('autosaves authored geometry and restores it after a reload', async ({ page
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
-	await expect(page.locator('#autosave-status')).toHaveText('AUTOSAVE READY');
+	await expect(page.locator('#autosave-status')).toHaveText('AUTOSAVE');
+	const stageBoundsBeforeSave = await page.locator('.stage-shell').boundingBox();
 
 	const canvas = page.locator('#stage');
 	await page.locator('[data-tool="location"]').click();
 	for (const position of [{ x: 220, y: 280 }, { x: 420, y: 280 }, { x: 420, y: 440 }, { x: 220, y: 440 }]) await canvas.click({ position });
 	await page.locator('#semantic-finish').click();
 	await page.locator('#semantic-editor').getByLabel('Name', { exact: true }).fill('Recovered room');
-	await expect(page.locator('#autosave-status')).toHaveText(/^SAVED /u, { timeout: 5000 });
+	await expect(page.locator('#autosave-status')).toHaveText('SAVED', { timeout: 5000 });
+	await expect(page.locator('#autosave-status')).toHaveAttribute('data-detail', /^SAVED /u);
+	expect(await page.locator('.stage-shell').boundingBox()).toEqual(stageBoundsBeforeSave);
 
 	await page.reload();
 	await expect(page.locator('#local-recovery')).toBeVisible();
@@ -754,6 +833,10 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	await page.locator('#project-language-label').fill('Hungarian');
 	await page.locator('#project-language-add').click();
 	await expect(page.locator('#project-language-list')).toContainText('Hungarian');
+	const translations = page.locator('.translation-editor');
+	await translations.locator('summary').click();
+	await translations.getByLabel('Name', { exact: true }).fill('Latogatoi szolgaltatasok');
+	await translations.getByLabel('Description', { exact: true }).fill('Terkep, jegyek es helyi segitseg.');
 	await page.locator('#project-category-name').fill('Visitor services');
 	await page.locator('#project-category-add').click();
 	await expect(page.locator('#project-category-list')).toContainText('Visitor services');
@@ -773,6 +856,13 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	expect(project.defaults?.location.fillOpacity).toBe(0.58);
 	expect(project.defaults?.location.extrusionHeight).toBe(31);
 	expect(project.languages).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'hu', label: 'Hungarian' })]));
+	expect(project.destinations).toEqual(expect.arrayContaining([
+		expect.objectContaining({
+			translations: expect.objectContaining({
+				hu: expect.objectContaining({ description: 'Terkep, jegyek es helyi segitseg.', name: 'Latogatoi szolgaltatasok' })
+			})
+		})
+	]));
 	expect(project.categories).toContain('Visitor services');
 	expect(location?.presentation?.fillOpacity).toBe(0.58);
 	expect(location?.presentation?.extrusionHeight).toBe(31);

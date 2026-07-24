@@ -94,8 +94,13 @@ const pointDistance = (left: WayfindingPoint, right: WayfindingPoint): number =>
 
 const edgePoints = (edge: WayfindingEdge, left: WayfindingNode, right: WayfindingNode): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [left, right];
+	const fromNode: WayfindingNode = edge.from === left.id ? left : right;
+	const toNode: WayfindingNode = edge.to === right.id ? right : left;
+	const forwardDistance: number = pointDistance(points[0], fromNode) + pointDistance(points[points.length - 1], toNode);
+	const reverseDistance: number = pointDistance(points[points.length - 1], fromNode) + pointDistance(points[0], toNode);
+	const oriented: WayfindingPoint[] = forwardDistance <= reverseDistance ? points : [...points].reverse();
 
-	return edge.from === left.id ? points : [...points].reverse();
+	return edge.from === left.id ? oriented : [...oriented].reverse();
 };
 
 const edgePixelDistance = (edge: WayfindingEdge, left: WayfindingNode, right: WayfindingNode): number => {

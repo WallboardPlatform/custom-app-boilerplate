@@ -1,4 +1,5 @@
 :root {
+	--topbar-height: 78px;
 	--wb-brand: #18826f;
 	--wb-brand-dark: #0f6657;
 	--wb-canvas: #303936;
@@ -39,8 +40,12 @@ summary:focus-visible {
 
 .topbar {
 	display: grid;
-	min-height: 78px;
+	height: var(--topbar-height);
+	min-height: var(--topbar-height);
+	max-height: var(--topbar-height);
+	box-sizing: border-box;
 	align-items: center;
+	overflow: hidden;
 	padding: 8px 16px;
 	border-bottom: 3px solid var(--wb-brand);
 	background: var(--wb-topbar);
@@ -88,14 +93,29 @@ summary:focus-visible {
 	font-weight: 700;
 }
 
-.status { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 12px; }
+.status {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	justify-content: flex-end;
+	overflow: hidden;
+	gap: 8px;
+}
 
 .status span {
+	display: block;
+	box-sizing: border-box;
+	overflow: hidden;
 	padding: 6px 8px;
 	border: 1px solid #4d5c58;
 	color: #c9d6d2;
 	background: #263532;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
+
+#autosave-status { width: 92px; flex: 0 0 92px; text-align: center; }
+#mask-status { width: 148px; flex: 0 0 148px; }
 
 .status span[data-confirmed="true"] { border-color: #18826f; color: #0f6657; background: #dff5ed; }
 .status span[data-state="saved"] { border-color: #18826f; color: #0f6657; background: #dff5ed; }
@@ -105,7 +125,15 @@ summary:focus-visible {
 
 .status strong { overflow: hidden; color: #eaf1ef; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 
-.edit-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px; }
+.edit-actions {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	justify-content: center;
+	overflow-x: auto;
+	overflow-y: hidden;
+	gap: 5px;
+}
 .toolbar-group { display: flex; align-items: center; }
 .toolbar-group + .toolbar-group { padding-left: 6px; border-left: 1px solid #45534f; }
 .edit-actions button {
@@ -132,7 +160,7 @@ summary:focus-visible {
 
 main {
 	display: grid;
-	height: calc(100% - 78px);
+	height: calc(100% - var(--topbar-height));
 	grid-template-columns: 340px minmax(420px, 1fr) 340px;
 }
 
@@ -640,20 +668,35 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	padding: 16px 18px;
 	border-bottom: 1px solid #d4dcd8;
 }
+.object-explorer:not([open]) { padding-bottom: 16px; }
 .object-explorer-heading {
 	display: flex;
 	align-items: end;
 	justify-content: space-between;
 	gap: 10px;
+	cursor: pointer;
+	list-style: none;
 }
+.object-explorer-heading::-webkit-details-marker { display: none; }
+.object-explorer-heading::after {
+	width: 18px;
+	flex: 0 0 18px;
+	color: var(--wb-brand-dark);
+	content: "+";
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1;
+	text-align: right;
+}
+.object-explorer[open] .object-explorer-heading::after { content: "-"; }
 .object-explorer-heading span {
 	color: #18826f;
 	font-size: 9px;
 	font-weight: 800;
 }
 .object-explorer-heading h2 { margin: 3px 0 0; font-size: 15px; }
-.object-explorer-heading small { color: #687571; font-size: 9px; white-space: nowrap; }
-.object-explorer > p { margin: 8px 0 12px; color: #687571; font-size: 10px; line-height: 1.4; }
+.object-explorer-heading small { margin-left: auto; color: #687571; font-size: 9px; white-space: nowrap; }
+.object-explorer-body > p { margin: 8px 0 12px; color: #687571; font-size: 10px; line-height: 1.4; }
 .object-list {
 	display: grid;
 	max-height: 42vh;
@@ -764,12 +807,21 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 .studio-notice[data-kind="error"] { border-color: #b94034; background: #fbe7e4; color: #7f261f; }
 .studio-notice[hidden] { display: none; }
 
-#cursor-position {
-	min-width: 78px;
-	color: #b9c8c4;
+.cursor-position {
+	position: absolute;
+	z-index: 18;
+	right: 12px;
+	bottom: 42px;
+	min-width: 88px;
+	padding: 6px 8px;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: rgba(20, 38, 34, 0.86);
+	box-shadow: 0 3px 12px rgba(14, 25, 22, 0.18);
+	color: #ffffff;
 	font-family: Consolas, monospace;
 	font-size: 10px;
 	text-align: right;
+	pointer-events: none;
 }
 
 .translation-editor {
@@ -986,6 +1038,36 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 .shortcut-grid dd { margin: 0; }
 .shortcut-grid dd { color: #4f5d59; font-size: 11px; }
 .shortcut-grid kbd { display: inline-block; min-width: 25px; padding: 4px 6px; border: 1px solid #aeb9b5; background: #ffffff; color: #26322f; font-size: 9px; font-weight: 750; text-align: center; }
+.confirm-dialog {
+	width: min(440px, calc(100vw - 32px));
+	padding: 0;
+	border: 1px solid #8f9c97;
+	background: #f8faf8;
+	color: #17201f;
+	box-shadow: 0 18px 60px rgba(20, 31, 28, 0.3);
+}
+.confirm-dialog::backdrop { background: rgba(20, 28, 26, 0.58); }
+.confirm-dialog > header { padding: 18px 20px 12px; border-bottom: 1px solid #d4dcd8; }
+.confirm-dialog > header span { color: var(--wb-brand); font-size: 9px; font-weight: 800; }
+.confirm-dialog > header h2 { margin: 4px 0 0; font-size: 20px; }
+.confirm-dialog > p { margin: 0; padding: 18px 20px; color: #4f5d59; font-size: 12px; line-height: 1.55; }
+.confirm-dialog .dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 20px 20px;
+	gap: 8px;
+}
+.confirm-dialog .dialog-actions button {
+	min-width: 108px;
+	height: 36px;
+	padding: 0 14px;
+	border: 1px solid var(--wb-brand);
+	background: var(--wb-brand);
+	color: #ffffff;
+	font-size: 11px;
+	font-weight: 800;
+}
+.confirm-dialog .dialog-actions button.secondary { border-color: #aeb9b5; background: #ffffff; color: #33413e; }
 .route-simulator { background: #eef4f1; }
 .route-simulator p { margin-top: 10px; }
 .route-simulator .route-intro { margin: 4px 0 12px; color: #52615d; }
@@ -1060,8 +1142,8 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 .edge-list small { color: #687571; font-size: 9px; }
 
 @media (max-width: 1500px) {
+	:root { --topbar-height: 118px; }
 	.topbar {
-		min-height: 118px;
 		align-items: center;
 		grid-template-columns: minmax(190px, 1fr) minmax(220px, 1fr);
 		grid-template-rows: auto auto;
@@ -1070,7 +1152,6 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	.topbar > div:first-child { grid-column: 1; grid-row: 1; }
 	.status { grid-column: 2; grid-row: 1; }
 	.edit-actions { grid-column: 1 / -1; grid-row: 2; }
-	main { height: calc(100% - 118px); }
 }
 
 @media (max-width: 1100px) {

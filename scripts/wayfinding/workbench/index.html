@@ -10,7 +10,7 @@
 	<header class="topbar">
 		<div class="product-title">
 			<div class="brand-mark" aria-hidden="true">W</div>
-			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.13</small></div>
+			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.14</small></div>
 		</div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
 			<div class="toolbar-group">
@@ -40,10 +40,9 @@
 			</div>
 		</div>
 		<div class="status">
-			<span id="autosave-status" data-state="ready" title="Local recovery is ready">AUTOSAVE READY</span>
+			<span id="autosave-status" data-state="ready" title="Local recovery is ready">AUTOSAVE</span>
 			<span id="mask-status">NO MASK</span>
 			<strong id="coverage-status">Project ready</strong>
-			<output id="cursor-position" title="Pointer position in map pixels">x -, y -</output>
 		</div>
 	</header>
 	<main>
@@ -148,9 +147,11 @@
 					</div>
 					<small id="drawing-mode-help">Best for precise straight-edged rooms and regions.</small>
 					<div class="trace-assist" id="trace-assist">
-						<label class="check" title="Moves authored points to a nearby strong color edge in the background image. Disable it for illustrated or text-heavy sources."><input id="snap-to-edges" type="checkbox" checked> Snap points to nearby image edges</label>
-						<label>Snap distance <output id="snap-radius-value">14</output><input id="snap-radius" type="range" min="4" max="32" step="2" value="14"></label>
-						<label id="detect-gap-control" hidden title="Bridges small breaks in an otherwise continuous detected border. Keep this low so neighboring rooms do not merge.">Detection gap tolerance <output id="detect-gap-value">3</output><input id="detect-gap" type="range" min="0" max="12" step="1" value="3"></label>
+						<label id="snap-enabled-control" class="check" title="Moves authored points to a nearby strong color edge in the background image. Disable it for illustrated or text-heavy sources."><input id="snap-to-edges" type="checkbox" checked> Snap points to nearby image edges</label>
+						<label id="snap-radius-control">Snap distance <output id="snap-radius-value">14</output><input id="snap-radius" type="range" min="4" max="32" step="2" value="14"></label>
+						<label id="detect-detail-control" hidden title="Straightens tiny raster steps, door-swing noise, and short notches after detection. Increase it for cleaner signage geometry; reduce it when a real recess disappears.">Boundary cleanup <output id="detect-detail-value">8</output><input id="detect-detail" type="range" min="0" max="24" step="1" value="8"></label>
+						<label id="detect-opening-control" hidden title="Stops detection from escaping through a doorway, crack, or opening narrower than this value. Set to 0 to allow every connected opening.">Block openings narrower than <output id="detect-opening-value">5 px</output><input id="detect-opening" type="range" min="0" max="24" step="1" value="5"></label>
+						<label id="detect-gap-control" hidden title="Bridges small breaks in an otherwise continuous detected region. Keep this low so neighboring rooms do not merge.">Gap bridging <output id="detect-gap-value">3</output><input id="detect-gap" type="range" min="0" max="12" step="1" value="3"></label>
 					</div>
 				</div>
 				<div class="tool-grid" role="group" aria-label="Semantic authoring tool">
@@ -332,17 +333,20 @@
 					<button id="save-3d-view" type="button" title="Use this camera when the floor opens">Save as default</button>
 				</div>
 			</div>
+			<output id="cursor-position" class="cursor-position" title="Pointer position in map pixels">x -, y -</output>
 			<footer><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add polygon point</span><button id="footer-shortcut-help" type="button">All shortcuts</button></footer>
 		</section>
 		<aside class="review" aria-label="Route review">
-			<div class="object-explorer workspace-panel" data-workspace-panel="map">
-				<div class="object-explorer-heading">
+			<details id="object-explorer-panel" class="object-explorer workspace-panel" data-workspace-panel="map" open>
+				<summary class="object-explorer-heading">
 					<div><span>MAP OBJECTS</span><h2>Layers and items</h2></div>
 					<small id="object-count">0 items</small>
+				</summary>
+				<div class="object-explorer-body">
+					<p>Choose any authored item to select and edit it.</p>
+					<div id="object-list" class="object-list"></div>
 				</div>
-				<p>Choose any authored item to select and edit it.</p>
-				<div id="object-list" class="object-list"></div>
-			</div>
+			</details>
 			<div id="semantic-editor" class="selected-edge workspace-panel" data-workspace-panel="map">
 				<h2>Semantic selection</h2>
 				<p>Select an authored location, point, door, label, or transition on the map.</p>
@@ -386,6 +390,11 @@
 			<section><h3>Map items</h3><dl><dt><kbd>R</kbd></dt><dd>Room or area</dd><dt><kbd>W</kbd></dt><dd>Walkable area</dd><dt><kbd>B</kbd></dt><dd>Blocked area</dd><dt><kbd>D</kbd></dt><dd>Door</dd><dt><kbd>P</kbd></dt><dd>Point of interest</dd><dt><kbd>Y</kbd></dt><dd>You are here</dd><dt><kbd>T</kbd></dt><dd>Floor connection</dd><dt><kbd>L</kbd></dt><dd>Text label</dd><dt><kbd>I</kbd></dt><dd>Icon</dd><dt><kbd>G</kbd></dt><dd>Logo</dd><dt><kbd>Enter</kbd></dt><dd>Finish polygon</dd></dl></section>
 			<section><h3>Route tools</h3><dl><dt><kbd>H</kbd></dt><dd>Pan tool</dd><dt><kbd>A</kbd></dt><dd>Place destination entrance</dd><dt><kbd>E</kbd></dt><dd>Draw route</dd><dt><kbd>X</kbd></dt><dd>Edit route</dd><dt><kbd>Enter</kbd></dt><dd>Finish route at junction</dd></dl></section>
 		</div>
+	</dialog>
+	<dialog id="confirm-dialog" class="confirm-dialog">
+		<header><div><span>CONFIRM ACTION</span><h2 id="confirm-title">Continue?</h2></div></header>
+		<p id="confirm-message"></p>
+		<div class="dialog-actions"><button id="confirm-cancel" type="button" class="secondary">Cancel</button><button id="confirm-accept" type="button">Continue</button></div>
 	</dialog>
 	<script type="module" src="./workbench.ts"></script>
 </body>

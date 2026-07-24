@@ -13,6 +13,8 @@ const icon = (id: string, label: string, body: string): BuiltinMapIcon => ({
 export const BUILTIN_MAP_ICONS: BuiltinMapIcon[] = [
 	icon('information', 'Information', '<circle cx="32" cy="32" r="26"/><path d="M32 29v18M32 18h.01"/>'),
 	icon('restroom', 'Restroom', '<circle cx="20" cy="14" r="5"/><circle cx="44" cy="14" r="5"/><path d="M20 22v18m-9-10h18M14 58l6-18 6 18M44 22l-10 24h7v12m3-36 10 24h-7v12"/>'),
+	icon('restroom-men', 'Men restroom', '<circle cx="32" cy="13" r="6"/><path d="M32 22v20m-12-12h24M24 59l8-17 8 17"/>'),
+	icon('restroom-women', 'Women restroom', '<circle cx="32" cy="13" r="6"/><path d="M32 22 19 47h8v12m5-37 13 25h-8v12"/>'),
 	icon('accessible', 'Accessible', '<circle cx="27" cy="12" r="5"/><path d="M27 20v16h14l8 17M27 27h14M25 32a16 16 0 1 0 17 18"/>'),
 	icon('elevator', 'Elevator', '<rect x="12" y="8" width="40" height="48" rx="3"/><path d="M32 12v40M21 24l5-6 5 6M43 40l-5 6-5-6"/>'),
 	icon('stairs', 'Stairs', '<path d="M8 52h12V40h12V28h12V16h12"/>'),
