@@ -38,8 +38,10 @@ import {
 	type WayfindingStudioFloor,
 	type WayfindingStudioLanguage,
 	type WayfindingStudioLabelElement,
+	type WayfindingStudioLocationColorMode,
 	type WayfindingStudioMediaElement,
 	type WayfindingStudioOriginElement,
+	type WayfindingStudioPedestrianSpaceSource,
 	type WayfindingStudioPointElement,
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioPolygonPresentation,
@@ -227,7 +229,8 @@ const destinationName = requireElement<HTMLInputElement>('#destination-name');
 const destinationLanguage = requireElement<HTMLSelectElement>('#destination-language');
 const destinationTranslatedName = requireElement<HTMLInputElement>('#destination-translated-name');
 const destinationTranslatedDescription = requireElement<HTMLTextAreaElement>('#destination-translated-description');
-const destinationCategory = requireElement<HTMLSelectElement>('#destination-category');
+const destinationCategoryOptions = requireElement<HTMLElement>('#destination-category-options');
+const destinationCategoryManage = requireElement<HTMLButtonElement>('#destination-category-manage');
 const destinationDescription = requireElement<HTMLTextAreaElement>('#destination-description');
 const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
 const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
@@ -258,11 +261,6 @@ const routeBuildButton = requireElement<HTMLButtonElement>('#route-build');
 const routeClearButton = requireElement<HTMLButtonElement>('#route-clear');
 const routeInspectButton = requireElement<HTMLButtonElement>('#route-inspect');
 const routePreviewNetworkInput = requireElement<HTMLInputElement>('#route-preview-network');
-const routePreviewAnimationInput = requireElement<HTMLSelectElement>('#route-preview-animation');
-const routePreviewSpeedInput = requireElement<HTMLInputElement>('#route-preview-speed');
-const routePreviewSpeedValue = requireElement<HTMLOutputElement>('#route-preview-speed-value');
-const routePreviewColorInput = requireElement<HTMLInputElement>('#route-preview-color');
-const routePreviewWidthInput = requireElement<HTMLInputElement>('#route-preview-width');
 const studioNotice = requireElement<HTMLElement>('#studio-notice');
 const workspaceMapButton = requireElement<HTMLButtonElement>('#workspace-map');
 const workspaceRoutePreviewButton = requireElement<HTMLButtonElement>('#workspace-route-preview');
@@ -350,7 +348,13 @@ const projectLanguageAdd = requireElement<HTMLButtonElement>('#project-language-
 const projectCategoryList = requireElement<HTMLElement>('#project-category-list');
 const projectCategoryName = requireElement<HTMLInputElement>('#project-category-name');
 const projectCategoryAdd = requireElement<HTMLButtonElement>('#project-category-add');
-const randomizeLocationColors = requireElement<HTMLButtonElement>('#randomize-location-colors');
+const projectDefaultsPanel = requireElement<HTMLDetailsElement>('.project-defaults');
+const defaultLocationFixedColorControl = requireElement<HTMLElement>('#default-location-fixed-color-control');
+const defaultLocationFixedColorInput = requireElement<HTMLInputElement>('#default-location-fixed-color');
+const locationColorModeHelp = requireElement<HTMLElement>('#location-color-mode-help');
+const polygonPedestrianTools = requireElement<HTMLElement>('#polygon-pedestrian-tools');
+const maskPedestrianTools = requireElement<HTMLElement>('#mask-pedestrian-tools');
+const pedestrianSourceStatus = requireElement<HTMLElement>('#pedestrian-source-status');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -511,6 +515,16 @@ const graphDocument = (): WayfindingGraphDocument => {
 
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
+const currentPedestrianSpaceSource = (): WayfindingStudioPedestrianSpaceSource => {
+	const floor: WayfindingStudioFloor = currentFloor();
+	if (floor.pedestrianSpaceSource === 'mask' || floor.pedestrianSpaceSource === 'polygons') return floor.pedestrianSpaceSource;
+
+	floor.pedestrianSpaceSource = floor.elements.some((element: WayfindingStudioElement): boolean => element.type === 'walkable')
+		? 'polygons'
+		: floor.walkableMask ? 'mask' : 'polygons';
+
+	return floor.pedestrianSpaceSource;
+};
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
 const removeRedundantRoutePoints = (points: WayfindingPoint[]): WayfindingPoint[] => {
 	const result: WayfindingPoint[] = [];
@@ -650,11 +664,37 @@ const renderProjectCollections = (): void => {
 
 	projectCategoryList.replaceChildren(...projectCategories().map((category: string): HTMLElement => {
 		const row: HTMLDivElement = document.createElement('div');
-		const label: HTMLSpanElement = document.createElement('span');
+		const label: HTMLInputElement = document.createElement('input');
 		const remove: HTMLButtonElement = document.createElement('button');
 		const usageCount: number = destinationRows().filter((destination: DestinationRow): boolean => destination.category === category).length;
 		row.className = 'settings-list-row';
-		label.textContent = usageCount > 0 ? `${category} (${usageCount})` : category;
+		row.classList.add('category-settings-row');
+		label.type = 'text';
+		label.value = category;
+		label.setAttribute('aria-label', `Rename ${category}`);
+		label.title = usageCount > 0
+			? `Used by ${usageCount} destination${usageCount === 1 ? '' : 's'}`
+			: 'Not used by a destination yet';
+		label.addEventListener('change', (): void => {
+			const replacement: string = label.value.trim();
+			if (!replacement || replacement === category) {
+				label.value = category;
+				return;
+			}
+			if (projectCategories().some((candidate: string): boolean => candidate.toLowerCase() === replacement.toLowerCase())) {
+				showStudioNotice(`The category "${replacement}" already exists.`, 'error');
+				label.value = category;
+				return;
+			}
+			const before: HistoryState = captureHistoryState();
+			studioProject.categories = projectCategories().map((candidate: string): string => candidate === category ? replacement : candidate);
+			for (const destination of destinationRows()) if (destination.category === category) destination.category = replacement;
+			touchWayfindingStudioProject(studioProject);
+			recordHistory(before);
+			renderStudioControls();
+			renderMetadataEditor();
+			showStudioNotice(`Renamed "${category}" to "${replacement}".`);
+		});
 		remove.type = 'button';
 		remove.className = 'text-action danger-text';
 		remove.textContent = 'Remove';
@@ -742,6 +782,26 @@ const renderDrawingMode = (): void => {
 	detectDetailControl.hidden = !smart;
 	detectOpeningControl.hidden = !smart;
 	detectGapControl.hidden = !smart;
+};
+
+const renderPedestrianSourceControls = (): void => {
+	const source: WayfindingStudioPedestrianSpaceSource = currentPedestrianSpaceSource();
+	const walkableCount: number = currentElements().filter((element: WayfindingStudioElement): boolean => element.type === 'walkable').length;
+	const painted: boolean = Boolean(currentFloor().walkableMask?.walkableRuns.length);
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-pedestrian-source]')) {
+		const active: boolean = button.dataset.pedestrianSource === source;
+		button.classList.toggle('active', active);
+		button.setAttribute('aria-pressed', String(active));
+	}
+	polygonPedestrianTools.hidden = source !== 'polygons';
+	maskPedestrianTools.hidden = source !== 'mask';
+	pedestrianSourceStatus.textContent = source === 'polygons'
+		? walkableCount > 0
+			? `${walkableCount} authored pedestrian area${walkableCount === 1 ? '' : 's'} will be used when routes are rebuilt.`
+			: 'No authored pedestrian area yet. Draw one or more corridor polygons.'
+		: painted
+			? 'The saved painted pedestrian mask will be used when routes are rebuilt.'
+			: 'No painted pedestrian mask yet. Pick a floor color or paint the usable space.';
 };
 
 const renderMediaAssetState = (): void => {
@@ -944,6 +1004,7 @@ const setWorkspaceMode = (mode: WorkspaceMode): void => {
 	} else {
 		coverageStatus.textContent = 'Map edit: add, select, and style map elements.';
 	}
+	renderPedestrianSourceControls();
 	renderReview();
 	draw();
 };
@@ -1212,6 +1273,7 @@ const cachedMediaImage = (asset: WayfindingStudioAsset): HTMLImageElement => {
 };
 
 const persistCurrentMask = (): void => {
+	if (currentPedestrianSpaceSource() !== 'mask') return;
 	if (mask.length === 0 || !mask.some((value: number): boolean => value === 1) || maskColumns === 0 || maskRows === 0) {
 		delete currentFloor().walkableMask;
 		return;
@@ -1230,7 +1292,11 @@ const persistCurrentMask = (): void => {
 };
 
 const applyMaskDocument = (document: WayfindingWalkableMaskDocument | undefined): void => {
-	if (!document) return;
+	if (!document) {
+		resetMaskGrid();
+		mask.fill(0);
+		return;
+	}
 	cellSizeInput.value = String(document.cellSize);
 	cellSizeValue.value = String(document.cellSize);
 	maskColumns = document.columns;
@@ -1523,11 +1589,19 @@ const syncProjectDefaultControls = (): void => {
 	defaultRouteAnimationInput.value = defaults.route.animation;
 	defaultRouteSpeedInput.value = String(defaults.route.animationSpeed);
 	defaultRouteSpeedValue.value = String(defaults.route.animationSpeed);
-	routePreviewAnimationInput.value = defaults.route.animation;
-	routePreviewSpeedInput.value = String(defaults.route.animationSpeed);
-	routePreviewSpeedValue.value = String(defaults.route.animationSpeed);
-	routePreviewColorInput.value = defaults.route.color;
-	routePreviewWidthInput.value = String(defaults.route.lineWidth);
+	defaultLocationFixedColorInput.value = defaults.locationColor.fixedColor;
+	defaultLocationFixedColorControl.hidden = defaults.locationColor.mode !== 'fixed';
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-location-color-mode]')) {
+		const active: boolean = button.dataset.locationColorMode === defaults.locationColor.mode;
+		button.classList.toggle('active', active);
+		button.setAttribute('aria-pressed', String(active));
+	}
+	const colorModeCopy: Record<WayfindingStudioLocationColorMode, string> = {
+		fixed: `Every new room uses ${defaults.locationColor.fixedColor}.`,
+		inherited: 'New rooms sample the floor-plan color beneath them. If no image color is available, the default room color is used.',
+		random: 'New rooms rotate through a curated, high-contrast map palette.'
+	};
+	locationColorModeHelp.textContent = colorModeCopy[defaults.locationColor.mode];
 };
 
 const objectName = (element: WayfindingStudioElement): string => {
@@ -1639,6 +1713,7 @@ const renderStudioControls = (): void => {
 	syncProjectDefaultControls();
 	renderProjectCollections();
 	renderObjectExplorer();
+	renderPedestrianSourceControls();
 };
 
 const selectedSemanticPolygon = (): WayfindingStudioPolygonElement | undefined => {
@@ -2154,11 +2229,22 @@ const renderMetadataEditor = (): void => {
 	destinationTranslatedName.value = translation?.name ?? '';
 	destinationTranslatedDescription.value = translation?.description ?? '';
 	const categories: string[] = projectCategories();
-	destinationCategory.replaceChildren(
-		new Option('No category', ''),
-		...categories.map((category: string): HTMLOptionElement => new Option(category, category))
-	);
-	destinationCategory.value = stringValue(row.category);
+	const selectedCategory: string = stringValue(row.category);
+	destinationCategoryOptions.replaceChildren();
+	for (const category of ['', ...categories]) {
+		const button: HTMLButtonElement = document.createElement('button');
+		const active: boolean = selectedCategory === category;
+		button.type = 'button';
+		button.className = 'category-option';
+		button.classList.toggle('active', active);
+		button.setAttribute('aria-pressed', String(active));
+		button.textContent = category || 'No category';
+		button.addEventListener('click', (): void => {
+			updateSelectedDestination('category', category);
+			renderMetadataEditor();
+		});
+		destinationCategoryOptions.append(button);
+	}
 	destinationDescription.value = stringValue(row.description);
 	destinationHours.value = stringValue(row.hours);
 	destinationStatus.value = stringValue(row.status);
@@ -2660,7 +2746,8 @@ const extractConnectedMask = (): void => {
 
 	for (const index of includeOverrides) nextMask[index] = 1;
 	for (const index of excludeOverrides) nextMask[index] = 0;
-	mask = nextMask;
+	mask = closeWalkableMask(nextMask, maskColumns, maskRows, bridgeRadius());
+	for (const index of excludeOverrides) mask[index] = 0;
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
 	renderReview();
@@ -3004,9 +3091,9 @@ const linkUnassignedDoorsToNearbyLocations = (): number => {
 	return linked;
 };
 
-const rasterizeAuthoredWalkableAreas = (): boolean => {
+const rasterizeAuthoredWalkableAreas = (): Uint8Array | undefined => {
 	const walkableAreas: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'walkable');
-	if (walkableAreas.length === 0) return false;
+	if (walkableAreas.length === 0) return undefined;
 	const obstacles: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
 	resetMaskGrid();
 	for (let row = 0; row < maskRows; row += 1) {
@@ -3022,9 +3109,88 @@ const rasterizeAuthoredWalkableAreas = (): boolean => {
 	}
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
-	persistCurrentMask();
 
-	return mask.some((value: number): boolean => value === 1);
+	return mask.some((value: number): boolean => value === 1) ? new Uint8Array(mask) : undefined;
+};
+
+const setPedestrianSpaceSource = (source: WayfindingStudioPedestrianSpaceSource): void => {
+	const floor: WayfindingStudioFloor = currentFloor();
+	const previous: WayfindingStudioPedestrianSpaceSource = currentPedestrianSpaceSource();
+	if (source === previous) {
+		renderPedestrianSourceControls();
+		return;
+	}
+	const before: HistoryState = captureHistoryState();
+	if (previous === 'mask') persistCurrentMask();
+	floor.pedestrianSpaceSource = source;
+	if (source === 'mask') applyMaskDocument(floor.walkableMask);
+	else rasterizeAuthoredWalkableAreas();
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	renderPedestrianSourceControls();
+	activateTool(source === 'polygons' ? 'walkable' : 'include');
+	draw();
+	coverageStatus.textContent = source === 'polygons'
+		? 'Polygon mode is active. Only authored Walkable areas and Blocked areas will be used when routes are rebuilt.'
+		: 'Paint mode is active. Only the painted pedestrian mask will be used when routes are rebuilt.';
+};
+
+const LOCATION_COLOR_PALETTE = [
+	'#f4c95d',
+	'#69c3b3',
+	'#f29b7f',
+	'#9ebce3',
+	'#c4d79b',
+	'#c5b1d8',
+	'#f1b75e',
+	'#80b9b0',
+	'#e88777',
+	'#8faed2',
+	'#b4cc8c',
+	'#b99bc7'
+] as const;
+
+const rgbHex = ({ r, g, b }: Pick<ColorSample, 'r' | 'g' | 'b'>): string => {
+	return `#${[r, g, b].map((value: number): string => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
+};
+
+const inheritedLocationColor = (points: WayfindingPoint[]): string | undefined => {
+	if (points.length === 0) return undefined;
+	const center: WayfindingPoint = points.reduce((sum: WayfindingPoint, point: WayfindingPoint): WayfindingPoint => ({
+		x: sum.x + point.x / points.length,
+		y: sum.y + point.y / points.length
+	}), { x: 0, y: 0 });
+	const candidates: WayfindingPoint[] = [
+		center,
+		...points.map((point: WayfindingPoint): WayfindingPoint => ({
+			x: center.x + (point.x - center.x) * 0.25,
+			y: center.y + (point.y - center.y) * 0.25
+		}))
+	];
+
+	for (const candidate of candidates) {
+		const sample = pixelColorAt(candidate.x, candidate.y);
+		if (sample) return rgbHex(sample);
+	}
+
+	return undefined;
+};
+
+const locationFillForNewPolygon = (
+	points: WayfindingPoint[],
+	presentation?: WayfindingStudioPolygonPresentation
+): string => {
+	if (presentation?.fillColor) return presentation.fillColor;
+	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
+	if (defaults.locationColor.mode === 'fixed') return defaults.locationColor.fixedColor;
+	if (defaults.locationColor.mode === 'random') {
+		const locationCount: number = studioProject.floors.reduce((count: number, floor: WayfindingStudioFloor): number =>
+			count + floor.elements.filter((element: WayfindingStudioElement): boolean => element.type === 'location').length
+		, 0);
+		return LOCATION_COLOR_PALETTE[locationCount % LOCATION_COLOR_PALETTE.length];
+	}
+
+	return inheritedLocationColor(points) ?? defaults.location.fillColor ?? defaults.locationColor.fixedColor;
 };
 
 const addSemanticPoint = (
@@ -3100,12 +3266,17 @@ const commitSemanticPolygon = (
 	const before: HistoryState = captureHistoryState();
 	const id: string = nextId(type);
 	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
+	const polygonPresentation: WayfindingStudioPolygonPresentation = {
+		...defaults[type],
+		...presentation
+	};
+	if (type === 'location') polygonPresentation.fillColor = locationFillForNewPolygon(points, presentation);
 	const element: WayfindingStudioPolygonElement = {
 		floorId: currentFloorId,
 		geometry: points,
 		id,
 		label: type === 'location' ? `Location ${id.split('-').at(-1)}` : undefined,
-		presentation: { ...defaults[type], ...presentation },
+		presentation: polygonPresentation,
 		provenance: 'reviewer-authored',
 		status: 'proposed',
 		type
@@ -3156,7 +3327,7 @@ const draw = (): void => {
 	}
 	drawSemanticElements();
 
-	if (workspaceMode === 'route-edit' && mask.length > 0) {
+	if (workspaceMode === 'route-edit' && currentPedestrianSpaceSource() === 'mask' && mask.length > 0) {
 		context.fillStyle = 'rgba(0, 190, 158, 0.32)';
 
 		for (let row = 0; row < maskRows; row += 1) {
@@ -3734,6 +3905,17 @@ const activateTool = (nextTool: Tool): void => {
 	draw();
 };
 
+const activateEditorTool = (nextTool: Tool): void => {
+	if (nextTool === 'walkable' || nextTool === 'obstacle') {
+		setWorkspaceMode('route-edit');
+		if (currentPedestrianSpaceSource() !== 'polygons') setPedestrianSpaceSource('polygons');
+	} else if (nextTool === 'sample' || nextTool === 'include' || nextTool === 'exclude') {
+		setWorkspaceMode('route-edit');
+		if (currentPedestrianSpaceSource() !== 'mask') setPedestrianSpaceSource('mask');
+	}
+	activateTool(nextTool);
+};
+
 const restoreTemporaryPan = (): void => {
 	if (!toolBeforeTemporaryPan) return;
 	tool = toolBeforeTemporaryPan;
@@ -3988,8 +4170,27 @@ const simplifyContainedGeometry = (points: WayfindingPoint[], clearance = 0): Wa
 	return points;
 };
 
+const quadraticRouteContained = (
+	entry: WayfindingPoint,
+	control: WayfindingPoint,
+	exit: WayfindingPoint,
+	clearance: number
+): boolean => {
+	for (let index = 1; index < 10; index += 1) {
+		const ratio: number = index / 10;
+		const inverse: number = 1 - ratio;
+		if (!pointWalkableWithClearance({
+			x: inverse * inverse * entry.x + 2 * inverse * ratio * control.x + ratio * ratio * exit.x,
+			y: inverse * inverse * entry.y + 2 * inverse * ratio * control.y + ratio * ratio * exit.y
+		}, clearance)) return false;
+	}
+
+	return true;
+};
+
 function traceRoundedRoute(target: CanvasRenderingContext2D, points: WayfindingPoint[], radius: number): void {
 	target.moveTo(points[0].x, points[0].y);
+	const clearance: number = Math.max(0, projectDefaults().route.lineWidth / 2);
 
 	for (let index = 1; index < points.length - 1; index += 1) {
 		const previous: WayfindingPoint = points[index - 1];
@@ -4010,7 +4211,12 @@ function traceRoundedRoute(target: CanvasRenderingContext2D, points: WayfindingP
 		};
 
 		target.lineTo(entry.x, entry.y);
-		target.quadraticCurveTo(current.x, current.y, exit.x, exit.y);
+		if (quadraticRouteContained(entry, current, exit, clearance)) {
+			target.quadraticCurveTo(current.x, current.y, exit.x, exit.y);
+		} else {
+			target.lineTo(current.x, current.y);
+			target.lineTo(exit.x, exit.y);
+		}
 	}
 
 	const end: WayfindingPoint = points[points.length - 1];
@@ -4046,13 +4252,24 @@ const generateCenterlineGraph = (): boolean => {
 	const linkedDoors: number = linkUnassignedDoorsToNearbyLocations();
 	synchronizeWayfindingStudioGraph(studioProject);
 	graph = studioProject.graph;
-	const usedAuthoredAreas: boolean = rasterizeAuthoredWalkableAreas();
-	if ((!usedAuthoredAreas && !mask.some((value: number): boolean => value === 1)) || maskColumns === 0 || maskRows === 0) {
-		coverageStatus.textContent = 'Draw at least one Walkable area before building routes.';
-		routeResult.textContent = 'Route setup is incomplete: draw the pedestrian area, then choose Build routes.';
+	const pedestrianSource: WayfindingStudioPedestrianSpaceSource = currentPedestrianSpaceSource();
+	const authoredMask: Uint8Array | undefined = pedestrianSource === 'polygons'
+		? rasterizeAuthoredWalkableAreas()
+		: (() => {
+			applyMaskDocument(currentFloor().walkableMask);
+			return mask.some((value: number): boolean => value === 1) ? new Uint8Array(mask) : undefined;
+		})();
+	if (!authoredMask || maskColumns === 0 || maskRows === 0) {
+		coverageStatus.textContent = pedestrianSource === 'polygons'
+			? 'Draw at least one Walkable area before building routes.'
+			: 'Paint or detect pedestrian space before building routes.';
+		routeResult.textContent = pedestrianSource === 'polygons'
+			? 'Route setup is incomplete: draw the pedestrian area, then choose Build routes.'
+			: 'Route setup is incomplete: paint the pedestrian area, then choose Build routes.';
 		renderStudioControls();
 		return false;
 	}
+	mask = new Uint8Array(authoredMask);
 
 	const elementsById = new Map(currentElements().map((element: WayfindingStudioElement): [string, WayfindingStudioElement] => [element.id, element]));
 	const linkedLocationIds = new Set(currentElements()
@@ -4081,10 +4298,8 @@ const generateCenterlineGraph = (): boolean => {
 		return false;
 	}
 
-	mask = closeWalkableMask(mask, maskColumns, maskRows, bridgeRadius());
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
-	const authoredMask: Uint8Array = new Uint8Array(mask);
 	const anchorIndexById = new Map<string, number>();
 	for (const anchorNode of anchorNodes) {
 		const column: number = Math.max(0, Math.min(maskColumns - 1, Math.floor(anchorNode.x / cellSize())));
@@ -4092,7 +4307,6 @@ const generateCenterlineGraph = (): boolean => {
 		const index: number | undefined = nearestWalkableIndex(maskIndex(column, row), authoredMask);
 		if (index !== undefined) anchorIndexById.set(anchorNode.id, index);
 	}
-	persistCurrentMask();
 	const skeleton: Uint8Array = skeletonizeWalkableMask(authoredMask, maskColumns, maskRows);
 	const attachmentIndices = new Set<number>();
 	const attachmentByAnchorId = new Map<string, number>();
@@ -4135,12 +4349,15 @@ const generateCenterlineGraph = (): boolean => {
 		const to: string | undefined = nodeIdByIndex.get(chain.indices[chain.indices.length - 1]);
 		if (!from || !to || from === to) return [];
 
+		const geometry: WayfindingPoint[] = simplifyContainedGeometry(chain.indices.map(pointForMaskIndex), cellSize() * 0.75);
+		if (!geometryContained(geometry, cellSize() * 0.25)) return [];
+
 		return [{
 			accessible: true,
 			bidirectional: true,
 			corridorWidth: cellSize(),
 			from,
-			geometry: simplifyContainedGeometry(chain.indices.map(pointForMaskIndex), cellSize() * 0.75),
+			geometry,
 			id: `centerline:${currentFloorId}:${String(edgeIndex + 1).padStart(4, '0')}`,
 			kind: 'walk',
 			reviewStatus: 'proposed',
@@ -4153,7 +4370,7 @@ const generateCenterlineGraph = (): boolean => {
 		const attachmentId: string | undefined = attachmentIndex === undefined ? undefined : nodeIdByIndex.get(attachmentIndex);
 		if (attachmentIndex === undefined || !attachmentId) return [];
 		const geometry: WayfindingPoint[] | undefined = connectorGeometryByAnchorId.get(anchorNode.id);
-		if (!geometry?.length) return [];
+		if (!geometry?.length || !geometryContained(geometry, 0)) return [];
 
 		return [{
 			accessible: true,
@@ -4232,7 +4449,7 @@ const requestRouteRegeneration = async (): Promise<boolean> => {
 
 	if (currentEdges.length > 0 && !await confirmAction(
 		`This replaces ${currentEdges.length} existing route segment${currentEdges.length === 1 ? '' : 's'} on ${currentFloor().name}, including manual adjustments.`,
-		'Rebuild this floor’s routes?',
+		"Rebuild this floor's routes?",
 		'Rebuild routes'
 	)) return false;
 
@@ -4473,7 +4690,15 @@ requireElement<HTMLButtonElement>('#studio-add-floor').addEventListener('click',
 	const before: HistoryState = captureHistoryState();
 	let index: number = studioProject.floors.length;
 	while (studioProject.floors.some((floor: WayfindingStudioFloor): boolean => floor.id === `level-${index}`)) index += 1;
-	const floor: WayfindingStudioFloor = { elements: [], height: currentFloor().height, id: `level-${index}`, name: `Level ${index}`, order: studioProject.floors.length, width: currentFloor().width };
+	const floor: WayfindingStudioFloor = {
+		elements: [],
+		height: currentFloor().height,
+		id: `level-${index}`,
+		name: `Level ${index}`,
+		order: studioProject.floors.length,
+		pedestrianSpaceSource: 'polygons',
+		width: currentFloor().width
+	};
 	studioProject.floors.push(floor);
 	touchWayfindingStudioProject(studioProject);
 	recordHistory(before);
@@ -4604,27 +4829,6 @@ for (const input of [projectLanguageCode, projectLanguageLabel, projectCategoryN
 		else projectLanguageAdd.click();
 	});
 }
-randomizeLocationColors.addEventListener('click', (): void => {
-	const locations: WayfindingStudioPolygonElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioPolygonElement[] =>
-		floor.elements.filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location')
-	);
-	if (locations.length === 0) {
-		showStudioNotice('There are no rooms or areas to recolor yet.');
-		return;
-	}
-	const palette = ['#f4c95d', '#69c3b3', '#f29b7f', '#9ebce3', '#c4d79b', '#c5b1d8', '#f1b75e', '#80b9b0', '#e88777', '#8faed2', '#b4cc8c', '#b99bc7'];
-	const before: HistoryState = captureHistoryState();
-	const offset: number = Math.floor(Math.random() * palette.length);
-	locations.forEach((location: WayfindingStudioPolygonElement, index: number): void => {
-		location.presentation ??= {};
-		location.presentation.fillColor = palette[(index + offset) % palette.length];
-	});
-	touchWayfindingStudioProject(studioProject);
-	recordHistory(before);
-	renderSemanticEditor();
-	draw();
-	showStudioNotice(`Applied distinct colors to ${locations.length} room${locations.length === 1 ? '' : 's'}.`);
-});
 const updateProjectDefaults = (mutate: (defaults: WayfindingStudioProjectDefaults) => void): void => {
 	const before: HistoryState = captureHistoryState();
 	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
@@ -4639,6 +4843,15 @@ defaultLocationOpacityInput.addEventListener('change', (): void => {
 });
 defaultLocationHeightInput.addEventListener('change', (): void => {
 	updateProjectDefaults((defaults): void => { defaults.location.extrusionHeight = Number(defaultLocationHeightInput.value); });
+});
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-location-color-mode]')) {
+	button.addEventListener('click', (): void => {
+		const mode: WayfindingStudioLocationColorMode = button.dataset.locationColorMode as WayfindingStudioLocationColorMode;
+		updateProjectDefaults((defaults): void => { defaults.locationColor.mode = mode; });
+	});
+}
+defaultLocationFixedColorInput.addEventListener('change', (): void => {
+	updateProjectDefaults((defaults): void => { defaults.locationColor.fixedColor = defaultLocationFixedColorInput.value; });
 });
 defaultWalkableOpacityInput.addEventListener('change', (): void => {
 	updateProjectDefaults((defaults): void => { defaults.walkable.fillOpacity = Number(defaultWalkableOpacityInput.value) / 100; });
@@ -4661,33 +4874,24 @@ defaultLogoSizeInput.addEventListener('change', (): void => {
 const updateRouteDefaults = (mutate: (route: WayfindingStudioProjectDefaults['route']) => void): void => {
 	updateProjectDefaults((defaults): void => { mutate(defaults.route); });
 };
-for (const input of [defaultRouteColorInput, routePreviewColorInput]) {
-	input.addEventListener('change', (): void => {
-		updateRouteDefaults((route): void => { route.color = input.value; });
-	});
-}
-for (const input of [defaultRouteWidthInput, routePreviewWidthInput]) {
-	input.addEventListener('change', (): void => {
-		updateRouteDefaults((route): void => { route.lineWidth = Number(input.value); });
-	});
-}
+defaultRouteColorInput.addEventListener('change', (): void => {
+	updateRouteDefaults((route): void => { route.color = defaultRouteColorInput.value; });
+});
+defaultRouteWidthInput.addEventListener('change', (): void => {
+	updateRouteDefaults((route): void => { route.lineWidth = Number(defaultRouteWidthInput.value); });
+});
 defaultRouteRadiusInput.addEventListener('change', (): void => {
 	updateRouteDefaults((route): void => { route.cornerRadius = Number(defaultRouteRadiusInput.value); });
 });
-for (const input of [defaultRouteAnimationInput, routePreviewAnimationInput]) {
-	input.addEventListener('change', (): void => {
-		updateRouteDefaults((route): void => { route.animation = input.value as WayfindingStudioProjectDefaults['route']['animation']; });
-	});
-}
-for (const input of [defaultRouteSpeedInput, routePreviewSpeedInput]) {
-	input.addEventListener('input', (): void => {
-		defaultRouteSpeedValue.value = input.value;
-		routePreviewSpeedValue.value = input.value;
-	});
-	input.addEventListener('change', (): void => {
-		updateRouteDefaults((route): void => { route.animationSpeed = Number(input.value); });
-	});
-}
+defaultRouteAnimationInput.addEventListener('change', (): void => {
+	updateRouteDefaults((route): void => { route.animation = defaultRouteAnimationInput.value as WayfindingStudioProjectDefaults['route']['animation']; });
+});
+defaultRouteSpeedInput.addEventListener('input', (): void => {
+	defaultRouteSpeedValue.value = defaultRouteSpeedInput.value;
+});
+defaultRouteSpeedInput.addEventListener('change', (): void => {
+	updateRouteDefaults((route): void => { route.animationSpeed = Number(defaultRouteSpeedInput.value); });
+});
 chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
 stopMediaPlacement.addEventListener('click', (): void => {
 	pendingMediaAssetId = undefined;
@@ -4857,6 +5061,11 @@ destinationSelect.addEventListener('change', (): void => {
 	selectedDestinationId = destinationSelect.value;
 	renderMetadataEditor();
 });
+destinationCategoryManage.addEventListener('click', (): void => {
+	projectDefaultsPanel.open = true;
+	projectCategoryName.focus({ preventScroll: true });
+	projectCategoryName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 
 for (const [input, field] of [
 	[destinationMapNumber, 'mapNumber'],
@@ -4868,9 +5077,6 @@ for (const [input, field] of [
 	input.addEventListener('input', (): void => { updateSelectedDestination(field, input.value); });
 }
 
-destinationCategory.addEventListener('change', (): void => {
-	updateSelectedDestination('category', destinationCategory.value);
-});
 destinationLanguage.addEventListener('change', renderMetadataEditor);
 destinationTranslatedName.addEventListener('input', (): void => {
 	updateSelectedTranslation('name', destinationTranslatedName.value);
@@ -4884,7 +5090,12 @@ destinationAccessible.addEventListener('change', (): void => {
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tool]')) {
 	button.addEventListener('click', (): void => {
-		activateTool(button.dataset.tool as Tool);
+		activateEditorTool(button.dataset.tool as Tool);
+	});
+}
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-pedestrian-source]')) {
+	button.addEventListener('click', (): void => {
+		setPedestrianSpaceSource(button.dataset.pedestrianSource as WayfindingStudioPedestrianSpaceSource);
 	});
 }
 
@@ -5023,7 +5234,7 @@ window.addEventListener('keydown', (event: KeyboardEvent): void => {
 	const shortcutTool: Tool | undefined = TOOL_SHORTCUTS[event.key.toLowerCase()];
 	if (shortcutTool) {
 		event.preventDefault();
-		activateTool(shortcutTool);
+		activateEditorTool(shortcutTool);
 	}
 });
 

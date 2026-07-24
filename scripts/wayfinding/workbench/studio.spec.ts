@@ -14,6 +14,7 @@ import {
 const createRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('route-clear-test');
 	const floor = project.floors[0];
+	floor.pedestrianSpaceSource = 'polygons';
 	floor.elements = [
 		{ floorId: floor.id, geometry: [{ x: 40, y: 40 }, { x: 840, y: 40 }, { x: 840, y: 480 }, { x: 40, y: 480 }], id: 'main-walkable', provenance: 'reviewer-authored', status: 'confirmed', type: 'walkable' },
 		{ floorId: floor.id, geometry: [{ x: 260, y: 235 }, { x: 340, y: 235 }, { x: 340, y: 320 }, { x: 260, y: 320 }], id: 'blocked-island', provenance: 'reviewer-authored', status: 'confirmed', type: 'obstacle' },
@@ -41,8 +42,20 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('automatic-route-test');
 	const floor = project.floors[0];
+	floor.pedestrianSpaceSource = 'polygons';
 	floor.width = 900;
 	floor.height = 600;
+	floor.walkableMask = {
+		cellSize: 20,
+		columns: 45,
+		contractVersion: 1,
+		height: 600,
+		mapId: 'automatic-route-test:stale-painted-mask',
+		reviewStatus: 'proposed',
+		rows: 30,
+		walkableRuns: [[0, 0, 0]],
+		width: 900
+	};
 	floor.elements = [
 		{
 			floorId: floor.id,
@@ -196,6 +209,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 test('keeps first-time guidance and authoring controls cohesive at the sidebar width', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('#project-onboarding')).toBeVisible();
+	await expect(page.locator('.layer-panel')).not.toHaveAttribute('open', '');
 
 	await page.locator('.project-defaults > summary').click();
 	await page.locator('.builtin-icon-picker > summary').click();
@@ -278,10 +292,12 @@ test('moves, inserts, and deletes polygon points above overlapping semantic laye
 	for (const position of [{ x: 220, y: 280 }, { x: 440, y: 280 }, { x: 440, y: 460 }, { x: 220, y: 460 }]) await canvas.click({ position });
 	await page.locator('#semantic-finish').click();
 
-	await page.locator('[data-workspace-panel="map"] [data-tool="walkable"]').click();
+	await page.locator('#workspace-route-edit').click();
+	await page.locator('#polygon-pedestrian-tools [data-tool="walkable"]').click();
 	for (const position of [{ x: 220, y: 280 }, { x: 350, y: 280 }, { x: 350, y: 380 }, { x: 220, y: 380 }]) await canvas.click({ position });
-	await page.locator('#semantic-finish').click();
+	await page.keyboard.press('Enter');
 
+	await page.locator('#workspace-map').click();
 	await page.locator('[data-tool="select"]').click();
 	await canvas.click({ position: { x: 420, y: 430 } });
 	const selection = page.locator('#semantic-editor');
@@ -325,7 +341,8 @@ test('draws freehand areas, authors exclusions, and explains portable save state
 	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
 	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
 	await page.locator('#drawing-mode-lasso').click();
-	await page.locator('[data-workspace-panel="map"] [data-tool="walkable"]').click();
+	await page.locator('#workspace-route-edit').click();
+	await page.locator('#polygon-pedestrian-tools [data-tool="walkable"]').click();
 	const canvas = page.locator('#stage');
 	const bounds = await canvas.boundingBox();
 	expect(bounds).not.toBeNull();
@@ -337,7 +354,7 @@ test('draws freehand areas, authors exclusions, and explains portable save state
 	};
 	await trace([{ x: 180, y: 250 }, { x: 470, y: 250 }, { x: 470, y: 500 }, { x: 180, y: 500 }, { x: 180, y: 250 }]);
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Walkable area');
-	await page.locator('#semantic-editor').getByRole('button', { name: 'Draw blocked island inside' }).click();
+	await page.locator('#polygon-pedestrian-tools [data-tool="obstacle"]').click();
 	await trace([{ x: 290, y: 335 }, { x: 365, y: 335 }, { x: 365, y: 415 }, { x: 290, y: 415 }, { x: 290, y: 335 }]);
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Blocked area');
 
@@ -389,6 +406,10 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 
 	const layerToggles = page.locator('[data-layer]');
 	await expect(layerToggles).toHaveCount(10);
+	const layerPanel = page.locator('.layer-panel');
+	await expect(layerPanel).not.toHaveAttribute('open', '');
+	await layerPanel.locator('> summary').click();
+	await expect(layerPanel).toHaveAttribute('open', '');
 	await page.locator('#hide-all-layers').click();
 	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).not.toBeChecked();
 	await page.locator('#show-all-layers').click();
@@ -460,6 +481,9 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject()));
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
 	await page.locator('#workspace-route-edit').click();
+	await expect(page.locator('[data-pedestrian-source="polygons"]')).toHaveClass(/active/u);
+	await expect(page.locator('#polygon-pedestrian-tools')).toBeVisible();
+	await expect(page.locator('#mask-pedestrian-tools')).toBeHidden();
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
 	await expect(page.locator('#route-destination option')).toHaveCount(2);
 	await expect(page.locator('#route-destination option', { hasText: 'Storage room' })).toHaveAttribute('disabled', '');
@@ -485,7 +509,9 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	const builtProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	const door = builtProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door');
 	expect(door?.locationId).toBe('meeting-room-shape');
-	expect(builtProject.floors[0].walkableMask?.walkableRuns.length).toBeGreaterThan(0);
+	expect(builtProject.floors[0].pedestrianSpaceSource).toBe('polygons');
+	expect(builtProject.floors[0].walkableMask?.mapId).toBe('automatic-route-test:stale-painted-mask');
+	expect(builtProject.floors[0].walkableMask?.walkableRuns).toEqual([[0, 0, 0]]);
 	expect(builtProject.graph.edges.length).toBeGreaterThan(0);
 	const roomNode = builtProject.graph.nodes.find((node): boolean => node.semanticElementId === 'meeting-room-shape');
 	expect(roomNode).toMatchObject({ x: door?.point.x, y: door?.point.y });
@@ -842,6 +868,7 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	await page.locator('#default-location-opacity').blur();
 	await page.locator('#default-location-height').fill('31');
 	await page.locator('#default-location-height').blur();
+	await page.locator('[data-location-color-mode="random"]').click();
 
 	const canvas = page.locator('#stage');
 	await page.locator('#drawing-mode-points').click();
@@ -874,8 +901,7 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	await translations.getByLabel('Description', { exact: true }).fill('Terkep, jegyek es helyi segitseg.');
 	await page.locator('#project-category-name').fill('Visitor services');
 	await page.locator('#project-category-add').click();
-	await expect(page.locator('#project-category-list')).toContainText('Visitor services');
-	await page.locator('#randomize-location-colors').click();
+	await expect(page.locator('#project-category-list input').last()).toHaveValue('Visitor services');
 	await page.locator('.builtin-icon-picker > summary').click();
 	await page.locator('.builtin-icon[title="Place Information"]').click();
 	await expect(page.locator('#media-asset-state')).toContainText('Information stays selected');
@@ -890,6 +916,7 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	const icon = project.floors[0].elements.find((element): boolean => element.type === 'icon');
 	expect(project.defaults?.location.fillOpacity).toBe(0.58);
 	expect(project.defaults?.location.extrusionHeight).toBe(31);
+	expect(project.defaults?.locationColor.mode).toBe('random');
 	expect(project.languages).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'hu', label: 'Hungarian' })]));
 	expect(project.destinations).toEqual(expect.arrayContaining([
 		expect.objectContaining({
@@ -972,15 +999,16 @@ test('rotates a door while placing it and persists animated route appearance', a
 	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
 	await page.locator('#studio-open-project').click();
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('.project-defaults > summary').click();
+	await page.locator('#default-route-animation').selectOption('flow');
+	await page.locator('#default-route-speed').fill('120');
+	await page.locator('#default-route-speed').dispatchEvent('input');
+	await page.locator('#default-route-color').fill('#1a73e8');
+	await page.locator('#default-route-color').dispatchEvent('input');
+	await page.locator('#default-route-width').fill('11');
+	await page.locator('#default-route-width').blur();
 	await page.locator('#workspace-route-preview').click();
-	await page.locator('.route-preview-style > summary').click();
-	await page.locator('#route-preview-animation').selectOption('flow');
-	await page.locator('#route-preview-speed').fill('120');
-	await page.locator('#route-preview-speed').dispatchEvent('change');
-	await page.locator('#route-preview-color').fill('#1a73e8');
-	await page.locator('#route-preview-color').dispatchEvent('change');
-	await page.locator('#route-preview-width').fill('11');
-	await page.locator('#route-preview-width').blur();
+	await expect(page.locator('.route-preview-style')).toHaveCount(0);
 
 	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
 		const rect: DOMRect = element.getBoundingClientRect();

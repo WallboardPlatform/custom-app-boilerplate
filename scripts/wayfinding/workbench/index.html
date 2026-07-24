@@ -114,7 +114,16 @@
 								<label>Walkable opacity<input id="default-walkable-opacity" type="number" min="0" max="100" step="1"><span class="unit">%</span></label>
 								<label>Blocked opacity<input id="default-obstacle-opacity" type="number" min="0" max="100" step="1"><span class="unit">%</span></label>
 							</div>
-							<button id="randomize-location-colors" type="button" class="secondary full-width-action">Give rooms distinct colors</button>
+							<fieldset class="color-policy">
+								<legend>Color for new rooms</legend>
+								<div class="segmented color-policy-options" role="radiogroup" aria-label="Color for newly placed rooms">
+									<button type="button" data-location-color-mode="inherited" aria-pressed="false">Match map</button>
+									<button type="button" data-location-color-mode="random" aria-pressed="false">Distinct</button>
+									<button type="button" data-location-color-mode="fixed" aria-pressed="false">One color</button>
+								</div>
+								<label id="default-location-fixed-color-control" class="color-input">Room color<input id="default-location-fixed-color" type="color"></label>
+								<p id="location-color-mode-help" class="field-note">Match map samples the background when possible and otherwise uses the project room color.</p>
+							</fieldset>
 						</section>
 						<section class="settings-section">
 							<div class="settings-heading"><h3>Labels and images</h3><span>Default asset sizing</span></div>
@@ -175,8 +184,6 @@
 				<div class="tool-grid" role="group" aria-label="Semantic authoring tool">
 					<button type="button" data-tool="select" data-shortcut="V" class="active">Select & move</button>
 					<button type="button" data-tool="location" data-shortcut="R">Room / area</button>
-					<button type="button" data-tool="walkable" data-shortcut="W">Walkable area</button>
-					<button type="button" data-tool="obstacle" data-shortcut="B">Blocked area</button>
 					<button type="button" data-tool="door" data-shortcut="D">Door</button>
 					<button type="button" data-tool="poi" data-shortcut="P">Point of interest</button>
 					<button type="button" data-tool="origin" data-shortcut="Y">You are here</button>
@@ -202,7 +209,7 @@
 					<strong>POLYGON DRAFT</strong><span id="semantic-draft-help">Tap each corner. Finish after at least three points.</span>
 					<div class="commands horizontal"><button id="semantic-finish" type="button">Finish</button><button id="semantic-cancel" type="button" class="secondary">Cancel</button></div>
 				</div>
-				<details class="layer-panel" open>
+				<details class="layer-panel">
 					<summary class="layer-panel-heading"><div><strong>Layer visibility</strong><span>Hide busy layers without deleting them.</span></div></summary>
 					<div class="layer-actions"><button id="show-all-layers" type="button">Show all</button><button id="hide-all-layers" type="button">Hide all</button></div>
 					<div class="layer-toggles">
@@ -229,31 +236,49 @@
 				</div>
 				<div class="route-editor-step">
 					<h3>1. Confirm pedestrian space</h3>
-					<p class="concise-help">Draw a <strong>Walkable area</strong> around corridors and public spaces. Add <strong>Blocked areas</strong> over planters, furniture, or voids.</p>
-					<div class="commands horizontal">
-						<button type="button" data-tool="walkable">Draw walkable area</button>
-						<button type="button" data-tool="obstacle" class="secondary">Add blocked area</button>
+					<p class="concise-help">Choose one source for this floor. The route builder uses only the selected source and preserves the other draft for later.</p>
+					<div class="pedestrian-source-picker" role="radiogroup" aria-label="Pedestrian-space authoring method">
+						<button type="button" data-pedestrian-source="polygons" aria-pressed="false">
+							<strong>Draw areas</strong><span>Trace one or more clean corridor polygons.</span>
+						</button>
+						<button type="button" data-pedestrian-source="mask" aria-pressed="false">
+							<strong>Paint or detect</strong><span>Paint a mask or detect a flat floor color.</span>
+						</button>
 					</div>
-					<details class="advanced-mask-tools">
-						<summary><span>Advanced image detection</span><small>Optional shortcut for flat-color floor plans</small></summary>
-						<div class="disclosure-body">
-							<p class="concise-help">Pick a floor color to detect connected pedestrian space. Paint corrections only when the automatic selection misses or includes an area.</p>
-							<label title="Smaller cells follow fine details; larger cells create a cleaner, simpler route area.">Detection detail <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
-							<label title="How different a pixel may be from the picked floor color. Increase it only when the same floor has visible shading.">Similar color range <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
-							<div class="segmented mask-tools" role="group" aria-label="Image detection tool">
+					<p id="pedestrian-source-status" class="source-status"></p>
+					<div id="polygon-pedestrian-tools" class="pedestrian-source-tools">
+						<div class="commands horizontal">
+							<button type="button" data-tool="walkable">Draw walkable area</button>
+							<button type="button" data-tool="obstacle" class="secondary">Add blocked area</button>
+						</div>
+						<p class="concise-help">Blocked areas subtract planters, furniture, voids, or other no-go zones from the drawn pedestrian space.</p>
+					</div>
+					<div id="mask-pedestrian-tools" class="pedestrian-source-tools" hidden>
+						<div class="mask-workflow">
+							<div class="segmented mask-tools" role="group" aria-label="Painted pedestrian-space tool">
 								<button type="button" data-tool="pan" data-shortcut="H" title="Move the map without editing">Pan</button>
 								<button type="button" data-tool="sample" title="Click a representative corridor or floor color">Pick floor color</button>
-								<button type="button" data-tool="include" title="Paint missing pedestrian space into the detected area">Paint walkable</button>
-								<button type="button" data-tool="exclude" title="Erase incorrectly detected pedestrian space">Erase</button>
+								<button type="button" data-tool="include" title="Paint pedestrian space into the active mask">Paint walkable</button>
+								<button type="button" data-tool="exclude" title="Erase pedestrian space from the active mask">Erase</button>
 							</div>
 							<label title="Size of the Paint walkable and Erase brush.">Correction brush <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
-							<label title="Closes tiny breaks in a detected corridor. Keep low so separate rooms are not joined accidentally.">Close tiny gaps <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
 							<div class="commands horizontal">
-								<button id="extract-mask" type="button">Detect from picked color</button>
-								<button id="clear-mask" type="button" class="secondary">Reset detected area</button>
+								<button id="clear-mask" type="button" class="secondary">Clear painted area</button>
 							</div>
 						</div>
-					</details>
+						<details class="advanced-mask-tools">
+							<summary><span>Detect from floor color</span><small>Optional shortcut for flat-color plans</small></summary>
+							<div class="disclosure-body">
+								<p class="concise-help">Pick a floor color to detect connected pedestrian space. Paint corrections only when the automatic selection misses or includes an area.</p>
+								<label title="Smaller cells follow fine details; larger cells create a cleaner, simpler route area.">Detection detail <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
+								<label title="How different a pixel may be from the picked floor color. Increase it only when the same floor has visible shading.">Similar color range <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
+								<label title="Closes tiny breaks in a detected corridor. Keep low so separate rooms are not joined accidentally.">Close tiny gaps <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
+								<div class="commands horizontal">
+									<button id="extract-mask" type="button">Detect from picked color</button>
+								</div>
+							</div>
+						</details>
+					</div>
 				</div>
 				<div class="route-editor-step">
 					<h3>2. Build routes</h3>
@@ -329,7 +354,11 @@
 					<label>Translated name<input id="destination-translated-name" type="text"></label>
 					<label>Translated description<textarea id="destination-translated-description" rows="3"></textarea></label>
 				</div>
-				<label title="Used for directory filtering, such as Services, Dining, or Restrooms.">Category<select id="destination-category"></select></label>
+				<fieldset class="destination-category-picker">
+					<legend>Category</legend>
+					<div id="destination-category-options" class="category-option-grid" role="radiogroup" aria-label="Destination category"></div>
+					<button id="destination-category-manage" type="button" class="text-action">Edit project categories</button>
+				</fieldset>
 				<label title="Optional public details shown when a visitor opens this destination.">Description<textarea id="destination-description" rows="4"></textarea></label>
 				<div class="field-pair">
 					<label>Hours<input id="destination-hours" type="text"></label>
@@ -378,17 +407,7 @@
 				<label>Destination<select id="route-destination"></select></label>
 				<label>Profile<select id="route-profile"><option value="standard">Standard</option><option value="step-free">Step-free</option></select></label>
 				<label class="check route-network-toggle"><input id="route-preview-network" type="checkbox"> Show route network</label>
-				<details class="route-preview-style">
-					<summary><span>Route appearance</span><small>Saved with the project</small></summary>
-					<div class="disclosure-body">
-						<label>Animation<select id="route-preview-animation"><option value="flow">Flow to destination</option><option value="pulse">Pulse</option><option value="none">None</option></select></label>
-						<label>Speed<input id="route-preview-speed" type="range" min="1" max="300" step="1"><output id="route-preview-speed-value"></output></label>
-						<div class="field-pair">
-							<label>Color<input id="route-preview-color" type="color"></label>
-							<label>Width<input id="route-preview-width" type="number" min="1" max="64" step="1"></label>
-						</div>
-					</div>
-				</details>
+				<p class="field-note route-style-source">Route color, width, corners, and animation use <strong>Project settings</strong>.</p>
 				<div class="route-actions">
 					<button id="route-simulate" type="button">Simulate route</button>
 					<button id="route-clear" type="button" class="danger" disabled>Clear route</button>
