@@ -75,6 +75,7 @@ const create3dTestProject = (): WayfindingStudioProject => {
 	floor.width = 900;
 	floor.height = 600;
 	floor.elements = [
+		{ facingDegrees: 0, floorId: floor.id, id: 'gallery-screen', label: 'Gallery screen', point: { x: 100, y: 300 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'confirmed', type: 'origin' },
 		{
 			destinationId: 'exhibition-hall',
 			floorId: floor.id,
@@ -87,7 +88,19 @@ const create3dTestProject = (): WayfindingStudioProject => {
 			type: 'location'
 		}
 	];
-	project.destinations = [{ floor: floor.id, id: 'exhibition-hall', name: 'Exhibition hall', routeable: false }];
+	project.destinations = [{ floor: floor.id, id: 'exhibition-hall', name: 'Exhibition hall', routeable: true }];
+	synchronizeWayfindingStudioGraph(project);
+	project.graph.edges = [{
+		accessible: true,
+		bidirectional: true,
+		from: 'semantic:gallery-screen',
+		geometry: [{ x: 100, y: 300 }, { x: 220, y: 310 }, { x: 450, y: 310 }],
+		id: 'gallery-to-exhibition',
+		kind: 'walk',
+		reviewStatus: 'confirmed',
+		to: 'semantic:exhibition-hall-shape',
+		traversal: 'indoor-corridor'
+	}];
 
 	return project;
 };
@@ -289,11 +302,13 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	const projectPath: string = testInfo.outputPath('automatic-route-test.wbwayfinding');
 	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject()));
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('#workspace-route-edit').click();
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
 	await page.locator('#route-build').click();
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(0);
 	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
 	await expect(page.locator('#route-result')).toContainText('ready to simulate');
+	await page.locator('#workspace-route-preview').click();
 	await page.locator('#route-simulate').click();
 	await expect(page.locator('#route-result')).toContainText('min');
 	const screenshotPath: string = testInfo.outputPath('automatic-route-studio.png');
@@ -351,6 +366,38 @@ test('opens the maintained Veszprem highlight project with embedded artwork', as
 	expect(errors).toEqual([]);
 });
 
+test('opens recoverable projects with a visible repair report and allows selecting the same file again', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	const project: WayfindingStudioProject = createWayfindingStudioProject('recoverable-browser-project');
+	project.name = 'Recovered field project';
+	project.floors[0].width = 100;
+	project.floors[0].height = 80;
+	project.floors[0].elements.push({
+		floorId: 'level-0',
+		geometry: [{ x: 10, y: 10 }, { x: 125, y: 10 }, { x: 125, y: 70 }, { x: 10, y: 70 }],
+		id: 'walkable-7',
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'walkable'
+	});
+	const projectPath: string = testInfo.outputPath('recoverable-project.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(project));
+
+	await page.goto('/');
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await expect(page.locator('#project-context-name')).toContainText('Recovered field project');
+	await expect(page.locator('#studio-notice')).toContainText('automatic repair');
+	await expect(page.locator('#studio-notice')).toContainText('walkable-7');
+	await expect(page.locator('#project-context-portable')).toHaveText('Not downloaded');
+
+	await page.locator('#studio-open-project').click();
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await expect(page.locator('#studio-notice')).toContainText('automatic repair');
+	expect(errors).toEqual([]);
+});
+
 test('clears a simulated route without changing the authored project', async ({ page }, testInfo) => {
 	const errors: string[] = [];
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
@@ -359,6 +406,7 @@ test('clears a simulated route without changing the authored project', async ({ 
 	const projectPath: string = testInfo.outputPath('route-clear-test.wbwayfinding');
 	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('#workspace-route-edit').click();
 	await expect(page.locator('#edge-summary')).toHaveText('1 route segment');
 	await expect(page.locator('#edge-list button')).toContainText('Lobby screen to Meeting room');
 	await page.locator('#edge-list button').click();
@@ -366,9 +414,18 @@ test('clears a simulated route without changing the authored project', async ({ 
 	await expect(page.locator('#selected-edge').getByLabel('Segment type')).toHaveValue('indoor');
 	await expect(page.locator('#selected-edge')).toContainText('Advanced segment settings');
 
+	await page.locator('#workspace-route-preview').click();
 	const clearRoute = page.locator('#route-clear');
 	await expect(clearRoute).toBeDisabled();
-	await page.locator('#route-simulate').click();
+	const canvas = page.locator('#stage');
+	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
+		const bounds: DOMRect = element.getBoundingClientRect();
+		return { height: bounds.height, width: bounds.width };
+	});
+	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
+	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
+	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
+	await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
 	await expect(page.locator('#route-result')).toContainText('min');
 	await expect(clearRoute).toBeEnabled();
 	await clearRoute.click();
@@ -418,6 +475,10 @@ test('renders, rotates, selects, and saves a nonblank 3D floor preview', async (
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 	await expect(page.locator('#semantic-editor').getByLabel('Fill color')).toHaveValue('#e18b4f');
 	await expect(page.locator('#semantic-editor').getByLabel('3D visual height')).toHaveValue('52');
+	await page.locator('#workspace-route-preview').click();
+	await page.mouse.click((bounds?.x ?? 0) + (bounds?.width ?? 0) / 2, (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2);
+	await expect(page.locator('#route-result')).toContainText('min');
+	await page.locator('#workspace-map').click();
 
 	await page.mouse.move((bounds?.x ?? 0) + (bounds?.width ?? 0) * 0.58, (bounds?.y ?? 0) + (bounds?.height ?? 0) * 0.5);
 	await page.mouse.down();
@@ -465,7 +526,7 @@ test('autosaves authored geometry and restores it after a reload', async ({ page
 	expect(errors).toEqual([]);
 });
 
-test('keeps specialist controls out of the authoring path and supports reversible deletion', async ({ page }, testInfo) => {
+test('keeps specialist delivery controls out of the authoring path and supports reversible deletion', async ({ page }) => {
 	const errors: string[] = [];
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
 	page.on('pageerror', (error): void => { errors.push(error.message); });
@@ -475,14 +536,9 @@ test('keeps specialist controls out of the authoring path and supports reversibl
 	await expect(page.locator('#tool-title')).toHaveText('Select & move');
 	await expect(page.locator('#reviewer-id')).not.toBeVisible();
 	await expect(page.getByText('Destination details', { exact: true })).not.toBeVisible();
-	await page.getByText('Review & delivery', { exact: true }).click();
-	await expect(page.getByText('What is this?', { exact: true })).toBeVisible();
-	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
-	await expect(page.getByText('The connected route network used for directions.', { exact: true })).toBeVisible();
-	const reviewScreenshotPath: string = testInfo.outputPath('review-delivery-panel.png');
-	await page.screenshot({ fullPage: true, path: reviewScreenshotPath });
-	await testInfo.attach('review-delivery-panel', { contentType: 'image/png', path: reviewScreenshotPath });
-	await page.getByText('Review & delivery', { exact: true }).click();
+	await expect(page.getByText('Delivery checks', { exact: true })).not.toBeVisible();
+	await expect(page.locator('#studio-export-project')).toBeVisible();
+	await expect(page.locator('#workspace-map')).toHaveAttribute('aria-pressed', 'true');
 
 	const canvas = page.locator('#stage');
 	await page.locator('[data-tool="location"]').click();

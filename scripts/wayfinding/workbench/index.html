@@ -6,10 +6,15 @@
 	<title>Wallboard Wayfinding Studio</title>
 	<link rel="stylesheet" href="./style.css">
 </head>
-<body>
+<body data-workspace="map">
 	<header class="topbar">
 		<div><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1></div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
+			<div class="workspace-switcher" role="group" aria-label="Studio workspace">
+				<button id="workspace-map" type="button" class="active" aria-pressed="true">Map</button>
+				<button id="workspace-route-preview" type="button" aria-pressed="false">Route preview</button>
+				<button id="workspace-route-edit" type="button" aria-pressed="false">Route edit</button>
+			</div>
 			<button id="undo" type="button" title="Undo the last map edit (Ctrl+Z)" disabled>Undo <kbd>Ctrl+Z</kbd></button>
 			<button id="redo" type="button" title="Redo the last undone edit (Ctrl+Shift+Z)" disabled>Redo</button>
 			<button id="delete-selection" type="button" class="danger" title="Delete the selected map item (Delete)" disabled>Delete selected</button>
@@ -18,6 +23,8 @@
 				<button id="view-2d" type="button" class="active" aria-pressed="true">2D edit</button>
 				<button id="view-3d" type="button" aria-pressed="false">3D preview</button>
 			</div>
+			<button id="studio-export-project" type="button" title="Download a portable project file (Ctrl+S)">Save project</button>
+			<button id="studio-export-runtime" type="button" title="Build the artifact consumed by a wayfinding custom app">Runtime bundle</button>
 			<button id="shortcut-help" type="button" title="Show all keyboard shortcuts (?)">Shortcuts <kbd>?</kbd></button>
 		</div>
 		<div class="status">
@@ -28,8 +35,8 @@
 	</header>
 	<main>
 		<aside class="controls" aria-label="Authoring controls">
-			<section class="workflow-step">
-				<span class="step-number">1</span><h2>Project and floor</h2>
+			<section class="workflow-step project-panel">
+				<span class="step-number">1</span><h2>Project</h2>
 				<div id="project-context" class="project-context" data-portable="missing">
 					<div><span>WORKING ON</span><strong id="project-context-name">Wayfinding project / Level 0</strong></div>
 					<dl>
@@ -52,8 +59,6 @@
 				<div class="commands horizontal">
 					<button id="studio-add-floor" type="button">Add floor</button>
 					<button id="studio-delete-floor" type="button" class="danger">Delete floor</button>
-					<button id="studio-export-project" type="button" class="secondary" title="Download a portable project file (Ctrl+S)">Download project</button>
-					<button id="studio-export-runtime" type="button" class="secondary">Runtime bundle</button>
 				</div>
 				<div id="local-recovery" class="local-recovery" hidden>
 					<strong>Local recovery found</strong>
@@ -65,7 +70,7 @@
 				</div>
 				<div id="studio-validation" class="project-assessment"></div>
 			</section>
-			<section class="workflow-step">
+			<section class="workflow-step workspace-panel" data-workspace-panel="map">
 				<span class="step-number">2</span><h2>Draw and edit the map</h2>
 				<p>Choose what you want to add, then click the map. Use <strong>Select & move</strong> to reposition or delete anything.</p>
 				<div class="tool-help" aria-live="polite"><strong id="tool-title">Select & move</strong><span id="tool-help">Click an item to edit it. Drag the item or one of its corners to reposition it.</span></div>
@@ -120,19 +125,19 @@
 					</div>
 				</div>
 			</section>
-			<details class="control-disclosure">
-				<summary><span>Advanced tools</span><small>Imports, walkable extraction, and route network editing</small></summary>
-				<div class="disclosure-body">
-					<h3>Source and migration files</h3>
+			<section class="workflow-step workspace-panel route-editor-panel" data-workspace-panel="route-edit">
+				<span class="step-number">2</span><h2>Route network</h2>
+				<div class="legacy-imports" hidden>
 					<label>Wayfinding project<input id="project-file" type="file" accept="application/json,.json"></label>
 					<label>Route graph<input id="graph-file" type="file" accept="application/json,.json"></label>
 					<label>Walkable mask<input id="mask-file" type="file" accept="application/json,.json"></label>
 					<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
-					<hr>
-					<h3>Walkable extraction</h3>
+				</div>
+				<div class="route-editor-step">
+					<h3>1. Define walkable space</h3>
 					<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
 					<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
-					<p>Choose Sample, then tap representative pedestrian paths or crossings. Connected extraction excludes similarly colored isolated buildings.</p>
+					<p class="concise-help">Sample a corridor color, or paint corrections. The route builder uses the resulting walkable area.</p>
 					<div class="segmented" role="group" aria-label="Mask tool">
 						<button type="button" data-tool="pan" data-shortcut="H">Pan</button>
 						<button type="button" data-tool="sample">Sample</button>
@@ -144,12 +149,13 @@
 					<div class="commands horizontal">
 						<button id="extract-mask" type="button">Extract mask</button>
 						<button id="clear-mask" type="button" class="secondary">Clear mask</button>
-						<button id="generate-centerlines" type="button">Generate routes</button>
 					</div>
-					<hr>
-					<h3>Route network editing</h3>
-					<p>Place destination entrances on walkable space, then connect and inspect the route network.</p>
-					<label>Level id<input id="level-id" type="text" value="level-0"></label>
+				</div>
+				<div class="route-editor-step">
+					<h3>2. Build and adjust</h3>
+					<button id="route-build" type="button" class="route-build">Build route network</button>
+					<button id="generate-centerlines" type="button" hidden>Build route network</button>
+					<input id="level-id" type="hidden" value="level-0">
 					<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
 						<button type="button" data-tool="anchor" data-shortcut="A">Place entrance</button>
 						<button type="button" data-tool="draw" data-shortcut="E">Draw route</button>
@@ -161,9 +167,9 @@
 						<div class="commands"><button id="finish-junction" type="button">Finish at new junction</button><button id="cancel-edge" type="button" class="secondary">Cancel</button></div>
 					</div>
 				</div>
-			</details>
-			<details class="control-disclosure review-disclosure">
-				<summary><span>Review & delivery</span><small>Only needed when preparing an approved runtime package</small></summary>
+			</section>
+			<details class="control-disclosure review-disclosure delivery-disclosure">
+				<summary><span>Delivery checks</span><small>Optional evidence and specialist exports</small></summary>
 				<div class="disclosure-body">
 				<h3>Delivery settings</h3>
 				<label>Project id<input id="project-id" type="text" value="wayfinding-project"></label>
@@ -199,7 +205,7 @@
 				</div>
 				</div>
 			</details>
-			<section id="metadata-editor" class="metadata-editor" hidden>
+			<section id="metadata-editor" class="metadata-editor legacy-metadata-editor" hidden>
 				<h2>Public destination details</h2>
 				<p id="metadata-summary">Visitor-facing directory content for locations and points of interest. It can later be replaced by a TABLE datasource.</p>
 				<label title="Choose which visitor-facing destination record to edit.">Destination<select id="destination-select"></select></label>
@@ -222,10 +228,11 @@
 			</section>
 		</aside>
 		<section class="stage-shell" aria-label="Map authoring stage">
+			<div id="studio-notice" class="studio-notice" role="status" aria-live="polite" hidden></div>
 			<div id="stage-empty" class="stage-empty"><strong>Open a project or add a background</strong><span>Background artwork is optional; semantic geometry and routes remain independently editable.</span></div>
 			<canvas id="stage" width="1341" height="947"></canvas>
 			<div id="stage-3d" class="stage-3d" hidden>
-				<div class="scene-3d-help"><strong>3D preview</strong><span>Drag to rotate, wheel to zoom, right-drag to move.</span></div>
+				<div class="scene-3d-help"><strong>3D preview</strong><span>Drag to rotate, wheel to zoom. In Route preview, click a destination to route to it.</span></div>
 				<div class="scene-3d-actions">
 					<button id="reset-3d-view" type="button" title="Return to the saved camera">Reset view</button>
 					<button id="save-3d-view" type="button" title="Use this camera when the floor opens">Save as default</button>
@@ -234,15 +241,14 @@
 			<footer><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add polygon point</span><button id="footer-shortcut-help" type="button">All shortcuts</button></footer>
 		</section>
 		<aside class="review" aria-label="Route review">
-			<div id="semantic-editor" class="selected-edge">
+			<div id="semantic-editor" class="selected-edge workspace-panel" data-workspace-panel="map">
 				<h2>Semantic selection</h2>
 				<p>Select an authored location, point, door, label, or transition on the map.</p>
 			</div>
-			<div class="selected-edge route-simulator">
-				<h2>Route simulator</h2>
-				<p class="route-intro">Draw the walkable area, add a start and destination entrance, then build the route network.</p>
+			<div class="selected-edge route-simulator workspace-panel" data-workspace-panel="route-preview">
+				<h2>Route preview</h2>
+				<p class="route-intro">Choose a destination below, or click a room directly on the 2D or 3D map.</p>
 				<ul id="route-setup-checklist" class="route-setup-checklist"></ul>
-				<button id="route-build" type="button" class="route-build">Build routes</button>
 				<label>Start<select id="route-start"></select></label>
 				<label>Destination<select id="route-destination"></select></label>
 				<label>Profile<select id="route-profile"><option value="standard">Standard</option><option value="step-free">Step-free</option></select></label>
@@ -252,9 +258,9 @@
 				</div>
 				<p id="route-result">Add an origin and a destination entrance, then connect them to the graph.</p>
 			</div>
-			<div class="review-summary"><span>ROUTE REVIEW</span><strong id="edge-summary">0 route segments</strong><small id="edge-failures">No route network loaded</small></div>
-			<div id="selected-edge" class="selected-edge"><p>Select a route segment on the map to inspect it.</p></div>
-			<div id="edge-list" class="edge-list"></div>
+			<div class="review-summary workspace-panel" data-workspace-panel="route-edit"><span>ROUTE NETWORK</span><strong id="edge-summary">0 route segments</strong><small id="edge-failures">No route network loaded</small></div>
+			<div id="selected-edge" class="selected-edge workspace-panel" data-workspace-panel="route-edit"><p>Select a route segment on the map to inspect it.</p></div>
+			<div id="edge-list" class="edge-list workspace-panel" data-workspace-panel="route-edit"></div>
 		</aside>
 	</main>
 	<dialog id="shortcut-dialog" class="shortcut-dialog">
