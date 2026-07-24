@@ -71,6 +71,21 @@ Use `templates/editor-assets/custom-settings-editor/` as the small structured-li
 
 **Ownership rule:** datasource for shared/dynamic/external data; custom editor for complex bundled state manually owned by this app; normal properties for simple settings.
 
+### Internal Editor UI Standard
+
+Keep Wallboard editor chrome consistent while leaving the authored app's visual style unconstrained:
+
+| Area | Rule |
+|------|------|
+| Hierarchy | Product/task title, primary modes, work surface, contextual inspector; one primary action per step |
+| Color | Neutral surfaces; `#18826f` action/selection; amber recovery/warning; red destructive/error |
+| Controls | Labels above fields, concise help only for unclear decisions, advanced controls collapsed by default |
+| State | Show current project, unsaved/recovery state, active mode, selection, and save result where the action occurs |
+| Interaction | Mode changes cancel incompatible tools; edits support undo; text commits on blur/change instead of rerendering per keystroke |
+| Safety | Prompt for browser recovery on entry; preserve aspect ratio for media; confirm destructive project/floor actions |
+
+Use `templates/editor-assets/custom-settings-editor/` for these chrome conventions. Domain-specific editors may change composition and density, but should retain the semantic colors, focus treatment, state visibility, and explicit destructive actions.
+
 ## Mapping
 
 Normalize and clamp values in `src/settings.ts`; components consume only mapped `Settings`.

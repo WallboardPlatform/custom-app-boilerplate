@@ -13,6 +13,7 @@
 		"updatedAt": { "$ref": "#/$defs/nonEmptyString" },
 		"delivery": { "$ref": "wayfinding-project.schema.json" },
 		"assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+		"categories": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
 		"floors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/floor" } },
 		"graph": {
 			"type": "object",
@@ -63,9 +64,11 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"name": { "$ref": "#/$defs/nonEmptyString" },
-				"kind": { "enum": ["background", "icon", "logo"] },
+				"kind": { "enum": ["background", "icon", "logo", "photo"] },
 				"mimeType": { "$ref": "#/$defs/nonEmptyString" },
-				"dataUrl": { "type": "string", "pattern": "^data:" }
+				"dataUrl": { "type": "string", "pattern": "^data:" },
+				"naturalHeight": { "type": "number", "exclusiveMinimum": 0 },
+				"naturalWidth": { "type": "number", "exclusiveMinimum": 0 }
 			}
 		},
 		"polygonElement": {
@@ -160,7 +163,11 @@
 			"type": "object",
 			"additionalProperties": true,
 			"required": ["id", "name"],
-			"properties": { "id": { "$ref": "#/$defs/nonEmptyString" }, "name": { "$ref": "#/$defs/nonEmptyString" } }
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"name": { "$ref": "#/$defs/nonEmptyString" },
+				"photoAssetIds": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true }
+			}
 		}
 	}
 }

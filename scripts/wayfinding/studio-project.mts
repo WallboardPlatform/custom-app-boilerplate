@@ -38,9 +38,11 @@ export interface WayfindingStudioPolygonPresentation {
 export interface WayfindingStudioAsset {
 	dataUrl: string;
 	id: string;
-	kind: 'background' | 'icon' | 'logo';
+	kind: 'background' | 'icon' | 'logo' | 'photo';
 	mimeType: string;
 	name: string;
+	naturalHeight?: number;
+	naturalWidth?: number;
 }
 
 export interface WayfindingStudioElementBase {
@@ -141,11 +143,13 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 	floor?: string;
 	id: string;
 	name: string;
+	photoAssetIds?: string[];
 	routeable?: boolean;
 }
 
 export interface WayfindingStudioProject {
 	assets: WayfindingStudioAsset[];
+	categories?: string[];
 	contractVersion: 1;
 	createdAt: string;
 	delivery: WayfindingProjectDocument;
@@ -225,6 +229,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 			projectId,
 			source: { equivalentRedrawAllowed: true, kind: 'floor-plan', levels: 1, presentation: 'source-overlay' }
 		},
+		categories: ['Accessibility', 'Dining', 'Events', 'Parking', 'Restrooms', 'Services', 'Shopping'],
 		destinations: [],
 		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, width: 1920 }],
 		graph: { contractVersion: 2, edges: [], graphId: `${projectId}-graph`, nodes: [] },
@@ -258,6 +263,10 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 	assertWayfindingStudioProjectShape(value);
 
 	const project: WayfindingStudioProject = value;
+	project.categories = Array.from(new Set([
+		...(Array.isArray(project.categories) ? project.categories.filter((category): category is string => typeof category === 'string') : []),
+		...project.destinations.map((destination): string | undefined => destination.category).filter((category): category is string => Boolean(category))
+	])).map((category): string => category.trim()).filter(Boolean).sort((left, right): number => left.localeCompare(right));
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
@@ -482,6 +491,13 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 	for (const destination of project.destinations) {
 		if (destination.floor && !floorIds.includes(destination.floor)) issues.push({ code: 'destination-floor-missing', elementIds: [destination.id], message: `Destination '${destination.id}' references missing floor '${destination.floor}'.`, severity: 'error' });
+
+		for (const assetId of destination.photoAssetIds ?? []) {
+			const asset: WayfindingStudioAsset | undefined = assetsById.get(assetId);
+
+			if (!asset) issues.push({ code: 'missing-destination-photo', elementIds: [destination.id, assetId], message: `Destination '${destination.id}' references missing photo '${assetId}'.`, severity: 'error' });
+			else if (asset.kind !== 'photo') issues.push({ code: 'destination-photo-kind-mismatch', elementIds: [destination.id, assetId], message: `Destination '${destination.id}' photo '${assetId}' must use a photo asset.`, severity: 'error' });
+		}
 	}
 
 	for (const screenId of duplicateIds(project.floors.flatMap((floor): string[] => floor.elements.filter((element): element is WayfindingStudioOriginElement => element.type === 'origin').map((origin): string => origin.screenId)))) issues.push({ code: 'duplicate-screen-id', elementIds: [screenId], message: `Installed-screen id '${screenId}' is duplicated.`, severity: 'error' });
