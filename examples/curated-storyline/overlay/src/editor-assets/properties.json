@@ -1,0 +1,88 @@
+{
+	"version": "1",
+	"name": "CuratedStoryline",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Storyline",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Edit storyline",
+					"type": "button",
+					"property": "customContent",
+					"customSettingsUrl": "/editor-assets/custom-settings-editor/index.html",
+					"tooltip": "Manage the ordered scenes, editorial copy, composition, and publication state."
+				}
+			]
+		},
+		{
+			"label": "Playback",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Scene duration",
+					"type": "number",
+					"property": "rotationSeconds",
+					"default": 9,
+					"min": 3,
+					"max": 120,
+					"step": 1,
+					"tooltip": "Seconds each enabled scene remains visible."
+				},
+				{
+					"label": "Show story index",
+					"type": "checkbox",
+					"property": "showProgress",
+					"default": true
+				},
+				{
+					"label": "Motion",
+					"type": "select",
+					"property": "motionPreset",
+					"default": "subtle",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" }
+					]
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Outer ground", "type": "color", "property": "backgroundColor", "default": "#f2efe7", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Story surface", "type": "color", "property": "surfaceColor", "default": "#172220", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#f6f2e8", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Secondary text", "type": "color", "property": "mutedTextColor", "default": "#abb7b2", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Coral scene", "type": "color", "property": "coralColor", "default": "#ed5a47", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Cobalt scene", "type": "color", "property": "cobaltColor", "default": "#4779dc", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Sun scene", "type": "color", "property": "sunColor", "default": "#f4be3e", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} },
+				{ "label": "Mint scene", "type": "color", "property": "mintColor", "default": "#62d6b5", "visibilityConditions": {"conditions": [{"id": "#theme-custom", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset"}], "rule": "#theme-custom"} }
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js",
+		"editor-assets/custom-settings-editor/index.html",
+		"editor-assets/custom-settings-editor/editor.js",
+		"editor-assets/custom-settings-editor/style.css"
+	]
+}
