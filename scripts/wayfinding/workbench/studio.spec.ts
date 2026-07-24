@@ -15,6 +15,8 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('route-clear-test');
 	const floor = project.floors[0];
 	floor.elements = [
+		{ floorId: floor.id, geometry: [{ x: 40, y: 40 }, { x: 840, y: 40 }, { x: 840, y: 480 }, { x: 40, y: 480 }], id: 'main-walkable', provenance: 'reviewer-authored', status: 'confirmed', type: 'walkable' },
+		{ floorId: floor.id, geometry: [{ x: 260, y: 235 }, { x: 340, y: 235 }, { x: 340, y: 320 }, { x: 260, y: 320 }], id: 'blocked-island', provenance: 'reviewer-authored', status: 'confirmed', type: 'obstacle' },
 		{ facingDegrees: 0, floorId: floor.id, id: 'lobby-screen', label: 'Lobby screen', point: { x: 120, y: 200 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'confirmed', type: 'origin' },
 		{ destinationId: 'meeting-room', floorId: floor.id, geometry: [{ x: 500, y: 120 }, { x: 760, y: 120 }, { x: 760, y: 360 }, { x: 500, y: 360 }], id: 'meeting-room-shape', label: 'Meeting room', provenance: 'reviewer-authored', status: 'confirmed', type: 'location' },
 		{ angle: 0, floorId: floor.id, id: 'meeting-room-door', length: 36, locationId: 'meeting-room-shape', point: { x: 500, y: 240 }, provenance: 'reviewer-authored', status: 'confirmed', type: 'door' }
@@ -25,7 +27,7 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 		accessible: true,
 		bidirectional: true,
 		from: 'semantic:lobby-screen',
-		geometry: [{ x: 120, y: 200 }, { x: 300, y: 200 }, { x: 500, y: 240 }],
+		geometry: [{ x: 120, y: 200 }, { x: 300, y: 140 }, { x: 500, y: 240 }],
 		id: 'lobby-to-meeting',
 		kind: 'walk',
 		reviewStatus: 'confirmed',
@@ -105,13 +107,21 @@ const create3dTestProject = (): WayfindingStudioProject => {
 	return project;
 };
 
+test.beforeEach(async ({ page }) => {
+	await page.addInitScript((): void => {
+		Object.defineProperty(window, 'showOpenFilePicker', { configurable: true, value: undefined });
+		Object.defineProperty(window, 'showSaveFilePicker', { configurable: true, value: undefined });
+	});
+});
+
 test('authors, refines, and exports a portable semantic project', async ({ page }, testInfo) => {
 	const errors: string[] = [];
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.10');
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.12');
+	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview']);
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
 	const canvas = page.locator('#stage');
@@ -155,6 +165,45 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	expect(project.floors[0].elements.map((element): string => element.type)).toEqual(['location', 'origin']);
 	expect(project.floors[0].elements[0].geometry).toHaveLength(5);
 	expect(errors).toEqual([]);
+});
+
+test('saves back to an opened project file handle and keeps Save as separate', async ({ page }) => {
+	const projectText: string = JSON.stringify(createRouteTestProject());
+	await page.addInitScript((value: string): void => {
+		const createHandle = (name: string, storageKey: string) => ({
+			createWritable: async () => ({
+				close: async (): Promise<void> => undefined,
+				write: async (data: Blob | string): Promise<void> => {
+					localStorage.setItem(storageKey, typeof data === 'string' ? data : await data.text());
+				}
+			}),
+			getFile: async (): Promise<File> => new File([value], name, { type: 'application/json' }),
+			name,
+			queryPermission: async (): Promise<PermissionState> => 'granted',
+			requestPermission: async (): Promise<PermissionState> => 'granted'
+		});
+		Object.defineProperty(window, 'showOpenFilePicker', {
+			configurable: true,
+			value: async () => [createHandle('opened-map.wbwayfinding', 'opened-map-write')]
+		});
+		Object.defineProperty(window, 'showSaveFilePicker', {
+			configurable: true,
+			value: async () => createHandle('copied-map.wbwayfinding', 'copied-map-write')
+		});
+	}, projectText);
+	await page.goto('/');
+	await page.locator('#studio-open-project').click();
+	await expect(page.locator('#project-context-source')).toHaveText('Project file: opened-map.wbwayfinding');
+	await page.locator('#studio-project-name').fill('Updated opened project');
+	await page.locator('#studio-export-project').click();
+	await expect.poll(async (): Promise<string | null> => page.evaluate(() => localStorage.getItem('opened-map-write'))).not.toBeNull();
+	const savedName: string = await page.evaluate((): string => JSON.parse(localStorage.getItem('opened-map-write') as string).name as string);
+	expect(savedName).toBe('Updated opened project');
+	await expect(page.locator('#project-context-portable')).toHaveText('Saved to opened-map.wbwayfinding');
+
+	await page.locator('#studio-save-as').click();
+	await expect.poll(async (): Promise<string | null> => page.evaluate(() => localStorage.getItem('copied-map-write'))).not.toBeNull();
+	await expect(page.locator('#project-context-portable')).toHaveText('Saved to copied-map.wbwayfinding');
 });
 
 test('moves, inserts, and deletes polygon points above overlapping semantic layers', async ({ page }) => {
@@ -213,7 +262,7 @@ test('draws freehand areas, authors exclusions, and explains portable save state
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not downloaded');
+	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
 	await page.locator('#drawing-mode-lasso').click();
 	await page.locator('[data-workspace-panel="map"] [data-tool="walkable"]').click();
 	const canvas = page.locator('#stage');
@@ -238,9 +287,9 @@ test('draws freehand areas, authors exclusions, and explains portable save state
 	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	expect(project.floors[0].elements.filter((element): boolean => element.type === 'walkable')).toHaveLength(1);
 	expect(project.floors[0].elements.filter((element): boolean => element.type === 'obstacle')).toHaveLength(1);
-	await expect(page.locator('#project-context-portable')).toHaveText('Downloaded and current');
+	await expect(page.locator('#project-context-portable')).toHaveText('Saved to Wayfinding project.wbwayfinding');
 	await page.locator('#studio-project-name').fill('Edited after download');
-	await expect(page.locator('#project-context-portable')).toHaveText('Changes not downloaded');
+	await expect(page.locator('#project-context-portable')).toHaveText('Unsaved file changes');
 	expect(errors).toEqual([]);
 });
 
@@ -290,7 +339,7 @@ test('detects a flat room, controls all layer visibility, and starts a clean pro
 	});
 	await page.locator('#studio-new-project').click();
 	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not downloaded');
+	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
 	await expect(page.locator('#studio-project-name')).toHaveValue('Wayfinding project');
 	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
 	await expect(page.locator('#coverage-status')).toContainText('New project ready');
@@ -401,7 +450,7 @@ test('opens recoverable projects with a visible repair report and allows selecti
 	await expect(page.locator('#project-context-name')).toContainText('Recovered field project');
 	await expect(page.locator('#studio-notice')).toContainText('automatic repair');
 	await expect(page.locator('#studio-notice')).toContainText('walkable-7');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not downloaded');
+	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
 
 	await page.locator('#studio-open-project').click();
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
@@ -427,8 +476,13 @@ test('clears a simulated route without changing the authored project', async ({ 
 
 	await page.locator('#workspace-route-preview').click();
 	const clearRoute = page.locator('#route-clear');
+	const inspectRoute = page.locator('#route-inspect');
 	await expect(clearRoute).toBeDisabled();
+	await expect(inspectRoute).toBeDisabled();
 	const canvas = page.locator('#stage');
+	await expect(canvas).toHaveAttribute('data-route-network-visible', 'false');
+	await page.locator('#route-preview-network').check();
+	await expect(canvas).toHaveAttribute('data-route-network-visible', 'true');
 	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
 		const bounds: DOMRect = element.getBoundingClientRect();
 		return { height: bounds.height, width: bounds.width };
@@ -438,7 +492,15 @@ test('clears a simulated route without changing the authored project', async ({ 
 	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
 	await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
 	await expect(page.locator('#route-result')).toContainText('min');
+	await expect(page.locator('#route-result')).toContainText('1 network segment');
+	await expect(canvas).toHaveAttribute('data-preview-route-point-count', '3');
 	await expect(clearRoute).toBeEnabled();
+	await expect(inspectRoute).toBeEnabled();
+	await inspectRoute.click();
+	await expect(page.locator('#workspace-route-edit')).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.locator('#selected-edge')).toContainText('Lobby screen to Meeting room');
+	await expect(canvas).toHaveAttribute('data-preview-route-point-count', '3');
+	await page.locator('#workspace-route-preview').click();
 	await clearRoute.click();
 	await expect(clearRoute).toBeDisabled();
 	await expect(page.locator('#route-result')).toContainText('Route preview cleared');
@@ -585,7 +647,7 @@ test('edits room and POI descriptions with discoverable keyboard authoring', asy
 	await page.keyboard.press('?');
 	await expect(page.locator('#shortcut-dialog')).toBeVisible();
 	await expect(page.locator('#shortcut-dialog')).toContainText('Hold to pan');
-	await expect(page.locator('#shortcut-dialog')).toContainText('Save project');
+	await expect(page.locator('#shortcut-dialog')).toContainText('Save to the opened file');
 	await page.locator('#shortcut-close').click();
 
 	const canvas = page.locator('#stage');
@@ -634,5 +696,151 @@ test('edits room and POI descriptions with discoverable keyboard authoring', asy
 	expect(project.floors[0].elements).toEqual(expect.arrayContaining([
 		expect.objectContaining({ color: '#264653', fontFamily: 'serif', fontSize: 36, fontWeight: 700, outlineColor: '#ffffff', outlineWidth: 2, text: 'Main entrance', textAnchor: 'middle', type: 'label' })
 	]));
+	expect(errors).toEqual([]);
+});
+
+test('keeps polygon drafts reversible and exposes authored objects with project defaults', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+
+	await page.locator('.project-defaults > summary').click();
+	await page.locator('#default-location-opacity').fill('58');
+	await page.locator('#default-location-opacity').blur();
+	await page.locator('#default-location-height').fill('31');
+	await page.locator('#default-location-height').blur();
+
+	const canvas = page.locator('#stage');
+	await page.locator('#drawing-mode-points').click();
+	await expect(page.locator('#trace-assist')).toBeHidden();
+	await page.locator('[data-tool="location"]').click();
+	await canvas.click({ position: { x: 220, y: 280 } });
+	await canvas.click({ position: { x: 430, y: 280 } });
+	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '2');
+	await page.locator('#undo').click();
+	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '1');
+	await page.locator('#redo').click();
+	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '2');
+	await canvas.click({ position: { x: 430, y: 450 } });
+	await canvas.click({ position: { x: 220, y: 450 } });
+	await page.locator('#semantic-finish').click();
+
+	await expect(page.locator('#object-count')).toHaveText('1 item');
+	await expect(page.locator('.object-group-heading')).toContainText('Rooms and areas (1)');
+	await expect(page.locator('.object-item')).toHaveClass(/active/u);
+	await page.locator('.object-item').click();
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	const location = project.floors[0].elements.find((element): element is WayfindingStudioPolygonElement => element.type === 'location');
+	expect(project.defaults?.location.fillOpacity).toBe(0.58);
+	expect(project.defaults?.location.extrusionHeight).toBe(31);
+	expect(location?.presentation?.fillOpacity).toBe(0.58);
+	expect(location?.presentation?.extrusionHeight).toBe(31);
+	expect(errors).toEqual([]);
+});
+
+test('preserves the viewport through undo and supports temporary preview panning', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+	const canvas = page.locator('#stage');
+
+	await canvas.hover({ position: { x: 500, y: 320 } });
+	await page.mouse.wheel(0, -480);
+	const before = await canvas.evaluate((element: HTMLCanvasElement): Record<string, string | undefined> => ({
+		offsetX: element.dataset.viewOffsetX,
+		offsetY: element.dataset.viewOffsetY,
+		scale: element.dataset.viewScale
+	}));
+	await page.locator('[data-tool="label"]').click();
+	await canvas.click({ position: { x: 520, y: 340 } });
+	await page.locator('#undo').click();
+	await expect.poll(async (): Promise<Record<string, string | undefined>> => canvas.evaluate((element: HTMLCanvasElement): Record<string, string | undefined> => ({
+		offsetX: element.dataset.viewOffsetX,
+		offsetY: element.dataset.viewOffsetY,
+		scale: element.dataset.viewScale
+	}))).toEqual(before);
+
+	await page.locator('#workspace-route-preview').click();
+	const panBefore: string | null = await canvas.getAttribute('data-view-offset-x');
+	const bounds = await canvas.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.keyboard.down('Space');
+	await page.mouse.move((bounds?.x ?? 0) + 20, (bounds?.y ?? 0) + 20);
+	await page.mouse.down();
+	await page.mouse.move((bounds?.x ?? 0) + 90, (bounds?.y ?? 0) + 55, { steps: 4 });
+	await page.mouse.up();
+	await page.keyboard.up('Space');
+	await expect(canvas).not.toHaveAttribute('data-view-offset-x', panBefore ?? '');
+	expect(errors).toEqual([]);
+});
+
+test('rotates a door while placing it and persists animated route appearance', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	await page.goto('/');
+	const canvas = page.locator('#stage');
+	const bounds = await canvas.boundingBox();
+	expect(bounds).not.toBeNull();
+
+	await page.locator('[data-tool="door"]').click();
+	await page.mouse.move((bounds?.x ?? 0) + 360, (bounds?.y ?? 0) + 320);
+	await page.mouse.down();
+	await page.mouse.move((bounds?.x ?? 0) + 410, (bounds?.y ?? 0) + 385, { steps: 5 });
+	await page.mouse.up();
+	await expect(page.locator('#semantic-editor h2')).toHaveText('Door');
+
+	const doorDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const doorDownload = await doorDownloadPromise;
+	const doorDownloadPath: string = await doorDownload.path() as string;
+	const doorProject = JSON.parse(fs.readFileSync(doorDownloadPath, 'utf8')) as WayfindingStudioProject;
+	const placedDoor = doorProject.floors[0].elements.find((element): element is WayfindingStudioDoorElement => element.type === 'door');
+	expect(Math.abs(placedDoor?.angle ?? 0)).toBeGreaterThan(20);
+
+	const projectPath: string = testInfo.outputPath('animated-route-project.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
+	await page.locator('#studio-open-project').click();
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('#workspace-route-preview').click();
+	await page.locator('.route-preview-style > summary').click();
+	await page.locator('#route-preview-animation').selectOption('flow');
+	await page.locator('#route-preview-speed').fill('120');
+	await page.locator('#route-preview-speed').dispatchEvent('change');
+	await page.locator('#route-preview-color').fill('#1a73e8');
+	await page.locator('#route-preview-color').dispatchEvent('change');
+	await page.locator('#route-preview-width').fill('11');
+	await page.locator('#route-preview-width').blur();
+
+	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
+		const rect: DOMRect = element.getBoundingClientRect();
+		return { height: rect.height, width: rect.width };
+	});
+	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
+	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
+	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
+	await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
+	await expect(canvas).toHaveAttribute('data-route-animation', 'flow');
+	await expect(page.locator('#route-result')).toContainText('min');
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	expect(project.defaults?.route).toEqual(expect.objectContaining({
+		animation: 'flow',
+		animationSpeed: 120,
+		color: '#1a73e8',
+		lineWidth: 11
+	}));
 	expect(errors).toEqual([]);
 });

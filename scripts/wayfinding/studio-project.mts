@@ -35,6 +35,29 @@ export interface WayfindingStudioPolygonPresentation {
 	fillOpacity?: number;
 }
 
+export interface WayfindingStudioProjectDefaults {
+	iconSize: number;
+	label: {
+		color: string;
+		fontFamily: WayfindingStudioFontFamily;
+		fontSize: number;
+		fontWeight: 400 | 600 | 700;
+		outlineColor: string;
+		outlineWidth: number;
+	};
+	location: Required<WayfindingStudioPolygonPresentation>;
+	logoSize: number;
+	obstacle: Required<WayfindingStudioPolygonPresentation>;
+	route: {
+		animation: 'flow' | 'none' | 'pulse';
+		animationSpeed: number;
+		color: string;
+		cornerRadius: number;
+		lineWidth: number;
+	};
+	walkable: Required<WayfindingStudioPolygonPresentation>;
+}
+
 export interface WayfindingStudioAsset {
 	dataUrl: string;
 	id: string;
@@ -152,6 +175,7 @@ export interface WayfindingStudioProject {
 	categories?: string[];
 	contractVersion: 1;
 	createdAt: string;
+	defaults?: WayfindingStudioProjectDefaults;
 	delivery: WayfindingProjectDocument;
 	destinations: WayfindingStudioDestination[];
 	floors: WayfindingStudioFloor[];
@@ -177,6 +201,7 @@ export interface WayfindingStudioRepair {
 export interface WayfindingRuntimeBundle {
 	assets: WayfindingStudioAsset[];
 	contractVersion: 1;
+	defaults: WayfindingStudioProjectDefaults;
 	destinations: { Destinations: { rows: WayfindingStudioDestination[] } };
 	floors: Array<{
 		backgroundAssetId?: string;
@@ -201,6 +226,44 @@ export interface WayfindingRuntimeBundle {
 
 const now = (): string => new Date().toISOString();
 
+export const createWayfindingStudioProjectDefaults = (): WayfindingStudioProjectDefaults => ({
+	iconSize: 72,
+	label: {
+		color: '#17201f',
+		fontFamily: 'sans-serif',
+		fontSize: 24,
+		fontWeight: 600,
+		outlineColor: '#ffffff',
+		outlineWidth: 0
+	},
+	location: { extrusionHeight: 18, fillColor: '#f4c95d', fillOpacity: 0.72 },
+	logoSize: 96,
+	obstacle: { extrusionHeight: 24, fillColor: '#31403d', fillOpacity: 0.76 },
+	route: {
+		animation: 'flow',
+		animationSpeed: 48,
+		color: '#f04438',
+		cornerRadius: 18,
+		lineWidth: 7
+	},
+	walkable: { extrusionHeight: 0, fillColor: '#55bfa7', fillOpacity: 0.28 }
+});
+
+export const wayfindingStudioProjectDefaults = (project: WayfindingStudioProject): WayfindingStudioProjectDefaults => {
+	const fallback: WayfindingStudioProjectDefaults = createWayfindingStudioProjectDefaults();
+	const defaults: Partial<WayfindingStudioProjectDefaults> = project.defaults ?? {};
+
+	return {
+		iconSize: defaults.iconSize ?? fallback.iconSize,
+		label: { ...fallback.label, ...defaults.label },
+		location: { ...fallback.location, ...defaults.location },
+		logoSize: defaults.logoSize ?? fallback.logoSize,
+		obstacle: { ...fallback.obstacle, ...defaults.obstacle },
+		route: { ...fallback.route, ...defaults.route },
+		walkable: { ...fallback.walkable, ...defaults.walkable }
+	};
+};
+
 const evidenceItem = (
 	provenance: 'customer-provided' | 'ai-inferred' | 'image-analysis'
 ): WayfindingProjectDocument['evidence']['accessibility'] => ({ provenance, status: 'unavailable' });
@@ -212,6 +275,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 		assets: [],
 		contractVersion: 1,
 		createdAt: timestamp,
+		defaults: createWayfindingStudioProjectDefaults(),
 		delivery: {
 			contractVersion: 1,
 			evidence: {
@@ -794,6 +858,7 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 	return {
 		assets: structuredClone(project.assets),
 		contractVersion: 1,
+		defaults: structuredClone(wayfindingStudioProjectDefaults(project)),
 		destinations: { Destinations: { rows: structuredClone(project.destinations) } },
 		floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
 			backgroundAssetId: floor.backgroundAssetId,
