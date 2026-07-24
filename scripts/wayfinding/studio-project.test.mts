@@ -146,6 +146,7 @@ void test('preserves door route anchors and their connected segments during sync
 		{ id: 'semantic:meeting-room-door', kind: 'route', levelId: 'level-0', semanticElementId: 'meeting-room-door', x: 80, y: 60 }
 	);
 	project.graph.edges.push({
+		accessible: true,
 		bidirectional: true,
 		from: 'corridor',
 		geometry: [{ x: 30, y: 60 }, { x: 80, y: 60 }],

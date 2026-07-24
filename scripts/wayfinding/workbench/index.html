@@ -8,7 +8,7 @@
 </head>
 <body data-workspace="map">
 	<header class="topbar">
-		<div><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1></div>
+		<div class="product-title"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.10</small></div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
 			<div class="workspace-switcher" role="group" aria-label="Studio workspace">
 				<button id="workspace-map" type="button" class="active" aria-pressed="true">Map</button>
@@ -50,18 +50,21 @@
 					<button id="studio-open-project" type="button" class="secondary">Open project</button>
 				</div>
 				<input id="studio-project-file" type="file" accept="application/json,.json,.wbwayfinding" hidden>
-				<label>Floor background image<input id="image-file" type="file" accept="image/*"></label>
 				<label>Project name<input id="studio-project-name" type="text" value="Wayfinding project"></label>
-				<div class="field-pair">
-					<label>Floor<select id="studio-floor"></select></label>
-					<label>Floor name<input id="studio-floor-name" type="text"></label>
-				</div>
-				<div class="commands horizontal">
-					<button id="studio-add-floor" type="button">Add floor</button>
-					<button id="studio-delete-floor" type="button" class="danger">Delete floor</button>
-				</div>
+				<details class="floor-manager" open>
+					<summary><span>Floors</span><small>Add artwork and manage levels</small></summary>
+					<div class="disclosure-body">
+						<label>Current floor<select id="studio-floor"></select></label>
+						<label>Floor name<input id="studio-floor-name" type="text"></label>
+						<label>Background image<input id="image-file" type="file" accept="image/*"></label>
+						<div class="commands horizontal">
+							<button id="studio-add-floor" type="button">Add floor</button>
+							<button id="studio-delete-floor" type="button" class="danger">Delete floor</button>
+						</div>
+					</div>
+				</details>
 				<div id="local-recovery" class="local-recovery" hidden>
-					<strong>Local recovery found</strong>
+					<strong>Continue your unsaved work?</strong>
 					<span id="local-recovery-summary">Restore it or discard it before editing this project.</span>
 					<div class="commands horizontal">
 						<button id="restore-autosave" type="button">Restore local work</button>
@@ -102,7 +105,11 @@
 				</div>
 				<div id="media-asset-state" class="media-asset-state" data-ready="false">
 					<div><strong>Image asset</strong><span id="media-asset-summary">Choose an image before placing it. Icon means a functional map symbol; Logo means a brand or tenant mark.</span></div>
-					<button id="choose-media-asset" type="button" class="secondary">Choose image</button>
+					<div class="commands horizontal">
+						<button id="choose-media-asset" type="button" class="secondary">Choose image</button>
+						<button id="stop-media-placement" type="button" class="secondary" hidden>Stop placing</button>
+					</div>
+					<div id="media-asset-library" class="media-asset-library" aria-label="Reusable icon and logo assets"></div>
 					<input id="semantic-media-file" type="file" accept="image/*" hidden>
 				</div>
 				<div id="semantic-draft" class="edge-draft" hidden>
@@ -134,32 +141,46 @@
 					<label>Destination datasource<input id="destination-file" type="file" accept="application/json,.json"></label>
 				</div>
 				<div class="route-editor-step">
-					<h3>1. Define walkable space</h3>
-					<label>Cell size <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
-					<label>Color tolerance <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
-					<p class="concise-help">Sample a corridor color, or paint corrections. The route builder uses the resulting walkable area.</p>
-					<div class="segmented" role="group" aria-label="Mask tool">
-						<button type="button" data-tool="pan" data-shortcut="H">Pan</button>
-						<button type="button" data-tool="sample">Sample</button>
-						<button type="button" data-tool="include">Include</button>
-						<button type="button" data-tool="exclude">Exclude</button>
-					</div>
-					<label>Brush radius <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
-					<label>Crossing gap close <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
+					<h3>1. Confirm pedestrian space</h3>
+					<p class="concise-help">Draw a <strong>Walkable area</strong> around corridors and public spaces. Add <strong>Blocked areas</strong> over planters, furniture, or voids.</p>
 					<div class="commands horizontal">
-						<button id="extract-mask" type="button">Extract mask</button>
-						<button id="clear-mask" type="button" class="secondary">Clear mask</button>
+						<button type="button" data-tool="walkable">Draw walkable area</button>
+						<button type="button" data-tool="obstacle" class="secondary">Add blocked area</button>
 					</div>
+					<details class="advanced-mask-tools">
+						<summary><span>Advanced image detection</span><small>Optional shortcut for flat-color floor plans</small></summary>
+						<div class="disclosure-body">
+							<p class="concise-help">Pick a floor color to detect connected pedestrian space. Paint corrections only when the automatic selection misses or includes an area.</p>
+							<label title="Smaller cells follow fine details; larger cells create a cleaner, simpler route area.">Detection detail <output id="cell-size-value">4</output><input id="cell-size" type="range" min="2" max="12" step="1" value="4"></label>
+							<label title="How different a pixel may be from the picked floor color. Increase it only when the same floor has visible shading.">Similar color range <output id="tolerance-value">28</output><input id="tolerance" type="range" min="4" max="100" step="1" value="28"></label>
+							<div class="segmented mask-tools" role="group" aria-label="Image detection tool">
+								<button type="button" data-tool="pan" data-shortcut="H" title="Move the map without editing">Pan</button>
+								<button type="button" data-tool="sample" title="Click a representative corridor or floor color">Pick floor color</button>
+								<button type="button" data-tool="include" title="Paint missing pedestrian space into the detected area">Paint walkable</button>
+								<button type="button" data-tool="exclude" title="Erase incorrectly detected pedestrian space">Erase</button>
+							</div>
+							<label title="Size of the Paint walkable and Erase brush.">Correction brush <output id="brush-value">18</output><input id="brush-size" type="range" min="4" max="80" step="2" value="18"></label>
+							<label title="Closes tiny breaks in a detected corridor. Keep low so separate rooms are not joined accidentally.">Close tiny gaps <output id="bridge-value">2</output><input id="bridge-size" type="range" min="0" max="5" step="1" value="2"></label>
+							<div class="commands horizontal">
+								<button id="extract-mask" type="button">Detect from picked color</button>
+								<button id="clear-mask" type="button" class="secondary">Reset detected area</button>
+							</div>
+						</div>
+					</details>
 				</div>
 				<div class="route-editor-step">
-					<h3>2. Build and adjust</h3>
-					<button id="route-build" type="button" class="route-build">Build route network</button>
+					<h3>2. Build routes</h3>
+					<p class="concise-help">Doors linked to rooms become route endpoints. The builder connects each endpoint to the nearest valid corridor centerline.</p>
+					<button id="route-build" type="button" class="route-build">Build routes to every linked door</button>
 					<button id="generate-centerlines" type="button" hidden>Build route network</button>
 					<input id="level-id" type="hidden" value="level-0">
+				</div>
+				<div class="route-editor-step">
+					<h3>3. Manual adjustments</h3>
 					<div class="segmented authoring-tools" role="group" aria-label="Graph authoring tool">
-						<button type="button" data-tool="anchor" data-shortcut="A">Place entrance</button>
-						<button type="button" data-tool="draw" data-shortcut="E">Draw route</button>
-						<button type="button" data-tool="graph" data-shortcut="X">Edit route</button>
+						<button type="button" data-tool="anchor" data-shortcut="A" title="Move or create the route endpoint for a selected destination">Place endpoint</button>
+						<button type="button" data-tool="draw" data-shortcut="E" title="Draw a missing route segment between existing or new route points">Draw segment</button>
+						<button type="button" data-tool="graph" data-shortcut="X" title="Select route segments and drag their points">Edit network</button>
 					</div>
 					<div id="edge-draft" class="edge-draft" hidden>
 						<strong>ROUTE DRAFT</strong>
