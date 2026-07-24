@@ -111,6 +111,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.10');
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
 	const canvas = page.locator('#stage');
@@ -145,8 +146,10 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	await testInfo.attach('authored-studio', { contentType: 'image/png', path: screenshotPath });
 
 	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-project-name').fill('Visitor Center / Ground Floor');
 	await page.locator('#studio-export-project').click();
 	const download = await downloadPromise;
+	expect(download.suggestedFilename()).toBe('Visitor Center - Ground Floor.wbwayfinding');
 	const downloadPath: string = await download.path() as string;
 	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { floors: Array<{ elements: Array<{ geometry?: unknown[]; type: string }> }> };
 	expect(project.floors[0].elements.map((element): string => element.type)).toEqual(['location', 'origin']);
@@ -165,7 +168,7 @@ test('moves, inserts, and deletes polygon points above overlapping semantic laye
 	for (const position of [{ x: 220, y: 280 }, { x: 440, y: 280 }, { x: 440, y: 460 }, { x: 220, y: 460 }]) await canvas.click({ position });
 	await page.locator('#semantic-finish').click();
 
-	await page.locator('[data-tool="walkable"]').click();
+	await page.locator('[data-workspace-panel="map"] [data-tool="walkable"]').click();
 	for (const position of [{ x: 220, y: 280 }, { x: 350, y: 280 }, { x: 350, y: 380 }, { x: 220, y: 380 }]) await canvas.click({ position });
 	await page.locator('#semantic-finish').click();
 
@@ -212,7 +215,7 @@ test('draws freehand areas, authors exclusions, and explains portable save state
 	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
 	await expect(page.locator('#project-context-portable')).toHaveText('Not downloaded');
 	await page.locator('#drawing-mode-lasso').click();
-	await page.locator('[data-tool="walkable"]').click();
+	await page.locator('[data-workspace-panel="map"] [data-tool="walkable"]').click();
 	const canvas = page.locator('#stage');
 	const bounds = await canvas.boundingBox();
 	expect(bounds).not.toBeNull();
@@ -309,6 +312,7 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
 	await expect(page.locator('#route-result')).toContainText('ready to simulate');
 	await page.locator('#workspace-route-preview').click();
+	await expect(page.locator('[data-tool="select"]').first()).toHaveClass(/active/u);
 	await page.locator('#route-simulate').click();
 	await expect(page.locator('#route-result')).toContainText('min');
 	const screenshotPath: string = testInfo.outputPath('automatic-route-studio.png');
@@ -324,6 +328,13 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	expect(door?.locationId).toBe('meeting-room-shape');
 	expect(builtProject.floors[0].walkableMask?.walkableRuns.length).toBeGreaterThan(0);
 	expect(builtProject.graph.edges.length).toBeGreaterThan(0);
+	const roomNode = builtProject.graph.nodes.find((node): boolean => node.semanticElementId === 'meeting-room-shape');
+	expect(roomNode).toMatchObject({ x: door?.point.x, y: door?.point.y });
+	const roomApproach = builtProject.graph.edges.find((edge): boolean => edge.id.startsWith('approach:') && edge.from === roomNode?.id);
+	expect(roomApproach).toBeDefined();
+	const approachGeometry = roomApproach?.geometry ?? [];
+	expect(approachGeometry[0]).toEqual(door?.point);
+	expect(approachGeometry.every((point): boolean => point.x >= 50 && point.x <= 850 && point.y >= 80 && point.y <= 520)).toBe(true);
 	expect(errors).toEqual([]);
 });
 
@@ -339,7 +350,7 @@ test('prompts for an icon or logo image before placement', async ({ page }, test
 	const chooser = await chooserPromise;
 	await chooser.setFiles(iconPath);
 	await expect(page.locator('#media-asset-state')).toHaveAttribute('data-ready', 'true');
-	await expect(page.locator('#media-asset-summary')).toContainText('marker.png is ready');
+	await expect(page.locator('#media-asset-summary')).toContainText('marker.png stays selected');
 	await page.locator('#stage').click({ position: { x: 330, y: 380 } });
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Logo');
 	expect(errors).toEqual([]);

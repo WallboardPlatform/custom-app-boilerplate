@@ -44,6 +44,11 @@ const polygonHeight = (floor: WayfindingStudioFloor, polygon: WayfindingStudioPo
 
 const polygonColor = (polygon: WayfindingStudioPolygonElement): string => polygon.presentation?.fillColor ?? POLYGON_DEFAULTS[polygon.type].color;
 const polygonOpacity = (polygon: WayfindingStudioPolygonElement): number => polygon.presentation?.fillOpacity ?? POLYGON_DEFAULTS[polygon.type].opacity;
+const POLYGON_LAYER_ORDER: Record<WayfindingStudioPolygonElement['type'], number> = {
+	walkable: 1,
+	location: 2,
+	obstacle: 3
+};
 
 const centeredPoint = (floor: WayfindingStudioFloor, point: WayfindingPoint, elevation = 0): THREE.Vector3 => new THREE.Vector3(
 	point.x - floor.width / 2,
@@ -332,9 +337,18 @@ export class WayfindingScene3d {
 		const opacity: number = polygonOpacity(polygon);
 		const topColor = new THREE.Color(polygonColor(polygon));
 		const sideColor = topColor.clone().multiplyScalar(0.72);
+		const layerOrder: number = POLYGON_LAYER_ORDER[polygon.type];
+		const materialOptions = {
+			depthWrite: opacity >= 0.999,
+			opacity,
+			polygonOffset: true,
+			polygonOffsetFactor: -layerOrder,
+			polygonOffsetUnits: -layerOrder,
+			transparent: opacity < 1
+		};
 		const materials = [
-			new THREE.MeshStandardMaterial({ color: sideColor, opacity, roughness: 0.82, transparent: opacity < 1 }),
-			new THREE.MeshStandardMaterial({ color: topColor, opacity, roughness: 0.76, transparent: opacity < 1 })
+			new THREE.MeshStandardMaterial({ ...materialOptions, color: sideColor, roughness: 0.82 }),
+			new THREE.MeshStandardMaterial({ ...materialOptions, color: topColor, roughness: 0.76 })
 		];
 		const geometry: THREE.BufferGeometry = height > 0.01
 			? new THREE.ExtrudeGeometry(shape, { bevelEnabled: false, depth: height, steps: 1 })
@@ -343,7 +357,8 @@ export class WayfindingScene3d {
 		mesh.castShadow = height > 0.01;
 		mesh.receiveShadow = true;
 		mesh.rotation.x = -Math.PI / 2;
-		mesh.position.y = height > 0.01 ? 0 : 0.2;
+		mesh.position.y = height > 0.01 ? layerOrder * 0.025 : layerOrder * 0.16;
+		mesh.renderOrder = layerOrder;
 		mesh.userData.elementId = polygon.id;
 		this.selectableObjects.push(mesh);
 		this.addDisposable(mesh);

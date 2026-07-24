@@ -13,7 +13,6 @@ import { addProposedEdge, addRouteNode, upsertLocationAnchor } from '../authorin
 import {
 	closeWalkableMask,
 	extractSkeletonNetwork,
-	nearestSkeletonIndex,
 	retainAnchorNetworkCore,
 	skeletonizeWalkableMask
 } from '../centerline.mts';
@@ -72,6 +71,7 @@ interface DestinationRow extends Record<string, unknown> {
 	id: string;
 	mapNumber?: string;
 	name: string;
+	photoAssetIds?: string[];
 	routeable?: boolean;
 	status?: string;
 }
@@ -87,6 +87,10 @@ type DestinationDatasourceDocument = Record<string, DestinationTable>;
 interface DraggedVertex {
 	edgeId: string;
 	pointIndex: number;
+}
+
+interface DraggedDoorRotation {
+	elementId: string;
 }
 
 interface EdgeDraft {
@@ -121,6 +125,7 @@ const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
+const STUDIO_VERSION = '0.10';
 
 const requireElement = <T extends Element>(selector: string): T => {
 	const element: T | null = document.querySelector<T>(selector);
@@ -194,6 +199,7 @@ const studioFloorName = requireElement<HTMLInputElement>('#studio-floor-name');
 const studioValidation = requireElement<HTMLElement>('#studio-validation');
 const localRecovery = requireElement<HTMLElement>('#local-recovery');
 const localRecoverySummary = requireElement<HTMLElement>('#local-recovery-summary');
+const studioVersion = requireElement<HTMLElement>('#studio-version');
 const restoreAutosaveButton = requireElement<HTMLButtonElement>('#restore-autosave');
 const discardAutosaveButton = requireElement<HTMLButtonElement>('#discard-autosave');
 const semanticDraftHost = requireElement<HTMLElement>('#semantic-draft');
@@ -242,6 +248,8 @@ const semanticDraftHelp = requireElement<HTMLElement>('#semantic-draft-help');
 const mediaAssetState = requireElement<HTMLElement>('#media-asset-state');
 const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
 const chooseMediaAsset = requireElement<HTMLButtonElement>('#choose-media-asset');
+const stopMediaPlacement = requireElement<HTMLButtonElement>('#stop-media-placement');
+const mediaAssetLibrary = requireElement<HTMLElement>('#media-asset-library');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
 
@@ -279,6 +287,7 @@ let viewMode: '2d' | '3d' = '2d';
 let workspaceMode: WorkspaceMode = 'map';
 let pendingMediaAssetId: string | undefined;
 let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
+let draggedDoorRotation: DraggedDoorRotation | undefined;
 let dragHistoryState: HistoryState | undefined;
 let dragMutated = false;
 let restoringHistory = false;
@@ -435,6 +444,25 @@ const nextId = (prefix: string): string => {
 };
 
 const destinationDatasource = (): DestinationDatasourceDocument => ({ Destinations: { rows: studioProject.destinations as DestinationRow[] } });
+const projectCategories = (): string[] => Array.from(new Set([
+	...(studioProject.categories ?? []),
+	...destinationRows().map((destination: DestinationRow): string | undefined => destination.category).filter((category): category is string => Boolean(category))
+])).map((category: string): string => category.trim()).filter(Boolean).sort((left: string, right: string): number => left.localeCompare(right));
+const rememberCategory = (category: string): void => {
+	const normalized: string = category.trim();
+	if (!normalized) return;
+	studioProject.categories = Array.from(new Set([...(studioProject.categories ?? []), normalized]))
+		.sort((left: string, right: string): number => left.localeCompare(right));
+};
+
+const portableProjectBaseName = (): string => {
+	const normalized: string = (studioProject.name.trim() || 'Wayfinding project')
+		.replace(/[<>:"/\\|?*\u0000-\u001f]/gu, '-')
+		.replace(/\s+/gu, ' ')
+		.replace(/[. ]+$/gu, '');
+
+	return normalized || 'Wayfinding project';
+};
 
 const renderProjectContext = (): void => {
 	const floor: WayfindingStudioFloor | undefined = studioProject.floors.find((candidate: WayfindingStudioFloor): boolean => candidate.id === currentFloorId) ?? studioProject.floors[0];
@@ -485,9 +513,31 @@ const renderMediaAssetState = (): void => {
 	const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === pendingMediaAssetId);
 	mediaAssetState.dataset.ready = String(Boolean(asset));
 	mediaAssetSummary.textContent = asset
-		? `${asset.name} is ready. Choose Icon for a functional map symbol or Logo for a brand mark, then click the map.`
+		? `${asset.name} stays selected. Click the map repeatedly to place more copies; choose Stop placing when finished.`
 		: 'Choose an image before placing it. Icon means a functional map symbol; Logo means a brand or tenant mark.';
 	chooseMediaAsset.textContent = asset ? 'Change image' : 'Choose image';
+	stopMediaPlacement.hidden = !asset;
+	mediaAssetLibrary.replaceChildren();
+	const reusableAssets: WayfindingStudioAsset[] = studioProject.assets.filter((candidate: WayfindingStudioAsset): boolean => candidate.kind === 'icon' || candidate.kind === 'logo');
+	for (const reusable of reusableAssets) {
+		const button: HTMLButtonElement = document.createElement('button');
+		const preview: HTMLImageElement = document.createElement('img');
+		const label: HTMLSpanElement = document.createElement('span');
+		button.type = 'button';
+		button.className = 'media-library-item';
+		button.classList.toggle('active', reusable.id === pendingMediaAssetId);
+		button.title = `Reuse ${reusable.name} as a ${reusable.kind}`;
+		preview.src = reusable.dataUrl;
+		preview.alt = '';
+		label.textContent = reusable.name;
+		button.append(preview, label);
+		button.addEventListener('click', (): void => {
+			pendingMediaAssetId = reusable.id;
+			if (reusable.kind === 'icon' || reusable.kind === 'logo') activateTool(reusable.kind);
+			renderMediaAssetState();
+		});
+		mediaAssetLibrary.append(button);
+	}
 };
 
 const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 'recovery' | 'error', title: string): void => {
@@ -540,7 +590,26 @@ const setViewMode = (mode: '2d' | '3d'): void => {
 	}
 };
 
+const resetWorkspaceInteraction = (mode: WorkspaceMode): void => {
+	pointerDown = false;
+	lassoDrawing = false;
+	semanticDraft = undefined;
+	edgeDraft = undefined;
+	draggedSemantic = undefined;
+	draggedDoorRotation = undefined;
+	draggedVertex = undefined;
+	dragHistoryState = undefined;
+	dragMutated = false;
+	insertPointForEdge = undefined;
+	insertPointForSemanticId = undefined;
+	selectedSemanticVertexIndex = undefined;
+	semanticDraftHost.hidden = true;
+	renderEdgeDraft();
+	activateTool(mode === 'route-edit' ? 'graph' : 'select');
+};
+
 const setWorkspaceMode = (mode: WorkspaceMode): void => {
+	if (workspaceMode !== mode) resetWorkspaceInteraction(mode);
 	workspaceMode = mode;
 	document.body.dataset.workspace = mode;
 	for (const [button, value] of [
@@ -748,6 +817,13 @@ const readFileDataUrl = (file: File): Promise<string> => new Promise((resolve, r
 	reader.onload = (): void => { resolve(String(reader.result)); };
 	reader.onerror = (): void => { reject(reader.error ?? new Error('File could not be read.')); };
 	reader.readAsDataURL(file);
+});
+
+const readImageDimensions = (dataUrl: string): Promise<{ height: number; width: number }> => new Promise((resolve, reject): void => {
+	const image = new Image();
+	image.onload = (): void => { resolve({ height: image.naturalHeight, width: image.naturalWidth }); };
+	image.onerror = (): void => { reject(new Error('The selected image could not be decoded.')); };
+	image.src = dataUrl;
 });
 
 const loadSourceImage = async (url: string): Promise<void> => {
@@ -1188,18 +1264,32 @@ const renderSemanticEditor = (): void => {
 		}
 		host.append(label);
 	};
-	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): void => {
+	const textField = (labelText: string, value: string, update: (next: string) => void, type: 'color' | 'number' | 'text' = 'text', host: HTMLElement = semanticEditor, note?: string): HTMLInputElement => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const input = document.createElement('input');
 		let before: HistoryState | undefined;
+		let dirty = false;
 		input.type = type;
 		input.value = value;
 		input.addEventListener('focus', (): void => { before = captureHistoryState(); });
-		input.addEventListener('input', (): void => { update(input.value); syncStudioGraph(); renderStudioControls(); draw(); });
-		input.addEventListener('change', (): void => {
+		input.addEventListener('input', (): void => {
+			update(input.value);
+			dirty = true;
+		});
+		const commit = (): void => {
+			if (!dirty) return;
+			syncStudioGraph();
 			if (before) recordHistory(before);
 			before = undefined;
+			dirty = false;
+			renderStudioControls();
+			draw();
+		};
+		input.addEventListener('change', commit);
+		input.addEventListener('blur', commit);
+		input.addEventListener('keydown', (event: KeyboardEvent): void => {
+			if (event.key === 'Enter') input.blur();
 		});
 		label.append(input);
 		if (note) {
@@ -1209,20 +1299,32 @@ const renderSemanticEditor = (): void => {
 			label.append(hint);
 		}
 		host.append(label);
+		return input;
 	};
 	const textAreaField = (labelText: string, value: string, update: (next: string) => void, host: HTMLElement = semanticEditor): void => {
 		const label = document.createElement('label');
 		label.textContent = labelText;
 		const textarea = document.createElement('textarea');
 		let before: HistoryState | undefined;
+		let dirty = false;
 		textarea.rows = 3;
 		textarea.value = value;
 		textarea.addEventListener('focus', (): void => { before = captureHistoryState(); });
-		textarea.addEventListener('input', (): void => { update(textarea.value); syncStudioGraph(); renderStudioControls(); draw(); });
-		textarea.addEventListener('change', (): void => {
+		textarea.addEventListener('input', (): void => {
+			update(textarea.value);
+			dirty = true;
+		});
+		const commit = (): void => {
+			if (!dirty) return;
+			syncStudioGraph();
 			if (before) recordHistory(before);
 			before = undefined;
-		});
+			dirty = false;
+			renderStudioControls();
+			draw();
+		};
+		textarea.addEventListener('change', commit);
+		textarea.addEventListener('blur', commit);
 		label.append(textarea);
 		host.append(label);
 	};
@@ -1245,10 +1347,37 @@ const renderSemanticEditor = (): void => {
 			element.label = value || destination.id;
 		});
 		textAreaField('Description', stringValue(destination.description), (value): void => { updateDestination('description', value); });
-		textField('Category', stringValue(destination.category), (value): void => {
+		const categoryInput: HTMLInputElement = textField('Category', stringValue(destination.category), (value): void => {
 			updateDestination('category', value);
 			if (element.type === 'poi') element.category = value || undefined;
+			rememberCategory(value);
 		});
+		const categoryList: HTMLDataListElement = document.createElement('datalist');
+		categoryList.id = `category-options-${element.id}`;
+		for (const category of projectCategories()) categoryList.append(new Option(category, category));
+		categoryInput.setAttribute('list', categoryList.id);
+		semanticEditor.append(categoryList);
+		const categoryManager: HTMLDetailsElement = document.createElement('details');
+		const categorySummary: HTMLElement = document.createElement('summary');
+		const categoryChips: HTMLDivElement = document.createElement('div');
+		categorySummary.textContent = `Project categories (${projectCategories().length})`;
+		categoryChips.className = 'category-chips';
+		for (const category of projectCategories()) {
+			const chip: HTMLButtonElement = document.createElement('button');
+			chip.type = 'button';
+			chip.textContent = `${category} x`;
+			chip.title = `Remove ${category} from category suggestions. Existing locations keep their value.`;
+			chip.addEventListener('click', (): void => {
+				const before: HistoryState = captureHistoryState();
+				studioProject.categories = (studioProject.categories ?? []).filter((candidate: string): boolean => candidate !== category);
+				syncStudioGraph();
+				recordHistory(before);
+				renderSemanticEditor();
+			});
+			categoryChips.append(chip);
+		}
+		categoryManager.append(categorySummary, categoryChips);
+		semanticEditor.append(categoryManager);
 		textField('Directory number', stringValue(destination.mapNumber), (value): void => { updateDestination('mapNumber', value); });
 		textField('Secondary / English name', stringValue(destination.englishName), (value): void => { updateDestination('englishName', value); });
 		textField('Opening hours', stringValue(destination.hours), (value): void => { updateDestination('hours', value); });
@@ -1256,6 +1385,62 @@ const renderSemanticEditor = (): void => {
 		selectField('Accessibility', [['', 'Unverified'], ['true', 'Step-free verified'], ['false', 'Not step-free']], typeof destination.accessible === 'boolean' ? String(destination.accessible) : '', (value): void => {
 			updateDestination('accessible', value === '' ? undefined : value === 'true');
 		});
+
+		const mediaHeading: HTMLHeadingElement = document.createElement('h3');
+		const gallery: HTMLDivElement = document.createElement('div');
+		const addPhotos: HTMLButtonElement = document.createElement('button');
+		const photoInput: HTMLInputElement = document.createElement('input');
+		mediaHeading.className = 'public-details-heading';
+		mediaHeading.textContent = 'Location photos';
+		gallery.className = 'destination-photo-gallery';
+		for (const assetId of destination.photoAssetIds ?? []) {
+			const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === assetId && candidate.kind === 'photo');
+			if (!asset) continue;
+			const item: HTMLElement = document.createElement('figure');
+			const image: HTMLImageElement = document.createElement('img');
+			const removePhoto: HTMLButtonElement = document.createElement('button');
+			image.src = asset.dataUrl;
+			image.alt = asset.name;
+			removePhoto.type = 'button';
+			removePhoto.textContent = 'Remove';
+			removePhoto.addEventListener('click', (): void => {
+				const before: HistoryState = captureHistoryState();
+				destination.photoAssetIds = (destination.photoAssetIds ?? []).filter((candidate: string): boolean => candidate !== assetId);
+				const stillReferenced: boolean = studioProject.destinations.some((candidate): boolean => candidate.photoAssetIds?.includes(assetId) ?? false);
+				if (!stillReferenced) studioProject.assets = studioProject.assets.filter((candidate: WayfindingStudioAsset): boolean => candidate.id !== assetId);
+				syncStudioGraph();
+				recordHistory(before);
+				renderSemanticEditor();
+			});
+			item.append(image, removePhoto);
+			gallery.append(item);
+		}
+		addPhotos.type = 'button';
+		addPhotos.textContent = 'Add photos';
+		addPhotos.className = 'secondary';
+		photoInput.type = 'file';
+		photoInput.accept = 'image/*';
+		photoInput.multiple = true;
+		photoInput.hidden = true;
+		addPhotos.addEventListener('click', (): void => { photoInput.click(); });
+		photoInput.addEventListener('change', async (): Promise<void> => {
+			const files: File[] = Array.from(photoInput.files ?? []);
+			if (files.length === 0) return;
+			const before: HistoryState = captureHistoryState();
+			const assetIds: string[] = [];
+			for (const file of files) {
+				const dataUrl: string = await readFileDataUrl(file);
+				const dimensions: { height: number; width: number } = await readImageDimensions(dataUrl);
+				const id: string = nextId('asset-photo');
+				studioProject.assets.push({ dataUrl, id, kind: 'photo', mimeType: file.type || 'image/png', name: file.name, naturalHeight: dimensions.height, naturalWidth: dimensions.width });
+				assetIds.push(id);
+			}
+			destination.photoAssetIds = [...(destination.photoAssetIds ?? []), ...assetIds];
+			syncStudioGraph();
+			recordHistory(before);
+			renderSemanticEditor();
+		});
+		semanticEditor.append(mediaHeading, gallery, addPhotos, photoInput);
 	}
 
 	if ('geometry' in element) {
@@ -1895,6 +2080,16 @@ const edgeFailuresFor = (edge: WayfindingEdge): WayfindingPoint[] => {
 	return failures;
 };
 
+const doorRotationHandlePoint = (door: WayfindingStudioDoorElement): WayfindingPoint => {
+	const radians: number = door.angle * Math.PI / 180;
+	const distance: number = door.length / 2 + 26 / scale;
+
+	return {
+		x: door.point.x + Math.cos(radians) * distance,
+		y: door.point.y + Math.sin(radians) * distance
+	};
+};
+
 const drawSemanticElements = (): void => {
 	const colors: Record<string, string> = {
 		door: '#17201f', label: '#17201f', location: '#d9981c', obstacle: '#a83c32', origin: '#138b75', poi: '#2b6cb0', transition: '#7b4bc4', walkable: '#17a886'
@@ -1948,6 +2143,20 @@ const drawSemanticElements = (): void => {
 			context.moveTo(element.point.x - dx, element.point.y - dy);
 			context.lineTo(element.point.x + dx, element.point.y + dy);
 			context.stroke();
+			if (selected && workspaceMode === 'map') {
+				const handle: WayfindingPoint = doorRotationHandlePoint(element);
+				context.beginPath();
+				context.moveTo(element.point.x + dx, element.point.y + dy);
+				context.lineTo(handle.x, handle.y);
+				context.strokeStyle = '#d94135';
+				context.lineWidth = 2 / scale;
+				context.stroke();
+				context.beginPath();
+				context.arc(handle.x, handle.y, 8 / scale, 0, Math.PI * 2);
+				context.fillStyle = '#ffffff';
+				context.fill();
+				context.stroke();
+			}
 		} else if (element.type === 'label') {
 			const fontFamilies: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
 				monospace: '"Courier New", monospace',
@@ -2156,7 +2365,17 @@ const addSemanticPoint = (type: Exclude<Tool, 'anchor' | 'draw' | 'exclude' | 'g
 			? sourceAsset
 			: { ...sourceAsset, id: nextId(`asset-${type}`), kind: type };
 		if (asset !== sourceAsset) studioProject.assets.push(asset);
-		element = { ...base, assetId: asset.id, height: 96, id: nextId(type), point: pointValue, type, width: 96 } satisfies WayfindingStudioMediaElement;
+		const naturalWidth: number = asset.naturalWidth ?? 96;
+		const naturalHeight: number = asset.naturalHeight ?? 96;
+		const ratio: number = 96 / Math.max(naturalWidth, naturalHeight);
+		const width: number = Math.max(12, naturalWidth * ratio);
+		const height: number = Math.max(12, naturalHeight * ratio);
+		const floor: WayfindingStudioFloor = currentFloor();
+		const point: WayfindingPoint = {
+			x: Math.max(0, Math.min(floor.width - width, pointValue.x - width / 2)),
+			y: Math.max(0, Math.min(floor.height - height, pointValue.y - height / 2))
+		};
+		element = { ...base, assetId: asset.id, height, id: nextId(type), point, type, width } satisfies WayfindingStudioMediaElement;
 	} else element = { ...base, color: '#17201f', fontFamily: 'sans-serif', fontSize: 24, fontWeight: 600, id: nextId('label'), outlineColor: '#ffffff', outlineWidth: 0, point: pointValue, text: 'Label', textAnchor: 'start', type: 'label' } satisfies WayfindingStudioLabelElement;
 	currentFloor().elements.push(element);
 	selectedSemanticId = element.id;
@@ -2795,7 +3014,7 @@ const saveStudioProject = (): void => {
 	syncStudioGraph();
 	void persistAutosave(true);
 	portableSnapshot = JSON.stringify(studioProject);
-	downloadText(`${studioProject.projectId}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
+	downloadText(`${portableProjectBaseName()}.wbwayfinding`, JSON.stringify(studioProject, null, 2));
 	renderProjectContext();
 	coverageStatus.textContent = 'Downloaded a portable project file containing the current work.';
 };
@@ -2832,6 +3051,96 @@ const pointForMaskIndex = (index: number): WayfindingPoint => ({
 	x: (index % maskColumns + 0.5) * cellSize(),
 	y: (Math.floor(index / maskColumns) + 0.5) * cellSize()
 });
+
+const maskNeighborIndices = (index: number): number[] => {
+	const column: number = index % maskColumns;
+	const row: number = Math.floor(index / maskColumns);
+	const neighbors: number[] = [];
+
+	for (const [columnOffset, rowOffset] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+		const nextColumn: number = column + columnOffset;
+		const nextRow: number = row + rowOffset;
+		if (nextColumn < 0 || nextRow < 0 || nextColumn >= maskColumns || nextRow >= maskRows) continue;
+		const nextIndex: number = maskIndex(nextColumn, nextRow);
+		if (mask[nextIndex] === 1) neighbors.push(nextIndex);
+	}
+
+	return neighbors;
+};
+
+const connectAnchorCellToWalkableArea = (anchorIndex: number, originalMask: Uint8Array): void => {
+	if (originalMask[anchorIndex] === 1) {
+		mask[anchorIndex] = 1;
+		return;
+	}
+
+	const anchorColumn: number = anchorIndex % maskColumns;
+	const anchorRow: number = Math.floor(anchorIndex / maskColumns);
+	let nearestIndex: number | undefined;
+	let nearestDistance = Number.POSITIVE_INFINITY;
+	const maximumRadius = Math.max(3, Math.ceil(36 / cellSize()));
+
+	for (let rowOffset = -maximumRadius; rowOffset <= maximumRadius; rowOffset += 1) {
+		for (let columnOffset = -maximumRadius; columnOffset <= maximumRadius; columnOffset += 1) {
+			const column: number = anchorColumn + columnOffset;
+			const row: number = anchorRow + rowOffset;
+			if (column < 0 || row < 0 || column >= maskColumns || row >= maskRows) continue;
+			const index: number = maskIndex(column, row);
+			if (originalMask[index] !== 1) continue;
+			const distance: number = columnOffset * columnOffset + rowOffset * rowOffset;
+			if (distance >= nearestDistance) continue;
+			nearestDistance = distance;
+			nearestIndex = index;
+		}
+	}
+
+	if (nearestIndex === undefined) return;
+	const targetColumn: number = nearestIndex % maskColumns;
+	const targetRow: number = Math.floor(nearestIndex / maskColumns);
+	const steps: number = Math.max(Math.abs(targetColumn - anchorColumn), Math.abs(targetRow - anchorRow), 1);
+
+	for (let step = 0; step <= steps; step += 1) {
+		const ratio: number = step / steps;
+		const column: number = Math.round(anchorColumn + (targetColumn - anchorColumn) * ratio);
+		const row: number = Math.round(anchorRow + (targetRow - anchorRow) * ratio);
+		mask[maskIndex(column, row)] = 1;
+	}
+};
+
+const shortestMaskPathToSkeleton = (startIndex: number, skeleton: Uint8Array): number[] | undefined => {
+	if (mask[startIndex] !== 1) return undefined;
+	const queue: number[] = [startIndex];
+	const visited = new Set<number>([startIndex]);
+	const previous = new Map<number, number>();
+	let targetIndex: number | undefined;
+
+	for (let cursor = 0; cursor < queue.length; cursor += 1) {
+		const index: number = queue[cursor];
+		if (skeleton[index] === 1) {
+			targetIndex = index;
+			break;
+		}
+
+		for (const neighbor of maskNeighborIndices(index)) {
+			if (visited.has(neighbor)) continue;
+			visited.add(neighbor);
+			previous.set(neighbor, index);
+			queue.push(neighbor);
+		}
+	}
+
+	if (targetIndex === undefined) return undefined;
+	const path: number[] = [targetIndex];
+	let index: number = targetIndex;
+	while (index !== startIndex) {
+		const previousIndex: number | undefined = previous.get(index);
+		if (previousIndex === undefined) return undefined;
+		index = previousIndex;
+		path.push(index);
+	}
+
+	return path.reverse();
+};
 
 const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] => {
 	if (points.length <= 2) return points;
@@ -2977,21 +3286,36 @@ const generateCenterlineGraph = (): boolean => {
 	mask = closeWalkableMask(mask, maskColumns, maskRows, bridgeRadius());
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
+	const authoredMask: Uint8Array = new Uint8Array(mask);
+	const anchorIndexById = new Map<string, number>();
+	for (const anchorNode of anchorNodes) {
+		const column: number = Math.max(0, Math.min(maskColumns - 1, Math.floor(anchorNode.x / cellSize())));
+		const row: number = Math.max(0, Math.min(maskRows - 1, Math.floor(anchorNode.y / cellSize())));
+		const index: number = maskIndex(column, row);
+		anchorIndexById.set(anchorNode.id, index);
+		connectAnchorCellToWalkableArea(index, authoredMask);
+	}
 	persistCurrentMask();
 	const skeleton: Uint8Array = skeletonizeWalkableMask(mask, maskColumns, maskRows);
-	const usedAnchorIndices = new Set<number>();
-	const anchorNodeByIndex = new Map<number, WayfindingNode>();
+	const attachmentIndices = new Set<number>();
+	const attachmentByAnchorId = new Map<string, number>();
+	const connectorGeometryByAnchorId = new Map<string, WayfindingPoint[]>();
 
 	for (const anchorNode of anchorNodes) {
-		const nearestIndex: number | undefined = nearestSkeletonIndex(skeleton, maskColumns, {
-			column: Math.floor(anchorNode.x / cellSize()),
-			row: Math.floor(anchorNode.y / cellSize())
-		}, usedAnchorIndices);
-		if (nearestIndex === undefined) continue;
-		usedAnchorIndices.add(nearestIndex);
-		anchorNodeByIndex.set(nearestIndex, anchorNode);
+		const anchorIndex: number | undefined = anchorIndexById.get(anchorNode.id);
+		const path: number[] | undefined = anchorIndex === undefined ? undefined : shortestMaskPathToSkeleton(anchorIndex, skeleton);
+		if (!path?.length) continue;
+		const attachmentIndex: number = path[path.length - 1];
+		const cellPath: WayfindingPoint[] = path.map(pointForMaskIndex);
+		const geometry: WayfindingPoint[] = simplifyContainedGeometry([
+			{ x: anchorNode.x, y: anchorNode.y },
+			...cellPath.slice(1)
+		]);
+		attachmentIndices.add(attachmentIndex);
+		attachmentByAnchorId.set(anchorNode.id, attachmentIndex);
+		connectorGeometryByAnchorId.set(anchorNode.id, geometry);
 	}
-	const connectedAnchorIds = new Set([...anchorNodeByIndex.values()].map((node: WayfindingNode): string => node.id));
+	const connectedAnchorIds = new Set(attachmentByAnchorId.keys());
 	if (!startNodes.some((node: WayfindingNode): boolean => connectedAnchorIds.has(node.id))
 		|| !destinationNodes.some((node: WayfindingNode): boolean => connectedAnchorIds.has(node.id))) {
 		coverageStatus.textContent = 'The start or destination entrance is too far from the Walkable area. Move it onto the pedestrian space and build again.';
@@ -3000,14 +3324,11 @@ const generateCenterlineGraph = (): boolean => {
 		return false;
 	}
 
-	const network = extractSkeletonNetwork(mask, maskColumns, maskRows, usedAnchorIndices);
+	const network = extractSkeletonNetwork(mask, maskColumns, maskRows, attachmentIndices);
 	const nodeIdByIndex = new Map<number, string>();
 	const generatedNodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
 		const point: WayfindingPoint = pointForMaskIndex(index);
-		const anchorNode: WayfindingNode | undefined = anchorNodeByIndex.get(index);
-		const node: WayfindingNode = anchorNode
-			? { ...anchorNode, ...point }
-			: { id: `route-auto:${currentFloorId}:${String(nodeIndex + 1).padStart(4, '0')}`, kind: 'route', levelId: currentFloorId, ...point };
+		const node: WayfindingNode = { id: `route-auto:${currentFloorId}:${String(nodeIndex + 1).padStart(4, '0')}`, kind: 'route', levelId: currentFloorId, ...point };
 		nodeIdByIndex.set(index, node.id);
 
 		return node;
@@ -3030,13 +3351,33 @@ const generateCenterlineGraph = (): boolean => {
 			traversal: 'indoor-corridor'
 		}];
 	});
+	const connectorEdges: WayfindingEdge[] = anchorNodes.flatMap((anchorNode: WayfindingNode, connectorIndex: number): WayfindingEdge[] => {
+		const attachmentIndex: number | undefined = attachmentByAnchorId.get(anchorNode.id);
+		const attachmentId: string | undefined = attachmentIndex === undefined ? undefined : nodeIdByIndex.get(attachmentIndex);
+		if (attachmentIndex === undefined || !attachmentId) return [];
+		const geometry: WayfindingPoint[] | undefined = connectorGeometryByAnchorId.get(anchorNode.id);
+		if (!geometry?.length) return [];
+
+		return [{
+			accessible: true,
+			bidirectional: true,
+			corridorWidth: cellSize(),
+			from: anchorNode.id,
+			geometry,
+			id: `approach:${currentFloorId}:${String(connectorIndex + 1).padStart(4, '0')}`,
+			kind: 'walk',
+			reviewStatus: 'proposed',
+			to: attachmentId,
+			traversal: 'portal'
+		}];
+	});
 	const retained = retainAnchorNetworkCore(
-		generatedNodes.map((node: WayfindingNode): string => node.id),
-		generatedEdges,
+		[...generatedNodes.map((node: WayfindingNode): string => node.id), ...anchorNodes.map((node: WayfindingNode): string => node.id)],
+		[...generatedEdges, ...connectorEdges],
 		connectedAnchorIds
 	);
 	const retainedNodes: WayfindingNode[] = generatedNodes.filter((node: WayfindingNode): boolean => retained.nodeIds.has(node.id));
-	const retainedEdges: WayfindingEdge[] = generatedEdges.filter((edge: WayfindingEdge): boolean => retained.edgeIds.has(edge.id));
+	const retainedEdges: WayfindingEdge[] = [...generatedEdges, ...connectorEdges].filter((edge: WayfindingEdge): boolean => retained.edgeIds.has(edge.id));
 	if (retainedEdges.length === 0) {
 		coverageStatus.textContent = 'The Walkable area is disconnected between the start and destination. Extend it so both endpoints share one continuous area.';
 		routeResult.textContent = 'No connected route network could be built from the current walkable geometry.';
@@ -3052,11 +3393,12 @@ const generateCenterlineGraph = (): boolean => {
 
 		return from?.levelId !== currentFloorId || to?.levelId !== currentFloorId;
 	});
+	const currentFloorSemanticNodes: WayfindingNode[] = graph.nodes.filter((node: WayfindingNode): boolean => node.levelId === currentFloorId && Boolean(node.semanticElementId));
 	graph = {
 		...graph,
 		contractVersion: 2,
 		edges: [...otherFloorEdges, ...retainedEdges],
-		nodes: [...otherFloorNodes, ...retainedNodes]
+		nodes: [...otherFloorNodes, ...currentFloorSemanticNodes, ...retainedNodes]
 	};
 	selectedEdgeId = undefined;
 	syncStudioGraph();
@@ -3241,12 +3583,24 @@ openProjectButton.addEventListener('click', (): void => { studioProjectFile.clic
 semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 	const file: File | undefined = semanticMediaFile.files?.[0];
 	if (!file) return;
+	const dataUrl: string = await readFileDataUrl(file);
+	const dimensions: { height: number; width: number } = await readImageDimensions(dataUrl);
+	const kind: 'icon' | 'logo' = tool === 'logo' ? 'logo' : 'icon';
 	const id: string = nextId('asset');
-	studioProject.assets.push({ dataUrl: await readFileDataUrl(file), id, kind: 'icon', mimeType: file.type || 'image/png', name: file.name });
+	studioProject.assets.push({
+		dataUrl,
+		id,
+		kind,
+		mimeType: file.type || 'image/png',
+		name: file.name,
+		naturalHeight: dimensions.height,
+		naturalWidth: dimensions.width
+	});
 	pendingMediaAssetId = id;
+	semanticMediaFile.value = '';
 	scheduleAutosave();
 	renderMediaAssetState();
-	coverageStatus.textContent = `${file.name} is ready. Click the map to place the ${tool === 'logo' ? 'logo' : 'icon'}.`;
+	coverageStatus.textContent = `${file.name} is ready. Click the map to place the ${kind}.`;
 });
 
 studioProjectName.addEventListener('input', (): void => { studioProject.name = studioProjectName.value.trim() || 'Wayfinding project'; touchWayfindingStudioProject(studioProject); scheduleAutosave(); });
@@ -3305,7 +3659,7 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 		coverageStatus.textContent = `Runtime export blocked: ${errors[0].message}`;
 		return;
 	}
-	downloadText(`${studioProject.projectId}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
+	downloadText(`${portableProjectBaseName()}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
 });
 requireElement<HTMLButtonElement>('#semantic-finish').addEventListener('click', finishSemanticPolygon);
 requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => {
@@ -3331,6 +3685,12 @@ snapRadiusInput.addEventListener('input', (): void => {
 	snapRadiusValue.value = snapRadiusInput.value;
 });
 chooseMediaAsset.addEventListener('click', (): void => { semanticMediaFile.click(); });
+stopMediaPlacement.addEventListener('click', (): void => {
+	pendingMediaAssetId = undefined;
+	activateTool('select');
+	renderMediaAssetState();
+	coverageStatus.textContent = 'Image placement finished. Select an item to move, resize, duplicate, or delete it.';
+});
 for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.addEventListener('change', draw);
 showAllLayers.addEventListener('click', (): void => {
 	for (const toggle of document.querySelectorAll<HTMLInputElement>('[data-layer]')) toggle.checked = true;
@@ -3778,6 +4138,18 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 	} else if (tool === 'door' || tool === 'poi' || tool === 'origin' || tool === 'transition' || tool === 'label' || tool === 'icon' || tool === 'logo') {
 		addSemanticPoint(tool, imagePoint);
 	} else if (tool === 'select') {
+		const currentSelection: WayfindingStudioElement | undefined = semanticElement();
+		if (currentSelection?.type === 'door') {
+			const handle: WayfindingPoint = doorRotationHandlePoint(currentSelection);
+			if (Math.hypot(imagePoint.x - handle.x, imagePoint.y - handle.y) <= 14 / scale) {
+				draggedDoorRotation = { elementId: currentSelection.id };
+				dragHistoryState = captureHistoryState();
+				dragMutated = false;
+				coverageStatus.textContent = 'Drag to rotate the door. Hold Shift to snap to 15-degree increments.';
+				draw();
+				return;
+			}
+		}
 		const currentPolygon: WayfindingStudioPolygonElement | undefined = selectedSemanticPolygon();
 		const currentVertexIndex: number | undefined = currentPolygon ? nearestSemanticVertex(currentPolygon, imagePoint) : undefined;
 		const selected: WayfindingStudioElement | undefined = currentVertexIndex !== undefined ? currentPolygon : nearestSemantic(imagePoint);
@@ -3838,6 +4210,15 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 		moveVertex(draggedVertex, imagePoint);
 		dragMutated = true;
 		draw();
+	} else if (tool === 'select' && draggedDoorRotation) {
+		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === draggedDoorRotation?.elementId);
+		if (element?.type !== 'door') return;
+		let angle: number = Math.atan2(imagePoint.y - element.point.y, imagePoint.x - element.point.x) * 180 / Math.PI;
+		if (event.shiftKey) angle = Math.round(angle / 15) * 15;
+		element.angle = (angle + 360) % 360;
+		element.status = 'proposed';
+		dragMutated = true;
+		draw();
 	} else if (tool === 'select' && draggedSemantic) {
 		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === draggedSemantic?.elementId);
 		if (!element) return;
@@ -3885,6 +4266,14 @@ canvas.addEventListener('pointerup', (): void => {
 		renderStudioControls();
 		draw();
 	}
+	if (draggedDoorRotation) {
+		draggedDoorRotation = undefined;
+		syncStudioGraph();
+		if (dragHistoryState && dragMutated) recordHistory(dragHistoryState);
+		renderSemanticEditor();
+		renderStudioControls();
+		draw();
+	}
 	dragHistoryState = undefined;
 	dragMutated = false;
 });
@@ -3920,6 +4309,7 @@ document.addEventListener('visibilitychange', (): void => {
 	if (document.visibilityState === 'hidden') void persistAutosave();
 });
 window.addEventListener('pagehide', (): void => { void persistAutosave(); scene3d.dispose(); });
+studioVersion.textContent = `Editor v${STUDIO_VERSION}`;
 syncProjectControls();
 renderProjectAssessment();
 setActiveTool();
