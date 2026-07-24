@@ -58,6 +58,16 @@ export interface WayfindingStudioProjectDefaults {
 	walkable: Required<WayfindingStudioPolygonPresentation>;
 }
 
+export interface WayfindingStudioLanguage {
+	code: string;
+	label: string;
+}
+
+export interface WayfindingStudioTranslation {
+	description?: string;
+	name?: string;
+}
+
 export interface WayfindingStudioAsset {
 	dataUrl: string;
 	id: string;
@@ -168,6 +178,7 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 	name: string;
 	photoAssetIds?: string[];
 	routeable?: boolean;
+	translations?: Record<string, WayfindingStudioTranslation>;
 }
 
 export interface WayfindingStudioProject {
@@ -175,11 +186,13 @@ export interface WayfindingStudioProject {
 	categories?: string[];
 	contractVersion: 1;
 	createdAt: string;
+	defaultLanguage?: string;
 	defaults?: WayfindingStudioProjectDefaults;
 	delivery: WayfindingProjectDocument;
 	destinations: WayfindingStudioDestination[];
 	floors: WayfindingStudioFloor[];
 	graph: WayfindingGraphDocument;
+	languages?: WayfindingStudioLanguage[];
 	name: string;
 	projectId: string;
 	updatedAt: string;
@@ -200,7 +213,9 @@ export interface WayfindingStudioRepair {
 
 export interface WayfindingRuntimeBundle {
 	assets: WayfindingStudioAsset[];
+	categories: string[];
 	contractVersion: 1;
+	defaultLanguage: string;
 	defaults: WayfindingStudioProjectDefaults;
 	destinations: { Destinations: { rows: WayfindingStudioDestination[] } };
 	floors: Array<{
@@ -215,6 +230,7 @@ export interface WayfindingRuntimeBundle {
 		width: number;
 	}>;
 	graph: WayfindingGraphDocument;
+	languages: WayfindingStudioLanguage[];
 	manifest: {
 		deliveryMode: WayfindingGuidanceMode;
 		generatedAt: string;
@@ -275,6 +291,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 		assets: [],
 		contractVersion: 1,
 		createdAt: timestamp,
+		defaultLanguage: 'en',
 		defaults: createWayfindingStudioProjectDefaults(),
 		delivery: {
 			contractVersion: 1,
@@ -297,6 +314,7 @@ export const createWayfindingStudioProject = (projectId = 'wayfinding-project'):
 		destinations: [],
 		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, width: 1920 }],
 		graph: { contractVersion: 2, edges: [], graphId: `${projectId}-graph`, nodes: [] },
+		languages: [{ code: 'en', label: 'English' }],
 		name: 'Wayfinding project',
 		projectId,
 		updatedAt: timestamp
@@ -331,6 +349,33 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 		...(Array.isArray(project.categories) ? project.categories.filter((category): category is string => typeof category === 'string') : []),
 		...project.destinations.map((destination): string | undefined => destination.category).filter((category): category is string => Boolean(category))
 	])).map((category): string => category.trim()).filter(Boolean).sort((left, right): number => left.localeCompare(right));
+	project.languages = Array.from(new Map(
+		(Array.isArray(project.languages) ? project.languages : [])
+			.filter((language): language is WayfindingStudioLanguage => isRecord(language) && typeof language.code === 'string' && typeof language.label === 'string')
+			.map((language): WayfindingStudioLanguage => ({ code: language.code.trim().toLowerCase(), label: language.label.trim() }))
+			.filter((language): boolean => Boolean(language.code && language.label))
+			.map((language): [string, WayfindingStudioLanguage] => [language.code, language])
+	).values());
+
+	if (project.languages.length === 0) project.languages.push({ code: 'en', label: 'English' });
+	project.defaultLanguage = project.languages.some((language): boolean => language.code === project.defaultLanguage)
+		? project.defaultLanguage
+		: project.languages[0].code;
+
+	for (const destination of project.destinations) {
+		const legacyEnglishName: unknown = destination.englishName;
+
+		if (typeof legacyEnglishName === 'string' && legacyEnglishName.trim()) {
+			destination.translations = {
+				...(destination.translations ?? {}),
+				en: {
+					...(isRecord(destination.translations?.en) ? destination.translations.en : {}),
+					name: destination.translations?.en?.name || legacyEnglishName.trim()
+				}
+			};
+		}
+		delete destination.englishName;
+	}
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
@@ -857,7 +902,9 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 
 	return {
 		assets: structuredClone(project.assets),
+		categories: structuredClone(project.categories ?? []),
 		contractVersion: 1,
+		defaultLanguage: project.defaultLanguage ?? 'en',
 		defaults: structuredClone(wayfindingStudioProjectDefaults(project)),
 		destinations: { Destinations: { rows: structuredClone(project.destinations) } },
 		floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
@@ -872,6 +919,7 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 			width: floor.width
 		})),
 		graph: runtimeGraph,
+		languages: structuredClone(project.languages ?? [{ code: 'en', label: 'English' }]),
 		manifest: {
 			deliveryMode: assessment.deliveryMode,
 			generatedAt: project.updatedAt,

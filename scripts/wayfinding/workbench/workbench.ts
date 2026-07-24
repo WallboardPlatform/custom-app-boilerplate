@@ -36,6 +36,7 @@ import {
 	type WayfindingStudioDoorElement,
 	type WayfindingStudioElement,
 	type WayfindingStudioFloor,
+	type WayfindingStudioLanguage,
 	type WayfindingStudioLabelElement,
 	type WayfindingStudioMediaElement,
 	type WayfindingStudioOriginElement,
@@ -45,8 +46,10 @@ import {
 	type WayfindingStudioProject,
 	type WayfindingStudioProjectDefaults,
 	type WayfindingStudioRepair,
+	type WayfindingStudioTranslation,
 	type WayfindingStudioTransitionElement
 } from '../studio-project.mts';
+import { BUILTIN_MAP_ICONS, type BuiltinMapIcon } from './icon-library';
 import { WayfindingScene3d } from './scene3d';
 
 type SemanticPolygonTool = 'location' | 'obstacle' | 'walkable';
@@ -67,7 +70,6 @@ interface DestinationRow extends Record<string, unknown> {
 	accessible?: boolean;
 	category?: string;
 	description?: string;
-	englishName?: string;
 	floor?: string;
 	hours?: string;
 	id: string;
@@ -76,6 +78,7 @@ interface DestinationRow extends Record<string, unknown> {
 	photoAssetIds?: string[];
 	routeable?: boolean;
 	status?: string;
+	translations?: Record<string, WayfindingStudioTranslation>;
 }
 
 interface DestinationTable {
@@ -85,6 +88,11 @@ interface DestinationTable {
 }
 
 type DestinationDatasourceDocument = Record<string, DestinationTable>;
+
+interface RouteDestinationAvailability {
+	available: boolean;
+	reason?: string;
+}
 
 interface DraggedVertex {
 	edgeId: string;
@@ -124,8 +132,18 @@ interface HistoryState {
 interface AutosaveRecord {
 	currentFloorId: string;
 	id: 'latest';
+	openedProjectFileName?: string;
 	project: WayfindingStudioProject;
+	projectFileHandle?: StudioFileHandle;
 	savedAt: string;
+}
+
+interface DraggedSemantic {
+	elementId: string;
+	grabOffset?: WayfindingPoint;
+	pointerStart: WayfindingPoint;
+	started: boolean;
+	vertexIndex?: number;
 }
 
 interface StudioWritableFile {
@@ -150,7 +168,7 @@ const AUTOSAVE_DATABASE = 'wallboard-wayfinding-studio';
 const AUTOSAVE_STORE = 'drafts';
 const AUTOSAVE_DELAY_MS = 700;
 const DEFAULT_ROUTE_RESULT = 'Add an origin and a destination entrance, then connect them to the graph.';
-const STUDIO_VERSION = '0.12';
+const STUDIO_VERSION = '0.13';
 
 const requireElement = <T extends Element>(selector: string): T => {
 	const element: T | null = document.querySelector<T>(selector);
@@ -205,8 +223,10 @@ const destinationSelect = requireElement<HTMLSelectElement>('#destination-select
 const destinationMapNumber = requireElement<HTMLInputElement>('#destination-map-number');
 const destinationId = requireElement<HTMLInputElement>('#destination-id');
 const destinationName = requireElement<HTMLInputElement>('#destination-name');
-const destinationEnglishName = requireElement<HTMLInputElement>('#destination-english-name');
-const destinationCategory = requireElement<HTMLInputElement>('#destination-category');
+const destinationLanguage = requireElement<HTMLSelectElement>('#destination-language');
+const destinationTranslatedName = requireElement<HTMLInputElement>('#destination-translated-name');
+const destinationTranslatedDescription = requireElement<HTMLTextAreaElement>('#destination-translated-description');
+const destinationCategory = requireElement<HTMLSelectElement>('#destination-category');
 const destinationDescription = requireElement<HTMLTextAreaElement>('#destination-description');
 const destinationHours = requireElement<HTMLInputElement>('#destination-hours');
 const destinationStatus = requireElement<HTMLInputElement>('#destination-status');
@@ -277,6 +297,9 @@ const drawingModeHelp = requireElement<HTMLElement>('#drawing-mode-help');
 const snapToEdgesInput = requireElement<HTMLInputElement>('#snap-to-edges');
 const snapRadiusInput = requireElement<HTMLInputElement>('#snap-radius');
 const snapRadiusValue = requireElement<HTMLOutputElement>('#snap-radius-value');
+const detectGapControl = requireElement<HTMLElement>('#detect-gap-control');
+const detectGapInput = requireElement<HTMLInputElement>('#detect-gap');
+const detectGapValue = requireElement<HTMLOutputElement>('#detect-gap-value');
 const traceAssist = requireElement<HTMLElement>('#trace-assist');
 const semanticDraftHelp = requireElement<HTMLElement>('#semantic-draft-help');
 const mediaAssetState = requireElement<HTMLElement>('#media-asset-state');
@@ -284,6 +307,7 @@ const mediaAssetSummary = requireElement<HTMLElement>('#media-asset-summary');
 const chooseMediaAsset = requireElement<HTMLButtonElement>('#choose-media-asset');
 const stopMediaPlacement = requireElement<HTMLButtonElement>('#stop-media-placement');
 const mediaAssetLibrary = requireElement<HTMLElement>('#media-asset-library');
+const builtinIconLibrary = requireElement<HTMLElement>('#builtin-icon-library');
 const showAllLayers = requireElement<HTMLButtonElement>('#show-all-layers');
 const hideAllLayers = requireElement<HTMLButtonElement>('#hide-all-layers');
 const objectCount = requireElement<HTMLElement>('#object-count');
@@ -302,6 +326,15 @@ const defaultRouteRadiusInput = requireElement<HTMLInputElement>('#default-route
 const defaultRouteAnimationInput = requireElement<HTMLSelectElement>('#default-route-animation');
 const defaultRouteSpeedInput = requireElement<HTMLInputElement>('#default-route-speed');
 const defaultRouteSpeedValue = requireElement<HTMLOutputElement>('#default-route-speed-value');
+const cursorPosition = requireElement<HTMLOutputElement>('#cursor-position');
+const projectLanguageList = requireElement<HTMLElement>('#project-language-list');
+const projectLanguageCode = requireElement<HTMLInputElement>('#project-language-code');
+const projectLanguageLabel = requireElement<HTMLInputElement>('#project-language-label');
+const projectLanguageAdd = requireElement<HTMLButtonElement>('#project-language-add');
+const projectCategoryList = requireElement<HTMLElement>('#project-category-list');
+const projectCategoryName = requireElement<HTMLInputElement>('#project-category-name');
+const projectCategoryAdd = requireElement<HTMLButtonElement>('#project-category-add');
+const randomizeLocationColors = requireElement<HTMLButtonElement>('#randomize-location-colors');
 
 let sourceImage: HTMLImageElement | undefined;
 let sourcePixels: ImageData | undefined;
@@ -337,7 +370,7 @@ let simulatedRoute: ReturnType<WayfindingGraph['route']>;
 let viewMode: '2d' | '3d' = '2d';
 let workspaceMode: WorkspaceMode = 'map';
 let pendingMediaAssetId: string | undefined;
-let draggedSemantic: { elementId: string; vertexIndex?: number } | undefined;
+let draggedSemantic: DraggedSemantic | undefined;
 let draggedDoorRotation: DraggedDoorRotation | undefined;
 let dragHistoryState: HistoryState | undefined;
 let dragMutated = false;
@@ -463,6 +496,25 @@ const graphDocument = (): WayfindingGraphDocument => {
 const currentFloor = (): WayfindingStudioFloor => studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === currentFloorId) ?? studioProject.floors[0];
 const currentElements = (): WayfindingStudioElement[] => currentFloor().elements;
 const semanticElement = (): WayfindingStudioElement | undefined => currentElements().find((element: WayfindingStudioElement): boolean => element.id === selectedSemanticId);
+const removeRedundantRoutePoints = (points: WayfindingPoint[]): WayfindingPoint[] => {
+	const result: WayfindingPoint[] = [];
+
+	for (const point of points) {
+		const previous: WayfindingPoint | undefined = result[result.length - 1];
+		if (previous && Math.hypot(previous.x - point.x, previous.y - point.y) < 0.5) continue;
+		result.push(point);
+
+		while (result.length >= 3) {
+			const left: WayfindingPoint = result[result.length - 3];
+			const middle: WayfindingPoint = result[result.length - 2];
+			const right: WayfindingPoint = result[result.length - 1];
+			if (distanceToSegment(middle, left, right) > 0.5) break;
+			result.splice(result.length - 2, 1);
+		}
+	}
+
+	return result;
+};
 const simulatedRoutePoints = (): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = simulatedRoute?.path
 		.filter((routePoint): boolean => routePoint.levelId === currentFloorId)
@@ -473,12 +525,10 @@ const simulatedRoutePoints = (): WayfindingPoint[] => {
 
 			return result;
 		}, []) ?? [];
-	const generatedRoute: boolean = simulatedRoute?.edgeIds.every((edgeId: string): boolean =>
-		edgeId.startsWith('centerline:') || edgeId.startsWith('approach:')
-	) ?? false;
-	const routeClearance: number = Math.max(cellSize() * 1.5, projectDefaults().route.lineWidth * 1.25);
 
-	return generatedRoute && points.length > 2 && mask.length > 0 ? simplifyContainedGeometry(points, routeClearance) : points;
+	// Keep the preview on the authored graph. Simplifying across edge boundaries can create
+	// a visually shorter line that was never part of the generated or reviewed network.
+	return removeRedundantRoutePoints(points);
 };
 const scene3d = new WayfindingScene3d(stage3dHost, {
 	onSelectElement: (elementId: string): void => {
@@ -516,6 +566,96 @@ const rememberCategory = (category: string): void => {
 	if (!normalized) return;
 	studioProject.categories = Array.from(new Set([...(studioProject.categories ?? []), normalized]))
 		.sort((left: string, right: string): number => left.localeCompare(right));
+};
+
+const projectLanguages = (): WayfindingStudioLanguage[] => {
+	const languages: WayfindingStudioLanguage[] = studioProject.languages?.length
+		? studioProject.languages
+		: [{ code: 'en', label: 'English' }];
+	studioProject.languages = languages;
+	if (!studioProject.defaultLanguage || !languages.some((language: WayfindingStudioLanguage): boolean => language.code === studioProject.defaultLanguage)) {
+		studioProject.defaultLanguage = languages[0].code;
+	}
+
+	return languages;
+};
+
+const renderProjectCollections = (): void => {
+	const languages: WayfindingStudioLanguage[] = projectLanguages();
+	projectLanguageList.replaceChildren(...languages.map((language: WayfindingStudioLanguage): HTMLElement => {
+		const row: HTMLDivElement = document.createElement('div');
+		const identity: HTMLDivElement = document.createElement('div');
+		const code: HTMLElement = document.createElement('code');
+		const label: HTMLSpanElement = document.createElement('span');
+		const actions: HTMLDivElement = document.createElement('div');
+		const makeDefault: HTMLButtonElement = document.createElement('button');
+		const remove: HTMLButtonElement = document.createElement('button');
+		const isDefault: boolean = language.code === studioProject.defaultLanguage;
+		row.className = 'settings-list-row';
+		row.dataset.default = String(isDefault);
+		code.textContent = language.code;
+		label.textContent = language.label;
+		identity.append(code, label);
+		makeDefault.type = 'button';
+		makeDefault.className = 'text-action';
+		makeDefault.textContent = isDefault ? 'Default' : 'Make default';
+		makeDefault.disabled = isDefault;
+		makeDefault.addEventListener('click', (): void => {
+			const before: HistoryState = captureHistoryState();
+			studioProject.defaultLanguage = language.code;
+			touchWayfindingStudioProject(studioProject);
+			recordHistory(before);
+			renderStudioControls();
+			renderMetadataEditor();
+		});
+		remove.type = 'button';
+		remove.className = 'text-action danger-text';
+		remove.textContent = 'Remove';
+		remove.disabled = languages.length === 1 || isDefault;
+		remove.title = isDefault ? 'Choose another default language before removing this one.' : '';
+		remove.addEventListener('click', (): void => {
+			const before: HistoryState = captureHistoryState();
+			studioProject.languages = projectLanguages().filter((candidate: WayfindingStudioLanguage): boolean => candidate.code !== language.code);
+			for (const destination of destinationRows()) {
+				if (!destination.translations) continue;
+				delete destination.translations[language.code];
+				if (Object.keys(destination.translations).length === 0) delete destination.translations;
+			}
+			touchWayfindingStudioProject(studioProject);
+			recordHistory(before);
+			renderStudioControls();
+			renderMetadataEditor();
+		});
+		actions.append(makeDefault, remove);
+		row.append(identity, actions);
+
+		return row;
+	}));
+
+	projectCategoryList.replaceChildren(...projectCategories().map((category: string): HTMLElement => {
+		const row: HTMLDivElement = document.createElement('div');
+		const label: HTMLSpanElement = document.createElement('span');
+		const remove: HTMLButtonElement = document.createElement('button');
+		const usageCount: number = destinationRows().filter((destination: DestinationRow): boolean => destination.category === category).length;
+		row.className = 'settings-list-row';
+		label.textContent = usageCount > 0 ? `${category} (${usageCount})` : category;
+		remove.type = 'button';
+		remove.className = 'text-action danger-text';
+		remove.textContent = 'Remove';
+		remove.addEventListener('click', (): void => {
+			if (usageCount > 0 && !window.confirm(`Remove "${category}" from the category list and ${usageCount} destination${usageCount === 1 ? '' : 's'}?`)) return;
+			const before: HistoryState = captureHistoryState();
+			studioProject.categories = (studioProject.categories ?? []).filter((candidate: string): boolean => candidate !== category);
+			for (const destination of destinationRows()) if (destination.category === category) delete destination.category;
+			touchWayfindingStudioProject(studioProject);
+			recordHistory(before);
+			renderStudioControls();
+			renderMetadataEditor();
+		});
+		row.append(label, remove);
+
+		return row;
+	}));
 };
 
 const portableProjectBaseName = (): string => {
@@ -571,6 +711,7 @@ const renderDrawingMode = (): void => {
 			: 'Tap each corner. Finish after at least three points.';
 	traceAssist.hidden = !lasso;
 	snapRadiusInput.disabled = !snapToEdgesInput.checked || !lasso;
+	detectGapControl.hidden = !smart;
 };
 
 const renderMediaAssetState = (): void => {
@@ -602,6 +743,39 @@ const renderMediaAssetState = (): void => {
 		});
 		mediaAssetLibrary.append(button);
 	}
+	builtinIconLibrary.replaceChildren(...BUILTIN_MAP_ICONS.map((icon: BuiltinMapIcon): HTMLButtonElement => {
+		const button: HTMLButtonElement = document.createElement('button');
+		const preview: HTMLImageElement = document.createElement('img');
+		const label: HTMLSpanElement = document.createElement('span');
+		button.type = 'button';
+		button.className = 'builtin-icon';
+		button.title = `Place ${icon.label}`;
+		preview.src = icon.dataUrl;
+		preview.alt = '';
+		label.textContent = icon.label;
+		button.append(preview, label);
+		button.addEventListener('click', (): void => {
+			const assetId = `builtin:${icon.id}`;
+			if (!studioProject.assets.some((candidate: WayfindingStudioAsset): boolean => candidate.id === assetId)) {
+				studioProject.assets.push({
+					dataUrl: icon.dataUrl,
+					id: assetId,
+					kind: 'icon',
+					mimeType: 'image/svg+xml',
+					name: icon.label,
+					naturalHeight: 64,
+					naturalWidth: 64
+				});
+			}
+			pendingMediaAssetId = assetId;
+			activateTool('icon');
+			renderMediaAssetState();
+			scheduleAutosave();
+			coverageStatus.textContent = `${icon.label} is ready. Click the map to place copies.`;
+		});
+
+		return button;
+	}));
 };
 
 const setAutosaveStatus = (label: string, state: 'ready' | 'saving' | 'saved' | 'recovery' | 'error', title: string): void => {
@@ -615,10 +789,19 @@ let noticeTimer: number | undefined;
 const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning'): void => {
 	studioNotice.textContent = message;
 	studioNotice.dataset.kind = kind;
+	studioNotice.title = 'Click to dismiss';
 	studioNotice.hidden = false;
 	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
-	noticeTimer = window.setTimeout((): void => { studioNotice.hidden = true; }, kind === 'error' ? 14_000 : 10_000);
+	noticeTimer = kind === 'warning'
+		? window.setTimeout((): void => { studioNotice.hidden = true; }, 10_000)
+		: undefined;
 };
+
+studioNotice.addEventListener('click', (): void => {
+	studioNotice.hidden = true;
+	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
+	noticeTimer = undefined;
+});
 
 const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
 	simulatedRoute = undefined;
@@ -750,14 +933,23 @@ async function persistAutosave(force = false): Promise<void> {
 	const record: AutosaveRecord = {
 		currentFloorId,
 		id: 'latest',
+		openedProjectFileName,
 		project: cloneStudioProject(studioProject),
+		projectFileHandle,
 		savedAt
 	};
 	setAutosaveStatus('SAVING...', 'saving', 'Saving a local recovery draft in this browser.');
 	try {
 		const database: IDBDatabase = autosaveDatabase;
 		autosaveWrite = autosaveWrite.catch((): void => undefined).then(async (): Promise<void> => {
-			await writeAutosaveRecord(database, record);
+			try {
+				await writeAutosaveRecord(database, record);
+			} catch (error) {
+				if (!(error instanceof DOMException) || error.name !== 'DataCloneError' || !record.projectFileHandle) throw error;
+				const portableRecord: AutosaveRecord = { ...record };
+				delete portableRecord.projectFileHandle;
+				await writeAutosaveRecord(database, portableRecord);
+			}
 		});
 		await autosaveWrite;
 		autosaveSnapshot = snapshot;
@@ -1158,6 +1350,27 @@ const renderProjectAssessment = (): void => {
 	projectAssessment.dataset.targetSatisfied = String(assessment.targetSatisfied);
 };
 
+const routeDestinationAvailability = (node: WayfindingNode): RouteDestinationAvailability => {
+	const destination: DestinationRow | undefined = destinationRows().find((row: DestinationRow): boolean => row.id === node.locationId);
+	if (destination?.routeable === false) return { available: false, reason: 'routing disabled' };
+	const floor: WayfindingStudioFloor | undefined = studioProject.floors.find((candidate: WayfindingStudioFloor): boolean => candidate.id === node.levelId);
+	const element: WayfindingStudioElement | undefined = floor?.elements.find((candidate: WayfindingStudioElement): boolean =>
+		candidate.id === node.semanticElementId
+		|| ((candidate.type === 'location' || candidate.type === 'poi') && candidate.destinationId === node.locationId)
+	);
+	if (element?.type === 'location') {
+		const hasLinkedDoor: boolean = Boolean(floor?.elements.some((candidate: WayfindingStudioElement): boolean =>
+			candidate.type === 'door' && candidate.locationId === element.id
+		));
+		const hasAuthoredRouteEntry: boolean = studioProject.graph.edges.some((edge: WayfindingEdge): boolean =>
+			edge.from === node.id || edge.to === node.id
+		);
+		if (!hasLinkedDoor && !hasAuthoredRouteEntry) return { available: false, reason: 'needs linked door' };
+	}
+
+	return { available: true };
+};
+
 const renderRouteSimulator = (): void => {
 	const origins: WayfindingStudioOriginElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioOriginElement[] => floor.elements.filter((element: WayfindingStudioElement): element is WayfindingStudioOriginElement => element.type === 'origin'));
 	const locationNodes: WayfindingNode[] = studioProject.graph.nodes.filter((node: WayfindingNode): boolean => node.kind === 'location' && Boolean(node.locationId));
@@ -1183,12 +1396,19 @@ const renderRouteSimulator = (): void => {
 	routeDestination.replaceChildren(...locationNodes.map((node: WayfindingNode): HTMLOptionElement => {
 		const option: HTMLOptionElement = document.createElement('option');
 		const destination = studioProject.destinations.find((row): boolean => row.id === node.locationId);
+		const availability: RouteDestinationAvailability = routeDestinationAvailability(node);
 		option.value = node.id;
-		option.textContent = `${destination?.name ?? node.locationId} (${node.levelId})`;
+		option.textContent = `${destination?.name ?? node.locationId} (${node.levelId})${availability.reason ? ` - ${availability.reason}` : ''}`;
+		option.disabled = !availability.available;
 		return option;
 	}));
 	if (Array.from(routeStart.options).some((option): boolean => option.value === previousStart)) routeStart.value = previousStart;
-	if (Array.from(routeDestination.options).some((option): boolean => option.value === previousDestination)) routeDestination.value = previousDestination;
+	if (Array.from(routeDestination.options).some((option): boolean => option.value === previousDestination && !option.disabled)) {
+		routeDestination.value = previousDestination;
+	} else {
+		const firstAvailable: HTMLOptionElement | undefined = Array.from(routeDestination.options).find((option): boolean => !option.disabled);
+		routeDestination.value = firstAvailable?.value ?? '';
+	}
 	const setupItems: Array<[boolean, string, string]> = [
 		[hasOrigin, 'Start point', hasOrigin ? 'You are here is placed' : 'Add You are here'],
 		[hasDestination, 'Destination', hasDestination ? 'Routeable destination exists' : 'Add a room or point of interest'],
@@ -1351,6 +1571,7 @@ const renderStudioControls = (): void => {
 	renderProjectContext();
 	renderMediaAssetState();
 	syncProjectDefaultControls();
+	renderProjectCollections();
 	renderObjectExplorer();
 };
 
@@ -1810,7 +2031,33 @@ const renderMetadataEditor = (): void => {
 	destinationMapNumber.value = stringValue(row.mapNumber);
 	destinationId.value = row.id;
 	destinationName.value = row.name;
-	destinationEnglishName.value = stringValue(row.englishName);
+	const previousTranslationLanguage: string = destinationLanguage.value;
+	const translationLanguages: WayfindingStudioLanguage[] = projectLanguages()
+		.filter((language: WayfindingStudioLanguage): boolean => language.code !== studioProject.defaultLanguage);
+	destinationLanguage.replaceChildren(...translationLanguages.map((language: WayfindingStudioLanguage): HTMLOptionElement => {
+		const option: HTMLOptionElement = document.createElement('option');
+		option.value = language.code;
+		option.textContent = `${language.label} (${language.code})`;
+
+		return option;
+	}));
+	if (translationLanguages.some((language: WayfindingStudioLanguage): boolean => language.code === previousTranslationLanguage)) {
+		destinationLanguage.value = previousTranslationLanguage;
+	}
+	const translationCode: string | undefined = destinationLanguage.value || translationLanguages[0]?.code;
+	const translation: WayfindingStudioTranslation | undefined = translationCode ? row.translations?.[translationCode] : undefined;
+	destinationLanguage.disabled = translationLanguages.length === 0;
+	destinationTranslatedName.disabled = translationLanguages.length === 0;
+	destinationTranslatedDescription.disabled = translationLanguages.length === 0;
+	destinationTranslatedName.placeholder = translationLanguages.length === 0 ? 'Add another project language first' : '';
+	destinationTranslatedDescription.placeholder = translationLanguages.length === 0 ? 'Add another project language first' : '';
+	destinationTranslatedName.value = translation?.name ?? '';
+	destinationTranslatedDescription.value = translation?.description ?? '';
+	const categories: string[] = projectCategories();
+	destinationCategory.replaceChildren(
+		new Option('No category', ''),
+		...categories.map((category: string): HTMLOptionElement => new Option(category, category))
+	);
 	destinationCategory.value = stringValue(row.category);
 	destinationDescription.value = stringValue(row.description);
 	destinationHours.value = stringValue(row.hours);
@@ -1833,7 +2080,23 @@ const updateSelectedDestination = (field: keyof DestinationRow, value: unknown):
 
 		if (selectedOption) selectedOption.textContent = [stringValue(row.mapNumber), row.name].filter(Boolean).join(' - ');
 	}
-	clearSimulatedRoute('Destination details changed. Simulate the route again.');
+	touchWayfindingStudioProject(studioProject);
+	scheduleAutosave();
+};
+
+const updateSelectedTranslation = (field: keyof WayfindingStudioTranslation, value: string): void => {
+	const row: DestinationRow | undefined = selectedDestination();
+	const languageCode: string = destinationLanguage.value;
+	if (!row || !languageCode) return;
+	row.translations ??= {};
+	row.translations[languageCode] ??= {};
+	if (value.trim()) row.translations[languageCode][field] = value;
+	else {
+		delete row.translations[languageCode][field];
+		if (Object.keys(row.translations[languageCode]).length === 0) delete row.translations[languageCode];
+		if (Object.keys(row.translations).length === 0) delete row.translations;
+	}
+	touchWayfindingStudioProject(studioProject);
 	scheduleAutosave();
 };
 
@@ -2083,6 +2346,7 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | unde
 	const queue: Array<[number, number]> = [[seedColumn, seedRow]];
 	queued[seedRow * columns + seedColumn] = 1;
 	const threshold: number = Math.max(8, tolerance());
+	const gapCells: number = Math.max(0, Math.ceil(Number(detectGapInput.value) / gridSize));
 
 	for (let cursor = 0; cursor < queue.length; cursor += 1) {
 		const [column, row] = queue[cursor];
@@ -2096,6 +2360,32 @@ const detectFlatRegionBoundary = (point: WayfindingPoint): DetectedRegion | unde
 			if (queued[nextIndex] === 1) continue;
 			queued[nextIndex] = 1;
 			queue.push([nextColumn, nextRow]);
+		}
+		if (gapCells === 0) continue;
+		for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as Array<[number, number]>) {
+			const immediateColumn: number = column + dx;
+			const immediateRow: number = row + dy;
+			if (immediateColumn < 0 || immediateRow < 0 || immediateColumn >= columns || immediateRow >= rows) continue;
+			const immediateColor = pixelColorAt((immediateColumn + 0.5) * gridSize, (immediateRow + 0.5) * gridSize);
+			if (immediateColor && colorDistance(immediateColor, seedColor) <= threshold) continue;
+			for (let distance = 2; distance <= gapCells + 1; distance += 1) {
+				const targetColumn: number = column + dx * distance;
+				const targetRow: number = row + dy * distance;
+				if (targetColumn < 0 || targetRow < 0 || targetColumn >= columns || targetRow >= rows) break;
+				const targetColor = pixelColorAt((targetColumn + 0.5) * gridSize, (targetRow + 0.5) * gridSize);
+				if (!targetColor || colorDistance(targetColor, seedColor) > threshold) continue;
+				for (let bridge = 1; bridge <= distance; bridge += 1) {
+					const bridgeColumn: number = column + dx * bridge;
+					const bridgeRow: number = row + dy * bridge;
+					const bridgeIndex: number = bridgeRow * columns + bridgeColumn;
+					region[bridgeIndex] = 1;
+					if (queued[bridgeIndex] === 0) {
+						queued[bridgeIndex] = 1;
+						queue.push([bridgeColumn, bridgeRow]);
+					}
+				}
+				break;
+			}
 		}
 	}
 
@@ -2498,6 +2788,13 @@ function routeToSemanticElement(elementId: string): boolean {
 	);
 	if (!destinationNode) {
 		routeResult.textContent = 'This destination has no route entrance yet. Add or link a door in Route edit.';
+		return false;
+	}
+	const availability: RouteDestinationAvailability = routeDestinationAvailability(destinationNode);
+	if (!availability.available) {
+		routeResult.textContent = availability.reason === 'needs linked door'
+			? 'This room is not route-ready. Add a door at its public entrance and link it to the room in Map edit.'
+			: 'Routing is disabled for this destination in its public details.';
 		return false;
 	}
 	const matchingOption: HTMLOptionElement | undefined = Array.from(routeDestination.options).find((option: HTMLOptionElement): boolean => option.value === destinationNode.id);
@@ -3092,8 +3389,15 @@ const renderReview = (): void => {
 	const selected: WayfindingEdge | undefined = edges.find((edge: WayfindingEdge): boolean => edge.id === selectedEdgeId);
 
 	maskStatus.textContent = !hasWalkableMask
-		? project.guidance.targetMode === 'route' ? 'NO MASK' : 'MASK OPTIONAL'
-		: maskReviewStatus === 'confirmed' ? 'MASK CONFIRMED' : 'MASK NEEDS REVIEW';
+		? project.guidance.targetMode === 'route' ? 'NO PEDESTRIAN AREA' : 'PEDESTRIAN AREA OPTIONAL'
+		: maskReviewStatus === 'confirmed' ? 'PEDESTRIAN AREA READY' : 'PEDESTRIAN AREA DRAFT';
+	maskStatus.title = !hasWalkableMask
+		? project.guidance.targetMode === 'route'
+			? 'Draw a walkable area before building a routed map.'
+			: 'Highlight-only projects do not require a walkable area.'
+		: maskReviewStatus === 'confirmed'
+			? 'The authored pedestrian area has been reviewed.'
+			: 'The pedestrian area is usable for editing but still needs review before routed delivery.';
 	maskStatus.dataset.confirmed = String(hasWalkableMask && maskReviewStatus === 'confirmed');
 	edgeSummary.textContent = `${edges.length} route segment${edges.length === 1 ? '' : 's'}`;
 	edgeFailures.textContent = !hasWalkableMask
@@ -3103,7 +3407,7 @@ const renderReview = (): void => {
 		? `${edges.length - invalidEdgeIds.size}/${edges.length} route segments contained`
 		: sourceImage
 			? 'Background loaded; author semantic layers'
-			: `${currentElements().length} semantic element(s) on ${currentFloor().name}`;
+			: `${currentElements().length} items / ${currentFloor().name}`;
 
 	edgeList.replaceChildren(...edges.map((edge: WayfindingEdge): HTMLButtonElement => {
 		const button: HTMLButtonElement = document.createElement('button');
@@ -3386,7 +3690,7 @@ const pointForMaskIndex = (index: number): WayfindingPoint => ({
 	y: (Math.floor(index / maskColumns) + 0.5) * cellSize()
 });
 
-const maskNeighborIndices = (index: number): number[] => {
+const maskNeighborIndices = (index: number, source: Uint8Array = mask): number[] => {
 	const column: number = index % maskColumns;
 	const row: number = Math.floor(index / maskColumns);
 	const neighbors: number[] = [];
@@ -3396,18 +3700,14 @@ const maskNeighborIndices = (index: number): number[] => {
 		const nextRow: number = row + rowOffset;
 		if (nextColumn < 0 || nextRow < 0 || nextColumn >= maskColumns || nextRow >= maskRows) continue;
 		const nextIndex: number = maskIndex(nextColumn, nextRow);
-		if (mask[nextIndex] === 1) neighbors.push(nextIndex);
+		if (source[nextIndex] === 1) neighbors.push(nextIndex);
 	}
 
 	return neighbors;
 };
 
-const connectAnchorCellToWalkableArea = (anchorIndex: number, originalMask: Uint8Array): void => {
-	if (originalMask[anchorIndex] === 1) {
-		mask[anchorIndex] = 1;
-		return;
-	}
-
+const nearestWalkableIndex = (anchorIndex: number, source: Uint8Array): number | undefined => {
+	if (source[anchorIndex] === 1) return anchorIndex;
 	const anchorColumn: number = anchorIndex % maskColumns;
 	const anchorRow: number = Math.floor(anchorIndex / maskColumns);
 	let nearestIndex: number | undefined;
@@ -3420,7 +3720,7 @@ const connectAnchorCellToWalkableArea = (anchorIndex: number, originalMask: Uint
 			const row: number = anchorRow + rowOffset;
 			if (column < 0 || row < 0 || column >= maskColumns || row >= maskRows) continue;
 			const index: number = maskIndex(column, row);
-			if (originalMask[index] !== 1) continue;
+			if (source[index] !== 1) continue;
 			const distance: number = columnOffset * columnOffset + rowOffset * rowOffset;
 			if (distance >= nearestDistance) continue;
 			nearestDistance = distance;
@@ -3428,21 +3728,11 @@ const connectAnchorCellToWalkableArea = (anchorIndex: number, originalMask: Uint
 		}
 	}
 
-	if (nearestIndex === undefined) return;
-	const targetColumn: number = nearestIndex % maskColumns;
-	const targetRow: number = Math.floor(nearestIndex / maskColumns);
-	const steps: number = Math.max(Math.abs(targetColumn - anchorColumn), Math.abs(targetRow - anchorRow), 1);
-
-	for (let step = 0; step <= steps; step += 1) {
-		const ratio: number = step / steps;
-		const column: number = Math.round(anchorColumn + (targetColumn - anchorColumn) * ratio);
-		const row: number = Math.round(anchorRow + (targetRow - anchorRow) * ratio);
-		mask[maskIndex(column, row)] = 1;
-	}
+	return nearestIndex;
 };
 
-const shortestMaskPathToSkeleton = (startIndex: number, skeleton: Uint8Array): number[] | undefined => {
-	if (mask[startIndex] !== 1) return undefined;
+const shortestMaskPathToSkeleton = (startIndex: number, skeleton: Uint8Array, source: Uint8Array): number[] | undefined => {
+	if (source[startIndex] !== 1) return undefined;
 	const queue: number[] = [startIndex];
 	const visited = new Set<number>([startIndex]);
 	const previous = new Map<number, number>();
@@ -3455,7 +3745,7 @@ const shortestMaskPathToSkeleton = (startIndex: number, skeleton: Uint8Array): n
 			break;
 		}
 
-		for (const neighbor of maskNeighborIndices(index)) {
+		for (const neighbor of maskNeighborIndices(index, source)) {
 			if (visited.has(neighbor)) continue;
 			visited.add(neighbor);
 			previous.set(neighbor, index);
@@ -3634,25 +3924,24 @@ const generateCenterlineGraph = (): boolean => {
 	for (const anchorNode of anchorNodes) {
 		const column: number = Math.max(0, Math.min(maskColumns - 1, Math.floor(anchorNode.x / cellSize())));
 		const row: number = Math.max(0, Math.min(maskRows - 1, Math.floor(anchorNode.y / cellSize())));
-		const index: number = maskIndex(column, row);
-		anchorIndexById.set(anchorNode.id, index);
-		connectAnchorCellToWalkableArea(index, authoredMask);
+		const index: number | undefined = nearestWalkableIndex(maskIndex(column, row), authoredMask);
+		if (index !== undefined) anchorIndexById.set(anchorNode.id, index);
 	}
 	persistCurrentMask();
-	const skeleton: Uint8Array = skeletonizeWalkableMask(mask, maskColumns, maskRows);
+	const skeleton: Uint8Array = skeletonizeWalkableMask(authoredMask, maskColumns, maskRows);
 	const attachmentIndices = new Set<number>();
 	const attachmentByAnchorId = new Map<string, number>();
 	const connectorGeometryByAnchorId = new Map<string, WayfindingPoint[]>();
 
 	for (const anchorNode of anchorNodes) {
 		const anchorIndex: number | undefined = anchorIndexById.get(anchorNode.id);
-		const path: number[] | undefined = anchorIndex === undefined ? undefined : shortestMaskPathToSkeleton(anchorIndex, skeleton);
+		const path: number[] | undefined = anchorIndex === undefined ? undefined : shortestMaskPathToSkeleton(anchorIndex, skeleton, authoredMask);
 		if (!path?.length) continue;
 		const attachmentIndex: number = path[path.length - 1];
 		const cellPath: WayfindingPoint[] = path.map(pointForMaskIndex);
 		const geometry: WayfindingPoint[] = simplifyContainedGeometry([
 			{ x: anchorNode.x, y: anchorNode.y },
-			...cellPath.slice(1)
+			...cellPath
 		]);
 		attachmentIndices.add(attachmentIndex);
 		attachmentByAnchorId.set(anchorNode.id, attachmentIndex);
@@ -3667,7 +3956,7 @@ const generateCenterlineGraph = (): boolean => {
 		return false;
 	}
 
-	const network = extractSkeletonNetwork(mask, maskColumns, maskRows, attachmentIndices);
+	const network = extractSkeletonNetwork(authoredMask, maskColumns, maskRows, attachmentIndices);
 	const nodeIdByIndex = new Map<number, string>();
 	const generatedNodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
 		const point: WayfindingPoint = pointForMaskIndex(index);
@@ -3747,13 +4036,40 @@ const generateCenterlineGraph = (): boolean => {
 	syncStudioGraph();
 	recordHistory(before);
 	const linkedCopy: string = linkedDoors > 0 ? ` Auto-linked ${linkedDoors} nearby door${linkedDoors === 1 ? '' : 's'}.` : '';
-	coverageStatus.textContent = `Built ${retainedEdges.length} route segment${retainedEdges.length === 1 ? '' : 's'} connecting the start and destinations.${linkedCopy}`;
-	routeResult.textContent = 'Routes are ready to simulate. They remain proposed until the walkable area is reviewed.';
+	const routeableLocations: WayfindingStudioPolygonElement[] = currentElements().filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement =>
+		element.type === 'location'
+		&& Boolean(element.destinationId)
+		&& destinationRows().find((destination: DestinationRow): boolean => destination.id === element.destinationId)?.routeable !== false
+	);
+	const unlinkedLocations: WayfindingStudioPolygonElement[] = routeableLocations.filter((location: WayfindingStudioPolygonElement): boolean =>
+		!currentElements().some((element: WayfindingStudioElement): boolean => element.type === 'door' && element.locationId === location.id)
+	);
+	const authoringCopy: string = unlinkedLocations.length > 0
+		? ` ${unlinkedLocations.length} room${unlinkedLocations.length === 1 ? '' : 's'} still need${unlinkedLocations.length === 1 ? 's' : ''} a linked door.`
+		: '';
+	coverageStatus.textContent = `Built ${retainedEdges.length} route segment${retainedEdges.length === 1 ? '' : 's'} connecting the start and ${routeableLocations.length - unlinkedLocations.length}/${routeableLocations.length} routeable rooms.${linkedCopy}${authoringCopy}`;
+	routeResult.textContent = `Routes are ready to simulate for ${routeableLocations.length - unlinkedLocations.length}/${routeableLocations.length} routeable rooms.${authoringCopy} They remain proposed until the walkable area is reviewed.`;
 	renderReview();
 	renderStudioControls();
 	draw();
 
 	return true;
+};
+
+const requestRouteRegeneration = (): boolean => {
+	const currentGraph: WayfindingGraphDocument = graph ?? studioProject.graph;
+	const currentNodeIds = new Set(currentGraph.nodes
+		.filter((node: WayfindingNode): boolean => node.levelId === currentFloorId)
+		.map((node: WayfindingNode): string => node.id));
+	const currentEdges = currentGraph.edges.filter((edge: WayfindingEdge): boolean =>
+		currentNodeIds.has(edge.from) || currentNodeIds.has(edge.to)
+	);
+
+	if (currentEdges.length > 0 && !window.confirm(
+		`Rebuild routes for ${currentFloor().name}? This replaces ${currentEdges.length} existing route segment${currentEdges.length === 1 ? '' : 's'}, including manual adjustments.`
+	)) return false;
+
+	return generateCenterlineGraph();
 };
 
 const loadJsonFile = async <T>(input: HTMLInputElement): Promise<T | undefined> => {
@@ -3855,7 +4171,8 @@ const initializeAutosave = async (): Promise<void> => {
 		const record: AutosaveRecord | undefined = await readAutosaveRecord(autosaveDatabase);
 		if (record) {
 			pendingRecovery = record;
-			localRecoverySummary.textContent = `${record.project.name}, saved ${new Date(record.savedAt).toLocaleString()}. Restore it or discard it before new edits are autosaved.`;
+			const source = record.openedProjectFileName ? ` linked to ${record.openedProjectFileName}` : '';
+			localRecoverySummary.textContent = `${record.project.name}${source}, saved ${new Date(record.savedAt).toLocaleString()}. Restore it or discard it before new edits are autosaved.`;
 			localRecovery.hidden = false;
 			setAutosaveStatus('RECOVERY FOUND', 'recovery', `Unsaved local work from ${new Date(record.savedAt).toLocaleString()} is available.`);
 			return;
@@ -4032,10 +4349,16 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 	syncStudioGraph();
 	const errors = validateWayfindingStudioDelivery(studioProject).filter((issue): boolean => issue.severity === 'error');
 	if (errors.length > 0) {
-		coverageStatus.textContent = `Runtime export blocked: ${errors[0].message}`;
+		const details = errors.slice(0, 4).map((issue, index): string => `${index + 1}. ${issue.message}`).join(' ');
+		const remaining = errors.length > 4 ? ` ${errors.length - 4} more issue${errors.length - 4 === 1 ? '' : 's'} remain.` : '';
+		const message = `Runtime export is blocked. ${details}${remaining}`;
+		coverageStatus.textContent = message;
+		coverageStatus.title = errors.map((issue): string => issue.message).join('\n');
+		showStudioNotice(message, 'error');
 		return;
 	}
 	downloadText(`${portableProjectBaseName()}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
+	showStudioNotice('Runtime bundle exported.');
 });
 requireElement<HTMLButtonElement>('#semantic-finish').addEventListener('click', finishSemanticPolygon);
 requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => {
@@ -4060,6 +4383,69 @@ drawingModeSmart.addEventListener('click', (): void => {
 snapToEdgesInput.addEventListener('change', renderDrawingMode);
 snapRadiusInput.addEventListener('input', (): void => {
 	snapRadiusValue.value = snapRadiusInput.value;
+});
+detectGapInput.addEventListener('input', (): void => {
+	detectGapValue.value = detectGapInput.value;
+});
+projectLanguageAdd.addEventListener('click', (): void => {
+	const code: string = projectLanguageCode.value.trim().toLowerCase().replace(/_/gu, '-');
+	const label: string = projectLanguageLabel.value.trim();
+	if (!/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/u.test(code) || !label) {
+		showStudioNotice('Enter a language code such as en, hu, or fr-ca and a display name.', 'error');
+		return;
+	}
+	if (projectLanguages().some((language: WayfindingStudioLanguage): boolean => language.code === code)) {
+		showStudioNotice(`${code} is already a project language.`, 'error');
+		return;
+	}
+	const before: HistoryState = captureHistoryState();
+	studioProject.languages = [...projectLanguages(), { code, label }];
+	projectLanguageCode.value = '';
+	projectLanguageLabel.value = '';
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	renderStudioControls();
+	renderMetadataEditor();
+});
+projectCategoryAdd.addEventListener('click', (): void => {
+	const category: string = projectCategoryName.value.trim();
+	if (!category) return;
+	const before: HistoryState = captureHistoryState();
+	rememberCategory(category);
+	projectCategoryName.value = '';
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	renderStudioControls();
+	renderMetadataEditor();
+});
+for (const input of [projectLanguageCode, projectLanguageLabel, projectCategoryName]) {
+	input.addEventListener('keydown', (event: KeyboardEvent): void => {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		if (input === projectCategoryName) projectCategoryAdd.click();
+		else projectLanguageAdd.click();
+	});
+}
+randomizeLocationColors.addEventListener('click', (): void => {
+	const locations: WayfindingStudioPolygonElement[] = studioProject.floors.flatMap((floor: WayfindingStudioFloor): WayfindingStudioPolygonElement[] =>
+		floor.elements.filter((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location')
+	);
+	if (locations.length === 0) {
+		showStudioNotice('There are no rooms or areas to recolor yet.');
+		return;
+	}
+	const palette = ['#f4c95d', '#69c3b3', '#f29b7f', '#9ebce3', '#c4d79b', '#c5b1d8', '#f1b75e', '#80b9b0', '#e88777', '#8faed2', '#b4cc8c', '#b99bc7'];
+	const before: HistoryState = captureHistoryState();
+	const offset: number = Math.floor(Math.random() * palette.length);
+	locations.forEach((location: WayfindingStudioPolygonElement, index: number): void => {
+		location.presentation ??= {};
+		location.presentation.fillColor = palette[(index + offset) % palette.length];
+	});
+	touchWayfindingStudioProject(studioProject);
+	recordHistory(before);
+	renderSemanticEditor();
+	draw();
+	showStudioNotice(`Applied distinct colors to ${locations.length} room${locations.length === 1 ? '' : 's'}.`);
 });
 const updateProjectDefaults = (mutate: (defaults: WayfindingStudioProjectDefaults) => void): void => {
 	const before: HistoryState = captureHistoryState();
@@ -4169,8 +4555,8 @@ restoreAutosaveButton.addEventListener('click', async (): Promise<void> => {
 	try {
 		await openStudioProject(record.project, record.currentFloorId);
 		projectOrigin = 'local-recovery';
-		openedProjectFileName = undefined;
-		projectFileHandle = undefined;
+		openedProjectFileName = record.openedProjectFileName;
+		projectFileHandle = record.projectFileHandle;
 		portableSnapshot = undefined;
 		adoptCurrentProjectForAutosave(record.savedAt);
 		coverageStatus.textContent = `Restored local work for ${studioProject.name}`;
@@ -4284,8 +4670,6 @@ destinationSelect.addEventListener('change', (): void => {
 for (const [input, field] of [
 	[destinationMapNumber, 'mapNumber'],
 	[destinationName, 'name'],
-	[destinationEnglishName, 'englishName'],
-	[destinationCategory, 'category'],
 	[destinationDescription, 'description'],
 	[destinationHours, 'hours'],
 	[destinationStatus, 'status']
@@ -4293,6 +4677,16 @@ for (const [input, field] of [
 	input.addEventListener('input', (): void => { updateSelectedDestination(field, input.value); });
 }
 
+destinationCategory.addEventListener('change', (): void => {
+	updateSelectedDestination('category', destinationCategory.value);
+});
+destinationLanguage.addEventListener('change', renderMetadataEditor);
+destinationTranslatedName.addEventListener('input', (): void => {
+	updateSelectedTranslation('name', destinationTranslatedName.value);
+});
+destinationTranslatedDescription.addEventListener('input', (): void => {
+	updateSelectedTranslation('description', destinationTranslatedDescription.value);
+});
 destinationAccessible.addEventListener('change', (): void => {
 	updateSelectedDestination('accessible', destinationAccessible.value === '' ? undefined : destinationAccessible.value === 'true');
 });
@@ -4458,8 +4852,8 @@ cellSizeInput.addEventListener('change', (): void => { resetMaskGrid(); renderRe
 toleranceInput.addEventListener('change', extractConnectedMask);
 requireElement<HTMLButtonElement>('#extract-mask').addEventListener('click', extractConnectedMask);
 requireElement<HTMLButtonElement>('#clear-mask').addEventListener('click', (): void => { colorSamples = []; resetMaskGrid(); renderReview(); draw(); });
-requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', generateCenterlineGraph);
-routeBuildButton.addEventListener('click', generateCenterlineGraph);
+requireElement<HTMLButtonElement>('#generate-centerlines').addEventListener('click', requestRouteRegeneration);
+routeBuildButton.addEventListener('click', requestRouteRegeneration);
 maskConfirmedInput.addEventListener('change', (): void => { maskReviewStatus = maskConfirmedInput.checked ? 'confirmed' : 'proposed'; renderReview(); });
 requireElement<HTMLButtonElement>('#export-mask').addEventListener('click', (): void => {
 	if (!sourceImage || mask.length === 0) return;
@@ -4633,7 +5027,28 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 				? currentVertexIndex ?? nearestSemanticVertex(selected, imagePoint)
 				: undefined;
 			selectedSemanticVertexIndex = vertexIndex;
-			draggedSemantic = { elementId: selected.id, vertexIndex };
+			let grabOffset: WayfindingPoint | undefined;
+			if (vertexIndex === undefined) {
+				if ('geometry' in selected) {
+					const center: WayfindingPoint = selected.geometry.reduce(
+						(sum: WayfindingPoint, vertex: WayfindingPoint): WayfindingPoint => ({
+							x: sum.x + vertex.x / selected.geometry.length,
+							y: sum.y + vertex.y / selected.geometry.length
+						}),
+						{ x: 0, y: 0 }
+					);
+					grabOffset = { x: center.x - imagePoint.x, y: center.y - imagePoint.y };
+				} else {
+					grabOffset = { x: selected.point.x - imagePoint.x, y: selected.point.y - imagePoint.y };
+				}
+			}
+			draggedSemantic = {
+				elementId: selected.id,
+				grabOffset,
+				pointerStart: previousPointer,
+				started: false,
+				vertexIndex
+			};
 			dragHistoryState = captureHistoryState();
 			dragMutated = false;
 		} else selectedSemanticVertexIndex = undefined;
@@ -4656,10 +5071,12 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 });
 
 canvas.addEventListener('pointermove', (event: PointerEvent): void => {
-	if (!pointerDown) return;
-
 	const point: WayfindingPoint = eventPoint(event);
 	const imagePoint: ImagePoint = toImagePoint(point);
+	const floor: WayfindingStudioFloor = currentFloor();
+	const inBounds: boolean = imagePoint.x >= 0 && imagePoint.y >= 0 && imagePoint.x <= floor.width && imagePoint.y <= floor.height;
+	cursorPosition.value = inBounds ? `x ${Math.round(imagePoint.x)}, y ${Math.round(imagePoint.y)}` : 'x -, y -';
+	if (!pointerDown) return;
 
 	if (tool === 'pan') {
 		offsetX += point.x - previousPointer.x;
@@ -4694,19 +5111,36 @@ canvas.addEventListener('pointermove', (event: PointerEvent): void => {
 	} else if (tool === 'select' && draggedSemantic) {
 		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === draggedSemantic?.elementId);
 		if (!element) return;
+		if (!draggedSemantic.started) {
+			if (Math.hypot(point.x - draggedSemantic.pointerStart.x, point.y - draggedSemantic.pointerStart.y) < 4) return;
+			draggedSemantic.started = true;
+		}
 		if ('geometry' in element) {
 			if (draggedSemantic.vertexIndex !== undefined) element.geometry[draggedSemantic.vertexIndex] = { x: imagePoint.x, y: imagePoint.y };
 			else {
 				const center = element.geometry.reduce((sum, vertex): WayfindingPoint => ({ x: sum.x + vertex.x / element.geometry.length, y: sum.y + vertex.y / element.geometry.length }), { x: 0, y: 0 });
-				const dx: number = imagePoint.x - center.x;
-				const dy: number = imagePoint.y - center.y;
+				const target: WayfindingPoint = {
+					x: imagePoint.x + (draggedSemantic.grabOffset?.x ?? 0),
+					y: imagePoint.y + (draggedSemantic.grabOffset?.y ?? 0)
+				};
+				const dx: number = target.x - center.x;
+				const dy: number = target.y - center.y;
 				element.geometry = element.geometry.map((vertex): WayfindingPoint => ({ x: vertex.x + dx, y: vertex.y + dy }));
 			}
-		} else element.point = { x: imagePoint.x, y: imagePoint.y };
+		} else {
+			element.point = {
+				x: imagePoint.x + (draggedSemantic.grabOffset?.x ?? 0),
+				y: imagePoint.y + (draggedSemantic.grabOffset?.y ?? 0)
+			};
+		}
 		element.status = 'proposed';
 		dragMutated = true;
 		draw();
 	}
+});
+
+canvas.addEventListener('pointerleave', (): void => {
+	if (!pointerDown) cursorPosition.value = 'x -, y -';
 });
 
 canvas.addEventListener('pointerup', (): void => {

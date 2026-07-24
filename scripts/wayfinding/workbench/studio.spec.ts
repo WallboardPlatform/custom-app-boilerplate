@@ -62,10 +62,23 @@ const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
 			status: 'proposed',
 			type: 'location'
 		},
+		{
+			destinationId: 'storage-room',
+			floorId: floor.id,
+			geometry: [{ x: 360, y: 180 }, { x: 540, y: 180 }, { x: 540, y: 420 }, { x: 360, y: 420 }],
+			id: 'storage-room-shape',
+			label: 'Storage room',
+			provenance: 'reviewer-authored',
+			status: 'proposed',
+			type: 'location'
+		},
 		{ angle: 90, floorId: floor.id, id: 'meeting-room-door', length: 36, point: { x: 650, y: 300 }, provenance: 'reviewer-authored', status: 'proposed', type: 'door' },
 		{ facingDegrees: 0, floorId: floor.id, id: 'lobby-screen', label: 'Lobby screen', point: { x: 100, y: 300 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'proposed', type: 'origin' }
 	];
-	project.destinations = [{ floor: floor.id, id: 'meeting-room', name: 'Meeting room', routeable: true }];
+	project.destinations = [
+		{ floor: floor.id, id: 'meeting-room', name: 'Meeting room', routeable: true },
+		{ floor: floor.id, id: 'storage-room', name: 'Storage room', routeable: true }
+	];
 	synchronizeWayfindingStudioGraph(project);
 
 	return project;
@@ -120,7 +133,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.12');
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.13');
 	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview']);
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
@@ -356,10 +369,15 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
 	await page.locator('#workspace-route-edit').click();
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
+	await expect(page.locator('#route-destination option')).toHaveCount(2);
+	await expect(page.locator('#route-destination option', { hasText: 'Storage room' })).toHaveAttribute('disabled', '');
+	await expect(page.locator('#route-destination option', { hasText: 'Storage room' })).toContainText('needs linked door');
 	await page.locator('#route-build').click();
 	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(0);
 	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
 	await expect(page.locator('#route-result')).toContainText('ready to simulate');
+	await expect(page.locator('#route-result')).toContainText('1/2 routeable rooms');
+	await expect(page.locator('#route-result')).toContainText('1 room still needs a linked door');
 	await page.locator('#workspace-route-preview').click();
 	await expect(page.locator('[data-tool="select"]').first()).toHaveClass(/active/u);
 	await page.locator('#route-simulate').click();
@@ -732,16 +750,35 @@ test('keeps polygon drafts reversible and exposes authored objects with project 
 	await page.locator('.object-item').click();
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 
+	await page.locator('#project-language-code').fill('hu');
+	await page.locator('#project-language-label').fill('Hungarian');
+	await page.locator('#project-language-add').click();
+	await expect(page.locator('#project-language-list')).toContainText('Hungarian');
+	await page.locator('#project-category-name').fill('Visitor services');
+	await page.locator('#project-category-add').click();
+	await expect(page.locator('#project-category-list')).toContainText('Visitor services');
+	await page.locator('#randomize-location-colors').click();
+	await page.locator('.builtin-icon-picker > summary').click();
+	await page.locator('.builtin-icon[title="Place Information"]').click();
+	await expect(page.locator('#media-asset-state')).toContainText('Information stays selected');
+	await canvas.click({ position: { x: 610, y: 360 } });
+
 	const downloadPromise = page.waitForEvent('download');
 	await page.locator('#studio-export-project').click();
 	const download = await downloadPromise;
 	const downloadPath: string = await download.path() as string;
 	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
 	const location = project.floors[0].elements.find((element): element is WayfindingStudioPolygonElement => element.type === 'location');
+	const icon = project.floors[0].elements.find((element): boolean => element.type === 'icon');
 	expect(project.defaults?.location.fillOpacity).toBe(0.58);
 	expect(project.defaults?.location.extrusionHeight).toBe(31);
+	expect(project.languages).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'hu', label: 'Hungarian' })]));
+	expect(project.categories).toContain('Visitor services');
 	expect(location?.presentation?.fillOpacity).toBe(0.58);
 	expect(location?.presentation?.extrusionHeight).toBe(31);
+	expect(location?.presentation?.fillColor).toMatch(/^#[0-9a-f]{6}$/u);
+	expect(icon).toEqual(expect.objectContaining({ assetId: 'builtin:information', type: 'icon' }));
+	expect(project.assets).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'builtin:information', mimeType: 'image/svg+xml' })]));
 	expect(errors).toEqual([]);
 });
 
