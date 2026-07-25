@@ -235,12 +235,15 @@ void test('preserves project languages, categories, and translated destination m
 	assert.equal(bundle.destinations.Destinations.rows[0].translations?.hu?.name, 'Tourinform');
 });
 
-void test('keeps incomplete route drafts editable while blocking runtime export', () => {
+void test('keeps incomplete route drafts editable while reporting concrete runtime defects', () => {
 	const project = createWayfindingStudioProject('route-draft');
 	project.delivery.guidance.targetMode = 'route';
 	assert.equal(parseWayfindingStudioProject(JSON.parse(JSON.stringify(project))).projectId, 'route-draft');
 	assert.deepEqual(validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error'), []);
-	assert.ok(validateWayfindingStudioDelivery(project).some((issue): boolean => issue.code === 'delivery-evidence-blocked'));
+	const issues = validateWayfindingStudioDelivery(project);
+	assert.ok(issues.some((issue): boolean => issue.code === 'missing-route-origin'));
+	assert.ok(issues.some((issue): boolean => issue.code === 'missing-route-destination'));
+	assert.ok(!issues.some((issue): boolean => issue.code === 'delivery-evidence-blocked'));
 });
 
 void test('exports the maintained Veszprem project only in its evidence-supported highlight mode', () => {
@@ -269,7 +272,7 @@ void test('materializes paired transitions and routes across floors', () => {
 	assert.deepEqual(validateWayfindingStudioDelivery(project).filter((issue): boolean => issue.severity === 'error'), []);
 });
 
-void test('blocks route delivery when graph coverage is disconnected or unreviewed', () => {
+void test('blocks route delivery when graph coverage is disconnected without requiring review flags', () => {
 	const project = multiFloorProject();
 	project.graph.edges = project.graph.edges.filter((edge): boolean => edge.id !== 'first-council');
 	const groundEntry = project.graph.edges.find((edge): boolean => edge.id === 'ground-entry');
@@ -278,17 +281,17 @@ void test('blocks route delivery when graph coverage is disconnected or unreview
 	const issues = validateWayfindingStudioDelivery(project);
 	assert.ok(issues.some((issue): boolean => issue.code === 'disconnected-route'));
 	assert.ok(issues.some((issue): boolean => issue.code === 'disconnected-step-free-route'));
-	assert.ok(issues.some((issue): boolean => issue.code === 'unconfirmed-route-edge'));
+	assert.ok(!issues.some((issue): boolean => issue.code === 'unconfirmed-route-edge'));
 });
 
-void test('requires confirmed entrance geometry for routeable room polygons', () => {
+void test('requires entrance geometry for routeable room polygons without requiring review flags', () => {
 	const project = multiFloorProject();
 	project.floors[1].elements = project.floors[1].elements.filter((element): boolean => element.id !== 'council-door');
 	project.floors[0].elements[0].status = 'proposed';
 	synchronizeWayfindingStudioGraph(project);
 	const issues = validateWayfindingStudioDelivery(project);
 	assert.ok(issues.some((issue): boolean => issue.code === 'missing-location-door'));
-	assert.ok(issues.some((issue): boolean => issue.code === 'unconfirmed-route-element'));
+	assert.ok(!issues.some((issue): boolean => issue.code === 'unconfirmed-route-element'));
 });
 
 void test('requires an independently confirmed walkable mask for every routed floor', () => {

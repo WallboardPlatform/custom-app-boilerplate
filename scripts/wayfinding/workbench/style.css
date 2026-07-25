@@ -52,7 +52,6 @@ button {
 }
 
 button:hover:not(:disabled) {
-	position: relative;
 	z-index: 1;
 	border-color: var(--wb-brand);
 	background: var(--wb-brand-soft);
@@ -267,7 +266,6 @@ main {
 	display: grid;
 	height: calc(100% - var(--topbar-height));
 	grid-template-columns: var(--left-panel-width) minmax(420px, 1fr) var(--right-panel-width);
-	transition: grid-template-columns 160ms ease;
 }
 
 body[data-left-panel="closed"] main {
@@ -316,13 +314,6 @@ body[data-workspace="runtime-preview"] .review {
 	padding: 0;
 	font-size: 15px;
 	line-height: 1;
-}
-
-#toggle-left-panel[aria-pressed="false"],
-#toggle-right-panel[aria-pressed="false"] {
-	border-color: var(--wb-brand);
-	background: var(--wb-brand-soft);
-	color: var(--wb-brand-dark);
 }
 
 .controls > section { padding: 16px; border-bottom: 1px solid var(--wb-divider); }
@@ -1218,6 +1209,7 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 
 .stage-shell {
 	position: relative;
+	isolation: isolate;
 	display: flex;
 	min-width: 0;
 	min-height: 0;
@@ -1225,6 +1217,39 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	overflow: hidden;
 	background: #323b39;
 }
+
+.stage-panel-toggle {
+	position: absolute;
+	z-index: 19;
+	top: 50%;
+	display: grid;
+	width: 30px;
+	min-width: 30px;
+	height: 52px;
+	min-height: 52px;
+	padding: 0;
+	border: 1px solid #8c9994;
+	border-radius: 0;
+	background: rgba(250, 252, 251, 0.96);
+	box-shadow: 0 4px 16px rgba(10, 24, 20, 0.2);
+	color: var(--wb-brand-dark);
+	font-size: 14px;
+	line-height: 1;
+	place-items: center;
+	transform: translateY(-50%);
+}
+.stage-panel-toggle-left { left: 8px; }
+.stage-panel-toggle-right { right: 8px; }
+.stage-panel-toggle:hover:not(:disabled) {
+	position: absolute;
+	z-index: 19;
+	border-color: var(--wb-brand);
+	background: var(--wb-brand-soft);
+}
+.stage-panel-toggle:active:not(:disabled) { transform: translateY(-50%); }
+body[data-left-panel="closed"] .stage-panel-toggle-left { left: 8px; }
+body[data-right-panel="closed"] .stage-panel-toggle-right { right: 8px; }
+body[data-workspace="runtime-preview"] .stage-panel-toggle { display: none; }
 
 .studio-notice {
 	position: absolute;
@@ -1261,7 +1286,15 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	font-size: 18px;
 	line-height: 1;
 }
-.studio-notice-dismiss:hover:not(:disabled) { background: rgba(0, 0, 0, 0.06); color: currentColor; }
+.studio-notice .studio-notice-dismiss:hover:not(:disabled) {
+	position: absolute;
+	z-index: auto;
+	top: 7px;
+	right: 7px;
+	border-color: transparent;
+	background: rgba(0, 0, 0, 0.06);
+	color: currentColor;
+}
 .studio-notice[data-kind="error"] { border-color: #b94034; background: #fbe7e4; color: #7f261f; }
 .studio-notice[hidden] { display: none; }
 
@@ -1387,9 +1420,10 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 .runtime-preview-details dt { color: var(--wb-muted); }
 .runtime-preview-details dd { margin: 0; font-weight: 750; overflow-wrap: anywhere; }
 .runtime-preview-details .icon-command {
-	position: relative;
-	float: right;
-	margin: -8px -8px 8px 10px;
+	position: absolute;
+	top: 9px;
+	right: 9px;
+	margin: 0;
 	pointer-events: auto;
 }
 .runtime-preview-photos { display: grid; margin-top: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -1457,6 +1491,8 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 }
 
 #stage {
+	position: relative;
+	z-index: 1;
 	display: none;
 	min-width: 0;
 	min-height: 0;
@@ -1747,6 +1783,35 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	font-size: 11px;
 	font-weight: 750;
 	line-height: 1.35;
+}
+.selected-edge .route-edit-help {
+	margin: 0 0 10px;
+	color: #687571;
+	font-size: 10px;
+	line-height: 1.45;
+}
+.segment-point-actions {
+	display: grid;
+	margin-top: 10px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+.segment-point-actions strong {
+	grid-column: 1 / -1;
+	color: #46534f;
+	font-size: 10px;
+}
+.selected-edge .segment-point-actions button {
+	min-width: 0;
+	margin-top: 0;
+	padding-right: 7px;
+	padding-left: 7px;
+}
+.selected-edge .segment-point-actions button:disabled {
+	border-color: #d5dcda;
+	background: #f4f6f5;
+	color: #9ba5a2;
+	cursor: not-allowed;
 }
 .segment-health { display: grid; margin: 10px 0 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .segment-health div { padding: 8px; border: 1px solid #d4dcd8; background: #fafcfa; }
