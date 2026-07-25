@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import {
 	createWayfindingStudioProject,
 	synchronizeWayfindingStudioGraph,
@@ -153,6 +153,25 @@ test.beforeEach(async ({ page }) => {
 	});
 });
 
+const mapPointAtCanvasPosition = async (canvas: Locator, position: { x: number; y: number }): Promise<{ x: number; y: number }> => canvas.evaluate(
+	(element, canvasPosition): { x: number; y: number } => ({
+		x: (canvasPosition.x - Number(element.dataset.viewOffsetX)) / Number(element.dataset.viewScale),
+		y: (canvasPosition.y - Number(element.dataset.viewOffsetY)) / Number(element.dataset.viewScale)
+	}),
+	position
+);
+
+const clickMapPoint = async (canvas: Locator, point: { x: number; y: number }): Promise<void> => {
+	const position = await canvas.evaluate(
+		(element, mapPoint): { x: number; y: number } => ({
+			x: Number(element.dataset.viewOffsetX) + mapPoint.x * Number(element.dataset.viewScale),
+			y: Number(element.dataset.viewOffsetY) + mapPoint.y * Number(element.dataset.viewScale)
+		}),
+		point
+	);
+	await canvas.click({ position });
+};
+
 test('authors, refines, and exports a portable semantic project', async ({ page }, testInfo) => {
 	const errors: string[] = [];
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
@@ -164,6 +183,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
 	const canvas = page.locator('#stage');
+	const authoredRoomCenter = await mapPointAtCanvasPosition(canvas, { x: 330, y: 405 });
 	await page.locator('[data-tool="location"]').click();
 	await canvas.click({ position: { x: 230, y: 320 } });
 	await canvas.click({ position: { x: 430, y: 320 } });
@@ -187,7 +207,7 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	await page.locator('#studio-delete-floor').click();
 	await expect(page.locator('#studio-floor option')).toHaveCount(1);
 	await page.locator('[data-tool="select"]').click();
-	await canvas.click({ position: { x: 330, y: 400 } });
+	await clickMapPoint(canvas, authoredRoomCenter);
 	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
 
 	const screenshotPath: string = testInfo.outputPath('authored-studio.png');
@@ -265,7 +285,20 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	await expect(page.locator('#shortcut-help')).toHaveCount(1);
 
 	const stage = page.locator('.stage-shell');
+	const canvas = page.locator('#stage');
 	const initialBounds = await stage.boundingBox();
+	const readViewport = async (): Promise<{ centerX: number; centerY: number; scale: number }> => canvas.evaluate((element): { centerX: number; centerY: number; scale: number } => {
+		const bounds = element.getBoundingClientRect();
+		const scale = Number(element.dataset.viewScale);
+		const offsetX = Number(element.dataset.viewOffsetX);
+		const offsetY = Number(element.dataset.viewOffsetY);
+		return {
+			centerX: (bounds.width / 2 - offsetX) / scale,
+			centerY: (bounds.height / 2 - offsetY) / scale,
+			scale
+		};
+	});
+	const initialViewport = await readViewport();
 	await page.locator('#toggle-left-panel').click();
 	await expect(page.locator('body')).toHaveAttribute('data-left-panel', 'closed');
 	await expect(page.locator('.controls')).toBeHidden();
@@ -275,6 +308,10 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	await page.waitForTimeout(220);
 	const expandedBounds = await stage.boundingBox();
 	expect((expandedBounds?.width ?? 0)).toBeGreaterThan(initialBounds?.width ?? 0);
+	const expandedViewport = await readViewport();
+	expect(expandedViewport.scale).toBeCloseTo(initialViewport.scale, 6);
+	expect(expandedViewport.centerX).toBeCloseTo(initialViewport.centerX, 6);
+	expect(expandedViewport.centerY).toBeCloseTo(initialViewport.centerY, 6);
 	await page.locator('#toggle-left-panel').click();
 	await page.locator('#toggle-right-panel').click();
 
@@ -292,7 +329,6 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	await expect(page.locator('#runtime-preview-description')).toContainText('Weekly team briefings');
 	await expect(page.locator('#runtime-preview-facts')).toContainText('G-12');
 
-	const canvas = page.locator('#stage');
 	await page.locator('#runtime-preview-icons').uncheck();
 	await page.locator('#runtime-preview-labels').uncheck();
 	await expect(canvas).toHaveAttribute('data-runtime-icons-visible', 'false');
@@ -624,6 +660,9 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	expect(roomApproach).toBeDefined();
 	const approachGeometry = roomApproach?.geometry ?? [];
 	expect(approachGeometry[0]).toEqual(door?.point);
+	expect(approachGeometry.length).toBeGreaterThan(1);
+	expect(approachGeometry[1].x).toBeLessThan(door?.point.x ?? Number.NEGATIVE_INFINITY);
+	expect(Math.abs(approachGeometry[1].y - (door?.point.y ?? 0))).toBeLessThanOrEqual(10);
 	expect(approachGeometry.every((point): boolean => point.x >= 50 && point.x <= 850 && point.y >= 80 && point.y <= 520)).toBe(true);
 	expect(errors).toEqual([]);
 });
@@ -841,6 +880,7 @@ test('autosaves authored geometry and restores it after a reload', async ({ page
 	const stageBoundsBeforeSave = await page.locator('.stage-shell').boundingBox();
 
 	const canvas = page.locator('#stage');
+	const authoredRoomCenter = await mapPointAtCanvasPosition(canvas, { x: 320, y: 360 });
 	await page.locator('[data-tool="location"]').click();
 	for (const position of [{ x: 220, y: 280 }, { x: 420, y: 280 }, { x: 420, y: 440 }, { x: 220, y: 440 }]) await canvas.click({ position });
 	await page.locator('#semantic-finish').click();
@@ -856,7 +896,7 @@ test('autosaves authored geometry and restores it after a reload', async ({ page
 	await expect(page.locator('#local-recovery')).toBeHidden();
 	await expect(page.locator('#coverage-status')).toContainText('Restored local work');
 	await page.locator('[data-tool="select"]').click();
-	await canvas.click({ position: { x: 320, y: 360 } });
+	await clickMapPoint(canvas, authoredRoomCenter);
 	await expect(page.locator('#semantic-editor').getByRole('heading', { name: 'Room / area' })).toBeVisible();
 	await expect(page.locator('#semantic-editor').getByLabel('Name', { exact: true })).toHaveValue('Recovered room');
 	expect(errors).toEqual([]);
@@ -1073,6 +1113,59 @@ test('preserves the viewport through undo and supports temporary preview panning
 	await page.mouse.up();
 	await page.keyboard.up('Space');
 	await expect(canvas).not.toHaveAttribute('data-view-offset-x', panBefore ?? '');
+	expect(errors).toEqual([]);
+});
+
+test('inserts, drags, and deletes individual route bends without replacing the segment', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	const projectPath: string = testInfo.outputPath('route-point-editing.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
+	await page.goto('/');
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('#workspace-route-edit').click();
+
+	const canvas = page.locator('#stage');
+	const canvasPosition = async (point: { x: number; y: number }): Promise<{ x: number; y: number }> => canvas.evaluate(
+		(element: HTMLCanvasElement, imagePoint): { x: number; y: number } => ({
+			x: Number(element.dataset.viewOffsetX) + imagePoint.x * Number(element.dataset.viewScale),
+			y: Number(element.dataset.viewOffsetY) + imagePoint.y * Number(element.dataset.viewScale)
+		}),
+		point
+	);
+	const insertionPosition = await canvasPosition({ x: 400, y: 190 });
+	await canvas.dblclick({ position: insertionPosition });
+	await expect(canvas).toHaveAttribute('data-selected-edge-vertex-index', '2');
+	await expect(page.locator('[data-selected-point]')).toHaveText('Bend 3 of 4');
+
+	const canvasBounds = await canvas.boundingBox();
+	expect(canvasBounds).not.toBeNull();
+	const dragTarget = await canvasPosition({ x: 420, y: 230 });
+	await page.mouse.move((canvasBounds?.x ?? 0) + insertionPosition.x, (canvasBounds?.y ?? 0) + insertionPosition.y);
+	await page.mouse.down();
+	await page.mouse.move((canvasBounds?.x ?? 0) + dragTarget.x, (canvasBounds?.y ?? 0) + dragTarget.y, { steps: 4 });
+	await page.mouse.up();
+
+	const editedDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const editedDownload = await editedDownloadPromise;
+	const editedPath: string = await editedDownload.path() as string;
+	const editedProject = JSON.parse(fs.readFileSync(editedPath, 'utf8')) as WayfindingStudioProject;
+	const editedEdge = editedProject.graph.edges.find((edge): boolean => edge.id === 'lobby-to-meeting');
+	expect(editedEdge?.geometry).toHaveLength(4);
+	expect(editedEdge?.geometry?.[2]).toEqual(expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+	expect(Math.abs((editedEdge?.geometry?.[2].y ?? 0) - 230)).toBeLessThan(3);
+
+	await page.keyboard.press('Delete');
+	await expect(page.locator('[data-selected-point]')).toHaveText('No route point selected');
+	const cleanedDownloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const cleanedDownload = await cleanedDownloadPromise;
+	const cleanedPath: string = await cleanedDownload.path() as string;
+	const cleanedProject = JSON.parse(fs.readFileSync(cleanedPath, 'utf8')) as WayfindingStudioProject;
+	expect(cleanedProject.graph.edges.find((edge): boolean => edge.id === 'lobby-to-meeting')?.geometry).toHaveLength(3);
+	expect(cleanedProject.graph.edges).toHaveLength(1);
 	expect(errors).toEqual([]);
 });
 

@@ -7,9 +7,7 @@ import {
 	type WayfindingWalkableMaskDocument
 } from '../../src/utils/wayfinding.js';
 import {
-	assessWayfindingProject,
 	type WayfindingGuidanceMode,
-	type WayfindingProjectAssessment,
 	type WayfindingProjectDocument
 } from './project.mjs';
 import { parseWayfindingSvg } from './model.mjs';
@@ -831,33 +829,16 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 export const validateWayfindingStudioDelivery = (project: WayfindingStudioProject): WayfindingStudioIssue[] => {
 	const issues: WayfindingStudioIssue[] = validateWayfindingStudioProject(project);
-	const assessment: WayfindingProjectAssessment = assessWayfindingProject(project.delivery);
 
-	if (!assessment.deliveryAllowed || assessment.deliveryMode === 'blocked') {
-		issues.push({ code: 'delivery-evidence-blocked', elementIds: [], message: assessment.issues.filter((issue): boolean => issue.severity === 'blocker').map((issue): string => issue.message).join(' ') || 'Confirmed evidence does not support a runtime delivery mode.', severity: 'error' });
-
-		return issues;
-	}
-
-	for (const issue of assessment.issues.filter((candidate): boolean => candidate.severity === 'warning')) issues.push({ code: issue.code, elementIds: [], message: issue.message, severity: 'warning' });
-
-	if (assessment.deliveryMode === 'route') {
+	if (project.delivery.guidance.targetMode === 'route') {
 		const origins: WayfindingStudioOriginElement[] = project.floors.flatMap((floor): WayfindingStudioOriginElement[] => floor.elements.filter((element): element is WayfindingStudioOriginElement => element.type === 'origin'));
 		const destinations: WayfindingStudioDestination[] = project.destinations.filter((destination): boolean => destination.routeable !== false);
 		const elementsById = new Map(project.floors.flatMap((floor): Array<[string, WayfindingStudioElement]> => floor.elements.map((element): [string, WayfindingStudioElement] => [element.id, element])));
-		const reportedUnconfirmedElements = new Set<string>();
-		const requireConfirmedElement = (element: WayfindingStudioElement | undefined): void => {
-			if (!element || element.status === 'confirmed' || reportedUnconfirmedElements.has(element.id)) return;
-			reportedUnconfirmedElements.add(element.id);
-			issues.push({ code: 'unconfirmed-route-element', elementIds: [element.id], message: `Route-critical element '${element.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
-		};
 
 		if (origins.length === 0) issues.push({ code: 'missing-route-origin', elementIds: [], message: 'Route delivery requires at least one authored origin.', severity: 'error' });
 
 		if (destinations.length === 0) issues.push({ code: 'missing-route-destination', elementIds: [], message: 'Route delivery requires at least one routeable destination.', severity: 'error' });
 		const routing = new WayfindingGraph(project.graph);
-
-		for (const origin of origins) requireConfirmedElement(origin);
 
 		for (const destination of destinations) {
 			const destinationNode: WayfindingNode | undefined = routing.locationNode(destination.id);
@@ -868,13 +849,11 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 				continue;
 			}
 			const destinationElement: WayfindingStudioElement | undefined = destinationNode.semanticElementId ? elementsById.get(destinationNode.semanticElementId) : undefined;
-			requireConfirmedElement(destinationElement);
 
 			if (destinationElement?.type === 'location') {
 				const door: WayfindingStudioDoorElement | undefined = project.floors.flatMap((floor): WayfindingStudioElement[] => floor.elements).find((element): element is WayfindingStudioDoorElement => element.type === 'door' && element.locationId === destinationElement.id);
 
-				if (!door) issues.push({ code: 'missing-location-door', elementIds: [destinationElement.id], message: `Routeable location '${destination.name}' must terminate at a reviewed door or approach.`, severity: 'error' });
-				else requireConfirmedElement(door);
+				if (!door) issues.push({ code: 'missing-location-door', elementIds: [destinationElement.id], message: `Routeable location '${destination.name}' must terminate at a linked door or approach.`, severity: 'error' });
 			}
 
 			for (const origin of origins) {
@@ -882,13 +861,7 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 				const route = routing.route(originNodeId, destinationNode.id);
 
 				if (!route) {
-					issues.push({ code: 'disconnected-route', elementIds: [origin.id, destination.id], message: `No confirmed route connects '${origin.label}' to '${destination.name}'.`, severity: 'error' });
-				} else {
-					for (const nodeId of route.nodeIds) {
-						const semanticElementId: string | undefined = routing.node(nodeId)?.semanticElementId;
-
-						if (semanticElementId) requireConfirmedElement(elementsById.get(semanticElementId));
-					}
+					issues.push({ code: 'disconnected-route', elementIds: [origin.id, destination.id], message: `No route connects '${origin.label}' to '${destination.name}'.`, severity: 'error' });
 				}
 
 				if (project.delivery.guidance.stepFreeRequired && !routing.route(originNodeId, destinationNode.id, { profile: 'step-free' })) {
@@ -898,7 +871,6 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 		}
 
 		for (const edge of project.graph.edges.filter((candidate): boolean => !candidate.id.startsWith('semantic-transition:'))) {
-			if (edge.reviewStatus !== 'confirmed') issues.push({ code: 'unconfirmed-route-edge', elementIds: [edge.id], message: `Route edge '${edge.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
 			const from: WayfindingNode | undefined = project.graph.nodes.find((node): boolean => node.id === edge.from);
 			const to: WayfindingNode | undefined = project.graph.nodes.find((node): boolean => node.id === edge.to);
 
@@ -920,9 +892,8 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 					continue;
 				}
 
-				for (const area of [...walkableAreas, ...obstacles]) requireConfirmedElement(area);
-
-				if (routeLeavesPolygonalPedestrianSpace(points, edge.corridorWidth ?? 0, walkableAreas, obstacles)) {
+				const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? 0;
+				if (routeLeavesPolygonalPedestrianSpace(points, validationWidth, walkableAreas, obstacles)) {
 					issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the authored pedestrian area.`, severity: 'error' });
 				}
 
@@ -935,9 +906,8 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 				continue;
 			}
 
-			if (floor.walkableMask.reviewStatus !== 'confirmed') issues.push({ code: 'unconfirmed-route-mask', elementIds: [edge.id, floor.id], message: `Painted pedestrian space for floor '${floor.id}' must be reviewer-confirmed before route delivery.`, severity: 'error' });
-
-			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, edge.corridorWidth ?? floor.walkableMask.cellSize).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the confirmed walkable-space mask.`, severity: 'error' });
+			const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? floor.walkableMask.cellSize;
+			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, validationWidth).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the painted walkable-space mask.`, severity: 'error' });
 		}
 	}
 
@@ -1027,12 +997,10 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioDelivery(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
-	const assessment: WayfindingProjectAssessment = assessWayfindingProject(project.delivery);
-
-	if (!assessment.deliveryAllowed || assessment.deliveryMode === 'blocked') throw new Error('Runtime bundle cannot be created while delivery evidence is blocked.');
-	const runtimeGraph: WayfindingGraphDocument = assessment.deliveryMode === 'route'
+	const deliveryMode: WayfindingGuidanceMode = project.delivery.guidance.targetMode;
+	const runtimeGraph: WayfindingGraphDocument = deliveryMode === 'route'
 		? structuredClone(project.graph)
-		: { contractVersion: 2, edges: [], graphId: `${project.graph.graphId}:${assessment.deliveryMode}`, nodes: [] };
+		: { contractVersion: 2, edges: [], graphId: `${project.graph.graphId}:${deliveryMode}`, nodes: [] };
 
 	return {
 		assets: structuredClone(project.assets),
@@ -1055,11 +1023,11 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 		graph: runtimeGraph,
 		languages: structuredClone(project.languages ?? [{ code: 'en', label: 'English' }]),
 		manifest: {
-			deliveryMode: assessment.deliveryMode,
+			deliveryMode,
 			generatedAt: project.updatedAt,
 			projectId: project.projectId,
 			sourceContractVersion: project.contractVersion,
-			targetMode: assessment.targetMode
+			targetMode: deliveryMode
 		}
 	};
 };

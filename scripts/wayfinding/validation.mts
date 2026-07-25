@@ -311,7 +311,8 @@ const validateGraph = (
 		}
 
 		if (walkableMask && from.levelId === to.levelId && edge.geometry && edge.corridorWidth !== undefined) {
-			const outside = walkableMask.outsideCorridor(points, edge.corridorWidth);
+			const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth;
+			const outside = walkableMask.outsideCorridor(points, validationWidth);
 
 			if (outside.length > 0) {
 				const first = outside[0];

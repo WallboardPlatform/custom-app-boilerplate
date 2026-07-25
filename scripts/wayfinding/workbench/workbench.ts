@@ -36,6 +36,7 @@ import {
 	type WayfindingStudioDoorElement,
 	type WayfindingStudioElement,
 	type WayfindingStudioFloor,
+	type WayfindingStudioIssue,
 	type WayfindingStudioLanguage,
 	type WayfindingStudioLabelElement,
 	type WayfindingStudioLocationColorMode,
@@ -129,6 +130,11 @@ interface HistoryState {
 		offsetY: number;
 		scale: number;
 	};
+}
+
+interface CanvasViewportSnapshot {
+	center: WayfindingPoint;
+	scale: number;
 }
 
 interface AutosaveRecord {
@@ -390,6 +396,7 @@ let colorSamples: ColorSample[] = [];
 let includeOverrides = new Set<number>();
 let excludeOverrides = new Set<number>();
 let selectedEdgeId: string | undefined;
+let selectedEdgeVertexIndex: number | undefined;
 let draggedVertex: DraggedVertex | undefined;
 let insertPointForEdge: string | undefined;
 let edgeDraft: EdgeDraft | undefined;
@@ -398,6 +405,7 @@ let previousPointer = { x: 0, y: 0 };
 let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
+let preserved2dViewport: CanvasViewportSnapshot | undefined;
 let currentFloorId = 'level-0';
 let semanticDraft: { points: WayfindingPoint[]; type: SemanticPolygonTool } | undefined;
 const semanticDraftRedo: WayfindingPoint[] = [];
@@ -466,6 +474,39 @@ const humanizeEvidenceMessage = (message: string): string => EVIDENCE_KEYS.reduc
 	(value: string, key: WayfindingEvidenceKey): string => value.replaceAll(key, EVIDENCE_COPY[key].label.toLowerCase()),
 	message
 );
+
+const runtimeExportInstruction = (issue: WayfindingStudioIssue): string => {
+	const message: string = humanizeEvidenceMessage(issue.message);
+
+	switch (issue.code) {
+		case 'missing-destination':
+		case 'graph-destination-missing':
+			return `${message} Select the room or point and complete its destination details.`;
+		case 'invalid-door-location':
+		case 'missing-location-door':
+			return `${message} Select the door and link it to the room it enters.`;
+		case 'missing-route-origin':
+			return `${message} Add a You are here marker for the installed screen.`;
+		case 'missing-route-destination':
+		case 'missing-destination-node':
+			return `${message} Select a destination, place its entrance on walkable space, then rebuild or connect the route network.`;
+		case 'disconnected-route':
+		case 'disconnected-step-free-route':
+			return `${message} Open Route edit and connect the highlighted destination to the network.`;
+		case 'missing-route-pedestrian-area':
+		case 'missing-route-mask':
+			return `${message} Open Route edit and define walkable space for that floor.`;
+		case 'route-leaves-walkable-space':
+			return `${message} Move the route inside the walkable area or expand the verified pedestrian space.`;
+		case 'polygon-outside-floor':
+		case 'element-outside-floor':
+		case 'graph-node-outside-floor':
+		case 'edge-outside-floor':
+			return `${message} Move the highlighted geometry fully inside the current floor.`;
+		default:
+			return message;
+	}
+};
 
 const TOOL_COPY: Record<Tool, { description: string; label: string }> = {
 	anchor: { description: 'Choose a destination, then click its walkable entrance on the map.', label: 'Place entrance' },
@@ -970,6 +1011,7 @@ const refresh3d = (): void => {
 };
 
 const setViewMode = (mode: '2d' | '3d'): void => {
+	if (viewMode === '2d' && mode === '3d') preserved2dViewport = captureCanvasViewport();
 	viewMode = mode;
 	const showing3d: boolean = mode === '3d';
 	view2dButton.classList.toggle('active', !showing3d);
@@ -988,9 +1030,7 @@ const setViewMode = (mode: '2d' | '3d'): void => {
 			? '3D route preview: click a destination to draw guidance from the selected start.'
 			: '3D preview: drag to rotate, wheel to zoom, and select a shape to edit it.';
 	} else {
-		window.requestAnimationFrame((): void => {
-			resizeCanvas();
-		});
+		resizeCanvasAfterLayout(preserved2dViewport);
 	}
 };
 
@@ -1008,12 +1048,14 @@ const resetWorkspaceInteraction = (mode: WorkspaceMode): void => {
 	insertPointForEdge = undefined;
 	insertPointForSemanticId = undefined;
 	selectedSemanticVertexIndex = undefined;
+	selectedEdgeVertexIndex = undefined;
 	semanticDraftHost.hidden = true;
 	renderEdgeDraft();
 	activateTool(mode === 'route-edit' ? 'graph' : 'select');
 };
 
 const setWorkspaceMode = (mode: WorkspaceMode): void => {
+	const viewport: CanvasViewportSnapshot | undefined = captureCanvasViewport();
 	if (workspaceMode !== mode) resetWorkspaceInteraction(mode);
 	workspaceMode = mode;
 	document.body.dataset.workspace = mode;
@@ -1041,10 +1083,12 @@ const setWorkspaceMode = (mode: WorkspaceMode): void => {
 	}
 	renderPedestrianSourceControls();
 	renderReview();
-	draw();
+	if (viewMode === '2d') resizeCanvasAfterLayout(viewport);
+	else draw();
 };
 
 const setPanelOpen = (side: 'left' | 'right', open: boolean): void => {
+	const viewport: CanvasViewportSnapshot | undefined = captureCanvasViewport();
 	document.body.dataset[side === 'left' ? 'leftPanel' : 'rightPanel'] = open ? 'open' : 'closed';
 	const button: HTMLButtonElement = side === 'left' ? toggleLeftPanelButton : toggleRightPanelButton;
 	const panelName: string = side === 'left' ? 'authoring controls' : 'properties';
@@ -1054,9 +1098,7 @@ const setPanelOpen = (side: 'left' | 'right', open: boolean): void => {
 	button.innerHTML = side === 'left'
 		? (open ? '&#9665;' : '&#9655;')
 		: (open ? '&#9655;' : '&#9665;');
-	window.requestAnimationFrame((): void => {
-		if (viewMode === '2d') resizeCanvas();
-	});
+	if (viewMode === '2d') resizeCanvasAfterLayout(viewport);
 };
 
 const openAutosaveDatabase = (): Promise<IDBDatabase> => new Promise((resolve, reject): void => {
@@ -1209,6 +1251,7 @@ const restoreHistoryState = async (state: HistoryState): Promise<void> => {
 	selectedSemanticId = undefined;
 	selectedSemanticVertexIndex = undefined;
 	selectedEdgeId = undefined;
+	selectedEdgeVertexIndex = undefined;
 	semanticDraft = undefined;
 	semanticDraftRedo.length = 0;
 	edgeDraft = undefined;
@@ -1806,8 +1849,33 @@ const deleteSelectedSemanticVertex = (): boolean => {
 	return true;
 };
 
+const deleteSelectedEdgeVertex = (): boolean => {
+	const edge: WayfindingEdge | undefined = graph?.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId);
+	if (!edge || selectedEdgeVertexIndex === undefined) return false;
+	const points: WayfindingPoint[] = edgePoints(edge);
+	if (selectedEdgeVertexIndex === 0 || selectedEdgeVertexIndex === points.length - 1) {
+		coverageStatus.textContent = 'This point is a shared route endpoint. Move it, or delete the complete segment if the connection is no longer needed.';
+
+		return true;
+	}
+	const before: HistoryState = captureHistoryState();
+	points.splice(selectedEdgeVertexIndex, 1);
+	edge.geometry = points.map((point: WayfindingPoint): WayfindingPoint => ({ ...point }));
+	edge.reviewStatus = 'proposed';
+	selectedEdgeVertexIndex = undefined;
+	insertPointForEdge = undefined;
+	syncStudioGraph();
+	recordHistory(before);
+	coverageStatus.textContent = `Removed a bend from ${routeSegmentName(edge)}.`;
+	renderReview();
+	draw();
+
+	return true;
+};
+
 const deleteCurrentSelection = (): void => {
 	if (deleteSelectedSemanticVertex()) return;
+	if (deleteSelectedEdgeVertex()) return;
 	const element: WayfindingStudioElement | undefined = semanticElement();
 	const edge: WayfindingEdge | undefined = graph?.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId);
 	if (!element && !edge) return;
@@ -1830,6 +1898,7 @@ const deleteCurrentSelection = (): void => {
 	} else if (edge && graph) {
 		graph.edges = graph.edges.filter((candidate: WayfindingEdge): boolean => candidate.id !== edge.id);
 		selectedEdgeId = undefined;
+		selectedEdgeVertexIndex = undefined;
 		coverageStatus.textContent = `Deleted route ${edge.id}`;
 	}
 	syncStudioGraph();
@@ -2349,7 +2418,20 @@ const edgePoints = (edge: WayfindingEdge): WayfindingPoint[] => {
 	return edge.geometry?.length ? edge.geometry : [from, to];
 };
 
-const resizeCanvas = (): void => {
+const captureCanvasViewport = (): CanvasViewportSnapshot | undefined => {
+	const bounds: DOMRect = canvas.getBoundingClientRect();
+	if (bounds.width < 2 || bounds.height < 2 || scale <= 0) return undefined;
+
+	return {
+		center: {
+			x: (bounds.width / 2 - offsetX) / scale,
+			y: (bounds.height / 2 - offsetY) / scale
+		},
+		scale
+	};
+};
+
+const resizeCanvas = (viewport?: CanvasViewportSnapshot): void => {
 	if (canvas.classList.contains('view-hidden')) return;
 	const bounds: DOMRect = canvas.getBoundingClientRect();
 	if (bounds.width < 2 || bounds.height < 2) return;
@@ -2357,7 +2439,16 @@ const resizeCanvas = (): void => {
 	canvas.width = Math.max(1, Math.round(bounds.width * ratio));
 	canvas.height = Math.max(1, Math.round(bounds.height * ratio));
 	context.setTransform(ratio, 0, 0, ratio, 0, 0);
+	if (viewport) {
+		scale = viewport.scale;
+		offsetX = bounds.width / 2 - viewport.center.x * scale;
+		offsetY = bounds.height / 2 - viewport.center.y * scale;
+	}
 	draw();
+};
+
+const resizeCanvasAfterLayout = (viewport?: CanvasViewportSnapshot): void => {
+	window.requestAnimationFrame((): void => { resizeCanvas(viewport); });
 };
 
 const fitImage = (): void => {
@@ -2860,7 +2951,9 @@ const pointWalkableWithClearance = (point: WayfindingPoint, clearance: number): 
 const edgeFailuresFor = (edge: WayfindingEdge): WayfindingPoint[] => {
 	const points: WayfindingPoint[] = edgePoints(edge);
 	const failures: WayfindingPoint[] = [];
-	const halfWidth: number = Math.max(0, (edge.corridorWidth ?? cellSize()) / 2);
+	const halfWidth: number = edge.traversal === 'portal'
+		? 0
+		: Math.max(0, (edge.corridorWidth ?? cellSize()) / 2);
 	const step: number = Math.max(1, cellSize() / 2);
 
 	for (let index = 1; index < points.length; index += 1) {
@@ -2905,6 +2998,7 @@ const drawSemanticElements = (): void => {
 	const colors: Record<string, string> = {
 		door: '#17201f', label: '#17201f', location: '#d9981c', obstacle: '#a83c32', origin: '#138b75', poi: '#2b6cb0', transition: '#7b4bc4', walkable: '#17a886'
 	};
+	const authoringOverlays: boolean = workspaceMode !== 'runtime-preview';
 	const defaults: WayfindingStudioProjectDefaults = projectDefaults();
 	for (const element of currentElements()) {
 		if (!layerVisible(element.type)) continue;
@@ -2913,7 +3007,7 @@ const drawSemanticElements = (): void => {
 			if ((element.type === 'icon' || element.type === 'logo') && !runtimePreviewIcons.checked) continue;
 			if (element.type === 'label' && !runtimePreviewLabels.checked) continue;
 		}
-		const selected: boolean = element.id === selectedSemanticId;
+		const selected: boolean = authoringOverlays && element.id === selectedSemanticId;
 		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
 		const polygonDefaults = polygon ? defaults[polygon.type] : undefined;
 		context.save();
@@ -2926,7 +3020,7 @@ const drawSemanticElements = (): void => {
 				const image: HTMLImageElement = cachedMediaImage(asset);
 				if (image.complete) context.drawImage(image, element.point.x, element.point.y, element.width, element.height);
 			}
-			context.strokeRect(element.point.x, element.point.y, element.width, element.height);
+			if (authoringOverlays) context.strokeRect(element.point.x, element.point.y, element.width, element.height);
 		} else if ('geometry' in element) {
 			context.beginPath();
 			context.moveTo(element.geometry[0].x, element.geometry[0].y);
@@ -3138,7 +3232,7 @@ function openRuntimePreviewDetails(elementId: string): boolean {
 		}));
 	runtimePreviewDetails.hidden = false;
 	renderRuntimePreview();
-	draw();
+	if (!routeToSemanticElement(element.id)) draw();
 
 	return true;
 }
@@ -3497,11 +3591,15 @@ const draw = (): void => {
 	canvas.dataset.viewScale = String(scale);
 	canvas.dataset.viewOffsetX = String(offsetX);
 	canvas.dataset.viewOffsetY = String(offsetY);
+	canvas.dataset.authoringOverlays = String(workspaceMode !== 'runtime-preview');
 	canvas.dataset.semanticDraftPointCount = String(semanticDraft?.points.length ?? 0);
 	canvas.dataset.routeNetworkVisible = String(showRouteNetwork);
 	canvas.setAttribute('data-origin-animation-2d', projectDefaults().origin.animation2d);
 	canvas.dataset.runtimeIconsVisible = String(runtimePreviewIcons.checked);
 	canvas.dataset.runtimeLabelsVisible = String(runtimePreviewLabels.checked);
+	const selectedEdge: WayfindingEdge | undefined = graph?.edges.find((edge: WayfindingEdge): boolean => edge.id === selectedEdgeId);
+	canvas.dataset.selectedEdgePointCount = String(selectedEdge ? edgePoints(selectedEdge).length : 0);
+	canvas.dataset.selectedEdgeVertexIndex = selectedEdgeVertexIndex === undefined ? '' : String(selectedEdgeVertexIndex);
 	context.save();
 	context.setTransform(1, 0, 0, 1, 0, 0);
 	context.fillStyle = '#323b39';
@@ -3565,12 +3663,13 @@ const draw = (): void => {
 			context.stroke();
 
 			if (workspaceMode === 'route-edit' && tool === 'graph' && edge.id === selectedEdgeId) {
-				for (const point of points) {
+				for (const [pointIndex, point] of points.entries()) {
+					const selectedVertex: boolean = pointIndex === selectedEdgeVertexIndex;
 					context.beginPath();
-					context.arc(point.x, point.y, 6 / scale, 0, Math.PI * 2);
-					context.fillStyle = '#fff8e9';
+					context.arc(point.x, point.y, (selectedVertex ? 9 : 6) / scale, 0, Math.PI * 2);
+					context.fillStyle = selectedVertex ? '#ffd34e' : '#fff8e9';
 					context.fill();
-					context.lineWidth = 2 / scale;
+					context.lineWidth = (selectedVertex ? 3 : 2) / scale;
 					context.strokeStyle = '#17201f';
 					context.stroke();
 				}
@@ -3650,13 +3749,18 @@ const draw = (): void => {
 	scheduleOriginAnimation();
 };
 
-const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
+const projectPointToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): WayfindingPoint => {
 	const lengthSquared: number = (right.x - left.x) ** 2 + (right.y - left.y) ** 2;
 
-	if (lengthSquared === 0) return Math.hypot(point.x - left.x, point.y - left.y);
+	if (lengthSquared === 0) return { ...left };
 
 	const ratio: number = Math.max(0, Math.min(1, ((point.x - left.x) * (right.x - left.x) + (point.y - left.y) * (right.y - left.y)) / lengthSquared));
-	const projection = { x: left.x + ratio * (right.x - left.x), y: left.y + ratio * (right.y - left.y) };
+
+	return { x: left.x + ratio * (right.x - left.x), y: left.y + ratio * (right.y - left.y) };
+};
+
+const distanceToSegment = (point: WayfindingPoint, left: WayfindingPoint, right: WayfindingPoint): number => {
+	const projection: WayfindingPoint = projectPointToSegment(point, left, right);
 
 	return Math.hypot(point.x - projection.x, point.y - projection.y);
 };
@@ -3749,7 +3853,7 @@ const moveVertex = (drag: DraggedVertex, point: WayfindingPoint): void => {
 	if (drag.pointIndex === edge.geometry.length - 1) setNodePoint(edge.to, point);
 };
 
-const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): void => {
+const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): number => {
 	const points: WayfindingPoint[] = edgePoints(edge).map((candidate: WayfindingPoint): WayfindingPoint => ({ ...candidate }));
 	let segment = 1;
 	let minimumDistance = Number.POSITIVE_INFINITY;
@@ -3763,13 +3867,17 @@ const insertPoint = (edge: WayfindingEdge, point: WayfindingPoint): void => {
 		}
 	}
 
-	points.splice(segment, 0, { ...point });
+	const projected: WayfindingPoint = projectPointToSegment(point, points[segment - 1], points[segment]);
+	points.splice(segment, 0, projected);
 	edge.geometry = points;
 	edge.reviewStatus = 'proposed';
+
+	return segment;
 };
 
-const selectEdge = (edgeId: string | undefined): void => {
+const selectEdge = (edgeId: string | undefined, vertexIndex?: number): void => {
 	selectedEdgeId = edgeId;
+	selectedEdgeVertexIndex = edgeId ? vertexIndex : undefined;
 	if (edgeId) {
 		selectedSemanticId = undefined;
 		selectedSemanticVertexIndex = undefined;
@@ -3961,13 +4069,18 @@ const renderReview = (): void => {
 	selectedEdgeHost.innerHTML = `
 		<h2>Route segment</h2>
 		<p class="segment-summary"></p>
+		<p class="route-edit-help">Double-click the line to add a bend. Drag any point to reshape it. Select an interior point and press Delete to remove it.</p>
 		<div class="edge-fields">
 			<label>Segment type<select data-edge-field="preset"></select></label>
 			<label>Direction<select data-edge-field="direction"><option value="both">Both directions</option><option value="one">From start to end</option></select></label>
 			<label class="check"><input data-edge-field="accessible" type="checkbox"> Verified step-free</label>
 		</div>
 		<div class="segment-health"><div><span>Review</span><strong data-segment-review></strong></div><div><span>Walkable check</span><strong data-segment-mask></strong></div></div>
-		<button type="button" data-action="insert">Add a bend</button>
+		<div class="segment-point-actions">
+			<strong data-selected-point></strong>
+			<button type="button" data-action="insert">Add point by click</button>
+			<button type="button" data-action="delete-point" class="danger">Delete selected point</button>
+		</div>
 		<button type="button" data-action="confirm">Mark segment as reviewed</button>
 		<details class="segment-advanced">
 			<summary>Advanced segment settings</summary>
@@ -3983,6 +4096,16 @@ const renderReview = (): void => {
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-review]')!.textContent = selected.reviewStatus === 'confirmed' ? 'Reviewed' : 'Needs review';
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-mask]')!.textContent = invalidEdgeIds.has(selected.id) ? `${edgeFailuresFor(selected).length} point failures` : hasWalkableMask ? 'Contained' : 'Not checked';
 	selectedEdgeHost.querySelector<HTMLElement>('[data-segment-id]')!.textContent = selected.id;
+	const selectedPoints: WayfindingPoint[] = edgePoints(selected);
+	const selectedPointStatus: HTMLElement = selectedEdgeHost.querySelector<HTMLElement>('[data-selected-point]')!;
+	const deletePointButton: HTMLButtonElement = selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="delete-point"]')!;
+	const selectedEndpoint: boolean = selectedEdgeVertexIndex === 0 || selectedEdgeVertexIndex === selectedPoints.length - 1;
+	selectedPointStatus.textContent = selectedEdgeVertexIndex === undefined
+		? 'No route point selected'
+		: selectedEndpoint
+			? `Endpoint ${selectedEdgeVertexIndex + 1} of ${selectedPoints.length}`
+			: `Bend ${selectedEdgeVertexIndex + 1} of ${selectedPoints.length}`;
+	deletePointButton.disabled = selectedEdgeVertexIndex === undefined || selectedEndpoint;
 	const presetSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="preset"]')!;
 	const directionSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="direction"]')!;
 	const kindSelect = selectedEdgeHost.querySelector<HTMLSelectElement>('[data-edge-field="kind"]')!;
@@ -4042,8 +4165,9 @@ const renderReview = (): void => {
 	});
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="insert"]')!.addEventListener('click', (): void => {
 		insertPointForEdge = selected.id;
-		coverageStatus.textContent = 'Click the route segment where you want to add a bend.';
+		coverageStatus.textContent = 'Click the route segment where you want to add a point. You can also double-click the line directly.';
 	});
+	deletePointButton.addEventListener('click', deleteCurrentSelection);
 	selectedEdgeHost.querySelector<HTMLButtonElement>('[data-action="confirm"]')!.addEventListener('click', (): void => {
 		if (mask.length === 0 || maskReviewStatus !== 'confirmed') {
 			coverageStatus.textContent = 'Confirm the independently reviewed walkable area before reviewing this route segment.';
@@ -4245,6 +4369,20 @@ const maskNeighborIndices = (index: number, source: Uint8Array = mask): number[]
 	return neighbors;
 };
 
+const maskIndexForPoint = (point: WayfindingPoint): number | undefined => {
+	const column: number = Math.floor(point.x / cellSize());
+	const row: number = Math.floor(point.y / cellSize());
+	if (column < 0 || row < 0 || column >= maskColumns || row >= maskRows) return undefined;
+
+	return maskIndex(column, row);
+};
+
+const pointWalkableInSource = (point: WayfindingPoint, source: Uint8Array): boolean => {
+	const index: number | undefined = maskIndexForPoint(point);
+
+	return index !== undefined && source[index] === 1;
+};
+
 const nearestWalkableIndex = (anchorIndex: number, source: Uint8Array): number | undefined => {
 	if (source[anchorIndex] === 1) return anchorIndex;
 	const anchorColumn: number = anchorIndex % maskColumns;
@@ -4270,39 +4408,212 @@ const nearestWalkableIndex = (anchorIndex: number, source: Uint8Array): number |
 	return nearestIndex;
 };
 
-const shortestMaskPathToSkeleton = (startIndex: number, skeleton: Uint8Array, source: Uint8Array): number[] | undefined => {
-	if (source[startIndex] !== 1) return undefined;
-	const queue: number[] = [startIndex];
-	const visited = new Set<number>([startIndex]);
-	const previous = new Map<number, number>();
-	let targetIndex: number | undefined;
+interface MaskPathQueueItem {
+	cost: number;
+	direction: number;
+	index: number;
+}
 
-	for (let cursor = 0; cursor < queue.length; cursor += 1) {
-		const index: number = queue[cursor];
-		if (skeleton[index] === 1) {
-			targetIndex = index;
+const pushMaskPathQueue = (queue: MaskPathQueueItem[], item: MaskPathQueueItem): void => {
+	queue.push(item);
+	let index: number = queue.length - 1;
+
+	while (index > 0) {
+		const parent: number = Math.floor((index - 1) / 2);
+		if (queue[parent].cost <= item.cost) break;
+		queue[index] = queue[parent];
+		index = parent;
+	}
+
+	queue[index] = item;
+};
+
+const popMaskPathQueue = (queue: MaskPathQueueItem[]): MaskPathQueueItem | undefined => {
+	const first: MaskPathQueueItem | undefined = queue[0];
+	const last: MaskPathQueueItem | undefined = queue.pop();
+	if (!first || !last || queue.length === 0) return first;
+	let index = 0;
+
+	while (true) {
+		const left: number = index * 2 + 1;
+		const right: number = left + 1;
+		if (left >= queue.length) break;
+		const child: number = right < queue.length && queue[right].cost < queue[left].cost ? right : left;
+		if (queue[child].cost >= last.cost) break;
+		queue[index] = queue[child];
+		index = child;
+	}
+
+	queue[index] = last;
+
+	return first;
+};
+
+const directionBetweenMaskIndices = (from: number, to: number): number => {
+	const difference: number = to - from;
+	if (difference === -maskColumns) return 0;
+	if (difference === 1) return 1;
+	if (difference === maskColumns) return 2;
+
+	return 3;
+};
+
+const directionForVector = (vector: WayfindingPoint): number => Math.abs(vector.x) >= Math.abs(vector.y)
+	? (vector.x >= 0 ? 1 : 3)
+	: (vector.y >= 0 ? 2 : 0);
+
+const shortestMaskPathToSkeleton = (
+	startIndex: number,
+	skeleton: Uint8Array,
+	source: Uint8Array,
+	initialDirection = -1
+): number[] | undefined => {
+	if (source[startIndex] !== 1) return undefined;
+	const queue: MaskPathQueueItem[] = [];
+	const startKey: number = startIndex * 5 + initialDirection + 1;
+	const costs = new Map<number, number>([[startKey, 0]]);
+	const previous = new Map<number, number>();
+	pushMaskPathQueue(queue, { cost: 0, direction: initialDirection, index: startIndex });
+	let targetKey: number | undefined;
+
+	while (queue.length > 0) {
+		const current: MaskPathQueueItem = popMaskPathQueue(queue)!;
+		const currentKey: number = current.index * 5 + current.direction + 1;
+		if (current.cost !== costs.get(currentKey)) continue;
+		if (skeleton[current.index] === 1) {
+			targetKey = currentKey;
 			break;
 		}
 
-		for (const neighbor of maskNeighborIndices(index, source)) {
-			if (visited.has(neighbor)) continue;
-			visited.add(neighbor);
-			previous.set(neighbor, index);
-			queue.push(neighbor);
+		for (const neighbor of maskNeighborIndices(current.index, source)) {
+			const direction: number = directionBetweenMaskIndices(current.index, neighbor);
+			const turnCost: number = current.direction < 0 || current.direction === direction
+				? 0
+				: (Math.abs(current.direction - direction) === 2 ? 8 : 2.5);
+			const boundaryNeighbors: number = maskNeighborIndices(neighbor, source).length;
+			const cost: number = current.cost + 1 + turnCost + (4 - boundaryNeighbors) * 0.35;
+			const key: number = neighbor * 5 + direction + 1;
+			if (cost >= (costs.get(key) ?? Number.POSITIVE_INFINITY)) continue;
+			costs.set(key, cost);
+			previous.set(key, currentKey);
+			pushMaskPathQueue(queue, { cost, direction, index: neighbor });
 		}
 	}
 
-	if (targetIndex === undefined) return undefined;
-	const path: number[] = [targetIndex];
-	let index: number = targetIndex;
-	while (index !== startIndex) {
-		const previousIndex: number | undefined = previous.get(index);
-		if (previousIndex === undefined) return undefined;
-		index = previousIndex;
-		path.push(index);
+	if (targetKey === undefined) return undefined;
+	const path: number[] = [Math.floor(targetKey / 5)];
+	let key: number = targetKey;
+	while (key !== startKey) {
+		const previousKey: number | undefined = previous.get(key);
+		if (previousKey === undefined) return undefined;
+		key = previousKey;
+		path.push(Math.floor(key / 5));
 	}
 
 	return path.reverse();
+};
+
+interface DoorApproach {
+	direction: WayfindingPoint;
+	indices: number[];
+	points: WayfindingPoint[];
+}
+
+const rayPolygonBoundaryDistance = (
+	start: WayfindingPoint,
+	direction: WayfindingPoint,
+	polygon: WayfindingPoint[]
+): number | undefined => {
+	let nearest: number | undefined;
+
+	for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+		const left: WayfindingPoint = polygon[previous];
+		const right: WayfindingPoint = polygon[index];
+		const segment = { x: right.x - left.x, y: right.y - left.y };
+		const denominator: number = direction.x * segment.y - direction.y * segment.x;
+		if (Math.abs(denominator) < 0.000001) continue;
+		const offset = { x: left.x - start.x, y: left.y - start.y };
+		const distance: number = (offset.x * segment.y - offset.y * segment.x) / denominator;
+		const segmentRatio: number = (offset.x * direction.y - offset.y * direction.x) / denominator;
+		if (distance < 0 || segmentRatio < 0 || segmentRatio > 1) continue;
+		if (nearest === undefined || distance < nearest) nearest = distance;
+	}
+
+	return nearest;
+};
+
+const doorCorridorDirection = (
+	door: WayfindingStudioDoorElement,
+	location: WayfindingStudioPolygonElement,
+	source: Uint8Array
+): WayfindingPoint => {
+	const radians: number = door.angle * Math.PI / 180;
+	const normals: [WayfindingPoint, WayfindingPoint] = [
+		{ x: -Math.sin(radians), y: Math.cos(radians) },
+		{ x: Math.sin(radians), y: -Math.cos(radians) }
+	];
+	const probeDistance: number = Math.max(cellSize() * 1.5, door.length * 0.75);
+	const insideLocation: boolean[] = normals.map((normal: WayfindingPoint): boolean => pointInPolygon({
+		x: door.point.x + normal.x * probeDistance,
+		y: door.point.y + normal.y * probeDistance
+	}, location.geometry));
+	if (insideLocation[0] !== insideLocation[1]) return insideLocation[0] ? normals[1] : normals[0];
+
+	const score = (normal: WayfindingPoint): number => {
+		let result = 0;
+		for (let step = 1; step <= 8; step += 1) {
+			const point: WayfindingPoint = {
+				x: door.point.x + normal.x * cellSize() * step / 2,
+				y: door.point.y + normal.y * cellSize() * step / 2
+			};
+			if (pointWalkableInSource(point, source)) result += 2;
+			if (pointInPolygon(point, location.geometry)) result -= 3;
+		}
+
+		return result;
+	};
+
+	return score(normals[0]) >= score(normals[1]) ? normals[0] : normals[1];
+};
+
+const buildDoorApproach = (
+	door: WayfindingStudioDoorElement,
+	location: WayfindingStudioPolygonElement,
+	source: Uint8Array,
+	skeleton: Uint8Array
+): DoorApproach | undefined => {
+	const direction: WayfindingPoint = doorCorridorDirection(door, location, source);
+	const indices: number[] = [];
+	const points: WayfindingPoint[] = [];
+	let enteredWalkable = false;
+	const boundaryDistance: number = pointInPolygon(door.point, location.geometry)
+		? rayPolygonBoundaryDistance(door.point, direction, location.geometry) ?? 0
+		: 0;
+	const approachStart: WayfindingPoint = {
+		x: door.point.x + direction.x * boundaryDistance,
+		y: door.point.y + direction.y * boundaryDistance
+	};
+	const maximumSteps: number = Math.max(12, Math.ceil((door.length + boundaryDistance) * 2 / cellSize()));
+
+	for (let step = 1; step <= maximumSteps; step += 1) {
+		const point: WayfindingPoint = {
+			x: approachStart.x + direction.x * cellSize() * step / 2,
+			y: approachStart.y + direction.y * cellSize() * step / 2
+		};
+		const index: number | undefined = maskIndexForPoint(point);
+		if (index === undefined || source[index] !== 1) {
+			if (enteredWalkable) break;
+			continue;
+		}
+		enteredWalkable = true;
+		points.push(point);
+		if (indices[indices.length - 1] !== index) indices.push(index);
+		if (indices.length >= 2 && skeleton[index] === 1) break;
+	}
+
+	if (indices.length === 0) return undefined;
+
+	return { direction, indices, points };
 };
 
 const simplifyGeometry = (points: WayfindingPoint[], toleranceValue: number): WayfindingPoint[] => {
@@ -4515,28 +4826,65 @@ const generateCenterlineGraph = (): boolean => {
 
 	maskReviewStatus = 'proposed';
 	maskConfirmedInput.checked = false;
+	const centeredMask: Uint8Array = morphRegionMask(authoredMask, maskColumns, maskRows, 1, 'erode');
+	const routingMask: Uint8Array = centeredMask.some((value: number): boolean => value === 1)
+		? centeredMask
+		: authoredMask;
+	const skeleton: Uint8Array = skeletonizeWalkableMask(routingMask, maskColumns, maskRows);
 	const anchorIndexById = new Map<string, number>();
+	const doorApproachByAnchorId = new Map<string, DoorApproach>();
 	for (const anchorNode of anchorNodes) {
+		const element: WayfindingStudioElement | undefined = elementsById.get(anchorNode.semanticElementId ?? '');
+		const door: WayfindingStudioDoorElement | undefined = element?.type === 'location'
+			? currentElements().find((candidate: WayfindingStudioElement): candidate is WayfindingStudioDoorElement => candidate.type === 'door' && candidate.locationId === element.id)
+			: undefined;
+		const approach: DoorApproach | undefined = door && element?.type === 'location'
+			? buildDoorApproach(door, element, authoredMask, skeleton)
+			: undefined;
+		if (approach) {
+			doorApproachByAnchorId.set(anchorNode.id, approach);
+			anchorIndexById.set(anchorNode.id, approach.indices[approach.indices.length - 1]);
+			continue;
+		}
 		const column: number = Math.max(0, Math.min(maskColumns - 1, Math.floor(anchorNode.x / cellSize())));
 		const row: number = Math.max(0, Math.min(maskRows - 1, Math.floor(anchorNode.y / cellSize())));
-		const index: number | undefined = nearestWalkableIndex(maskIndex(column, row), authoredMask);
+		const index: number | undefined = nearestWalkableIndex(maskIndex(column, row), routingMask);
 		if (index !== undefined) anchorIndexById.set(anchorNode.id, index);
 	}
-	const skeleton: Uint8Array = skeletonizeWalkableMask(authoredMask, maskColumns, maskRows);
 	const attachmentIndices = new Set<number>();
 	const attachmentByAnchorId = new Map<string, number>();
 	const connectorGeometryByAnchorId = new Map<string, WayfindingPoint[]>();
 
 	for (const anchorNode of anchorNodes) {
 		const anchorIndex: number | undefined = anchorIndexById.get(anchorNode.id);
-		const path: number[] | undefined = anchorIndex === undefined ? undefined : shortestMaskPathToSkeleton(anchorIndex, skeleton, authoredMask);
+		const doorApproach: DoorApproach | undefined = doorApproachByAnchorId.get(anchorNode.id);
+		const path: number[] | undefined = anchorIndex === undefined
+			? undefined
+			: shortestMaskPathToSkeleton(
+				anchorIndex,
+				skeleton,
+				authoredMask,
+				doorApproach ? directionForVector(doorApproach.direction) : -1
+			);
 		if (!path?.length) continue;
 		const attachmentIndex: number = path[path.length - 1];
-		const cellPath: WayfindingPoint[] = path.map(pointForMaskIndex);
-		const geometry: WayfindingPoint[] = simplifyContainedGeometry([
-			{ x: anchorNode.x, y: anchorNode.y },
-			...cellPath
+		const approachPoints: WayfindingPoint[] = doorApproach
+			? doorApproach.points
+			: [];
+		const suffix: WayfindingPoint[] = simplifyContainedGeometry([
+			pointForMaskIndex(path[0]),
+			...path.slice(1).map(pointForMaskIndex)
 		]);
+		const geometry: WayfindingPoint[] = doorApproach
+			? [
+				{ x: anchorNode.x, y: anchorNode.y },
+				...simplifyContainedGeometry(approachPoints),
+				...suffix.slice(1)
+			]
+			: simplifyContainedGeometry([
+				{ x: anchorNode.x, y: anchorNode.y },
+				...path.map(pointForMaskIndex)
+			]);
 		attachmentIndices.add(attachmentIndex);
 		attachmentByAnchorId.set(anchorNode.id, attachmentIndex);
 		connectorGeometryByAnchorId.set(anchorNode.id, geometry);
@@ -4550,7 +4898,7 @@ const generateCenterlineGraph = (): boolean => {
 		return false;
 	}
 
-	const network = extractSkeletonNetwork(authoredMask, maskColumns, maskRows, attachmentIndices);
+	const network = extractSkeletonNetwork(routingMask, maskColumns, maskRows, attachmentIndices);
 	const nodeIdByIndex = new Map<number, string>();
 	const generatedNodes: WayfindingNode[] = network.nodeIndices.map((index: number, nodeIndex: number): WayfindingNode => {
 		const point: WayfindingPoint = pointForMaskIndex(index);
@@ -4564,8 +4912,9 @@ const generateCenterlineGraph = (): boolean => {
 		const to: string | undefined = nodeIdByIndex.get(chain.indices[chain.indices.length - 1]);
 		if (!from || !to || from === to) return [];
 
-		const geometry: WayfindingPoint[] = simplifyContainedGeometry(chain.indices.map(pointForMaskIndex), cellSize() * 0.75);
-		if (!geometryContained(geometry, cellSize() * 0.25)) return [];
+		const corridorClearance: number = cellSize() / 2;
+		const geometry: WayfindingPoint[] = simplifyContainedGeometry(chain.indices.map(pointForMaskIndex), corridorClearance);
+		if (!geometryContained(geometry, corridorClearance)) return [];
 
 		return [{
 			accessible: true,
@@ -4967,12 +5316,12 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 	syncStudioGraph();
 	const errors = validateWayfindingStudioDelivery(studioProject).filter((issue): boolean => issue.severity === 'error');
 	if (errors.length > 0) {
-		const details = errors.slice(0, 4).map((issue, index): string => `${index + 1}. ${issue.message}`).join(' ');
+		const details = errors.slice(0, 4).map((issue, index): string => `${index + 1}. ${runtimeExportInstruction(issue)}`).join(' ');
 		const remaining = errors.length > 4 ? ` ${errors.length - 4} more issue${errors.length - 4 === 1 ? '' : 's'} remain.` : '';
-		const message = `Runtime export is blocked. ${details}${remaining}`;
+		const message = `Finish these items before exporting: ${details}${remaining}`;
 		coverageStatus.textContent = message;
-		coverageStatus.title = errors.map((issue): string => issue.message).join('\n');
-		showStudioNotice(message, 'error');
+		coverageStatus.title = errors.map(runtimeExportInstruction).join('\n');
+		showStudioNotice(message, 'error', 'Runtime bundle is not ready');
 		return;
 	}
 	downloadText(`${portableProjectBaseName()}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
@@ -5365,7 +5714,7 @@ runtimePreviewDetailsClose.addEventListener('pointerdown', (event: PointerEvent)
 	runtimePreviewDestinationId = undefined;
 	selectedSemanticId = undefined;
 	renderRuntimePreview();
-	draw();
+	clearSimulatedRoute('Choose a destination to preview its route.');
 });
 reset3dViewButton.addEventListener('click', (): void => {
 	scene3d.resetCamera();
@@ -5587,13 +5936,15 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 
 		if (edge) {
 			const before: HistoryState = captureHistoryState();
-			insertPoint(edge, imagePoint);
+			const insertedIndex: number = insertPoint(edge, imagePoint);
 			syncStudioGraph();
 			recordHistory(before);
+			selectEdge(edge.id, insertedIndex);
+			coverageStatus.textContent = `Added point ${insertedIndex + 1} to ${routeSegmentName(edge)}. Drag it to refine the route.`;
 		}
 		insertPointForEdge = undefined;
-		renderReview();
-		draw();
+		pointerDown = false;
+		canvas.releasePointerCapture(event.pointerId);
 
 		return;
 	}
@@ -5682,6 +6033,7 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		selectedSemanticId = selected?.id;
 		selectedSemanticVertexIndex = currentVertexIndex;
 		selectedEdgeId = undefined;
+		selectedEdgeVertexIndex = undefined;
 		if (selected) {
 			const vertexIndex: number | undefined = 'geometry' in selected
 				? currentVertexIndex ?? nearestSemanticVertex(selected, imagePoint)
@@ -5716,17 +6068,20 @@ canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
 		renderReview();
 		draw();
 	} else if (tool === 'graph' && graph) {
-		const edge: WayfindingEdge | undefined = selectedEdgeId
+		const selectedEdge: WayfindingEdge | undefined = selectedEdgeId
 			? graph.edges.find((candidate: WayfindingEdge): boolean => candidate.id === selectedEdgeId)
-			: nearestEdge(imagePoint);
+			: undefined;
+		const selectedVertex: number | undefined = selectedEdge ? nearestVertex(selectedEdge, imagePoint) : undefined;
+		const edge: WayfindingEdge | undefined = selectedVertex !== undefined ? selectedEdge : nearestEdge(imagePoint);
 		const vertex: number | undefined = edge ? nearestVertex(edge, imagePoint) : undefined;
 
 		if (edge && vertex !== undefined) {
+			selectEdge(edge.id, vertex);
 			draggedVertex = { edgeId: edge.id, pointIndex: vertex };
 			dragHistoryState = captureHistoryState();
 			dragMutated = false;
 		}
-		else selectEdge(nearestEdge(imagePoint)?.id);
+		else selectEdge(edge?.id);
 	}
 });
 
@@ -5846,8 +6201,20 @@ canvas.addEventListener('pointerup', (): void => {
 });
 
 canvas.addEventListener('dblclick', (event: MouseEvent): void => {
-	if (tool !== 'select') return;
 	const point: ImagePoint = toImagePoint(eventPoint(event));
+	if (workspaceMode === 'route-edit' && tool === 'graph' && graph) {
+		const edge: WayfindingEdge | undefined = nearestEdge(point);
+		if (!edge) return;
+		const before: HistoryState = captureHistoryState();
+		const insertedIndex: number = insertPoint(edge, point);
+		syncStudioGraph();
+		recordHistory(before);
+		selectEdge(edge.id, insertedIndex);
+		coverageStatus.textContent = `Added point ${insertedIndex + 1} to ${routeSegmentName(edge)}. Drag it to refine the route.`;
+
+		return;
+	}
+	if (tool !== 'select') return;
 	const selected: WayfindingStudioElement | undefined = semanticElement() ?? nearestSemantic(point);
 	if (!selected || !('geometry' in selected)) return;
 	const insertedIndex: number | undefined = insertSemanticVertex(selected, point);
@@ -5871,7 +6238,7 @@ canvas.addEventListener('wheel', (event: WheelEvent): void => {
 	draw();
 }, { passive: false });
 
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', (): void => { resizeCanvas(); });
 document.addEventListener('visibilitychange', (): void => {
 	if (document.visibilityState === 'hidden') void persistAutosave();
 });
