@@ -23,7 +23,11 @@ import type {
 	WayfindingProjectDocument
 } from '../project.mts';
 import {
-	createWayfindingRuntimeBundle,
+	createWayfindingMapPackage,
+	WAYFINDING_MAP_PACKAGE_EXTENSION,
+	WAYFINDING_MAP_PACKAGE_MIME_TYPE
+} from '../runtime-package.mts';
+import {
 	createWayfindingStudioProject,
 	parseWayfindingStudioProject,
 	repairWayfindingStudioProject,
@@ -78,10 +82,12 @@ interface DestinationRow extends Record<string, unknown> {
 	id: string;
 	mapNumber?: string;
 	name: string;
+	phone?: string;
 	photoAssetIds?: string[];
 	routeable?: boolean;
 	status?: string;
 	translations?: Record<string, WayfindingStudioTranslation>;
+	website?: string;
 }
 
 interface DestinationTable {
@@ -276,7 +282,11 @@ const toggleLeftPanelButton = requireElement<HTMLButtonElement>('#toggle-left-pa
 const toggleRightPanelButton = requireElement<HTMLButtonElement>('#toggle-right-panel');
 const runtimePreview = requireElement<HTMLElement>('#runtime-preview');
 const runtimePreviewSearch = requireElement<HTMLInputElement>('#runtime-preview-search');
+const runtimePreviewLanguage = requireElement<HTMLSelectElement>('#runtime-preview-language');
+const runtimePreviewFloor = requireElement<HTMLSelectElement>('#runtime-preview-floor');
+const runtimePreviewCategoryFilter = requireElement<HTMLSelectElement>('#runtime-preview-category-filter');
 const runtimePreviewIcons = requireElement<HTMLInputElement>('#runtime-preview-icons');
+const runtimePreviewBrands = requireElement<HTMLInputElement>('#runtime-preview-brands');
 const runtimePreviewLabels = requireElement<HTMLInputElement>('#runtime-preview-labels');
 const runtimePreviewResults = requireElement<HTMLElement>('#runtime-preview-results');
 const runtimePreviewDetails = requireElement<HTMLElement>('#runtime-preview-details');
@@ -1312,6 +1322,15 @@ const redo = async (): Promise<void> => {
 const downloadText = (name: string, value: string, type = 'application/json'): void => {
 	const anchor: HTMLAnchorElement = document.createElement('a');
 	anchor.href = URL.createObjectURL(new Blob([value], { type }));
+	anchor.download = name;
+	anchor.click();
+	URL.revokeObjectURL(anchor.href);
+};
+
+const downloadBytes = (name: string, value: Uint8Array, type: string): void => {
+	const anchor: HTMLAnchorElement = document.createElement('a');
+	const blobBytes = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength) as ArrayBuffer;
+	anchor.href = URL.createObjectURL(new Blob([blobBytes], { type }));
 	anchor.download = name;
 	anchor.click();
 	URL.revokeObjectURL(anchor.href);
@@ -3004,10 +3023,15 @@ const drawSemanticElements = (): void => {
 		if (!layerVisible(element.type)) continue;
 		if (workspaceMode === 'runtime-preview') {
 			if (element.type === 'walkable' || element.type === 'obstacle' || element.type === 'door') continue;
-			if ((element.type === 'icon' || element.type === 'logo') && !runtimePreviewIcons.checked) continue;
+			if (element.type === 'icon' && !runtimePreviewIcons.checked) continue;
+			if (element.type === 'logo' && !runtimePreviewBrands.checked) continue;
 			if (element.type === 'label' && !runtimePreviewLabels.checked) continue;
 		}
-		const selected: boolean = authoringOverlays && element.id === selectedSemanticId;
+		const destinationId: string | undefined = 'destinationId' in element ? element.destinationId : undefined;
+		const visitorSelected: boolean = workspaceMode === 'runtime-preview'
+			&& destinationId !== undefined
+			&& destinationId === runtimePreviewDestinationId;
+		const selected: boolean = authoringOverlays ? element.id === selectedSemanticId : visitorSelected;
 		const polygon: WayfindingStudioPolygonElement | undefined = 'geometry' in element ? element : undefined;
 		const polygonDefaults = polygon ? defaults[polygon.type] : undefined;
 		context.save();
@@ -3018,15 +3042,34 @@ const drawSemanticElements = (): void => {
 			const asset: WayfindingStudioAsset | undefined = studioProject.assets.find((candidate: WayfindingStudioAsset): boolean => candidate.id === element.assetId);
 			if (asset) {
 				const image: HTMLImageElement = cachedMediaImage(asset);
-				if (image.complete) context.drawImage(image, element.point.x, element.point.y, element.width, element.height);
+				const pulse: number = visitorSelected ? 1 + (Math.sin(originAnimationPhase / 7) + 1) * 0.035 : 1;
+				const width: number = element.width * pulse;
+				const height: number = element.height * pulse;
+				const x: number = element.point.x - (width - element.width) / 2;
+				const y: number = element.point.y - (height - element.height) / 2;
+				if (image.complete) context.drawImage(image, x, y, width, height);
+				if (visitorSelected) {
+					context.strokeStyle = '#ffffff';
+					context.lineWidth = 7 / scale;
+					context.strokeRect(x, y, width, height);
+					context.strokeStyle = '#138b75';
+					context.lineWidth = 3 / scale;
+					context.strokeRect(x, y, width, height);
+				}
 			}
 			if (authoringOverlays) context.strokeRect(element.point.x, element.point.y, element.width, element.height);
 		} else if ('geometry' in element) {
+			if (workspaceMode === 'runtime-preview' && element.type === 'location' && !visitorSelected) {
+				context.restore();
+				continue;
+			}
 			context.beginPath();
 			context.moveTo(element.geometry[0].x, element.geometry[0].y);
 			for (const vertex of element.geometry.slice(1)) context.lineTo(vertex.x, vertex.y);
 			context.closePath();
-			context.globalAlpha = element.presentation?.fillOpacity ?? polygonDefaults?.fillOpacity ?? 0.2;
+			context.globalAlpha = visitorSelected
+				? Math.max(0.32, element.presentation?.fillOpacity ?? polygonDefaults?.fillOpacity ?? 0.2)
+				: element.presentation?.fillOpacity ?? polygonDefaults?.fillOpacity ?? 0.2;
 			context.fill();
 			context.globalAlpha = 1;
 			if ((workspaceMode !== 'route-preview' && workspaceMode !== 'runtime-preview') || selected) {
@@ -3035,10 +3078,10 @@ const drawSemanticElements = (): void => {
 				context.strokeStyle = selected ? '#ffe06c' : 'rgba(255, 255, 255, 0.94)';
 				context.stroke();
 				context.lineWidth = (selected ? 2.5 : 1.5) / scale;
-				context.strokeStyle = selected ? '#17201f' : '#087d6b';
+				context.strokeStyle = visitorSelected ? '#138b75' : selected ? '#17201f' : '#087d6b';
 				context.stroke();
 			}
-			if (selected) {
+			if (selected && authoringOverlays) {
 				context.fillStyle = '#fffdf6';
 				for (const [index, vertex] of element.geometry.entries()) {
 					context.beginPath();
@@ -3103,9 +3146,19 @@ const drawSemanticElements = (): void => {
 			}
 		} else {
 			context.beginPath();
-			context.arc(element.point.x, element.point.y, (selected ? 12 : 8) / scale, 0, Math.PI * 2);
+			const visitorPulse: number = visitorSelected ? (Math.sin(originAnimationPhase / 7) + 1) * 4 : 0;
+			context.arc(element.point.x, element.point.y, (selected ? 12 + visitorPulse : 8) / scale, 0, Math.PI * 2);
 			context.fill();
 			context.stroke();
+			if (visitorSelected) {
+				context.beginPath();
+				context.arc(element.point.x, element.point.y, (22 + visitorPulse * 1.5) / scale, 0, Math.PI * 2);
+				context.strokeStyle = '#138b75';
+				context.globalAlpha = 0.55;
+				context.lineWidth = 3 / scale;
+				context.stroke();
+				context.globalAlpha = 1;
+			}
 			if (element.type === 'origin') {
 				const animation: WayfindingStudioProjectDefaults['origin']['animation2d'] = defaults.origin.animation2d;
 				if (animation !== 'none') {
@@ -3170,36 +3223,37 @@ function routeDestinationAt(pointValue: WayfindingPoint): WayfindingStudioElemen
 	});
 }
 
-const runtimePreviewDestination = (elementId: string): { destination: DestinationRow; element: WayfindingStudioElement } | undefined => {
-	const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === elementId);
-	if (!element || !((element.type === 'location' || element.type === 'poi') && element.destinationId)) return undefined;
-	const destination: DestinationRow | undefined = destinationRows().find((candidate: DestinationRow): boolean => candidate.id === element.destinationId);
+const runtimeDestinationElement = (destinationId: string, floorId: string = currentFloorId): WayfindingStudioElement | undefined =>
+	studioProject.floors.find((floor: WayfindingStudioFloor): boolean => floor.id === floorId)?.elements.find((element: WayfindingStudioElement): boolean =>
+		(element.type === 'location' || element.type === 'poi') && element.destinationId === destinationId
+	);
 
-	return destination ? { destination, element } : undefined;
+const runtimePreviewDestination = (elementId: string): { destination: DestinationRow; element: WayfindingStudioElement } | undefined => {
+	const clickedElement: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean => candidate.id === elementId);
+	const destinationId: string | undefined = clickedElement && 'destinationId' in clickedElement ? clickedElement.destinationId : undefined;
+	if (!clickedElement || !destinationId) return undefined;
+	const destination: DestinationRow | undefined = destinationRows().find((candidate: DestinationRow): boolean => candidate.id === destinationId);
+	const destinationElement: WayfindingStudioElement | undefined = runtimeDestinationElement(destinationId);
+
+	return destination ? { destination, element: destinationElement ?? clickedElement } : undefined;
 };
 
+const runtimePreviewLanguageCode = (): string =>
+	runtimePreviewLanguage.value || studioProject.defaultLanguage || projectLanguages()[0]?.code || 'en';
+
 const runtimePreviewDisplayName = (destination: DestinationRow): string => {
-	const languageCode: string | undefined = studioProject.defaultLanguage;
-	const translated: string | undefined = languageCode ? destination.translations?.[languageCode]?.name : undefined;
+	const translated: string | undefined = destination.translations?.[runtimePreviewLanguageCode()]?.name;
 
 	return translated?.trim() || destination.name?.trim() || destination.id;
 };
 
 const runtimePreviewDisplayDescription = (destination: DestinationRow): string => {
-	const languageCode: string | undefined = studioProject.defaultLanguage;
-	const translated: string | undefined = languageCode ? destination.translations?.[languageCode]?.description : undefined;
+	const translated: string | undefined = destination.translations?.[runtimePreviewLanguageCode()]?.description;
 
 	return translated?.trim() || destination.description?.trim() || 'No visitor description has been added yet.';
 };
 
-function openRuntimePreviewDetails(elementId: string): boolean {
-	const resolved = runtimePreviewDestination(elementId);
-	if (!resolved) return false;
-	const { destination, element } = resolved;
-	runtimePreviewDestinationId = destination.id;
-	selectedSemanticId = element.id;
-	selectedSemanticVertexIndex = undefined;
-	selectedEdgeId = undefined;
+const renderRuntimePreviewDetails = (destination: DestinationRow): void => {
 	runtimePreviewCategory.textContent = destination.category?.trim() || 'Destination';
 	runtimePreviewName.textContent = runtimePreviewDisplayName(destination);
 	runtimePreviewDescription.textContent = runtimePreviewDisplayDescription(destination);
@@ -3231,18 +3285,76 @@ function openRuntimePreviewDetails(elementId: string): boolean {
 			return image;
 		}));
 	runtimePreviewDetails.hidden = false;
+};
+
+function openRuntimePreviewDetails(elementId: string): boolean {
+	const resolved = runtimePreviewDestination(elementId);
+	if (!resolved) return false;
+	const { destination, element } = resolved;
+	runtimePreviewDestinationId = destination.id;
+	selectedSemanticId = element.id;
+	selectedSemanticVertexIndex = undefined;
+	selectedEdgeId = undefined;
+	renderRuntimePreviewDetails(destination);
 	renderRuntimePreview();
-	if (!routeToSemanticElement(element.id)) draw();
+	if ((element.type !== 'location' && element.type !== 'poi') || !routeToSemanticElement(element.id)) draw();
 
 	return true;
 }
 
+const replaceSelectOptions = (
+	select: HTMLSelectElement,
+	options: Array<{ label: string; value: string }>,
+	preferredValue: string
+): void => {
+	select.replaceChildren(...options.map(({ label, value }): HTMLOptionElement => {
+		const option: HTMLOptionElement = document.createElement('option');
+		option.value = value;
+		option.textContent = label;
+		return option;
+	}));
+	select.value = options.some((option): boolean => option.value === preferredValue) ? preferredValue : options[0]?.value ?? '';
+};
+
+const syncRuntimePreviewControls = (): void => {
+	const languageValue: string = runtimePreviewLanguage.value || studioProject.defaultLanguage || '';
+	replaceSelectOptions(
+		runtimePreviewLanguage,
+		projectLanguages().map((language: WayfindingStudioLanguage): { label: string; value: string } => ({ label: language.label, value: language.code })),
+		languageValue
+	);
+	replaceSelectOptions(
+		runtimePreviewFloor,
+		studioProject.floors.map((floor: WayfindingStudioFloor): { label: string; value: string } => ({ label: floor.name, value: floor.id })),
+		currentFloorId
+	);
+	const categoryValue: string = runtimePreviewCategoryFilter.value;
+	const categories: string[] = [...new Set(destinationRows()
+		.map((destination: DestinationRow): string => destination.category?.trim() ?? '')
+		.filter(Boolean))]
+		.sort((left: string, right: string): number => left.localeCompare(right));
+	replaceSelectOptions(
+		runtimePreviewCategoryFilter,
+		[{ label: 'All categories', value: '' }, ...categories.map((category: string): { label: string; value: string } => ({ label: category, value: category }))],
+		categoryValue
+	);
+};
+
 function renderRuntimePreview(): void {
 	if (workspaceMode !== 'runtime-preview') return;
+	syncRuntimePreviewControls();
+	const selectedDestination: DestinationRow | undefined = runtimePreviewDestinationId
+		? destinationRows().find((destination: DestinationRow): boolean => destination.id === runtimePreviewDestinationId)
+		: undefined;
+	if (selectedDestination) renderRuntimePreviewDetails(selectedDestination);
+	else runtimePreviewDetails.hidden = true;
 	runtimePreviewDetails.hidden = runtimePreviewDestinationId === undefined;
 	const query: string = runtimePreviewSearch.value.trim().toLocaleLowerCase();
+	const category: string = runtimePreviewCategoryFilter.value;
 	const rows: DestinationRow[] = destinationRows()
 		.filter((destination: DestinationRow): boolean => destination.routeable !== false)
+		.filter((destination: DestinationRow): boolean => Boolean(runtimeDestinationElement(destination.id)))
+		.filter((destination: DestinationRow): boolean => !category || destination.category === category)
 		.filter((destination: DestinationRow): boolean => {
 			if (!query) return true;
 			return [
@@ -3265,9 +3377,7 @@ function renderRuntimePreview(): void {
 		const button: HTMLButtonElement = document.createElement('button');
 		const name: HTMLElement = document.createElement('strong');
 		const detail: HTMLSpanElement = document.createElement('span');
-		const element: WayfindingStudioElement | undefined = currentElements().find((candidate: WayfindingStudioElement): boolean =>
-			(candidate.type === 'location' || candidate.type === 'poi') && candidate.destinationId === destination.id
-		);
+		const element: WayfindingStudioElement | undefined = runtimeDestinationElement(destination.id);
 		button.type = 'button';
 		button.className = 'runtime-preview-result';
 		button.classList.toggle('active', destination.id === runtimePreviewDestinationId);
@@ -3596,6 +3706,7 @@ const draw = (): void => {
 	canvas.dataset.routeNetworkVisible = String(showRouteNetwork);
 	canvas.setAttribute('data-origin-animation-2d', projectDefaults().origin.animation2d);
 	canvas.dataset.runtimeIconsVisible = String(runtimePreviewIcons.checked);
+	canvas.dataset.runtimeBrandsVisible = String(runtimePreviewBrands.checked);
 	canvas.dataset.runtimeLabelsVisible = String(runtimePreviewLabels.checked);
 	const selectedEdge: WayfindingEdge | undefined = graph?.edges.find((edge: WayfindingEdge): boolean => edge.id === selectedEdgeId);
 	canvas.dataset.selectedEdgePointCount = String(selectedEdge ? edgePoints(selectedEdge).length : 0);
@@ -4736,7 +4847,10 @@ const routeAnimationActive = (): boolean => Boolean(
 const originAnimationActive = (): boolean => Boolean(
 	viewMode === '2d'
 	&& projectDefaults().origin.animation2d !== 'none'
-	&& currentElements().some((element: WayfindingStudioElement): boolean => element.type === 'origin' && layerVisible('origin'))
+	&& (
+		currentElements().some((element: WayfindingStudioElement): boolean => element.type === 'origin' && layerVisible('origin'))
+		|| (workspaceMode === 'runtime-preview' && runtimePreviewDestinationId)
+	)
 );
 
 const scheduleOriginAnimation = (): void => {
@@ -5321,11 +5435,15 @@ requireElement<HTMLButtonElement>('#studio-export-runtime').addEventListener('cl
 		const message = `Finish these items before exporting: ${details}${remaining}`;
 		coverageStatus.textContent = message;
 		coverageStatus.title = errors.map(runtimeExportInstruction).join('\n');
-		showStudioNotice(message, 'error', 'Runtime bundle is not ready');
+		showStudioNotice(message, 'error', 'Published map is not ready');
 		return;
 	}
-	downloadText(`${portableProjectBaseName()}.runtime.json`, JSON.stringify(createWayfindingRuntimeBundle(studioProject), null, 2));
-	showStudioNotice('Runtime bundle exported.');
+	downloadBytes(
+		`${portableProjectBaseName()}${WAYFINDING_MAP_PACKAGE_EXTENSION}`,
+		createWayfindingMapPackage(studioProject),
+		WAYFINDING_MAP_PACKAGE_MIME_TYPE
+	);
+	showStudioNotice('Published map exported.');
 });
 requireElement<HTMLButtonElement>('#semantic-finish').addEventListener('click', finishSemanticPolygon);
 requireElement<HTMLButtonElement>('#semantic-cancel').addEventListener('click', (): void => {
@@ -5703,7 +5821,20 @@ toggleRightPanelButton.addEventListener('click', (): void => {
 	setPanelOpen('right', document.body.dataset.rightPanel === 'closed');
 });
 runtimePreviewSearch.addEventListener('input', renderRuntimePreview);
+runtimePreviewLanguage.addEventListener('change', (): void => {
+	renderRuntimePreview();
+	draw();
+});
+runtimePreviewFloor.addEventListener('change', async (): Promise<void> => {
+	runtimePreviewDestinationId = undefined;
+	selectedSemanticId = undefined;
+	clearSimulatedRoute('Choose a destination to preview its route.');
+	await activateFloor(runtimePreviewFloor.value);
+	renderRuntimePreview();
+});
+runtimePreviewCategoryFilter.addEventListener('change', renderRuntimePreview);
 runtimePreviewIcons.addEventListener('change', draw);
+runtimePreviewBrands.addEventListener('change', draw);
 runtimePreviewLabels.addEventListener('change', draw);
 runtimePreviewDetails.addEventListener('click', (event: MouseEvent): void => {
 	event.stopPropagation();

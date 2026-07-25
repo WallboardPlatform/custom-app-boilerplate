@@ -36,7 +36,7 @@
 			<div class="toolbar-group">
 				<button id="studio-export-project" type="button" title="Save to the opened project file (Ctrl+S)">Save</button>
 				<button id="studio-save-as" type="button" title="Choose a new project file (Ctrl+Shift+S)">Save as</button>
-				<button id="studio-export-runtime" type="button" title="Build the artifact consumed by a wayfinding custom app">Runtime bundle</button>
+				<button id="studio-export-runtime" type="button" title="Publish the .wbmap package consumed by a wayfinding custom app">Publish map</button>
 				<button id="shortcut-help" type="button" title="Show all keyboard shortcuts (?)">Shortcuts <kbd>?</kbd></button>
 			</div>
 		</div>
@@ -395,8 +395,14 @@
 			<section id="runtime-preview" class="runtime-preview" hidden aria-label="Visitor map preview">
 				<header class="runtime-preview-toolbar">
 					<label class="runtime-search"><span>Find a destination</span><input id="runtime-preview-search" type="search" placeholder="Search names, categories, or details"></label>
+					<div class="runtime-preview-filters">
+						<label><span>Language</span><select id="runtime-preview-language"></select></label>
+						<label><span>Floor</span><select id="runtime-preview-floor"></select></label>
+						<label><span>Category</span><select id="runtime-preview-category-filter"></select></label>
+					</div>
 					<div class="runtime-preview-toggles">
 						<label class="check"><input id="runtime-preview-icons" type="checkbox" checked> Symbols</label>
+						<label class="check"><input id="runtime-preview-brands" type="checkbox" checked> Brand logos</label>
 						<label class="check"><input id="runtime-preview-labels" type="checkbox" checked> Labels</label>
 					</div>
 				</header>
