@@ -1,13 +1,13 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Prove that a portable Wayfinding Studio runtime artifact can power a polished interactive Wallboard custom app in both 2D and 3D.",
+		"summary": "Prove that an editable Wayfinding Studio project can publish a portable map package that powers a polished interactive Wallboard custom app in both 2D and 3D.",
 		"audience": "Visitors using a landscape touch display at a modern campus.",
 		"primaryGoal": "Let a visitor select a destination and inspect a reviewed route while rotating, panning, and zooming the same semantic map in 3D."
 	},
 	"assumptions": [
 		"The Northline campus data is synthetic and license-safe.",
-		"The bundled runtime JSON represents the exact portable contract emitted by Wayfinding Studio.",
+		"The checked-in .wbwayfinding project is the editable source and the bundled .wbmap is its published runtime package.",
 		"The primary surfaces are Full HD and 1366x768 landscape touch displays."
 	],
 	"app": { "mode": "replacement", "name": "Northline Spatial Wayfinding", "version": "1" },
@@ -21,7 +21,7 @@
 	],
 	"data": { "mode": "static", "bindings": [] },
 	"ownership": [
-		{ "id": "runtime-artifact", "area": "content", "owner": "locked", "targets": ["campus.runtime.json"], "rationale": "Reviewed geometry, graph topology, labels, and presentation travel together as one Studio runtime artifact." },
+		{ "id": "runtime-artifact", "area": "content", "owner": "locked", "targets": ["campus.wbwayfinding", "campus.wbmap"], "rationale": "Reviewed geometry, graph topology, destination content, and media are authored in Studio and published together as one portable runtime package." },
 		{ "id": "kiosk-settings", "area": "presentation", "owner": "setting", "targets": ["title", "defaultView", "showViewSwitcher", "motionPreset", "themePreset", "backgroundColor", "panelColor", "primaryTextColor", "secondaryTextColor", "accentColor"], "rationale": "Operators control kiosk identity and safe presentation choices without changing reviewed geometry." },
 		{ "id": "visitor-session", "area": "state", "owner": "interaction", "targets": ["selectedDestination", "view", "camera"], "rationale": "Selection and camera movement belong to the active visitor session." }
 	],
@@ -80,7 +80,7 @@
 		{
 			"id": "destination-names",
 			"role": "secondary",
-			"source": { "type": "computed", "properties": ["runtimeArtifact"] },
+			"source": { "type": "computed", "properties": ["publishedMapPackage"] },
 			"selectors": [".wb-spatial-wayfinding-destination strong"],
 			"strategy": "wrap",
 			"limits": { "minimumFontSize": 15, "maximumLines": 2 },
@@ -103,7 +103,7 @@
 	"assets": [
 		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
 		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "runtime-artifact", "source": "packaged", "path": "src/assets/campus.runtime.json", "required": true }
+		{ "id": "runtime-artifact", "source": "packaged", "path": "src/assets/campus.wbmap", "required": true }
 	],
 	"visualDirection": {
 		"source": "creative-led",
@@ -116,7 +116,7 @@
 		"avoid": ["Generic KPI cards", "Decorative perspective that blocks route inspection", "Auto-zoom after destination selection"]
 	},
 	"visualReview": {
-		"intent": "A convincing real custom-app proof that Studio output can become a touch-controlled spatial wayfinding product.",
+		"intent": "A convincing real custom-app proof that an editable Studio project can publish a touch-controlled spatial wayfinding product.",
 		"focus": [
 			"Verify the WebGL canvas is nonblank and correctly framed.",
 			"Verify labels float above their matching extrusions without clipping.",

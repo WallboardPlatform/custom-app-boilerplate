@@ -81,7 +81,8 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Assess wayfinding evidence/mode | `npm run wayfinding:assess -- --project wayfinding-project.json` |
 | Author a manual-first wayfinding package | `npm run wayfinding:studio` |
 | Migrate reviewed map artifacts | `npm run wayfinding:studio:migrate-svg -- --delivery ... --svg ... --destinations ... --output venue.wbwayfinding` |
-| Export a wayfinding runtime bundle | `npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfinding-runtime` |
+| Publish a wayfinding map package | `npm run wayfinding:studio:export -- --project venue.wbwayfinding --output published-map` |
+| Republish the spatial example | `npm run wayfinding:example:publish` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |

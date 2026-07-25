@@ -219,7 +219,7 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "imported", "reviewer-authored"] },
-				"type": { "enum": ["icon", "logo"] }, "point": { "$ref": "#/$defs/point" }, "assetId": { "$ref": "#/$defs/nonEmptyString" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }
+				"type": { "enum": ["icon", "logo"] }, "point": { "$ref": "#/$defs/point" }, "assetId": { "$ref": "#/$defs/nonEmptyString" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }
 			}
 		},
 		"floor": {
@@ -246,7 +246,16 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"name": { "$ref": "#/$defs/nonEmptyString" },
+				"accessible": { "type": "boolean" },
+				"category": { "type": "string" },
+				"description": { "type": "string" },
+				"floor": { "type": "string" },
+				"hours": { "type": "string" },
+				"mapNumber": { "type": "string" },
+				"phone": { "type": "string" },
 				"photoAssetIds": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
+				"routeable": { "type": "boolean" },
+				"status": { "type": "string" },
 				"translations": {
 					"type": "object",
 					"additionalProperties": {
@@ -257,7 +266,8 @@
 							"description": { "type": "string" }
 						}
 					}
-				}
+				},
+				"website": { "type": "string" }
 			}
 		}
 	}

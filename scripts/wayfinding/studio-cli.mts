@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+	createWayfindingMapPackage,
+	WAYFINDING_MAP_PACKAGE_EXTENSION
+} from './runtime-package.mjs';
 import { createWayfindingRuntimeBundle, validateWayfindingStudioDelivery } from './studio-project.mjs';
 import { parseWayfindingStudioProjectSource } from './schema.mjs';
 
@@ -24,12 +28,24 @@ if (errors.length > 0) {
 }
 
 const bundle = createWayfindingRuntimeBundle(project);
+const packageBytes = createWayfindingMapPackage(project);
+const safeProjectName: string = project.name
+	.normalize('NFKD')
+	.replace(/[\u0300-\u036f]/g, '')
+	.replace(/[^a-zA-Z0-9._-]+/g, '-')
+	.replace(/^-+|-+$/g, '')
+	.toLowerCase() || 'wayfinding-map';
 
 if (!outputDirectory) {
-	process.stdout.write(`${JSON.stringify({ issues, manifest: bundle.manifest }, null, 2)}\n`);
+	process.stdout.write(`${JSON.stringify({
+		issues,
+		manifest: bundle.manifest,
+		publishedMap: `${safeProjectName}${WAYFINDING_MAP_PACKAGE_EXTENSION}`
+	}, null, 2)}\n`);
 } else {
 	const target: string = path.resolve(outputDirectory);
 	fs.mkdirSync(path.join(target, 'floors'), { recursive: true });
+	fs.writeFileSync(path.join(target, `${safeProjectName}${WAYFINDING_MAP_PACKAGE_EXTENSION}`), packageBytes);
 	fs.writeFileSync(path.join(target, 'assets.json'), `${JSON.stringify(bundle.assets, null, 2)}\n`);
 	fs.writeFileSync(path.join(target, 'manifest.json'), `${JSON.stringify(bundle.manifest, null, 2)}\n`);
 	fs.writeFileSync(path.join(target, 'route-graph.json'), `${JSON.stringify(bundle.graph, null, 2)}\n`);

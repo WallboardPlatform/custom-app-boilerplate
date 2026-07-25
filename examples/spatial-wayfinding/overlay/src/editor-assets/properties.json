@@ -62,6 +62,6 @@
 			]
 		}
 	],
-	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js", "assets/index.wbmap"],
 	"externalCommands": []
 }

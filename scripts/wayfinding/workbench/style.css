@@ -1347,8 +1347,9 @@ body[data-workspace="runtime-preview"] .stage-panel-toggle { display: none; }
 
 .runtime-preview-toggles {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 16px;
+	gap: 8px 14px;
 }
 
 .runtime-preview-toggles .check {
@@ -1356,6 +1357,36 @@ body[data-workspace="runtime-preview"] .stage-panel-toggle { display: none; }
 	color: var(--wb-muted);
 	font-size: 10px;
 	font-weight: 750;
+}
+
+.runtime-preview-filters {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.runtime-preview-filters label,
+.runtime-preview-filters span {
+	display: block;
+	min-width: 0;
+}
+
+.runtime-preview-filters span {
+	margin-bottom: 5px;
+	color: var(--wb-muted);
+	font-size: 8px;
+	font-weight: 800;
+	text-transform: uppercase;
+}
+
+.runtime-preview-filters select {
+	width: 100%;
+	min-height: 34px;
+	padding: 6px 26px 6px 8px;
+	border: 1px solid var(--wb-border);
+	border-radius: var(--wb-radius);
+	background-color: var(--wb-surface);
+	font-size: 9px;
 }
 
 .runtime-preview-results {

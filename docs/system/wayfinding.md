@@ -23,7 +23,7 @@ npm run wayfinding:assess -- --project wayfinding-project.json
 
 | Project section | Owns |
 |-----------------|------|
-| `assets` | Optional floor backgrounds, logos, icons as embedded data URLs |
+| `assets` | Optional floor backgrounds, symbols, brand marks, and photos used while editing |
 | `floors` | Coordinate size and semantic elements per floor |
 | `destinations` | Baseline public copy and data structure |
 | `graph` | Reviewed nodes, edges, accessibility, closures, floor transitions |
@@ -39,9 +39,9 @@ Semantic floor elements:
 | `walkable` / `obstacle` | Explicit authoring geometry and review aid |
 | `origin` | Installed screen position, facing degrees, default language |
 | `transition` | Paired stairs/elevator/escalator connection across floors |
-| `label` / `icon` / `logo` | Independent presentation layers |
+| `label` / `icon` / `logo` | Independent presentation layers; `icon` is semantic and theme-tintable, while `logo` preserves a brand identity |
 
-Stable IDs are mandatory. Geometry, doors, origins, and transitions stay in the package. Mutable names, descriptions, status, hours, images, localization, and CTA copy may be bound to a Wallboard `TABLE`; mutable data cannot create geometry or route eligibility.
+Stable IDs are mandatory. Geometry, doors, origins, and transitions stay in the package. A destination may own translated names/descriptions, categories, status, hours, contact details, one semantic symbol, one brand mark, and multiple photos. A `poi` is a point-shaped destination rather than a second metadata model. Mutable destination content may be bound to a Wallboard `TABLE`; mutable data cannot create geometry or route eligibility.
 
 ## Wayfinding Studio
 
@@ -59,13 +59,13 @@ Workflow:
 4. In **Route edit**, build the initial centerline from reviewed pedestrian space and linked doors, then inspect or adjust individual segments. Rebuilding replaces manual route edits and requires confirmation.
 5. In **Route preview**, click a route-ready destination or choose it from the directory. Rooms without a linked public entrance are labeled unavailable instead of failing with an unexplained route error.
 6. Give paired cross-floor transitions the same `connectionId`; set type and accessibility from verified venue facts. Confirm imported or AI-proposed semantics only after review.
-7. Studio autosaves a recovery draft in IndexedDB. **Save** writes back to the opened file when the browser grants a file handle; **Save as** creates a portable copy. Runtime export is a separate acceptance gate and never replaces the editable project.
+7. Studio autosaves a recovery draft in IndexedDB. **Save** writes back to the opened file when the browser grants a file handle; **Save as** creates a portable copy. **Publish map** creates the `.wbmap` consumed by a custom app and never replaces the editable project.
 
 `npm run wayfinding:workbench` remains an alias for the same Studio.
 
 ### Host boundary
 
-Wayfinding Studio is the complete standalone authoring product and canonical editor for `.wbwayfinding`. It owns project/file lifecycle, floors, background and reusable assets, semantic geometry, route generation and repair, validation, recovery, and runtime export.
+Wayfinding Studio is the complete standalone authoring product and canonical editor for `.wbwayfinding`. It owns project/file lifecycle, floors, background and reusable assets, semantic geometry, route generation and repair, validation, recovery, and `.wbmap` publishing.
 
 Keep the model, renderer, routing, and inspector logic host-neutral. A future Wallboard custom editor may embed a constrained host for editing an existing project property through the Wallboard message bridge, but it must not duplicate the full Studio or become the only way to author maps. Embedded editing excludes project creation, arbitrary file management, migration, and bulk asset workflows unless the host gains explicit platform support.
 
@@ -84,25 +84,27 @@ npm run wayfinding:studio:migrate-svg -- --delivery wayfinding-project.json --sv
 
 Imported geometry is `proposed` by default. Add `--status confirmed` only when the supplied SVG geometry has already completed human review.
 
-Deterministic export:
+Publish the portable map:
 
 ```bash
 npm run wayfinding:studio:export -- --project venue.wbwayfinding --output wayfinding-runtime
 ```
 
-Output:
+Primary output:
 
 ```text
-assets.json
-manifest.json
-route-graph.json
-destinations-datasource.json
-validation.json
-floors/<floor-id>.scene.json
-floors/<floor-id>.svg
+wayfinding-runtime/<project-name>.wbmap
 ```
 
-Generated SVG groups are stable: `Background`, `Walkable`, `Obstacles`, `Locations`, `Doors`, `POIs`, `Origins`, `Transitions`, `Labels`, `Icons`, `Logos`. Labels/icons/logos are always independent layers. Each scene file contains the same semantic elements plus optional 3D presentation and camera state; referenced data URLs live in `assets.json`. Runtime routes remain in `route-graph.json`, not invisible SVG geometry.
+`.wbmap` is a ZIP package with `manifest.json`, `map.json`, `routes/graph.json`, `data/destinations.json`, per-floor SVG/scene files, and binary `assets/*`. JSON files reference package paths instead of carrying data URLs. Generated SVG groups are stable: `Background`, `Walkable`, `Obstacles`, `Locations`, `Doors`, `POIs`, `Origins`, `Transitions`, `Labels`, `Icons`, `Logos`. Routes remain structured graph data, not invisible SVG geometry. The additional loose files in the output directory are diagnostics for development and are not the custom-app contract.
+
+The custom app treats the package as visitor content:
+
+- 2D idle state hides location fills; hover/selection reveals a readable highlight.
+- 3D keeps authored extrusions visible and strengthens the selected destination.
+- symbols are semantic and theme-aware; brand marks preserve their artwork; photos appear in destination details.
+- directory search, language, floor, category, and optional layer controls operate on the same destination model.
+- authoring geometry and editor handles never appear in the visitor runtime.
 
 `manifest.json` records both `targetMode` and evidence-assessed `deliveryMode`. When fallback is allowed and route evidence is incomplete, export may safely downgrade to directory/highlight/directional mode; its runtime graph is intentionally empty so an app cannot accidentally render an uncertified route. Studio project parsing remains structural, so an incomplete route draft can always be reopened and corrected.
 
@@ -187,6 +189,6 @@ Deliver:
 
 - uploadable custom-app ZIP and source ZIP;
 - editable `.wbwayfinding` project;
-- deterministic runtime export;
+- published `.wbmap` plus the editable `.wbwayfinding` source;
 - destination datasource contract and synthetic template;
 - screenshots and route evidence appropriate to the assessed mode.

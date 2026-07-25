@@ -153,6 +153,7 @@ export interface WayfindingStudioLabelElement extends WayfindingStudioElementBas
 
 export interface WayfindingStudioMediaElement extends WayfindingStudioElementBase {
 	assetId: string;
+	destinationId?: string;
 	height: number;
 	point: WayfindingPoint;
 	type: 'icon' | 'logo';
@@ -186,11 +187,16 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 	category?: string;
 	description?: string;
 	floor?: string;
+	hours?: string;
 	id: string;
+	mapNumber?: string;
 	name: string;
+	phone?: string;
 	photoAssetIds?: string[];
 	routeable?: boolean;
+	status?: string;
 	translations?: Record<string, WayfindingStudioTranslation>;
+	website?: string;
 }
 
 export interface WayfindingStudioProject {
@@ -773,6 +779,8 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 			if ((element.type === 'icon' || element.type === 'logo') && assetsById.get(element.assetId)?.kind !== element.type) issues.push({ code: 'media-kind-mismatch', elementIds: [element.id, element.assetId], message: `Element '${element.id}' must reference a ${element.type} asset.`, severity: 'error' });
 
+			if ((element.type === 'icon' || element.type === 'logo') && element.destinationId && !destinationIds.has(element.destinationId)) issues.push({ code: 'missing-destination', elementIds: [element.id, element.destinationId], message: `Element '${element.id}' references missing destination '${element.destinationId}'.`, severity: 'error' });
+
 			if ((element.type === 'icon' || element.type === 'logo') && (!(element.width > 0) || !(element.height > 0) || element.point.x + element.width > floor.width || element.point.y + element.height > floor.height)) issues.push({ code: 'invalid-media-bounds', elementIds: [element.id], message: `Media element '${element.id}' needs positive dimensions fully inside its floor.`, severity: 'error' });
 		}
 
@@ -893,6 +901,7 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 				}
 
 				const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? 0;
+
 				if (routeLeavesPolygonalPedestrianSpace(points, validationWidth, walkableAreas, obstacles)) {
 					issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the authored pedestrian area.`, severity: 'error' });
 				}
@@ -907,6 +916,7 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 			}
 
 			const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? floor.walkableMask.cellSize;
+
 			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, validationWidth).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the painted walkable-space mask.`, severity: 'error' });
 		}
 	}
@@ -924,7 +934,11 @@ const labelFontFamilies: Record<WayfindingStudioFontFamily, string> = {
 	serif: 'Georgia, serif'
 };
 
-export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floorId: string): string => {
+export const renderWayfindingFloorSvg = (
+	project: WayfindingStudioProject,
+	floorId: string,
+	assetHref: (asset: WayfindingStudioAsset) => string = (asset): string => asset.dataUrl
+): string => {
 	const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === floorId);
 
 	if (!floor) throw new Error(`Floor '${floorId}' does not exist.`);
@@ -944,7 +958,7 @@ export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floor
 	const media = (element: WayfindingStudioMediaElement): string => {
 		const asset: WayfindingStudioAsset | undefined = assetById.get(element.assetId);
 
-		return asset ? `<image ${attrs(element)} href="${escapeXml(asset.dataUrl)}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}"/>` : '';
+		return asset ? `<image ${attrs(element)}${element.destinationId ? ` data-wayfinding-location-id="${escapeXml(element.destinationId)}"` : ''} href="${escapeXml(assetHref(asset))}" x="${number(element.point.x)}" y="${number(element.point.y)}" width="${number(element.width)}" height="${number(element.height)}" preserveAspectRatio="xMidYMid meet"/>` : '';
 	};
 	const door = (item: WayfindingStudioElement): string => {
 		const value = item as WayfindingStudioDoorElement;
@@ -978,7 +992,7 @@ export const renderWayfindingFloorSvg = (project: WayfindingStudioProject, floor
 
 	return [
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${number(floor.width)} ${number(floor.height)}" width="${number(floor.width)}" height="${number(floor.height)}">`,
-		`<g id="Background">${background ? `<image id="background-${escapeXml(floor.id)}" href="${escapeXml(background.dataUrl)}" x="0" y="0" width="${number(floor.width)}" height="${number(floor.height)}" preserveAspectRatio="none"/>` : ''}</g>`,
+		`<g id="Background">${background ? `<image id="background-${escapeXml(floor.id)}" href="${escapeXml(assetHref(background))}" x="0" y="0" width="${number(floor.width)}" height="${number(floor.height)}" preserveAspectRatio="none"/>` : ''}</g>`,
 		`<g id="Walkable" fill="#66c2a5" fill-opacity="0.18" stroke="#16836f">${elements('walkable').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Obstacles" fill="#151c1b" fill-opacity="0.22" stroke="#151c1b">${elements('obstacle').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,
 		`<g id="Locations" fill="#f4c95d" fill-opacity="0.2" stroke="#c88716">${elements('location').map((item): string => polygon(item as WayfindingStudioPolygonElement)).join('')}</g>`,

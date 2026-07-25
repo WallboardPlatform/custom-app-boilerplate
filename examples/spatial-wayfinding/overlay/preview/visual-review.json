@@ -1,85 +1,85 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "1875df4ac8175f8d0c4372038c705ece9bb964d04f3ee28579153da4c4282cd6",
-	"reviewedAt": "2026-07-23T10:02:34.778Z",
-	"reviewer": "Codex independent visual review",
+	"sourceHash": "b0321247bce9d49b0c233bf5a98b961c6fc0a895ea0ab2608ef147c7dce1a485",
+	"reviewedAt": "2026-07-25T14:35:00.000Z",
+	"reviewer": "Codex visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The app proves the requested shared Studio runtime contract with selectable destinations, matching 2D and 3D views, route rendering, and touch camera controls."
+			"notes": "Published map package, visitor directory, destination details, routes, floor controls, and media match the approved runtime scope."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The scene uses the reviewed synthetic campus artifact directly; all six authored destinations, origin, colors, heights, labels, and route geometry remain recognizable in both views."
+			"notes": "The Northline campus concept retains its authored map geometry, destination hierarchy, branding, and source-specific spatial composition."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Extruded destination masses, billboard labels, a restrained isometric camera, and the paired directory create a distinct spatial wayfinding composition rather than a generic dashboard."
+			"notes": "The runtime reads as a purpose-built spatial product with map-first composition, restrained directory controls, and destination-specific details."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Destination names, view controls, directory entries, and the selected-state guidance remain legible at Full HD and 1366x768 without clipped text."
+			"notes": "Primary destination names, active route, floor label, and directory controls remain legible at both Full HD and compact signage sizes."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light and dark screenshots preserve readable labels, controls, directory dividers, and highlighted actions; the white floor plane remains a deliberate map surface in dark mode."
+			"notes": "Light and dark presets preserve readable controls, route contrast, selected-location emphasis, and detail-panel hierarchy."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "The tested destination labels fit their authored spaces, directory rows preserve hierarchy, and the title uses bounded ellipsis with descender-safe padding."
+			"notes": "Long translated destination names and descriptions stay bounded through wrapping, clamping, and the intentional directory scroll region."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "The map remains the primary surface, all six spaces stay inside the camera frame, and the directory occupies a stable secondary column at both tested sizes."
+			"notes": "The map remains dominant while directory, filters, destination details, and route actions stay organized without overlap or clipped controls."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "The runtime artifact supplies coherent per-space colors and elevations; 2D and 3D modes, light and dark presets, and the verified placeholder contain no missing assets."
+			"notes": "Brand, symbol, and photo assets render from the packaged artifact; theme colors and selection treatments remain coherent in both views."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The full-bleed interactive spatial scene, extrusion controls, and shared 2D/3D artifact are materially different from the maintained table, queue, dashboard, menu, and feed examples."
+			"notes": "The spatial canvas, 2D and 3D representations, semantic map layers, and visitor directory are distinct from the repository's dashboard examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD 3D render inspected: all six extruded spaces, labels, origin, controls, and directory are visible with no clipping or overlap."
+			"notes": "Full HD 3D runtime is nonblank, correctly framed, and shows the directory, route, selected destination, details, and packaged media."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact 3D render inspected: the complete scene remains framed and every destination stays identifiable."
+			"notes": "Compact runtime keeps the map usable and all controls bounded; the destination list scrolls intentionally without obscuring details."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Default scenario inspected at Full HD; it preserves the approved composition and differs only by animation timing."
+			"notes": "Default scenario reproduces the complete visitor flow with map, route, destination selection, controls, and detail content."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact scenario inspected; labels, directory rows, and controls remain within their surfaces."
+			"notes": "Compact scenario preserves responsive structure, readable controls, and correct selected-location emphasis without overlap."
 		},
 		{
 			"file": "scenario-dark-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Dark scenario inspected; text and control contrast remain clear and the map masses are visually distinct."
+			"notes": "Dark scenario maintains sufficient foreground, route, control, and selected-area contrast across the compact surface."
 		},
 		{
 			"file": "scenario-flat-map-1920x1080.png",
 			"status": "pass",
-			"notes": "Flat 2D scenario inspected; all six regions, the central circulation band, and the origin marker are clear with no overflow."
+			"notes": "Flat-map scenario hides 3D extrusion while retaining the background map, semantic selection, route, media, and destination details."
 		}
 	],
 	"unresolvedFindings": []
