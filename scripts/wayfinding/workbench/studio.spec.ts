@@ -159,8 +159,8 @@ test('authors, refines, and exports a portable semantic project', async ({ page 
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.15');
-	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview']);
+	await expect(page.locator('#studio-version')).toHaveText('Editor v0.16');
+	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview', 'Visitor preview']);
 	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
 
 	const canvas = page.locator('#stage');
@@ -240,6 +240,111 @@ test('keeps first-time guidance and authoring controls cohesive at the sidebar w
 		'2. Build routes',
 		'3. Manual adjustments'
 	]);
+});
+
+test('expands the map workspace and provides a focused visitor preview', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => {
+		if (message.type() === 'error') errors.push(message.text());
+	});
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	const project: WayfindingStudioProject = createRouteTestProject();
+	project.destinations[0] = {
+		...project.destinations[0],
+		category: 'Meeting rooms',
+		description: 'Weekly team briefings and visitor presentations.',
+		hours: '08:00 - 18:00',
+		mapNumber: 'G-12',
+		status: 'Open'
+	};
+	const projectPath: string = testInfo.outputPath('visitor-preview-project.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(project));
+
+	await page.goto('/');
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await expect(page.locator('#shortcut-help')).toHaveCount(1);
+
+	const stage = page.locator('.stage-shell');
+	const initialBounds = await stage.boundingBox();
+	await page.locator('#toggle-left-panel').click();
+	await expect(page.locator('body')).toHaveAttribute('data-left-panel', 'closed');
+	await expect(page.locator('.controls')).toBeHidden();
+	await page.locator('#toggle-right-panel').click();
+	await expect(page.locator('body')).toHaveAttribute('data-right-panel', 'closed');
+	await expect(page.locator('.review')).toBeHidden();
+	await page.waitForTimeout(220);
+	const expandedBounds = await stage.boundingBox();
+	expect((expandedBounds?.width ?? 0)).toBeGreaterThan(initialBounds?.width ?? 0);
+	await page.locator('#toggle-left-panel').click();
+	await page.locator('#toggle-right-panel').click();
+
+	await page.locator('#workspace-runtime-preview').click();
+	await expect(page.locator('body')).toHaveAttribute('data-workspace', 'runtime-preview');
+	await expect(page.locator('#runtime-preview')).toBeVisible();
+	await expect(page.locator('.controls')).toBeHidden();
+	await expect(page.locator('.review')).toBeHidden();
+	await page.locator('#runtime-preview-search').fill('weekly');
+	await expect(page.locator('.runtime-preview-result')).toHaveCount(1);
+	await expect(page.locator('.runtime-preview-result')).toContainText('Meeting room');
+	await page.locator('.runtime-preview-result').click();
+	await expect(page.locator('#runtime-preview-details')).toBeVisible();
+	await expect(page.locator('#runtime-preview-name')).toHaveText('Meeting room');
+	await expect(page.locator('#runtime-preview-description')).toContainText('Weekly team briefings');
+	await expect(page.locator('#runtime-preview-facts')).toContainText('G-12');
+
+	const canvas = page.locator('#stage');
+	await page.locator('#runtime-preview-icons').uncheck();
+	await page.locator('#runtime-preview-labels').uncheck();
+	await expect(canvas).toHaveAttribute('data-runtime-icons-visible', 'false');
+	await expect(canvas).toHaveAttribute('data-runtime-labels-visible', 'false');
+	const closeHitTarget = await page.locator('#runtime-preview-details-close').evaluate((element: HTMLElement): string | undefined => {
+		const bounds = element.getBoundingClientRect();
+		return document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)?.id;
+	});
+	expect(closeHitTarget).toBe('runtime-preview-details-close');
+	await page.locator('#runtime-preview-details-close').click();
+	await expect(page.locator('#runtime-preview-details')).toBeHidden();
+	expect(errors).toEqual([]);
+});
+
+test('persists configurable visitor-position animation and exposes the extended symbol set', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
+	page.on('pageerror', (error): void => { errors.push(error.message); });
+	const projectPath: string = testInfo.outputPath('origin-animation-project.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
+
+	await page.goto('/');
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	await page.locator('.project-defaults > summary').click();
+	await page.locator('#default-origin-color').fill('#8f3db4');
+	await page.locator('#default-origin-color').dispatchEvent('change');
+	await page.locator('#default-origin-speed').fill('92');
+	await page.locator('#default-origin-speed').blur();
+	await page.locator('#default-origin-animation-2d').selectOption('pulse');
+	await page.locator('#default-origin-animation-3d').selectOption('pulse');
+	await expect(page.locator('#stage')).toHaveAttribute('data-origin-animation-2d', 'pulse');
+	await page.locator('#view-3d').click();
+	await expect(page.locator('#stage-3d')).toHaveAttribute('data-origin-animation-3d', 'pulse');
+
+	await page.locator('#view-2d').click();
+	await page.locator('.builtin-icon-picker > summary').click();
+	for (const label of ['Payment terminal', 'Entrance', 'Wi-Fi', 'Pets allowed', 'Luggage storage']) {
+		await expect(page.locator(`.builtin-icon[title="Place ${label}"]`)).toBeVisible();
+	}
+
+	const downloadPromise = page.waitForEvent('download');
+	await page.locator('#studio-export-project').click();
+	const download = await downloadPromise;
+	const downloadPath: string = await download.path() as string;
+	const saved = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
+	expect(saved.defaults?.origin).toEqual({
+		animation2d: 'pulse',
+		animation3d: 'pulse',
+		animationSpeed: 92,
+		color: '#8f3db4'
+	});
+	expect(errors).toEqual([]);
 });
 
 test('saves back to an opened project file handle and keeps Save as separate', async ({ page }) => {

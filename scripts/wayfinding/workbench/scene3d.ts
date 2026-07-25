@@ -10,6 +10,7 @@ import type {
 	WayfindingStudioFloor,
 	WayfindingStudioLabelElement,
 	WayfindingStudioMediaElement,
+	WayfindingStudioOriginElement,
 	WayfindingStudioPolygonElement,
 	WayfindingStudioProject,
 	WayfindingStudioProjectDefaults
@@ -118,6 +119,13 @@ export class WayfindingScene3d {
 	private readonly disposableObjects: THREE.Object3D[] = [];
 	private frameId?: number;
 	private lastBuildKey?: string;
+	private readonly originAnimations: Array<{
+		baseY: number;
+		group: THREE.Group;
+		kind: WayfindingStudioProjectDefaults['origin']['animation3d'];
+		phase: number;
+		speed: number;
+	}> = [];
 	private pointerStart?: { x: number; y: number };
 	private readonly raycaster = new THREE.Raycaster();
 	private readonly renderer: THREE.WebGLRenderer;
@@ -301,6 +309,7 @@ export class WayfindingScene3d {
 		if ('geometry' in element) this.addPolygon(project, floor, element);
 		else if (element.type === 'label') this.addLabel(project, floor, element);
 		else if (element.type === 'icon' || element.type === 'logo') this.addMedia(project, floor, element);
+		else if (element.type === 'origin') this.addOrigin(project, floor, element);
 	}
 
 	private addFloorPlane(project: WayfindingStudioProject, floor: WayfindingStudioFloor): void {
@@ -374,6 +383,43 @@ export class WayfindingScene3d {
 		this.addDisposable(plane);
 		this.scene.add(plane);
 		this.host.dataset.renderedMediaCount = String(Number(this.host.dataset.renderedMediaCount ?? 0) + 1);
+	}
+
+	private addOrigin(project: WayfindingStudioProject, floor: WayfindingStudioFloor, origin: WayfindingStudioOriginElement): void {
+		const defaults: WayfindingStudioProjectDefaults = wayfindingStudioProjectDefaults(project);
+		const size: number = Math.max(12, Math.min(floor.width, floor.height) * 0.024);
+		const baseY: number = labelElevation(floor, floor.elements, origin.point, defaults) + size * 0.28;
+		const group = new THREE.Group();
+		const baseMaterial = new THREE.MeshStandardMaterial({
+			color: defaults.origin.color,
+			emissive: new THREE.Color(defaults.origin.color).multiplyScalar(0.32),
+			emissiveIntensity: 0.7,
+			roughness: 0.5
+		});
+		const base = new THREE.Mesh(new THREE.CylinderGeometry(size * 0.34, size * 0.42, size * 0.28, 28), baseMaterial);
+		base.castShadow = true;
+		const halo = new THREE.Mesh(
+			new THREE.TorusGeometry(size * 0.62, Math.max(1.4, size * 0.08), 10, 36),
+			new THREE.MeshBasicMaterial({ color: defaults.origin.color, depthTest: false, transparent: true, opacity: 0.82 })
+		);
+		halo.rotation.x = Math.PI / 2;
+		halo.position.y = -size * 0.12;
+		group.add(base, halo);
+		group.position.copy(centeredPoint(floor, origin.point, baseY));
+		group.userData.elementId = origin.id;
+		group.renderOrder = 32;
+		this.selectableObjects.push(base);
+		base.userData.elementId = origin.id;
+		this.addDisposable(group);
+		this.scene.add(group);
+		this.originAnimations.push({
+			baseY,
+			group,
+			kind: defaults.origin.animation3d,
+			phase: Math.random() * Math.PI * 2,
+			speed: Math.max(1, defaults.origin.animationSpeed)
+		});
+		this.host.setAttribute('data-origin-animation-3d', defaults.origin.animation3d);
 	}
 
 	private addPolygon(project: WayfindingStudioProject, floor: WayfindingStudioFloor, polygon: WayfindingStudioPolygonElement): void {
@@ -476,6 +522,7 @@ export class WayfindingScene3d {
 
 	private disposeSceneContent(): void {
 		this.routeAnimation = undefined;
+		this.originAnimations.length = 0;
 		for (const object of this.disposableObjects) {
 			object.removeFromParent();
 			object.traverse((child): void => {
@@ -532,11 +579,28 @@ export class WayfindingScene3d {
 			}
 
 			this.controls.update();
+			this.updateOriginAnimations(performance.now());
 			this.updateRouteAnimation(performance.now());
 			this.render();
 			this.frameId = window.requestAnimationFrame(frame);
 		};
 		this.frameId = window.requestAnimationFrame(frame);
+	}
+
+	private updateOriginAnimations(now: number): void {
+		for (const animation of this.originAnimations) {
+			const phase: number = now * animation.speed / 24_000 + animation.phase;
+			if (animation.kind === 'bounce') {
+				animation.group.position.y = animation.baseY + Math.abs(Math.sin(phase)) * 18;
+				animation.group.scale.setScalar(1);
+			} else if (animation.kind === 'pulse') {
+				animation.group.position.y = animation.baseY;
+				animation.group.scale.setScalar(0.9 + (Math.sin(phase) + 1) * 0.16);
+			} else {
+				animation.group.position.y = animation.baseY;
+				animation.group.scale.setScalar(1);
+			}
+		}
 	}
 
 	private updateRouteAnimation(now: number): void {

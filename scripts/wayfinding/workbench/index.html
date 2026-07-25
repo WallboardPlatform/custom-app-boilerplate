@@ -6,11 +6,11 @@
 	<title>Wallboard Wayfinding Studio</title>
 	<link rel="stylesheet" href="./style.css">
 </head>
-<body data-workspace="map">
+<body data-workspace="map" data-left-panel="open" data-right-panel="open">
 	<header class="topbar">
 		<div class="product-title">
 			<div class="brand-mark" aria-hidden="true">W</div>
-			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.15</small></div>
+			<div class="product-copy"><span>WALLBOARD / WAYFINDING</span><h1>Wayfinding Studio</h1><small id="studio-version">Editor v0.16</small></div>
 		</div>
 		<div class="edit-actions" role="group" aria-label="Edit history">
 			<div class="toolbar-group">
@@ -18,6 +18,7 @@
 					<button id="workspace-map" type="button" class="active" aria-pressed="true">Map</button>
 					<button id="workspace-route-edit" type="button" aria-pressed="false">Route edit</button>
 					<button id="workspace-route-preview" type="button" aria-pressed="false">Route preview</button>
+					<button id="workspace-runtime-preview" type="button" aria-pressed="false">Visitor preview</button>
 				</div>
 			</div>
 			<div class="toolbar-group">
@@ -33,6 +34,8 @@
 				</div>
 			</div>
 			<div class="toolbar-group">
+				<button id="toggle-left-panel" type="button" class="icon-command" title="Show or hide authoring controls" aria-pressed="true" aria-label="Hide authoring controls">&#9665;</button>
+				<button id="toggle-right-panel" type="button" class="icon-command" title="Show or hide properties" aria-pressed="true" aria-label="Hide properties">&#9655;</button>
 				<button id="studio-export-project" type="button" title="Save to the opened project file (Ctrl+S)">Save</button>
 				<button id="studio-save-as" type="button" title="Choose a new project file (Ctrl+Shift+S)">Save as</button>
 				<button id="studio-export-runtime" type="button" title="Build the artifact consumed by a wayfinding custom app">Runtime bundle</button>
@@ -134,6 +137,17 @@
 							<div class="field-pair">
 								<label>Icon size<input id="default-icon-size" type="number" min="8" max="1024" step="1"></label>
 								<label>Logo size<input id="default-logo-size" type="number" min="8" max="1024" step="1"></label>
+							</div>
+						</section>
+						<section class="settings-section">
+							<div class="settings-heading"><h3>You are here</h3><span>Visitor position marker</span></div>
+							<div class="field-pair">
+								<label class="color-input">Marker color<input id="default-origin-color" type="color"></label>
+								<label>Animation speed<input id="default-origin-speed" type="number" min="1" max="300" step="1"></label>
+							</div>
+							<div class="field-pair">
+								<label>2D animation<select id="default-origin-animation-2d"><option value="radar">Radar rings</option><option value="pulse">Pulse</option><option value="none">None</option></select></label>
+								<label>3D animation<select id="default-origin-animation-3d"><option value="bounce">Bounce</option><option value="pulse">Pulse</option><option value="none">None</option></select></label>
 							</div>
 						</section>
 						<section class="settings-section">
@@ -381,8 +395,26 @@
 					<button id="save-3d-view" type="button" title="Use this camera when the floor opens">Save as default</button>
 				</div>
 			</div>
+			<section id="runtime-preview" class="runtime-preview" hidden aria-label="Visitor map preview">
+				<header class="runtime-preview-toolbar">
+					<label class="runtime-search"><span>Find a destination</span><input id="runtime-preview-search" type="search" placeholder="Search names, categories, or details"></label>
+					<div class="runtime-preview-toggles">
+						<label class="check"><input id="runtime-preview-icons" type="checkbox" checked> Symbols</label>
+						<label class="check"><input id="runtime-preview-labels" type="checkbox" checked> Labels</label>
+					</div>
+				</header>
+				<div id="runtime-preview-results" class="runtime-preview-results" aria-live="polite"></div>
+				<article id="runtime-preview-details" class="runtime-preview-details" hidden>
+					<button id="runtime-preview-details-close" type="button" class="icon-command" aria-label="Close destination details">&times;</button>
+					<span id="runtime-preview-category"></span>
+					<h2 id="runtime-preview-name"></h2>
+					<p id="runtime-preview-description"></p>
+					<dl id="runtime-preview-facts"></dl>
+					<div id="runtime-preview-photos" class="runtime-preview-photos"></div>
+				</article>
+			</section>
 			<output id="cursor-position" class="cursor-position" title="Pointer position in map pixels">x -, y -</output>
-			<footer><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add polygon point</span><button id="footer-shortcut-help" type="button">All shortcuts</button></footer>
+			<footer><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add polygon point</span></footer>
 		</section>
 		<aside class="review" aria-label="Route review">
 			<details id="object-explorer-panel" class="object-explorer workspace-panel" data-workspace-panel="map" open>
