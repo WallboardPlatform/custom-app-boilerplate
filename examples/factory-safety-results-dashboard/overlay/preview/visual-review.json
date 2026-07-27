@@ -1,95 +1,95 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "505093c7e42d434636d03e5e7ae934b3a0fce51979c96ce84af22605807e66b0",
-	"reviewedAt": "2026-07-19T13:19:33.081Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "8ace0193e1ebca3054285e79c5f4eb56f786ead21fb5adad214db36eb2c07631",
+	"reviewedAt": "2026-07-27T14:02:41.627Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Shows the requested derived safety KPIs and recent raw submissions from one Results binding."
+			"notes": "Safety readiness results: completion, average score, pass rate and perfect-score counts, a latest-submissions table, and a score distribution panel."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "No external visual reference was supplied; the paired questionnaire language is preserved."
+			"notes": "Paired analytics concept retained alongside the questionnaire: same brand block and red accent, aggregate view rather than prompt view."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Industrial command-board hierarchy, audit table, and score profile are domain-specific."
+			"notes": "Reads as the results half of a purpose-built pair; the distribution panel and per-participant score column are specific to the questionnaire it aggregates."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary metrics and statuses remain legible at both declared landscape sizes."
+			"notes": "Metric values dominate their tiles; submission rows and distribution labels sit at their intended roles."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Dark, Light, and Custom token paths preserve semantic text and status contrast."
+			"notes": "The light compact scenario preserves metric, pass and fail colour separation against the pale field."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long title and participant identity scenarios pass fit, ellipsis, and ink checks."
+			"notes": "Long-title and corporate-ids scenarios keep the board title and participant identifiers complete rather than ellipsizing them."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Full HD and compact layouts fill their zones without overflow, overlap, or dead regions."
+			"notes": "Metric row, table and distribution panel divide the surface at both sizes; reduced row counts stay balanced and the empty state substitutes a centred message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Packaged assets are intact and the coordinated palettes cover every visible surface."
+			"notes": "Brand mark, distribution bars and status chips render crisply at 1366x768 and 1920x1080; no raster media involved."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The paired analytics board teaches aggregation mechanics without copying the questionnaire layout."
+			"notes": "Deliberately shares identity with the questionnaire it pairs with, which is the point of the pair, while its aggregate structure is not duplicated elsewhere."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-corporate-ids-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-title-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-row-array-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: hierarchy, containment, text ink, density, and palette are coherent."
+			"notes": "Inspected in the contact sheet: metrics, table and distribution fill their regions, identifiers complete, empty and reduced-row states intentional, nothing clipped."
 		}
 	],
 	"unresolvedFindings": []
