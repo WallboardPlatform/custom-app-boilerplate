@@ -152,6 +152,25 @@ export default tseslint.config(
 		},
 	},
 
+	// ✅ App sources only. Build scripts resolve their own paths with import.meta.url legitimately;
+	// components must not. The ban is stated in AGENTS.md, configuration.md and
+	// widget-best-practices.md but nothing enforced it, and the flagship wayfinding example
+	// drifted into violating it. A runtime-built URL is also invisible to the visual-review
+	// fingerprint, which walks import statements, so a packaged asset could change without
+	// staling the accepted review.
+	{
+		files: ['**/src/**/*.{ts,tsx}'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'NewExpression[callee.name="URL"] MemberExpression[object.type="MetaProperty"][property.name="url"]',
+					message: 'Import packaged media statically instead of building the URL with new URL(..., import.meta.url). A static import is rewritten by the bundler and is visible to the visual-review fingerprint; a runtime-built URL is neither.'
+				}
+			]
+		}
+	},
+
 	// ✅ Override for non-TypeScript / config files
 	{
 		files: ['**/*.js', '**/*.cjs', '**/*.mjs'],

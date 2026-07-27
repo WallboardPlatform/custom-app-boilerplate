@@ -8,6 +8,9 @@ const repositoryRoot: string = resolve(__dirname, '..');
 
 export default defineConfig({
 	root: repositoryRoot,
+	// Keep in step with the production config: an app that statically imports a published
+	// wayfinding map must resolve it in the preview too, or the visual suite cannot render it.
+	assetsInclude: ['**/*.wbmap'],
 	plugins: [
 		solidPlugin({ dev: true }),
 		solidSvg()

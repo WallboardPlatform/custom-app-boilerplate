@@ -23,7 +23,7 @@ import { SpatialScene } from '@utils/spatial-scene';
 
 import style from '@components/wb-app/wb-app.module.scss';
 
-const runtimePackageUrl: string = new URL('../../assets/campus.wbmap', import.meta.url).href;
+import runtimePackageUrl from '../../assets/campus.wbmap';
 
 interface WbAppProps {
 	hostElement: HTMLElement;
