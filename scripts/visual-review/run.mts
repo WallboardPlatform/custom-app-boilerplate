@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { renderContactSheet } from './contact-sheet.mts';
 import {
 	collectScreenshotFiles,
 	createPendingVisualReview,
@@ -44,6 +45,10 @@ if (mode === '--prepare') {
 
 	fs.writeFileSync(reviewPath, `${JSON.stringify(review, null, '\t')}\n`, 'utf8');
 	console.log(`Visual review checklist prepared: ${reviewPath}`);
+
+	const sheetPath: string | undefined = await renderContactSheet(projectDirectory);
+
+	if (sheetPath) console.log(`Contact sheet: ${sheetPath}`);
 	console.log('Inspect every screenshot, then set criteria and screenshot statuses before delivery.');
 } else if (mode === '--validate') {
 	const review: VisualReview = readReview()

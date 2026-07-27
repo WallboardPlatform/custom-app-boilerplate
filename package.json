@@ -30,7 +30,7 @@
 		"test:capabilities": "tsx --test scripts/capabilities/*.test.mts",
 		"test:example-data-privacy": "node --test scripts/example-data-privacy.test.mjs",
 		"test:example-screenshots": "node --test scripts/example-screenshots.test.mjs",
-		"test:visual-review": "tsx --test scripts/visual-review/model.test.mts",
+		"test:visual-review": "tsx --test scripts/visual-review/*.test.mts",
 		"test:wayfinding": "tsx --test scripts/wayfinding/*.test.mts",
 		"typecheck:wayfinding-studio": "tsc -p scripts/wayfinding/workbench/tsconfig.json",
 		"test:wayfinding-studio": "npm run typecheck:wayfinding-studio && playwright test --config scripts/wayfinding/workbench/playwright.config.ts",
