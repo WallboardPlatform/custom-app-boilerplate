@@ -1,6 +1,12 @@
 {
 	"title": "Call Center Agent Status",
 	"description": "Eight-agent status grid with case-insensitive state mapping, uneven-page rotation, and live metric updates.",
+	"mechanisms": [
+		"status-wall",
+		"card-grid-mosaic",
+		"content-paging",
+		"table-binding"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -8,6 +14,13 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

@@ -1,6 +1,10 @@
 {
 	"title": "Weather Window",
 	"description": "Platform weather-service proof with cached condition media, defensive normalization, stale-data resilience, and ratio-specific editorial compositions.",
+	"mechanisms": [
+		"weather-binding",
+		"photographic-overlay"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +17,8 @@
 	"artifacts": [
 		"generation-brief.json"
 	],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

@@ -1,6 +1,10 @@
 {
 	"title": "Single Hero Clock",
 	"description": "Static clock archetype with timezone formatting, live ticking, and ResizeObserver-driven compositions for extreme signage ratios.",
+	"mechanisms": [
+		"single-hero-callout",
+		"settings-only"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"datasource-contract.json",
@@ -9,5 +13,8 @@
 	"artifacts": [
 		"generation-brief.json"
 	],
-	"referenceScreenshots": ["app-default-1280x720.png", "ultra-wide-3000x300.png"]
+	"referenceScreenshots": [
+		"app-default-1280x720.png",
+		"ultra-wide-3000x300.png"
+	]
 }

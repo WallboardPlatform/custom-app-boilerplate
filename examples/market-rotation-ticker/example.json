@@ -1,6 +1,9 @@
 {
 	"title": "Market Rotation Ticker",
 	"description": "Continuous ultra-wide market ticker with rotating heterogeneous datasource bindings, asset lookup, and motion-specific acceptance tests.",
+	"mechanisms": [
+		"ultra-wide-marquee"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +16,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["app-default-6000x136.png", "scenario-light-theme-6000x136.png"]
+	"referenceScreenshots": [
+		"app-default-6000x136.png",
+		"scenario-light-theme-6000x136.png"
+	]
 }
