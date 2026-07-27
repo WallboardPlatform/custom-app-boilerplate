@@ -1,13 +1,13 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "58a34dda19d1cac4a127f0311a9fce967f2abbe00e8a2c64bf4ce78e47245a28",
-	"reviewedAt": "2026-07-27T14:03:33.817Z",
+	"sourceHash": "dcc4da7199f85e3e87550473593b8fd9b8770045a69b30917881a03608759e82",
+	"reviewedAt": "2026-07-27T16:50:51.824Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Downtown wayfinding: illustrated city map, searchable destination list, language switch, directional guidance and selected-destination detail."
+			"notes": "Downtown wayfinding: illustrated city map, searchable destination list, language switch, directional guidance and selected-destination detail. The touch keyboard passes the shared keyboard conformance suite: focus retention on every control, disabled honoured, and no doubled space."
 		},
 		{
 			"id": "referenceFidelity",

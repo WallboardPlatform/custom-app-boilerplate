@@ -1,17 +1,17 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "a91d04201b904a3bebaa7d7f95fb32166be2f2b38159e37b42d99992e6767311",
-	"reviewedAt": "2026-07-20T15:27:59.837Z",
+	"sourceHash": "0ea6bf8174b0e20b5b5d6ea7f2c586d151d4a79c41055633b130ec0322b600e7",
+	"reviewedAt": "2026-07-27T16:48:42.134Z",
 	"reviewer": "Codex compact-layout regression review",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The workspace provides the requested full PDF surface: multiple documents, navigation, search, outlines, forms, annotations, zoom, download, commands, lazy rendering, and unattended scrolling."
+			"notes": "The workspace provides the requested full PDF surface: multiple documents, navigation, search, outlines, forms, annotations, zoom, download, commands, lazy rendering, and unattended scrolling. The touch keyboard now passes the shared keyboard conformance suite."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
+			"status": "pass",
 			"notes": "No external design reference was declared; the controlled-document workspace brief is the visual authority."
 		},
 		{

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { applyCapability } from '../capability-materialization.mjs';
 
 interface KeyboardModule {
+	appendKeyboardSpace: (value: string, maximumLength?: number) => string;
 	appendKeyboardValue: (value: string, key: string, maximumLength?: number) => string;
 	keyboardLayoutsFor: (
 		ids: readonly ('en' | 'hu')[]
@@ -65,6 +66,21 @@ void describe('on-screen keyboard capability', (): void => {
 		assert.equal(appendKeyboardValue('Veszpr', 'é', 8), 'Veszpré');
 		assert.equal(appendKeyboardValue('1234', '5', 4), '1234');
 		assert.equal(removeLastKeyboardCharacter('Veszprém'), 'Veszpré');
+	});
+
+	void it('collapses the leading and doubled spaces a tapped space bar produces', {
+		skip: !keyboardModule
+	}, (): void => {
+		assert.ok(keyboardModule);
+		const { appendKeyboardSpace } = keyboardModule;
+
+		// A wide space bar under a finger double-taps easily, and the resulting query matches
+		// nothing while looking identical on screen.
+		assert.equal(appendKeyboardSpace(''), '');
+		assert.equal(appendKeyboardSpace('vár '), 'vár ');
+		assert.equal(appendKeyboardSpace('vár'), 'vár ');
+		assert.equal(appendKeyboardSpace('vár', 4), 'vár ');
+		assert.equal(appendKeyboardSpace('vár', 3), 'vár');
 	});
 
 	void it('materializes only into an opted-in app', {

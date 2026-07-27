@@ -56,3 +56,16 @@ export const appendKeyboardValue = (value: string, key: string, maximumLength = 
 export const removeLastKeyboardCharacter = (value: string): string => {
 	return Array.from(value).slice(0, -1).join('');
 };
+
+/**
+ * Space is tapped, not typed. A wide space bar under a finger produces double taps easily, and a
+ * query with a doubled or leading space matches nothing while looking identical on screen. This
+ * collapses both cases instead of leaving every app to guard its own space key.
+ */
+export const appendKeyboardSpace = (value: string, maximumLength = 120): string => {
+	if (value.length === 0 || value.endsWith(' ')) {
+		return value;
+	}
+
+	return appendKeyboardValue(value, ' ', maximumLength);
+};
