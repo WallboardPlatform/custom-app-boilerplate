@@ -1,130 +1,130 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "50449c415d1c46419dec3f1771bd80f1b36f140781030a4c4aafc79c07c74fa4",
-	"reviewedAt": "2026-07-19T11:24:52.631Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "bf565b3ca38c78bd36cbfa6d6f50e3284fd4adbc5d385e6c82fbf781487d9e10",
+	"reviewedAt": "2026-07-27T14:08:36.938Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Calendar and Feed remain clearly separated and composed around the current program."
+			"notes": "Venue pulse: venue identity, date, the current or next program with time, room, progress and state, plus a supporting visitor announcement."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "No external visual reference was required; the maintained Foundry direction remains consistent."
+			"notes": "Civic arts-centre concept retained: ruled cream frame, serif program title, accent rail marking the active state."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Venue-specific editorial composition remains distinct from generic cards or dashboards."
+			"notes": "Reads as a foyer program board rather than a calendar list; the program panel and supporting note column are role-differentiated by design."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary program titles, times, states, and support notes remain readable at both target sizes."
+			"notes": "The program title dominates and reaches its intended size now that auto-fit resolves; the announcement column sits at a deliberately subordinate role."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light and dark scenarios preserve readable contrast and hierarchy."
+			"notes": "Dark-theme and light-theme scenarios preserve accent rail, frame and body contrast."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long program and announcement text stays bounded without clipping or overlap."
+			"notes": "The announcement title clamps at two lines, which is the strategy the generation brief declares for this element with the stated rationale that the announcement must not compete with the program. The long-content scenario is the declared evidence for that policy and the visual suite enforces it."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Full HD and compact layouts fill their assigned surfaces intentionally."
+			"notes": "Program panel and announcement column divide the stage at every surface; feed-only and calendar-only scenarios promote the surviving source to the full stage, and both-empty substitutes a centred message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Media fallbacks, empty states, and both coordinated themes render cleanly."
+			"notes": "Announcement media renders with a cover fit; the broken-media scenario drops the image and reflows the copy rather than leaving a gap."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The result retains a civic venue identity rather than copying another maintained example."
+			"notes": "The ruled cream civic frame is distinct from the dark operational and full-bleed photographic examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "compact-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-all-day-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-both-empty-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-broken-media-stale-feed-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-calendar-only-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-dark-theme-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-feed-only-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-google-overlap-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-icalendar-legacy-feed-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-light-theme-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-live-calendar-update-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-live-feed-update-800x480.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-long-content-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		},
 		{
 			"file": "scenario-microsoft-calendar-current-feed-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the labeled full-matrix contact sheet; no clipping, overlap, blank state, or broken composition."
+			"notes": "Inspected in the contact sheet, with the compact state verified at full resolution: the announcement two-line clamp is the brief's declared wrap policy, not a layout defect; program content is complete and legible; empty and single-source states are intentional."
 		}
 	],
 	"unresolvedFindings": []
