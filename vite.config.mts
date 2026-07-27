@@ -6,6 +6,7 @@ import stylelint from 'vite-plugin-stylelint';
 import solidSvg from 'vite-plugin-solid-svg';
 
 import WBAppPostExecution from './package-tools/plugins/wb-app-post-execution';
+import { resolvedPathAliases } from './scripts/path-aliases.mts';
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd: boolean = mode === 'production';
@@ -55,14 +56,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     base: '',
     resolve: {
-      alias: {
-        '@contexts': resolve(__dirname, './src/contexts'),
-        '@services': resolve(__dirname, './src/services'),
-        '@components': resolve(__dirname, './src/components'),
-        '@interfaces': resolve(__dirname, './src/interfaces'),
-        '@hooks': resolve(__dirname, './src/hooks'),
-        '@utils': resolve(__dirname, './src/utils'),
-      }
+      // Declared once in tsconfig.json; see scripts/path-aliases.mts.
+      alias: resolvedPathAliases(__dirname)
     },
     build: {
       minify: 'terser',

@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { readPathAliases } from '../path-aliases.mts';
+
 export const VISUAL_REVIEW_CRITERIA = [
 	'promptFidelity',
 	'referenceFidelity',
@@ -52,24 +54,31 @@ const SOURCE_EXTENSIONS: string[] = [
 	'.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.woff', '.woff2', '.ttf'
 ];
 /**
- * Line endings are normalized for these so a review hash does not depend on whether the
- * checkout is Windows or Linux. Every text format an example can contribute to the
- * fingerprint has to be listed: `.html` was missing, and because the custom settings editor
- * is the only HTML in `editor-assets`, that one example hashed differently per platform and
- * whichever side promoted it last made the other side fail.
+ * Line endings are normalized so a review hash does not depend on whether the checkout is
+ * Windows or Linux.
+ *
+ * This is a denylist of known binary formats rather than an allowlist of text ones, because an
+ * allowlist fails open: `.html` was missing from it, the one example shipping a custom settings
+ * editor hashed differently per platform, and whichever side promoted its review last made the
+ * other side report it stale. Any text format added tomorrow is now normalized by default; only
+ * formats named here are hashed as raw bytes.
  */
-const TEXT_SOURCE_EXTENSIONS = new Set([
-	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json', '.svg',
-	'.html', '.htm', '.txt', '.md', '.xml'
+const BINARY_SOURCE_EXTENSIONS = new Set([
+	'.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.ico', '.bmp',
+	'.woff', '.woff2', '.ttf', '.otf', '.eot',
+	'.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg',
+	'.pdf', '.zip', '.gz', '.wbmap', '.wasm'
 ]);
-const SOURCE_ALIASES: Readonly<Record<string, string>> = {
-	'@components': 'src/components',
-	'@contexts': 'src/contexts',
-	'@hooks': 'src/hooks',
-	'@interfaces': 'src/interfaces',
-	'@services': 'src/services',
-	'@utils': 'src/utils'
+
+const isBinarySource = (filePath: string): boolean => {
+	return BINARY_SOURCE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
 };
+/**
+ * Derived from tsconfig rather than restated, so an alias added there cannot silently go
+ * untracked here. Divergence in this consumer fails open: the imported file drops out of the
+ * hash and changing it stops staling the accepted review.
+ */
+const sourceAliases = (projectDirectory: string): Record<string, string> => readPathAliases(projectDirectory);
 
 const collectFiles = (directory: string): string[] => {
 	if (!fs.existsSync(directory)) {
@@ -114,7 +123,7 @@ const localImportBase = (
 		return path.resolve(projectDirectory, specifier.slice(1));
 	}
 
-	for (const [alias, target] of Object.entries(SOURCE_ALIASES)) {
+	for (const [alias, target] of Object.entries(sourceAliases(projectDirectory))) {
 		if (specifier === alias || specifier.startsWith(`${alias}/`)) {
 			return path.resolve(projectDirectory, target, specifier.slice(alias.length + 1));
 		}
@@ -274,9 +283,9 @@ export const createVisualReviewSourceHash = (projectDirectory: string): string =
 		hash.update(normalizeRelativePath(path.relative(projectDirectory, filePath)));
 		hash.update('\0');
 		const contents: Buffer = fs.readFileSync(filePath);
-		const normalizedContents: Buffer | string = TEXT_SOURCE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
-			? contents.toString('utf8').replace(/\r\n?/g, '\n')
-			: contents;
+		const normalizedContents: Buffer | string = isBinarySource(filePath)
+			? contents
+			: contents.toString('utf8').replace(/\r\n?/g, '\n');
 
 		hash.update(normalizedContents);
 		hash.update('\0');
