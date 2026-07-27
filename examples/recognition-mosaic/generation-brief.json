@@ -27,7 +27,10 @@
 			"height": 1080,
 			"role": "primary",
 			"purpose": "Full-screen studio recognition wall with a dominant portrait and supporting recognitions.",
-			"minimumContentCoverage": { "width": 92, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 88
+			}
 		},
 		{
 			"id": "wide-low",
@@ -35,7 +38,10 @@
 			"height": 432,
 			"role": "required",
 			"purpose": "Wide-low signage strip with a compact masthead and horizontal recognition rhythm.",
-			"minimumContentCoverage": { "width": 92, "height": 87 }
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 87
+			}
 		},
 		{
 			"id": "portrait",
@@ -43,7 +49,10 @@
 			"height": 1920,
 			"role": "required",
 			"purpose": "Portrait display with stacked editorial tiles and a tall lead story.",
-			"minimumContentCoverage": { "width": 89, "height": 86 }
+			"minimumContentCoverage": {
+				"width": 89,
+				"height": 86
+			}
 		},
 		{
 			"id": "square",
@@ -51,7 +60,10 @@
 			"height": 600,
 			"role": "required",
 			"purpose": "Compact recognition tile that keeps one lead person and concise supporting context legible.",
-			"minimumContentCoverage": { "width": 91, "height": 84 }
+			"minimumContentCoverage": {
+				"width": 91,
+				"height": 84
+			}
 		}
 	],
 	"data": {
@@ -123,60 +135,117 @@
 	"dynamicText": [
 		{
 			"id": "studio-name",
-			"source": { "type": "setting", "properties": ["studioName"] },
-			"selectors": [".recognition-brand"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"studioName"
+				]
+			},
+			"selectors": [
+				".recognition-brand"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 14,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, retain the leading text and ellipsize only the tail.",
 			"rationale": "The studio name is a first-viewport brand signal but must share the masthead with the wall title.",
 			"evidenceScenario": "long-copy"
 		},
 		{
 			"id": "wall-title",
-			"source": { "type": "setting", "properties": ["wallTitle"] },
-			"selectors": [".recognition-title"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"wallTitle"
+				]
+			},
+			"selectors": [
+				".recognition-title"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, preserve one line and ellipsize the tail.",
 			"rationale": "The editorial title establishes the recognition purpose without becoming a large dashboard header.",
 			"evidenceScenario": "long-copy"
 		},
 		{
 			"id": "person-name",
-			"source": { "type": "datasource", "properties": ["recognitionData"] },
-			"selectors": [".recognition-card__name"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"recognitionData"
+				]
+			},
+			"selectors": [
+				".recognition-card__name"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "After two complete lines, ellipsize the remaining tail while preserving the full datasource value.",
 			"rationale": "Names are a primary content surface and should remain substantially visible without crowding achievements.",
 			"evidenceScenario": "long-copy"
 		},
 		{
 			"id": "achievement",
-			"source": { "type": "datasource", "properties": ["recognitionData"] },
-			"selectors": [".recognition-card__achievement"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"recognitionData"
+				]
+			},
+			"selectors": [
+				".recognition-card__achievement"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 4 },
+			"limits": {
+				"maximumLines": 4
+			},
 			"fallback": "Clamp after the surface-specific line allowance and continue the full achievement on a later curated recognition entry if needed.",
 			"rationale": "Achievements carry the wall's meaning and receive more lines than secondary metadata.",
 			"evidenceScenario": "long-copy"
 		},
 		{
 			"id": "role-and-team",
-			"source": { "type": "datasource", "properties": ["recognitionData"] },
-			"selectors": [".recognition-card__role", ".recognition-card__team"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"recognitionData"
+				]
+			},
+			"selectors": [
+				".recognition-card__role",
+				".recognition-card__team"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize secondary metadata after one line while preserving it in the editable datasource.",
 			"rationale": "Role and team orient the viewer but must not compete with the person or achievement.",
 			"evidenceScenario": "long-copy"
 		},
 		{
 			"id": "quote",
-			"source": { "type": "datasource", "properties": ["recognitionData"] },
-			"selectors": [".recognition-card__quote"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"recognitionData"
+				]
+			},
+			"selectors": [
+				".recognition-card__quote"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Hide the tail after two complete lines; quotes are optional supporting texture.",
 			"rationale": "Short quotes add personality but remain subordinate to the achievement.",
 			"evidenceScenario": "long-copy"
@@ -232,28 +301,81 @@
 		{
 			"id": "balanced-page-rotation",
 			"expectation": "Pages rotate on the configured interval, wrap circularly, and keep prime and partial counts balanced.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "live-datasource-edit",
 			"expectation": "Editing a datasource row updates visible recognition content immediately.",
-			"evidence": { "scenario": "live-edit" }
+			"evidence": {
+				"scenario": "live-edit"
+			}
 		},
 		{
 			"id": "partial-final-page",
 			"expectation": "Timed advancement reaches a composed final page without overflow or empty tile shells.",
-			"evidence": { "scenario": "last-page" }
+			"evidence": {
+				"scenario": "last-page"
+			}
+		},
+		{
+			"id": "pagination-conformance",
+			"expectation": "Paging shows every honouree exactly once per cycle, never renders an empty page, and returns to the first page after a full cycle.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "portrait-a", "source": "packaged", "path": "src/assets/portraits/portrait-a.jpg", "required": true },
-		{ "id": "portrait-b", "source": "packaged", "path": "src/assets/portraits/portrait-b.jpg", "required": true },
-		{ "id": "portrait-c", "source": "packaged", "path": "src/assets/portraits/portrait-c.jpg", "required": true },
-		{ "id": "portrait-d", "source": "packaged", "path": "src/assets/portraits/portrait-d.jpg", "required": true },
-		{ "id": "portrait-e", "source": "packaged", "path": "src/assets/portraits/portrait-e.jpg", "required": true },
-		{ "id": "recognition-photo", "source": "datasource", "binding": "recognitionData", "required": false }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "portrait-a",
+			"source": "packaged",
+			"path": "src/assets/portraits/portrait-a.jpg",
+			"required": true
+		},
+		{
+			"id": "portrait-b",
+			"source": "packaged",
+			"path": "src/assets/portraits/portrait-b.jpg",
+			"required": true
+		},
+		{
+			"id": "portrait-c",
+			"source": "packaged",
+			"path": "src/assets/portraits/portrait-c.jpg",
+			"required": true
+		},
+		{
+			"id": "portrait-d",
+			"source": "packaged",
+			"path": "src/assets/portraits/portrait-d.jpg",
+			"required": true
+		},
+		{
+			"id": "portrait-e",
+			"source": "packaged",
+			"path": "src/assets/portraits/portrait-e.jpg",
+			"required": true
+		},
+		{
+			"id": "recognition-photo",
+			"source": "datasource",
+			"binding": "recognitionData",
+			"required": false
+		}
 	],
 	"visualDirection": {
 		"source": "agent-authored",

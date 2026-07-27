@@ -1,13 +1,13 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "008059a6d5920e9efa14985f10b43eb05e773e02260e5107e3a315f84d7ad801",
-	"reviewedAt": "2026-07-27T14:00:38.342Z",
+	"sourceHash": "47eea41bfae0886bc5aa85e87798c3a7639f042cfc4e4e8cfd79ff79a451e239",
+	"reviewedAt": "2026-07-27T18:21:48.983Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Recognition wall: studio identity, honouree name, discipline and role labels, citation, closing quote, and progress through the set."
+			"notes": "Recognition wall: studio identity, honouree name, discipline and role labels, citation, closing quote, and progress through the set. Paging passes the shared pagination conformance suite: every honouree appears exactly once per cycle, no page is empty, and a full cycle returns to the first page."
 		},
 		{
 			"id": "referenceFidelity",
