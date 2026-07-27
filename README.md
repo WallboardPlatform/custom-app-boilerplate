@@ -93,6 +93,8 @@ The tracked-image review threshold is 10 MiB, not an absolute ceiling. A justifi
 
 `deliver` creates an upload ZIP and a separate sanitized source ZIP plus manifest, brief, and datasource sidecars. Upload only the app ZIP. `_UNVERIFIED` packages have `uploadReady: false` and require normal delivery elsewhere.
 
+Wayfinding v1 uses three distinct artifacts: the editable `.wbwayfinding` source, its generated `.wbmap` runtime package, and the accepted custom-app upload ZIP that contains the map. See [`docs/system/wayfinding.md`](docs/system/wayfinding.md); Northline under `examples/spatial-wayfinding` is the proven runtime mechanics reference.
+
 ## Build Output
 
 ```text

@@ -21,7 +21,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 
 `README.md` is the setup and command reference. Do not preload unrelated system docs.
 
-For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and use the repository's Wayfinding Studio workflow.
+For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and use the repository's Wayfinding Studio workflow. Keep the v1 artifacts distinct: author and preserve the `.wbwayfinding` source, publish a `.wbmap` from it, package that `.wbmap` in the custom app, then return the editable project, published map, and accepted app delivery. Never hand-edit `.wbmap` or build from loose export diagnostics. Use `examples/spatial-wayfinding` (Northline) as the proven package/runtime mechanics reference, not as a mandatory visual template.
 
 ## Non-Negotiable
 
