@@ -45,3 +45,22 @@ registerKeyboardConformance({
 ```
 
 Apps that render their own keyboard instead of using the capability are held to the same bar by calling the same suite.
+
+## Empty state
+
+Suite: `preview/conformance/empty-state.ts`. Applies to any app whose datasource can return nothing — 17 of the 23 examples declare an empty scenario.
+
+| Level | Rule | Why |
+|-------|------|-----|
+| MUST | An empty datasource renders visible text | `widget-best-practices.md` already forbids a blank widget. A blank signage surface is indistinguishable from a crashed player or a dead screen. |
+| MUST | The app stays identifiable | Losing the masthead as well as the data makes the screen look broken rather than idle. |
+| MUST | The message clears the `secondary` floor for the declared viewing distance | Empty-state copy is routinely left at metadata size, unreadable from the distance the rest of the app was designed for. |
+| MUST | Content is not orphaned against the top edge | An empty state is still a composition. |
+| SHOULD | The message is operator-configurable | 14 examples already expose an `emptyStateText` setting. |
+| MAY | Wording, illustration, placement, whether an icon appears | Appearance is the app's. |
+
+The `message` locator is required rather than inferred. An earlier version measured the largest text anywhere in the widget, which is always the app title, so the legibility assertion could never fail — a conformance test that cannot fail is worse than none.
+
+## Promoting a review
+
+`example:review:promote` refuses a workspace prepared from source the repository no longer holds. `validate:visual-review` only proves a workspace agrees with its own snapshot, so an experiment that re-prepares an example with a reverted change leaves a workspace that passes validation while carrying evidence for code that is gone. That happened twice while these standards were being written.

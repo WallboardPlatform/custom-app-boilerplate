@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "6e3fe3e51eb19264f56a843a86596422c71fe63c8d53f5b55f9ef5b76466d559",
-	"reviewedAt": "2026-07-27T13:48:47.743Z",
+	"sourceHash": "18bf215ab98ec9a7c7559da3b4a6b0156c381e6eab977bc98070d6634ddcc58c",
+	"reviewedAt": "2026-07-27T17:26:15.365Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
@@ -37,7 +37,7 @@
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Image and detail column divide the surface at every aspect; the empty state substitutes a centred collection message."
+			"notes": "Image and detail column divide the surface at every aspect; the empty state substitutes a centred collection message. The empty state now passes the shared empty-state conformance suite."
 		},
 		{
 			"id": "assetAndThemeQuality",

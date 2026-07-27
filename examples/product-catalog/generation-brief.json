@@ -10,21 +10,70 @@
 		"The operator uploads or selects each product image directly in the TABLE image filePicker column.",
 		"The filePicker cell uses Wallboard's {name, id, location} value and does not require a second datasource."
 	],
-	"app": { "mode": "new", "name": "Field Note Product Catalog", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Field Note Product Catalog",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "Retail signage may use full-screen landscape, portrait endcaps, compact displays, or wide shelf strips."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Primary editorial retail display with deliberate page margins.", "minimumContentCoverage": { "width": 92, "height": 83 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide shelf display with a bounded image and editorial copy strip.", "minimumContentCoverage": { "width": 94, "height": 82 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait retail endcap.", "minimumContentCoverage": { "width": 89, "height": 91 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact square display with a narrow outer margin.", "minimumContentCoverage": { "width": 91, "height": 87 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Primary editorial retail display with deliberate page margins.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 83
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide shelf display with a bounded image and editorial copy strip.",
+			"minimumContentCoverage": {
+				"width": 94,
+				"height": 82
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait retail endcap.",
+			"minimumContentCoverage": {
+				"width": 89,
+				"height": 91
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact square display with a narrow outer margin.",
+			"minimumContentCoverage": {
+				"width": 91,
+				"height": 87
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "products", "source": "generated", "contract": "TABLE", "access": "read" }
+			{
+				"property": "products",
+				"source": "generated",
+				"contract": "TABLE",
+				"access": "read"
+			}
 		]
 	},
 	"ownership": [
@@ -32,46 +81,75 @@
 			"id": "catalog-composition",
 			"area": "presentation",
 			"owner": "locked",
-			"targets": ["editorial-composition", "responsive-layout", "media-fallback"],
+			"targets": [
+				"editorial-composition",
+				"responsive-layout",
+				"media-fallback"
+			],
 			"rationale": "The generated visual identity, layout modes, and fallback treatment stay code-owned."
 		},
 		{
 			"id": "catalog-content-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["brandLabel", "collectionTitle", "emptyStateText"],
+			"targets": [
+				"brandLabel",
+				"collectionTitle",
+				"emptyStateText"
+			],
 			"rationale": "Operators may tailor the collection voice without changing code."
 		},
 		{
 			"id": "catalog-presentation-settings",
 			"area": "presentation",
 			"owner": "setting",
-			"targets": ["mediaFit", "backgroundColor", "textColor", "mutedTextColor", "accentColor", "panelColor"],
+			"targets": [
+				"mediaFit",
+				"backgroundColor",
+				"textColor",
+				"mutedTextColor",
+				"accentColor",
+				"panelColor"
+			],
 			"rationale": "Operators can tune media treatment and the compact visual palette."
 		},
 		{
 			"id": "catalog-behavior-settings",
 			"area": "behavior",
 			"owner": "setting",
-			"targets": ["pageDurationSeconds", "motionPreset"],
+			"targets": [
+				"pageDurationSeconds",
+				"motionPreset"
+			],
 			"rationale": "Operators control cadence and may disable motion."
 		},
 		{
 			"id": "product-records",
 			"area": "content",
 			"owner": "datasource",
-			"targets": ["products"],
+			"targets": [
+				"products"
+			],
 			"rationale": "Product content and ordering are quick-editable TABLE rows."
 		}
 	],
 	"experience": {
 		"mode": "passive",
 		"views": [
-			{ "id": "product-feature", "purpose": "Show one product with its matched image, copy, details, price, and availability." },
-			{ "id": "empty", "purpose": "Show a designed collection message when no valid products exist." }
+			{
+				"id": "product-feature",
+				"purpose": "Show one product with its matched image, copy, details, price, and availability."
+			},
+			{
+				"id": "empty",
+				"purpose": "Show a designed collection message when no valid products exist."
+			}
 		],
 		"inputs": [],
-		"session": { "reset": "none", "expectation": "The passive catalog keeps rotating from its current product." }
+		"session": {
+			"reset": "none",
+			"expectation": "The passive catalog keeps rotating from its current product."
+		}
 	},
 	"outputs": [],
 	"rendering": {
@@ -83,7 +161,10 @@
 		"default": "subtle",
 		"presetProperty": "motionPreset",
 		"transition": "slide",
-		"techniques": ["fade", "slide"],
+		"techniques": [
+			"fade",
+			"slide"
+		],
 		"rationale": "A short entrance transition marks product changes; Off removes it while preserving rotation."
 	},
 	"media": [
@@ -93,7 +174,11 @@
 			"source": "datasource",
 			"fit": "cover",
 			"binding": "products",
-			"fields": ["image.location", "image.url", "image"],
+			"fields": [
+				"image.location",
+				"image.url",
+				"image"
+			],
 			"cache": "platform",
 			"preview": "platform-mock",
 			"fallback": "Render the panel-colored geometric product treatment and category label.",
@@ -107,13 +192,34 @@
 		"fallback": "Use the generated editorial palette, typographic contrast, and brand label setting."
 	},
 	"presentation": {
-		"themes": ["custom"],
+		"themes": [
+			"custom"
+		],
 		"density": "sparse",
 		"viewingDistance": "room",
 		"textRoles": [
-			{ "role": "primary", "selectors": [".wb-product-catalog-copy h2", ".wb-product-catalog-empty h2"] },
-			{ "role": "secondary", "selectors": [".wb-product-catalog-copy > p"] },
-			{ "role": "metadata", "selectors": [".wb-product-catalog-header h1", ".wb-product-catalog-copy-topline", ".wb-product-catalog-details", ".wb-product-catalog-copy footer"] }
+			{
+				"role": "primary",
+				"selectors": [
+					".wb-product-catalog-copy h2",
+					".wb-product-catalog-empty h2"
+				]
+			},
+			{
+				"role": "secondary",
+				"selectors": [
+					".wb-product-catalog-copy > p"
+				]
+			},
+			{
+				"role": "metadata",
+				"selectors": [
+					".wb-product-catalog-header h1",
+					".wb-product-catalog-copy-topline",
+					".wb-product-catalog-details",
+					".wb-product-catalog-copy footer"
+				]
+			}
 		]
 	},
 	"cadence": {
@@ -121,26 +227,72 @@
 		"intervalProperty": "pageDurationSeconds"
 	},
 	"settings": [
-		{ "property": "brandLabel", "purpose": "Sets the compact retail brand line." },
-		{ "property": "collectionTitle", "purpose": "Sets the collection statement." },
-		{ "property": "emptyStateText", "purpose": "Sets the no-products message." },
-		{ "property": "pageDurationSeconds", "purpose": "Sets seconds per product." },
-		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive transition motion.", "effect": "motion-preset" },
-		{ "property": "mediaFit", "purpose": "Selects Cover or Contain for matched product images.", "effect": "media-fit" },
-		{ "property": "backgroundColor", "purpose": "Sets the canvas color.", "effect": "background-color" },
-		{ "property": "textColor", "purpose": "Sets primary text and line color." },
-		{ "property": "mutedTextColor", "purpose": "Sets supporting text color." },
-		{ "property": "accentColor", "purpose": "Sets badge, availability, and progress accent." },
-		{ "property": "panelColor", "purpose": "Sets the no-image panel color." }
+		{
+			"property": "brandLabel",
+			"purpose": "Sets the compact retail brand line."
+		},
+		{
+			"property": "collectionTitle",
+			"purpose": "Sets the collection statement."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Sets the no-products message."
+		},
+		{
+			"property": "pageDurationSeconds",
+			"purpose": "Sets seconds per product."
+		},
+		{
+			"property": "motionPreset",
+			"purpose": "Selects Off, Subtle, or Expressive transition motion.",
+			"effect": "motion-preset"
+		},
+		{
+			"property": "mediaFit",
+			"purpose": "Selects Cover or Contain for matched product images.",
+			"effect": "media-fit"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Sets the canvas color.",
+			"effect": "background-color"
+		},
+		{
+			"property": "textColor",
+			"purpose": "Sets primary text and line color."
+		},
+		{
+			"property": "mutedTextColor",
+			"purpose": "Sets supporting text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Sets badge, availability, and progress accent."
+		},
+		{
+			"property": "panelColor",
+			"purpose": "Sets the no-image panel color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "collection-title",
 			"role": "metadata",
-			"source": { "type": "setting", "properties": ["collectionTitle"] },
-			"selectors": [".wb-product-catalog-header h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"collectionTitle"
+				]
+			},
+			"selectors": [
+				".wb-product-catalog-header h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 16, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 16,
+				"maximumLines": 1
+			},
 			"fallback": "Keep one line and reduce to the room-readable minimum before ellipsizing.",
 			"rationale": "The collection statement must remain complete in the masthead whenever space permits.",
 			"evidenceScenario": "long-copy"
@@ -148,10 +300,20 @@
 		{
 			"id": "product-name",
 			"role": "primary",
-			"source": { "type": "datasource", "properties": ["products"] },
-			"selectors": [".wb-product-catalog-copy h2"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"products"
+				]
+			},
+			"selectors": [
+				".wb-product-catalog-copy h2"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 28, "maximumLines": 2 },
+			"limits": {
+				"minimumFontSize": 28,
+				"maximumLines": 2
+			},
 			"fallback": "Use two lines and preserve the readable minimum; omit secondary copy before shrinking further.",
 			"rationale": "The product name is the primary room-reading target.",
 			"evidenceScenario": "long-copy"
@@ -159,47 +321,111 @@
 		{
 			"id": "product-description",
 			"role": "secondary",
-			"source": { "type": "datasource", "properties": ["products"] },
-			"selectors": [".wb-product-catalog-copy > p"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"products"
+				]
+			},
+			"selectors": [
+				".wb-product-catalog-copy > p"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 4 },
+			"limits": {
+				"maximumLines": 4
+			},
 			"fallback": "Hide overflow only in compact and wide-low surfaces after preserving the product name, price, and image.",
 			"rationale": "Description length varies but must not displace price or availability.",
 			"evidenceScenario": "long-copy"
 		}
 	],
 	"states": [
-		{ "scenario": "portrait-catalog", "expectation": "Image and copy stack into a full-height retail endcap composition." },
-		{ "scenario": "wide-low", "expectation": "The shelf-strip layout keeps image, name, price, and availability visible." },
-		{ "scenario": "compact", "expectation": "Compact signage preserves the primary retail hierarchy and omits lower-priority details." },
-		{ "scenario": "long-copy", "expectation": "Long collection, name, and description text remain readable and contained." },
-		{ "scenario": "missing-image", "expectation": "Missing File System matches use the designed geometric fallback." },
-		{ "scenario": "empty", "expectation": "No valid rows render the configured empty collection message." },
-		{ "scenario": "last-product", "expectation": "The final product remains a complete page before circular rotation." },
-		{ "scenario": "live-product-update", "expectation": "TABLE edits update visible copy without resetting the active product unnecessarily." },
-		{ "scenario": "motion-off", "expectation": "Rotation remains functional while page transition animation is disabled." }
+		{
+			"scenario": "portrait-catalog",
+			"expectation": "Image and copy stack into a full-height retail endcap composition."
+		},
+		{
+			"scenario": "wide-low",
+			"expectation": "The shelf-strip layout keeps image, name, price, and availability visible."
+		},
+		{
+			"scenario": "compact",
+			"expectation": "Compact signage preserves the primary retail hierarchy and omits lower-priority details."
+		},
+		{
+			"scenario": "long-copy",
+			"expectation": "Long collection, name, and description text remain readable and contained."
+		},
+		{
+			"scenario": "missing-image",
+			"expectation": "Missing File System matches use the designed geometric fallback."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "No valid rows render the configured empty collection message."
+		},
+		{
+			"scenario": "last-product",
+			"expectation": "The final product remains a complete page before circular rotation."
+		},
+		{
+			"scenario": "live-product-update",
+			"expectation": "TABLE edits update visible copy without resetting the active product unnecessarily."
+		},
+		{
+			"scenario": "motion-off",
+			"expectation": "Rotation remains functional while page transition animation is disabled."
+		}
 	],
 	"behaviors": [
 		{
 			"id": "catalog-rotation",
 			"expectation": "Products rotate in stable order, wrap circularly, never show an empty frame, and clean up the instance timer.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "table-file-picker",
 			"expectation": "Products.image filePicker values resolve their location directly without a second datasource.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "media-fallback",
 			"expectation": "Missing and broken image records render the designed fallback.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "With no products the catalog still renders, keeps its header visible, states the collection note at a room-legible size, and does not orphan that message against the top edge.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "product-images", "source": "datasource", "binding": "products", "required": false }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "product-images",
+			"source": "datasource",
+			"binding": "products",
+			"required": false
+		}
 	],
 	"visualDirection": {
 		"source": "creative-led",
