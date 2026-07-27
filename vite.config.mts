@@ -11,6 +11,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd: boolean = mode === 'production';
 
   return {
+    // Published wayfinding map packages are opaque archives an app imports statically, the same
+    // way it imports an image. Declaring them here lets the bundler emit and rewrite the URL,
+    // which keeps components off `new URL(..., import.meta.url)` and keeps the package visible
+    // to the visual-review fingerprint.
+    assetsInclude: ['**/*.wbmap'],
     plugins: [
       solidPlugin({
         dev: !isProd
