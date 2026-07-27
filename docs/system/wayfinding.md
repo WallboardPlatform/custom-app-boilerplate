@@ -21,6 +21,16 @@ npm run wayfinding:assess -- --project wayfinding-project.json
 
 `*.wbwayfinding` is the editable source of truth, validated by `schemas/wayfinding-studio-project.schema.json`.
 
+### V1 artifact lifecycle
+
+| Artifact | Purpose | Rule |
+|----------|---------|------|
+| `*.wbwayfinding` | Canonical editable Studio project | Save, archive, and hand off this file. Never use it directly in the visitor runtime. |
+| `*.wbmap` | Published portable map package | Regenerate it from the `.wbwayfinding` source after every accepted map change. Never hand-edit it. |
+| Custom-app upload ZIP | Installable Wallboard app containing the published `.wbmap` | Build and validate it through the normal delivery workflow. This is the only artifact uploaded as the app. |
+
+Loose export files and reports are diagnostics only. They are not runtime inputs or customer deliverables. `examples/spatial-wayfinding` (Northline) is the field-tested v1 mechanics reference for consuming a `.wbmap`; it demonstrates the package contract, 2D/3D visitor views, details, layers, multilingual search, selection, and routing without prescribing a visual style.
+
 | Project section | Owns |
 |-----------------|------|
 | `assets` | Optional floor backgrounds, symbols, brand marks, and photos used while editing |
@@ -188,7 +198,7 @@ Acceptance requires:
 Deliver:
 
 - uploadable custom-app ZIP and source ZIP;
-- editable `.wbwayfinding` project;
-- published `.wbmap` plus the editable `.wbwayfinding` source;
+- canonical editable `.wbwayfinding` project;
+- published `.wbmap` generated from that project;
 - destination datasource contract and synthetic template;
 - screenshots and route evidence appropriate to the assessed mode.
