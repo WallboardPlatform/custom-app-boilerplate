@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "43ba44b43ffbd48a212b41a430c34b674dad277e8caf65ed15132625cb59c686",
-	"reviewedAt": "2026-07-27T13:45:36.477Z",
+	"sourceHash": "0f7116eaf28d9b0258630b3ed6744ea1989d1ee8647eaec8924bac5861cfb619",
+	"reviewedAt": "2026-07-27T14:11:28.469Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
@@ -54,72 +54,72 @@
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "compact-640x360.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-compact-640x360.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-custom-theme-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-long-title-960x540.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-source-error-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: chrome is intact and legible on every surface. Cropped picture edges on square and portrait are the intended cover fit, verified against a pre-fix render."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		}
 	],
 	"unresolvedFindings": []
