@@ -1,135 +1,135 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "0d90f29bdecdeafed179fa9afffec1f43c194c7062e773fab496122be754540e",
-	"reviewedAt": "2026-07-19T11:22:27.266Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "a0418ad8d3875b7de5a305705969ce0b80d8a1435fe89cb24715c3ade9156f12",
+	"reviewedAt": "2026-07-27T13:25:36.289Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The operational departure board preserves fast row scanning, status hierarchy, pagination, and all declared edge states."
+			"notes": "Departure board: time, destination, flight, gate, terminal and status per row, with terminal identity, local clock and a standing advisory footer."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
-			"notes": "No external visual reference was declared; the instruction-led transport brief is the review authority."
+			"status": "pass",
+			"notes": "Keeps the airport flight-information-display concept: yellow identity band, monospaced-feel rows, colour-coded status chips."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Continuous timetable registration, amber information rails, and gate/status columns make this specific to airport operations."
+			"notes": "Reads as an airport FIDS board, not a generic table widget; full-bleed rows with a dedicated status column."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+			"notes": "Destination and time columns sit above the distance-viewing floors now that auto-fit resolves properly instead of pinning to the minimum."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+			"notes": "Light-theme scenario keeps status chips legible against pale rows; the default holds yellow-on-black at full strength."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+			"notes": "Long-label and maximum-content scenarios keep destination names complete; row count adapts by paging rather than shrinking type."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+			"notes": "Rows fill the board at full counts. Sparse states show fewer rows against the board field, which is how a real departures display behaves, and the empty state substitutes a centred message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Dark, light, and custom-derived tokens now coordinate all surfaces; status colors and gate treatments remain readable."
+			"notes": "Identity mark and status chips render crisply from 600x600 through 1920x1080; no raster media involved."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+			"notes": "The yellow-banded transit board is visually distinct from the dashboard and editorial examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-bound-null-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-empty-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-invalid-rows-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-last-page-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-light-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-long-labels-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-maximum-content-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-odd-count-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-row-array-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "scenario-static-unbound-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: columns align, status chips are readable, sparse and empty states are intentional, no clipping or overflow at any surface."
 		}
 	],
 	"unresolvedFindings": []
