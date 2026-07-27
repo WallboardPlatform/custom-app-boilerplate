@@ -1,6 +1,10 @@
 {
 	"title": "Spatial Wayfinding",
 	"description": "Interactive 2D/3D campus wayfinding published from an editable Wayfinding Studio project.",
+	"mechanisms": [
+		"published-map-package",
+		"map-orientation"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",

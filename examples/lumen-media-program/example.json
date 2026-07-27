@@ -1,7 +1,12 @@
 {
 	"title": "Lumen Media Program",
 	"description": "Full-bleed video program proving cached file and folder playback, ordered playlists, HLS fallback, captions, recovery, telemetry, and external controls.",
-	"capabilities": ["video"],
+	"mechanisms": [
+		"video-playback"
+	],
+	"capabilities": [
+		"video"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -11,6 +16,10 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"artifacts": ["generation-brief.json"],
-	"referenceScreenshots": ["app-default-1920x1080.png"]
+	"artifacts": [
+		"generation-brief.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png"
+	]
 }

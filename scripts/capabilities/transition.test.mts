@@ -10,14 +10,16 @@ import type { TransitionScheduler, TransitionState } from '../../src/utils/trans
  * have been the one debugging it. These cover the controller before that happens.
  */
 
+type ScheduledCallback = () => void;
+
 interface FakeClock {
 	pending: number;
-	run: () => void;
+	run: ScheduledCallback;
 	scheduler: TransitionScheduler;
 }
 
 const fakeClock = (): FakeClock => {
-	const callbacks = new Map<number, () => void>();
+	const callbacks = new Map<number, ScheduledCallback>();
 	let nextId = 1;
 
 	return {
@@ -25,14 +27,17 @@ const fakeClock = (): FakeClock => {
 			return callbacks.size;
 		},
 		run: (): void => {
-			const due: Array<() => void> = [...callbacks.values()];
+			const due: ScheduledCallback[] = [...callbacks.values()];
 
 			callbacks.clear();
+
 			for (const callback of due) callback();
 		},
 		scheduler: {
 			setTimeout: (callback: () => void): ReturnType<typeof setTimeout> => {
-				const id: number = nextId++;
+				nextId += 1;
+
+				const id: number = nextId;
 
 				callbacks.set(id, callback);
 

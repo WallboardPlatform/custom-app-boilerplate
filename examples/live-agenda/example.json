@@ -1,6 +1,10 @@
 {
 	"title": "Live Agenda",
 	"description": "Time-aware agenda using the built-in Wallboard Calendar contract with Google, Microsoft, and iCalendar normalization.",
+	"mechanisms": [
+		"feed-or-calendar-binding",
+		"split-stage"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +17,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

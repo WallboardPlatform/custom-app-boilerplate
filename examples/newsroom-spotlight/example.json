@@ -1,6 +1,10 @@
 {
 	"title": "Newsroom Spotlight",
 	"description": "Editorial feed spotlight using the built-in Wallboard Feed contract with current and legacy RSS normalization.",
+	"mechanisms": [
+		"feed-or-calendar-binding",
+		"timed-rotation"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +17,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }
