@@ -1,0 +1,5 @@
+{
+	"reviewThresholdTokens": 30000,
+	"approvedBudgetTokens": 36000,
+	"justification": "Agent-facing contract docs (generation brief, widget best practices, wayfinding) grew with the v7 brief and the Wayfinding Studio product surface. Raising the ceiling requires trimming or merging a document, not appending another one."
+}

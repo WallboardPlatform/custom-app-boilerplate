@@ -257,6 +257,7 @@ const studioProjectFile = requireElement<HTMLInputElement>('#studio-project-file
 const studioProjectName = requireElement<HTMLInputElement>('#studio-project-name');
 const studioFloorSelect = requireElement<HTMLSelectElement>('#studio-floor');
 const studioFloorName = requireElement<HTMLInputElement>('#studio-floor-name');
+const studioFloorUnitsPerMeter = requireElement<HTMLInputElement>('#studio-floor-units-per-meter');
 const studioValidation = requireElement<HTMLElement>('#studio-validation');
 const localRecovery = requireElement<HTMLElement>('#local-recovery');
 const localRecoverySummary = requireElement<HTMLElement>('#local-recovery-summary');
@@ -982,12 +983,24 @@ const confirmAction = (message: string, title = 'Continue?', acceptLabel = 'Cont
 	confirmCancel.focus();
 });
 
+type StudioNoticeKind = 'error' | 'info' | 'warning';
+
 let noticeTimer: number | undefined;
-const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning', title?: string): void => {
+const NOTICE_HEADINGS: Record<StudioNoticeKind, string> = {
+	error: 'Action needed',
+	info: 'Studio update',
+	warning: 'Check this'
+};
+const NOTICE_DISMISS_DELAY: Record<StudioNoticeKind, number | undefined> = {
+	error: undefined,
+	info: 4_000,
+	warning: 10_000
+};
+const showStudioNotice = (message: string, kind: StudioNoticeKind = 'info', title?: string): void => {
 	const heading: HTMLElement = document.createElement('strong');
 	const copy: HTMLSpanElement = document.createElement('span');
 	const dismiss: HTMLButtonElement = document.createElement('button');
-	heading.textContent = title ?? (kind === 'error' ? 'Action needed' : 'Studio update');
+	heading.textContent = title ?? NOTICE_HEADINGS[kind];
 	copy.textContent = message;
 	dismiss.type = 'button';
 	dismiss.className = 'studio-notice-dismiss';
@@ -1002,9 +1015,10 @@ const showStudioNotice = (message: string, kind: 'error' | 'warning' = 'warning'
 	studioNotice.dataset.kind = kind;
 	studioNotice.hidden = false;
 	if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
-	noticeTimer = kind === 'warning'
-		? window.setTimeout((): void => { studioNotice.hidden = true; }, 10_000)
-		: undefined;
+	const dismissDelay: number | undefined = NOTICE_DISMISS_DELAY[kind];
+	noticeTimer = dismissDelay === undefined
+		? undefined
+		: window.setTimeout((): void => { studioNotice.hidden = true; }, dismissDelay);
 };
 
 const clearSimulatedRoute = (message = DEFAULT_ROUTE_RESULT): void => {
@@ -1809,6 +1823,7 @@ const renderStudioControls = (): void => {
 	}));
 	studioFloorSelect.value = currentFloorId;
 	studioFloorName.value = currentFloor().name;
+	studioFloorUnitsPerMeter.value = currentFloor().unitsPerMeter === undefined ? '' : String(currentFloor().unitsPerMeter);
 	const structuralIssues = validateWayfindingStudioProject(studioProject);
 	const structuralErrors = structuralIssues.filter((issue): boolean => issue.severity === 'error');
 	const deliveryIssues = structuralErrors.length === 0 ? validateWayfindingStudioDelivery(studioProject) : structuralIssues;
@@ -3239,6 +3254,19 @@ const runtimePreviewDestination = (elementId: string): { destination: Destinatio
 	return destination ? { destination, element: destinationElement ?? clickedElement } : undefined;
 };
 
+/**
+ * Route length is only physically meaningful when the floor declares its scale. An uncalibrated
+ * floor would otherwise report raw map units as metres, so the measurement is withheld instead.
+ */
+const routeMeasurement = (): { distance: string; duration: string } | undefined => {
+	if (!simulatedRoute || currentFloor().unitsPerMeter === undefined) return undefined;
+
+	return {
+		distance: `${simulatedRoute.walkingDistance} m`,
+		duration: `Approx. ${Math.max(1, Math.ceil(simulatedRoute.walkingSeconds / 60))} min walk`
+	};
+};
+
 const runtimePreviewLanguageCode = (): string =>
 	runtimePreviewLanguage.value || studioProject.defaultLanguage || projectLanguages()[0]?.code || 'en';
 
@@ -3259,11 +3287,12 @@ const renderRuntimePreviewDetails = (destination: DestinationRow): void => {
 	runtimePreviewName.textContent = runtimePreviewDisplayName(destination);
 	runtimePreviewDescription.textContent = runtimePreviewDisplayDescription(destination);
 	const hasCurrentRoute: boolean = destination.id === runtimePreviewDestinationId && Boolean(simulatedRoute);
-	if (hasCurrentRoute && simulatedRoute) {
+	const measurement = hasCurrentRoute ? routeMeasurement() : undefined;
+	if (measurement) {
 		const distance: HTMLElement = document.createElement('strong');
 		const duration: HTMLElement = document.createElement('span');
-		distance.textContent = `${simulatedRoute.walkingDistance} m`;
-		duration.textContent = `Approx. ${Math.max(1, Math.ceil(simulatedRoute.walkingSeconds / 60))} min walk`;
+		distance.textContent = measurement.distance;
+		duration.textContent = measurement.duration;
 		runtimePreviewRoute.replaceChildren(distance, duration);
 		runtimePreviewRoute.hidden = false;
 	} else {
@@ -3448,7 +3477,10 @@ function simulateSelectedRoute(): boolean {
 		routeInspectButton.disabled = true;
 		return false;
 	}
-	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationNodeId, { profile: routeProfile.value as 'standard' | 'step-free' });
+	simulatedRoute = new WayfindingGraph(studioProject.graph).route(startId, destinationNodeId, {
+		mapRatio: currentFloor().unitsPerMeter,
+		profile: routeProfile.value as 'standard' | 'step-free'
+	});
 	if (!simulatedRoute) {
 		routeResult.textContent = 'No route exists for the selected profile. Connect the origin, transitions, and destination entrance.';
 		routeClearButton.disabled = true;
@@ -3459,7 +3491,11 @@ function simulateSelectedRoute(): boolean {
 	const floors: string[] = [...new Set(simulatedRoute.nodeIds
 		.map((id: string): string => studioProject.graph.nodes.find((node: WayfindingNode): boolean => node.id === id)?.levelId ?? ''))]
 		.filter(Boolean);
-	routeResult.textContent = `${simulatedRoute.walkingDistance} m, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${simulatedRoute.edgeIds.length} network segment${simulatedRoute.edgeIds.length === 1 ? '' : 's'}, ${floors.join(' -> ')}`;
+	const measurement = routeMeasurement();
+	const shape: string = `${simulatedRoute.edgeIds.length} network segment${simulatedRoute.edgeIds.length === 1 ? '' : 's'}, ${floors.join(' -> ')}`;
+	routeResult.textContent = measurement
+		? `${measurement.distance}, ${Math.ceil(simulatedRoute.walkingSeconds / 60)} min, ${shape}`
+		: `${shape}. Set the floor scale to report distance and walking time.`;
 	routeClearButton.disabled = false;
 	routeInspectButton.disabled = false;
 	draw();
@@ -5332,7 +5368,7 @@ const openStudioProjectFile = async (file: File, handle?: StudioFileHandle): Pro
 		adoptCurrentProjectForAutosave();
 		if (repairs.length > 0) {
 			const details: string = repairs.map((repair: WayfindingStudioRepair): string => repair.message).join(' ');
-			showStudioNotice(`Opened with ${repairs.length} automatic repair${repairs.length === 1 ? '' : 's'}. ${details}`);
+			showStudioNotice(`Opened with ${repairs.length} automatic repair${repairs.length === 1 ? '' : 's'}. ${details}`, 'warning');
 			coverageStatus.textContent = 'Project recovered. Review the repaired geometry, then save the project file.';
 		} else {
 			showStudioNotice(`Opened ${studioProject.name}.`);
@@ -5415,6 +5451,16 @@ semanticMediaFile.addEventListener('change', async (): Promise<void> => {
 
 studioProjectName.addEventListener('input', (): void => { studioProject.name = studioProjectName.value.trim() || 'Wayfinding project'; touchWayfindingStudioProject(studioProject); scheduleAutosave(); });
 studioFloorName.addEventListener('input', (): void => { currentFloor().name = studioFloorName.value.trim() || currentFloorId; touchWayfindingStudioProject(studioProject); renderStudioControls(); });
+studioFloorUnitsPerMeter.addEventListener('input', (): void => {
+	const parsed: number = Number(studioFloorUnitsPerMeter.value);
+
+	if (studioFloorUnitsPerMeter.value.trim() === '' || !Number.isFinite(parsed) || parsed <= 0) delete currentFloor().unitsPerMeter;
+	else currentFloor().unitsPerMeter = parsed;
+
+	touchWayfindingStudioProject(studioProject);
+	clearSimulatedRoute();
+	renderStudioControls();
+});
 studioFloorSelect.addEventListener('change', async (): Promise<void> => { persistCurrentMask(); await activateFloor(studioFloorSelect.value); });
 requireElement<HTMLButtonElement>('#studio-add-floor').addEventListener('click', async (): Promise<void> => {
 	const before: HistoryState = captureHistoryState();

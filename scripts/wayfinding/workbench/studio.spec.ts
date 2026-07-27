@@ -14,6 +14,7 @@ import {
 const createRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('route-clear-test');
 	const floor = project.floors[0];
+	floor.unitsPerMeter = 20;
 	floor.pedestrianSpaceSource = 'polygons';
 	floor.elements = [
 		{ floorId: floor.id, geometry: [{ x: 40, y: 40 }, { x: 840, y: 40 }, { x: 840, y: 480 }, { x: 40, y: 480 }], id: 'main-walkable', provenance: 'reviewer-authored', status: 'confirmed', type: 'walkable' },
@@ -42,6 +43,7 @@ const createRouteTestProject = (): WayfindingStudioProject => {
 const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('automatic-route-test');
 	const floor = project.floors[0];
+	floor.unitsPerMeter = 20;
 	floor.pedestrianSpaceSource = 'polygons';
 	floor.width = 900;
 	floor.height = 600;
@@ -100,6 +102,7 @@ const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
 const create3dTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('three-dimensional-preview');
 	const floor = project.floors[0];
+	floor.unitsPerMeter = 20;
 	project.defaults!.route.animation = 'flow';
 	project.defaults!.route.animationSpeed = 120;
 	project.defaults!.route.lineWidth = 13;
@@ -285,8 +288,10 @@ test('expands the map workspace and provides a focused visitor preview', async (
 		status: 'Open',
 		translations: {
 			hu: {
-				description: 'Heti csapategyeztetesek es latogatoi bemutatok.',
-				name: 'Targyalo'
+				// Accented glyphs are deliberate: Hungarian is a shipped runtime language, so the
+				// preview must prove descender and diacritic ink clearance, not ASCII-folded text.
+				description: 'Heti csapategyeztetések és látogatói bemutatók őszig.',
+				name: 'Tárgyaló'
 			}
 		},
 		website: 'https://example.com/meeting-room'
@@ -359,8 +364,8 @@ test('expands the map workspace and provides a focused visitor preview', async (
 
 	await page.locator('#runtime-preview-search').clear();
 	await page.locator('#runtime-preview-language').selectOption('hu');
-	await expect(page.locator('#runtime-preview-name')).toHaveText('Targyalo');
-	await expect(page.locator('#runtime-preview-description')).toContainText('Heti csapategyeztetesek');
+	await expect(page.locator('#runtime-preview-name')).toHaveText('Tárgyaló');
+	await expect(page.locator('#runtime-preview-description')).toContainText('csapategyeztetések és látogatói');
 
 	await page.locator('#runtime-preview-icons').uncheck();
 	await page.locator('#runtime-preview-labels').uncheck();
@@ -774,6 +779,46 @@ test('opens recoverable projects with a visible repair report and allows selecti
 	expect(errors).toEqual([]);
 });
 
+test('reports route distance only for a calibrated floor', async ({ page }, testInfo) => {
+	await page.goto('/');
+	const projectPath: string = testInfo.outputPath('route-scale-test.wbwayfinding');
+	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
+	await page.locator('#studio-project-file').setInputFiles(projectPath);
+	const scale = page.locator('#studio-floor-units-per-meter');
+	await expect(scale).toHaveValue('20');
+
+	const canvas = page.locator('#stage');
+	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
+		const bounds: DOMRect = element.getBoundingClientRect();
+		return { height: bounds.height, width: bounds.width };
+	});
+	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
+	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
+	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
+	const clickDestination = async (): Promise<void> => {
+		await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
+	};
+
+	await page.locator('#workspace-route-preview').click();
+	await clickDestination();
+	// 20 units per metre must divide the raw map distance rather than report map units as metres.
+	const calibrated: string = await page.locator('#route-result').innerText();
+	const reportedMeters: number = Number(/(\d+) m,/.exec(calibrated)?.[1]);
+	expect(reportedMeters).toBeGreaterThan(0);
+	expect(reportedMeters).toBeLessThan(60);
+
+	await page.locator('#workspace-map').click();
+	await scale.fill('');
+	await page.locator('#workspace-route-preview').click();
+	await clickDestination();
+	await expect(page.locator('#route-result')).toContainText('Set the floor scale');
+	await expect(page.locator('#route-result')).not.toContainText(' m,');
+	await page.locator('#workspace-runtime-preview').click();
+	await page.locator('.runtime-preview-result').first().click();
+	await expect(page.locator('#runtime-preview-name')).toBeVisible();
+	await expect(page.locator('#runtime-preview-route')).toBeHidden();
+});
+
 test('clears a simulated route without changing the authored project', async ({ page }, testInfo) => {
 	const errors: string[] = [];
 	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
@@ -876,6 +921,12 @@ test('renders, rotates, selects, and saves a nonblank 3D floor preview', async (
 	await expect(page.locator('#route-result')).toContainText('min');
 	await expect(preview).toHaveAttribute('data-route-animation', 'flow');
 	await expect(preview).toHaveAttribute('data-route-width', '13');
+	// The walking route must stay on the pedestrian plane instead of climbing onto extruded room tops.
+	const routeElevation: number = Number(await preview.getAttribute('data-route-elevation'));
+	const floorPeak: number = Number(await preview.getAttribute('data-floor-peak'));
+	expect(floorPeak).toBeGreaterThan(0);
+	expect(routeElevation).toBeGreaterThan(0);
+	expect(routeElevation).toBeLessThan(floorPeak);
 	const firstProgress: string | null = await preview.getAttribute('data-route-progress');
 	await expect.poll(async (): Promise<string | null> => preview.getAttribute('data-route-progress')).not.toBe(firstProgress);
 	const routeScreenshotPath: string = testInfo.outputPath('three-dimensional-route-preview.png');

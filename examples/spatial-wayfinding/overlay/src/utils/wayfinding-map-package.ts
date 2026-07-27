@@ -51,6 +51,7 @@ interface PublishedScene {
 	id: string;
 	name: string;
 	order: number;
+	unitsPerMeter?: number;
 	width: number;
 }
 
@@ -116,6 +117,7 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 			name: scene.name,
 			order: scene.order,
 			svg: inlineAssets(strFromU8(requiredEntry(entries, descriptor.svgPath)), assets),
+			unitsPerMeter: scene.unitsPerMeter ?? descriptor.unitsPerMeter,
 			width: scene.width
 		};
 	});

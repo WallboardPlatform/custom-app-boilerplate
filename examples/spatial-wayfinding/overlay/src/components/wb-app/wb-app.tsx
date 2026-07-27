@@ -164,7 +164,11 @@ export default (props: WbAppProps): JSX.Element => {
 		const startId: string | undefined = originNodeId();
 		const node = destinationId && activeGraph ? activeGraph.locationNode(destinationId) : undefined;
 
-		return node && activeGraph && startId ? activeGraph.route(startId, node.id, { mapRatio: 13 }) : undefined;
+		// The published floor owns its scale. Authored edge distances win; this only sizes the
+		// pixel fallback, so a regenerated route network cannot silently report map units as metres.
+		return node && activeGraph && startId
+			? activeGraph.route(startId, node.id, { mapRatio: floor()?.unitsPerMeter })
+			: undefined;
 	});
 	const activeRoutePoints = createMemo((): WayfindingPoint[] => {
 		const floorId: string | undefined = floor()?.id;
