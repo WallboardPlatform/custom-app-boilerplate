@@ -1,153 +1,151 @@
 {
-    "reviewVersion":  1,
-    "sourceHash": "5900dcda0bdd5c1f478024868016121c009c0fda9cdeab6dcbde50311b820bdf",
-    "reviewedAt": "2026-07-19T11:23:44.612Z",
-    "reviewer": "Codex shared auto-fit migration re-review",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "All target surfaces preserve the campus directory hierarchy and primary wayfinding fields."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "pass",
-                         "notes":  "No external visual reference was supplied; the instruction-led civic campus direction is consistent."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "Locator rail, route bands, serif identity, and semantic accessibility treatment remain distinctive and coherent."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "Headings, destinations, rooms, directions, and portrait accessibility notes remain readable without tiny type."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Light, dark, and custom themes retain clear text and band contrast."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "Portrait stress values wrap fully at 16px or larger with no overflow or ellipsis; compact surfaces remain bounded."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "Landscape, strip, square, and stacked portrait compositions use their native frames without overlap or dead zones."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "Packaged identity assets render crisply and semantic colors remain coordinated across themes."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "The directory is domain-specific and does not read as an unmodified scaffold example."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "app-default-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Primary landscape directory is aligned, balanced, and readable."
-                        },
-                        {
-                            "file":  "landscape-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Responsive landscape remains bounded with stable row alignment."
-                        },
-                        {
-                            "file":  "portrait-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Six-row stacked scan path shows complete default direction and accessibility values."
-                        },
-                        {
-                            "file":  "scenario-custom-theme-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Custom semantic palette is coordinated and readable."
-                        },
-                        {
-                            "file":  "scenario-dark-theme-1366x768.png",
-                            "status":  "pass",
-                            "notes":  "Dark preset retains hierarchy, contrast, and route semantics."
-                        },
-                        {
-                            "file":  "scenario-empty-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Empty state is centered, explicit, and visually calm."
-                        },
-                        {
-                            "file":  "scenario-final-partial-page-1366x768.png",
-                            "status":  "pass",
-                            "notes":  "Final page fills the row area evenly without clipping."
-                        },
-                        {
-                            "file":  "scenario-invalid-rows-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Valid rows remain well composed after malformed rows are removed."
-                        },
-                        {
-                            "file":  "scenario-live-datasource-update-1366x768.png",
-                            "status":  "pass",
-                            "notes":  "Updated destination and room appear in the stable directory layout."
-                        },
-                        {
-                            "file":  "scenario-long-departments-1536x432.png",
-                            "status":  "pass",
-                            "notes":  "Wide-low stress content remains bounded within the established compact policy."
-                        },
-                        {
-                            "file":  "scenario-many-buildings-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Sorted building and floor groups retain a continuous scan path."
-                        },
-                        {
-                            "file":  "scenario-missing-rooms-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Room fallback labels fit cleanly in the square composition."
-                        },
-                        {
-                            "file":  "scenario-portrait-long-essential-fields-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "All six long destinations, directions, and accessibility notes are fully readable with multi-line wrapping."
-                        },
-                        {
-                            "file":  "scenario-row-array-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Row-array normalization produces the expected stable layout."
-                        },
-                        {
-                            "file":  "scenario-single-building-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Four portrait rows use the full height while retaining complete essential values."
-                        },
-                        {
-                            "file":  "scenario-static-unbound-1366x768.png",
-                            "status":  "pass",
-                            "notes":  "Representative fallback content renders as a complete directory."
-                        },
-                        {
-                            "file":  "scenario-unequal-floors-1366x768.png",
-                            "status":  "pass",
-                            "notes":  "Unequal groups preserve clear building and floor continuity."
-                        },
-                        {
-                            "file":  "square-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Square layout remains compact, aligned, and legible."
-                        },
-                        {
-                            "file":  "wide-low-1536x432.png",
-                            "status":  "pass",
-                            "notes":  "Strip composition uses the full width with stable compact rows."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "f242ccdf276f393d4aefe63f239778c135ab4c2f5b5096d1d7744e9281ad6794",
+	"reviewedAt": "2026-07-27T13:48:50.280Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Campus directory: building, floor, department, room, walking direction and accessibility note per row, with venue identity and paging progress."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Institutional directory-board concept preserved: serif masthead, ruled table, grouped building bands."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as a lobby directory rather than a data grid; building grouping and direction column are domain-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Department names hold the primary role above their floor; direction and accessibility text sit at the metadata floor by design."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark-theme and custom-theme scenarios preserve row banding, rule contrast and the accent masthead."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-department and portrait-long-essential-field scenarios wrap rather than ellipsize; the direction column clamps its secondary text."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The table fills the plate on every surface; partial-page, single-building and missing-room states remain balanced, and the empty state substitutes a centred notice."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Institution mark and rules render crisply from 600x600 through 1920x1080; no raster media involved."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The ruled institutional directory is structurally distinct from the card and panel examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-custom-theme-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-dark-theme-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-empty-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-final-partial-page-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-invalid-rows-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-long-departments-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-many-buildings-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-missing-rooms-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-portrait-long-essential-fields-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-row-array-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-single-building-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-static-unbound-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "scenario-unequal-floors-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows align across all columns, building grouping is legible, sparse and empty states are intentional, nothing clipped or overlapping."
+		}
+	],
+	"unresolvedFindings": []
 }

@@ -1,125 +1,125 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "43ba44b43ffbd48a212b41a430c34b674dad277e8caf65ed15132625cb59c686",
-	"reviewedAt": "2026-07-20T08:45:57.411Z",
-	"reviewer": "Codex live-field hardening review",
+	"sourceHash": "0f7116eaf28d9b0258630b3ed6744ea1989d1ee8647eaec8924bac5861cfb619",
+	"reviewedAt": "2026-07-27T14:11:28.469Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The app proves opt-in video playback, playlist, captions, recovery, telemetry, and controls."
+			"notes": "Media program board: channel identity, playing programme, archive index, now-playing filename and elapsed/total time, across playing and source-error states."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
-			"notes": "The brief is creatively directed and does not specify an external visual reference."
+			"status": "pass",
+			"notes": "Broadcast-continuity concept retained: full-bleed video field, small persistent identity mark, minimal chrome over picture."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The fictional Lumen broadcast identity and full-bleed program composition are specific to media playback."
+			"notes": "Reads as a channel playout board rather than a web video player; chrome is a thin overlay, not a card."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary program titles, active source, and status remain above declared room-view font floors."
+			"notes": "Now-playing title and clock sit above their floors on every surface; the corrected auto-fit no longer pins them to the minimum."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Dark, Light, and Custom palettes keep every app-owned overlay and native caption readable."
+			"notes": "Custom-theme scenario holds legible chrome over a bright picture; the default keeps white-on-dark at full strength."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long venue, program, and source names fit or ellipsize without clipping or geometry changes."
+			"notes": "Long-title scenario truncates the filename intentionally with an ellipsis while the programme index keeps its own labels bounded."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Media remains dominant while playlist and progress chrome reflow deliberately on all required surfaces."
+			"notes": "Video fills the frame at every aspect; square and portrait crop the picture with cover rather than letterboxing, and chrome stays inside the safe area."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Packaged synthetic WebM assets, generated icon, placeholder, and coordinated palettes render correctly."
+			"notes": "Video renders with an explicit cover fit, so narrow surfaces crop the picture as intended; the source-error scenario substitutes a recovery reel."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The broadcast-style full-bleed program differs materially from dashboard and card-based examples."
+			"notes": "Full-bleed motion with overlay chrome is distinct from the panelled and card-based examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD program is balanced, readable, and fully populated."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "compact-640x360.png",
 			"status": "pass",
-			"notes": "Compact layout removes secondary chrome while preserving status."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Landscape layout keeps media dominant and labels bounded."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Portrait layout repositions the source rail above the footer."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-compact-640x360.png",
 			"status": "pass",
-			"notes": "Compact behavior scenario remains readable without overlap."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-custom-theme-1280x720.png",
 			"status": "pass",
-			"notes": "Custom palette updates the complete authored chrome coherently."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD scenario shows active playback, playlist, caption, and progress."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-long-title-960x540.png",
 			"status": "pass",
-			"notes": "Pathological labels truncate cleanly above semantic font floors."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Light portrait chrome, caption, source rail, and footer retain contrast."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-source-error-1920x1080.png",
 			"status": "pass",
-			"notes": "Recovery scenario advances to playable media and shows the active source."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-square-600x600.png",
 			"status": "pass",
-			"notes": "Square layout preserves video, caption, identity, and progress."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "scenario-wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Wide-low layout keeps the center frame and status rail unobstructed."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Default square render remains fully bounded and legible."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Default wide-low render uses the horizontal area efficiently."
+			"notes": "Re-inspected against the fixed build: chrome is intact and legible on every surface; cropped picture edges on square and portrait are the intended cover fit."
 		}
 	],
 	"unresolvedFindings": []

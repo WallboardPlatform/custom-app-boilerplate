@@ -1,123 +1,121 @@
 {
-    "reviewVersion":  1,
-    "sourceHash": "616ff29a0be2870778ab919b3dbceef29e5b5d20f054851294150296385660aa",
-    "reviewedAt": "2026-07-19T13:24:21.847Z",
-    "reviewer": "Codex shared auto-fit migration re-review",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "Both portrait targets read as one grouped Andon instrument and cover mixed, normal, stopped, unknown, empty, dense, partial, invalid, and live-update states."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "not-applicable",
-                         "notes":  "No external visual reference was supplied; TASK.md and the instruction-led generation brief are the review authority."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "The continuous signal spine, distinct marker geometry, ruled line headers, and flat station lanes form a purpose-built production instrument."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "Severity headline, state glyphs, station names, and elapsed values remain prominent at 1080 and the narrower 480-pixel target."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Dark, light, and semantic state surfaces preserve readable text and clear Normal, Attention, Stopped, and Unknown hierarchy."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "Long titles auto-fit, line and station labels ellipsize deliberately, reasons wrap within two lines, and all inspected text retains complete ink."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "The fixed header and footer frame a flexible uninterrupted line body; dense, sparse, empty, and continued pages remain balanced without overlap."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "The packaged Northstar icon and coordinated palettes render cleanly with no missing resources, decorative gradients, or theme inconsistencies."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "The vertical industrial signal rail and line-group composition are distinct from the scaffold examples and avoid dashboard-card visual grammar."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "app-default-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920; mixed line counts, severity hierarchy, station lanes, and footer remain aligned and fully contained."
-                        },
-                        {
-                            "file":  "narrow-column-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920; narrow typography, state spine, elapsed values, and two-column footer legend remain readable and contained."
-                        },
-                        {
-                            "file":  "scenario-all-normal-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920; Flow Stable hierarchy is calm while every station and line remains scannable."
-                        },
-                        {
-                            "file":  "scenario-all-stopped-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920; eight stopped stations remain individually distinguishable with repeated square X markers and labels."
-                        },
-                        {
-                            "file":  "scenario-empty-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920 and confirmed live; the centered no-data message is intentional, legible, and framed by the persistent instrument chrome."
-                        },
-                        {
-                            "file":  "scenario-final-partial-group-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920 and confirmed live; the continued line label, remaining six stations, and page-two indicator are unambiguous."
-                        },
-                        {
-                            "file":  "scenario-invalid-rows-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920; one valid row remains visible and the sparse tail communicates the intentionally short data set."
-                        },
-                        {
-                            "file":  "scenario-light-theme-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920; the light preset preserves line boundaries, state fills, text contrast, and severity emphasis."
-                        },
-                        {
-                            "file":  "scenario-live-update-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920; the pushed stopped state, updated reason, owner, duration, totals, and line severity all render in place."
-                        },
-                        {
-                            "file":  "scenario-long-reasons-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920 and confirmed live; the long title fits, long labels ellipsize, reasons wrap, and metadata stays within each lane."
-                        },
-                        {
-                            "file":  "scenario-maximum-content-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920; nine visible stations fill page one without clipping and the page indicator clearly announces rotation."
-                        },
-                        {
-                            "file":  "scenario-mixed-line-load-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1080x1920; mixed station counts retain line grouping and make Attention and Stopped exceptions dominant at distance."
-                        },
-                        {
-                            "file":  "scenario-unknown-state-480x1920.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x1920; the unknown station uses a circular outline, question mark, Unknown label, and muted lane independently of color."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "eb2e044e4689dfd68f93f1298f52c81856af7040966371c8083874a12df693da",
+	"reviewedAt": "2026-07-27T14:01:54.248Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Line andon: plant identity, aggregate stopped count, and per-station rows with state, station name, reason and elapsed time, grouped by line."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Andon-board concept retained: banner state summary over colour-coded station rows in a tall column format."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as a factory andon column rather than a dashboard; the state banner and per-row colour field are domain-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Station names and the aggregate banner hold their roles across both the 1080 and 480 wide columns; elapsed times sit at the metadata role by intent."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light-theme scenario preserves state-colour separation across normal, attention and stopped rows without losing row banding."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-reason scenario wraps the reason text within its row; station names stay complete at the 480px column width."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Rows fill the tall column at every count; the final-partial-group, invalid-rows and unknown-state scenarios stay balanced, and the empty state substitutes a centred no-status message."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Plant mark and state glyphs render crisply in both column widths; no raster media involved."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The tall single-column andon is structurally distinct from the landscape dashboard and grid examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "narrow-column-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-all-normal-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-all-stopped-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-empty-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-final-partial-group-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-invalid-rows-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-light-theme-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-live-update-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-long-reasons-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-maximum-content-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-mixed-line-load-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		},
+		{
+			"file": "scenario-unknown-state-480x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: rows fill the column, state colours are distinguishable, reasons wrap rather than clip, empty and partial states are intentional."
+		}
+	],
+	"unresolvedFindings": []
 }
