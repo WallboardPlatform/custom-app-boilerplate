@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "9bf2d678f75b689a7800d12b53532fbfa01cb19f5ebf9d731982f804f93b5453",
-	"reviewedAt": "2026-07-27T09:31:16.948Z",
+	"sourceHash": "7031210ed8f8b500a22af5fffd80e76a81b3510836edd80081bc586647d5a071",
+	"reviewedAt": "2026-07-27T15:47:45.483Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
@@ -42,7 +42,7 @@
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Brand mark, visitor-information symbol, and floor artwork all resolve from the packaged artifact with no missing-media fallback visible."
+			"notes": "The published map package is now a static import rather than a runtime-built URL, so the bundler emits and rewrites it and the review fingerprint tracks it. Brand, symbol and photo assets render from the packaged artifact in both views."
 		},
 		{
 			"id": "exampleSameness",

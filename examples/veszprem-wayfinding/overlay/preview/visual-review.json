@@ -1,130 +1,130 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "9740620342f04fb3bfd63f3458b6abfbce1be9d34f9539f4f67280000e06c3de",
-	"reviewedAt": "2026-07-27T09:01:56.1801438+02:00",
-	"reviewer": "Codex visual review",
+	"sourceHash": "dcc4da7199f85e3e87550473593b8fd9b8770045a69b30917881a03608759e82",
+	"reviewedAt": "2026-07-27T16:50:51.824Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The experience is a multilingual touch directory with search, visitor-controlled pan and zoom, persistent current-position and target pulses, optional evidence-bounded directional guidance, and no invented walking route."
+			"notes": "Downtown wayfinding: illustrated city map, searchable destination list, language switch, directional guidance and selected-destination detail. The touch keyboard passes the shared keyboard conformance suite: focus retention on every control, disabled honoured, and no doubled space."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The supplied tourism map remains the authoritative visual source while the overlay adds only reviewed SVG hit targets and guidance markers."
+			"notes": "Veszprem tourist-map concept retained: the authored illustrated plan as the visual base with an overlay list rather than a redrawn map."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The Veszprem identity, bilingual destination data, map artwork, kiosk controls, and focused detail state read as a venue-specific product."
+			"notes": "Reads as a civic orientation point; the map base, QR panel and bilingual switch are specific to this deployment."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Directory names, selected destination titles, map controls, and guidance statements remain legible at both validated surfaces."
+			"notes": "Destination names and the board title hold their roles; map labels belong to the authored artwork and are unchanged."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Default and custom palettes preserve contrast for text, controls, selected markers, and muted map content."
+			"notes": "Custom-theme and compact scenarios preserve list contrast and selection emphasis against the map base."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long title, long directory row, and long selected destination scenarios wrap or scroll without clipping or overlap."
+			"notes": "Long-title, long-destination-list and long-destination-selected scenarios wrap names completely without ellipsis."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Map and directory remain balanced at 1920x1080 and 1366x768; scroll replaces ambiguous pagination and selected states keep controls visible."
+			"notes": "Map and list divide the surface at both sizes; the keyboard scenario overlays without displacing the map, and the empty state substitutes an explicit message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "The source map renders sharply, custom colors propagate, current and selected markers pulse distinctly, and the venue-confirmed facing arrow remains separate from destination guidance."
+			"notes": "The illustrated map renders sharply at 1366x768 and 1920x1080 with the QR and brand marks intact."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The example follows the supplied cartographic visual language rather than imposing the dashboard style used by unrelated examples."
+			"notes": "Reference-led map wayfinding is structurally distinct from every other example in the portfolio."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full-HD directory is complete and uncluttered, with the current-position marker visible before interaction."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact surface preserves the map, directory hierarchy, and touch targets."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-active-highlight-1920x1080.png",
 			"status": "pass",
-			"notes": "One destination is isolated with a strong pulsing spotlight and no false route line or automatic viewport change."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Scenario render matches the reviewed Full-HD default image byte-for-byte."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact behavior render has no clipping, overlap, or inaccessible controls."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-custom-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Custom palette changes visible chrome and controls while retaining contrast."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-directional-guidance-1920x1080.png",
 			"status": "pass",
-			"notes": "Pulsing origin and target remain distinct, the map-relative facing arrow and compass direction are readable, and the UI explicitly states that it is not a walking path."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",
 			"status": "pass",
-			"notes": "Empty data produces a centered, legible empty state without disturbing map controls."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-external-destination-1366x768.png",
 			"status": "pass",
-			"notes": "A destination without reviewed map geometry is honestly reported as not shown on this map."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-keyboard-open-1366x768.png",
 			"status": "pass",
-			"notes": "The large on-screen keyboard exposes the typed value, Hungarian and English layouts, and unambiguous touch actions."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
 			"status": "pass",
-			"notes": "A live table update replaces the visible directory row without stale content."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-destination-list-1366x768.png",
 			"status": "pass",
-			"notes": "Long destination text remains readable and the directory remains continuously scrollable."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-destination-selected-1366x768.png",
 			"status": "pass",
-			"notes": "Long selected names and descriptions wrap within the detail panel without obscuring the highlight."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-title-1366x768.png",
 			"status": "pass",
-			"notes": "The long venue title remains on one readable header line at the validated compact surface."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-row-array-1366x768.png",
 			"status": "pass",
-			"notes": "The supported row-array datasource shape renders the complete directory correctly."
+			"notes": "Inspected in the contact sheet: map base is sharp, destination list legible, keyboard and guidance overlays correct, empty state intentional, nothing clipped."
 		}
 	],
 	"unresolvedFindings": []

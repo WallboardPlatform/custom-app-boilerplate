@@ -1,130 +1,130 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "22b55fa6c08098797975293dc2461def78341c9d2d579866821830a86b12b604",
-	"reviewedAt": "2026-07-20T08:45:49.603Z",
-	"reviewer": "Codex live-field hardening review",
+	"sourceHash": "f3a3bebc6cd8e623299f8e35ec7cbf6bf3a7d7ff4e48928e06b2c4a95a43656d",
+	"reviewedAt": "2026-07-27T14:04:31.527Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The proof uses the platform weather service, exposes only meaningful editor settings, refreshes predictably, and retains the last good forecast on transient failure."
+			"notes": "Local weather: place, current temperature and condition, wind, humidity, visibility, sunrise and sunset, plus a multi-day outlook strip."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
-			"notes": "No external design reference was declared; the cinematic weather-window brief is the visual authority."
+			"status": "pass",
+			"notes": "Photographic weather-window concept retained: a location photograph as the field with typographic data laid over it."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Full-bleed weather media, an oversized temperature composition, calibrated detail rules, and an unframed forecast horizon distinguish it from dashboard and card examples."
+			"notes": "Reads as an editorial weather window rather than a widget; serif place name over photography with asymmetric rules is concept-specific."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Hero, secondary, and metadata text remain above the declared room-viewing floors at all maintained target ratios."
+			"notes": "Place name and current temperature dominate; the detail column and outlook labels sit at their intended roles above the floors."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "The media scrim and solid fallback preserve readable contrast across bright imagery, missing media, stale data, and unavailable states."
+			"notes": "Data holds contrast against the darkened photograph across the default, stale and unavailable states."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long locations and conditions fit through bounded auto-fit, while forecast metadata remains complete without clipped glyphs or partial lines."
+			"notes": "Long-condition and long-location scenarios wrap onto multiple lines and keep the full string without ellipsis."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Forecast content changes from a horizontal horizon to a vertical sequence for tall surfaces and intentionally omits secondary details on compact surfaces."
+			"notes": "Header, current block, detail column and outlook strip divide the surface at every aspect. The short-forecast scenario stretches a single card across the full strip with its content pinned to both edges, which is sparse but truthful to a one-day outlook and loses no data; the unavailable state substitutes an explicit message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Generated preview media, editor icon, placeholder, cached platform media, and no-media fallback all render without broken assets."
+			"notes": "The location photograph renders with an intentional cover fit at every aspect; condition glyphs stay crisp and the missing-media scenario degrades cleanly."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The edge-to-edge editorial composition is deliberately unlike the maintained operational tables, cards, menus, and dashboards."
+			"notes": "Full-bleed photographic typography is distinct from the panelled and card-based examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full-HD hierarchy, weather media, detail rail, and forecast horizon were inspected at rendered size."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Generic landscape keeps the complete hierarchy and vertically stacked detail labels without overlap."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Portrait uses a deliberate vertical forecast sequence with balanced media and readable hero text."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-long-condition-960x540.png",
 			"status": "pass",
-			"notes": "The long condition fits within its bounded region above the secondary text floor."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-long-location-960x540.png",
 			"status": "pass",
-			"notes": "The long location wraps and fits without clipping or displacing the weather reading."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-missing-media-1920x1080.png",
 			"status": "pass",
-			"notes": "Missing media falls back to an intentional atmospheric color field and weather mark without a broken image."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-motion-off-1920x1080.png",
 			"status": "pass",
-			"notes": "The motion-off state remains compositionally complete with decorative drift and reveal effects disabled."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "The declared portrait scenario matches the inspected portrait target without hidden or overlapping content."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-short-forecast-1920x1080.png",
 			"status": "pass",
-			"notes": "A short forecast remains intentionally distributed rather than leaving a broken or collapsed horizon."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-square-600x600.png",
 			"status": "pass",
-			"notes": "Square mode prioritizes room-readable current conditions and a compact forecast without overcrowding."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-stale-update-1920x1080.png",
 			"status": "pass",
-			"notes": "A failed refresh retains the last good forecast and adds a clear but restrained stale-data message."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-unavailable-1920x1080.png",
 			"status": "pass",
-			"notes": "Initial service failure renders a designed full-surface unavailable state with actionable location guidance."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "scenario-wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Wide-low mode forms a compact signage band with readable current conditions and forecast values."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Maintained square preset matches the inspected compact composition and semantic font floors."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Maintained wide-low preset remains fully populated and readable with no accidental clipping."
+			"notes": "Inspected in the contact sheet, with the short-forecast state verified at full resolution: data is complete and legible over the photograph, sparse outlook is truthful, nothing clipped or overflowing."
 		}
 	],
 	"unresolvedFindings": []

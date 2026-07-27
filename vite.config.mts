@@ -6,11 +6,17 @@ import stylelint from 'vite-plugin-stylelint';
 import solidSvg from 'vite-plugin-solid-svg';
 
 import WBAppPostExecution from './package-tools/plugins/wb-app-post-execution';
+import { resolvedPathAliases } from './scripts/path-aliases.mts';
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd: boolean = mode === 'production';
 
   return {
+    // Published wayfinding map packages are opaque archives an app imports statically, the same
+    // way it imports an image. Declaring them here lets the bundler emit and rewrite the URL,
+    // which keeps components off `new URL(..., import.meta.url)` and keeps the package visible
+    // to the visual-review fingerprint.
+    assetsInclude: ['**/*.wbmap'],
     plugins: [
       solidPlugin({
         dev: !isProd
@@ -50,14 +56,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     base: '',
     resolve: {
-      alias: {
-        '@contexts': resolve(__dirname, './src/contexts'),
-        '@services': resolve(__dirname, './src/services'),
-        '@components': resolve(__dirname, './src/components'),
-        '@interfaces': resolve(__dirname, './src/interfaces'),
-        '@hooks': resolve(__dirname, './src/hooks'),
-        '@utils': resolve(__dirname, './src/utils'),
-      }
+      // Declared once in tsconfig.json; see scripts/path-aliases.mts.
+      alias: resolvedPathAliases(__dirname)
     },
     build: {
       minify: 'terser',

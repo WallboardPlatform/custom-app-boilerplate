@@ -1,105 +1,105 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "17cdac3537bc44adaf8235ef3ca174ea4880973390324e3694a889477db2fafa",
-	"reviewedAt": "2026-07-19T13:20:32.623Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "f09dfb716cf195b69990a648bd0383b321923efe8fac569901a9bc9ce3dea77b",
+	"reviewedAt": "2026-07-27T14:00:40.908Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The dashboard prioritizes operational throughput, exceptions, target progress, live updates, and a useful empty state."
+			"notes": "Operations pulse: three headline metrics with deltas, an hourly throughput series, and a daily-target gauge with unit context."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
-			"notes": "No external visual reference was declared; the agent-authored analytical brief is the review authority."
+			"status": "pass",
+			"notes": "Operations-centre concept retained: metric tiles above a dominant time series, live indicator in the header."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "An integrated evidence chart and deliberately unequal KPI hierarchy avoid a generic equal-card dashboard."
+			"notes": "A conventional operations layout, which is what this example teaches: metric tiles, one time series and a target gauge. It is deliberately the plainest example in the portfolio rather than a styled one."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+			"notes": "Metric values dominate their tiles and clear the room-distance floor; axis labels sit at the metadata role by intent."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+			"notes": "Light-theme scenario preserves chart line, fill and gauge contrast against the pale field."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+			"notes": "Long-label scenario keeps metric captions complete by wrapping within the tile rather than ellipsizing the value."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+			"notes": "Tiles and chart divide the surface at every aspect; portrait and square restack rather than compress, and the empty state substitutes a centred no-signal message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Chart.js output, light and dark themes, progress treatment, and empty state are visually coordinated."
+			"notes": "Chart renders crisply at every surface with no raster media; the gauge track and fill stay aligned."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+			"notes": "Shares the dark panel language with other operational examples, which is appropriate to its brief, but its metric-plus-series structure is not duplicated elsewhere."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "scenario-empty-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "scenario-light-theme-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "scenario-live-update-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "scenario-long-labels-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: metrics and chart fill their regions, axis and gauge legible, empty and light-theme states correct, nothing clipped."
 		}
 	],
 	"unresolvedFindings": []

@@ -39,3 +39,9 @@ declare module '*.webp' {
 	const source: string;
 	export default source;
 }
+
+/** Published wayfinding map package. Imported statically; resolves to its emitted URL. */
+declare module '*.wbmap' {
+	const source: string;
+	export default source;
+}

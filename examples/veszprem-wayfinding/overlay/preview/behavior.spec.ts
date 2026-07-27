@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+
+import { registerKeyboardConformance } from './conformance/keyboard';
 
 interface PreviewWindow extends Window {
 	__wallboardPreview?: { pushDatasource: (property: string, value: unknown) => void };
@@ -84,6 +86,19 @@ test('the app-owned keyboard is multilingual and filters the continuous director
 	await expect(page.getByRole('searchbox', { name: 'Search destinations' })).toHaveValue('v');
 	await keyboard.getByRole('button', { name: 'Show results' }).click();
 	await expect(keyboard).toHaveCount(0);
+});
+
+registerKeyboardConformance({
+	name: 'Veszprem destination search',
+	open: async (page: Page): Promise<void> => {
+		await openScenario(page);
+		await page.getByLabel('Search destinations').click();
+		await expect(page.getByRole('dialog', { name: 'Search destinations' })).toBeVisible();
+	},
+	keyboard: (page: Page): Locator => page.getByRole('dialog', { name: 'Search destinations' }),
+	letterKeyName: 'Key v',
+	spaceKeyName: 'Space',
+	focusTarget: (page: Page): Locator => page.getByRole('searchbox', { name: 'Search destinations' })
 });
 
 test('the language selector switches all app-owned interface labels', async ({ page }): Promise<void> => {

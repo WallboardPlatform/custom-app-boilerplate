@@ -1,95 +1,95 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "8f05eda788c50707a1a8248b858fa415676532cd534d0ef7920b83c00295598b",
-	"reviewedAt": "2026-07-19T11:26:06.807Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "bd98ceb6a7bafd2dffde5f5ac122e05932d383d76877a9e3baea177b7f3afe16",
+	"reviewedAt": "2026-07-27T14:02:38.957Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The five-view safety journey, identity capture, scoring, result write, and reset behavior match the brief."
+			"notes": "Safety checkpoint: branded welcome, identity capture, numbered question steps with selectable answers, and a check-in-progress status rail."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "No external visual reference was supplied; the instruction-led industrial checkpoint concept is preserved."
+			"notes": "Industrial safety-checkpoint concept retained: dark field, red action colour, oversized step numeral, brand block down the left edge."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Route-like progress, safety rail, and station controls create a domain-specific touch experience."
+			"notes": "Reads as a shop-floor kiosk prompt rather than a web form; the step numeral and status rail are purpose-specific."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary prompts, options, and actions remain readable across both accepted landscape surfaces."
+			"notes": "Question prompts and the call to action reach their intended sizes now that auto-fit resolves rather than pinning to the floor."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Dark, Light, and Custom token paths preserve control, text, border, and state contrast."
+			"notes": "The light compact scenario preserves red action contrast and question legibility against the pale field."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long welcome, long question, option labels, and descenders pass fit and ink checks."
+			"notes": "Long-question and long-welcome scenarios wrap fully across multiple lines with the step numeral relocating rather than colliding."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Every view fills the landscape station without overflow, overlap, or cramped form behavior."
+			"notes": "Brand rail, prompt column and numeral divide the surface at every size; the empty state substitutes an explicit no-active-questions message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Packaged editor assets and complete semantic palettes are coherent with the fictional brand."
+			"notes": "Brand mark and answer chips render crisply at 1366x768 and 1920x1080; no raster media involved."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The sequential touch-station composition teaches interaction mechanics rather than dashboard styling."
+			"notes": "The interactive checkpoint prompt is structurally distinct from the passive board and dashboard examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-empty-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-full-hd-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-identity-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-question-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		},
 		{
 			"file": "scenario-long-welcome-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected: controls, identity form, dynamic text, containment, and palette are coherent."
+			"notes": "Inspected in the contact sheet: prompts and actions are complete and legible, long content wraps without collision, empty state intentional, nothing clipped."
 		}
 	],
 	"unresolvedFindings": []

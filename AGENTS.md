@@ -16,6 +16,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 | CSS/layout | `styling.md` |
 | Charts | `charting.md` |
 | Reusable mechanics | `capabilities.md` |
+| On-screen keyboard, recurring interactive elements | `archetypes.md` |
 | Wayfinding/maps | `wayfinding.md`, `datasource-contracts.md` |
 | Packaging/replacement | `app-identity-and-delivery.md` |
 

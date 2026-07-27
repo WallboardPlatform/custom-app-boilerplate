@@ -1,138 +1,136 @@
 {
-    "reviewVersion":  1,
-    "sourceHash": "4a9550ceedff0899dd9fce094df58cef4ff89b46c0382ce1b76b7c30a4532161",
-    "reviewedAt": "2026-07-19T13:29:07.659Z",
-    "reviewer": "Codex shared auto-fit migration re-review",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "Photo-led employee recognition remains primary across all requested ratios, with achievements second and metadata third."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "pass",
-                         "notes":  "No user reference was supplied; the authored Paper Kite editorial direction is consistently realized."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "Asymmetric lead/support silhouettes, offset folio, geometric paper mark, and print-like color blocks create a specific studio identity."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "Names and achievements retain strong size and hierarchy at full-screen, strip, portrait, square, and compact fallback dimensions."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Light and dark presets keep masthead, folio, colored tiles, and supporting labels readable without fixed dark-only literals."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "Long names, achievements, teams, roles, masthead text, and quotes remain contained with safe prefixes and complete descender ink."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "Single, two-person, odd-five, balanced prime-seven, final-page, portrait, square, wide-low, and 960x540 compositions are intentional and stable."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "Fictional portraits are sharp and use useful crops; missing and failed media resolve to designed initials mosaics without browser image artifacts."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "The app avoids equal KPI cards, dashboard framing, top-right page dots, and the boilerplate examples\u0027 standard header grammar."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "app-default-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Five-person primary mosaic has a dominant portrait, readable hierarchy, and balanced support tiles."
-                        },
-                        {
-                            "file":  "landscape-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Compact fallback uses two-person pagination and preserves the full masthead title."
-                        },
-                        {
-                            "file":  "portrait-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Tall lead feature and two supporting tiles use the full portrait canvas without collisions."
-                        },
-                        {
-                            "file":  "scenario-dark-theme-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Deep green canvas and coordinated cards preserve contrast and the upbeat editorial tone."
-                        },
-                        {
-                            "file":  "scenario-empty-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Empty state remains branded, centered, and purposeful without simulating recognition rows."
-                        },
-                        {
-                            "file":  "scenario-last-page-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Final three-person page expands into an asymmetric complete composition with correct folio."
-                        },
-                        {
-                            "file":  "scenario-live-edit-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Updated name and achievement render immediately; transient media uses the intentional initials treatment."
-                        },
-                        {
-                            "file":  "scenario-long-copy-1536x432.png",
-                            "status":  "pass",
-                            "notes":  "Stress copy remains bounded with complete masthead text and intentional secondary ellipsis."
-                        },
-                        {
-                            "file":  "scenario-missing-and-broken-photos-1080x1920.png",
-                            "status":  "pass",
-                            "notes":  "Two media failures become distinct initials compositions while valid portraits remain intact."
-                        },
-                        {
-                            "file":  "scenario-odd-five-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Odd count fills the primary surface with one lead and four supporting recognitions."
-                        },
-                        {
-                            "file":  "scenario-prime-seven-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "First balanced page shows four recognitions with a deliberate non-equal silhouette."
-                        },
-                        {
-                            "file":  "scenario-row-array-960x540.png",
-                            "status":  "pass",
-                            "notes":  "Processed row-array input matches the compact two-person visual contract."
-                        },
-                        {
-                            "file":  "scenario-single-person-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Single recognition expands into a full photo-and-story feature rather than a stranded tile."
-                        },
-                        {
-                            "file":  "scenario-two-people-1536x432.png",
-                            "status":  "pass",
-                            "notes":  "Two recognitions form a clear asymmetric horizontal editorial pair."
-                        },
-                        {
-                            "file":  "square-600x600.png",
-                            "status":  "pass",
-                            "notes":  "Two-person square page keeps portraits, achievements, quotes, and folio readable."
-                        },
-                        {
-                            "file":  "wide-low-1536x432.png",
-                            "status":  "pass",
-                            "notes":  "Wide-low page emphasizes three recognitions and uses the strip without dashboard compression."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "47eea41bfae0886bc5aa85e87798c3a7639f042cfc4e4e8cfd79ff79a451e239",
+	"reviewedAt": "2026-07-27T18:21:48.983Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Recognition wall: studio identity, honouree name, discipline and role labels, citation, closing quote, and progress through the set. Paging passes the shared pagination conformance suite: every honouree appears exactly once per cycle, no page is empty, and a full cycle returns to the first page."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Editorial mosaic concept retained: primary colour blocks paired with portrait photography, serif names against sans labels."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as a curated recognition wall rather than a people directory; the tile mosaic and per-tile colour assignment are concept-specific."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Honouree names and citations reach their intended sizes now that auto-fit resolves, so the hero tile no longer renders at its floor."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark-theme scenario keeps the colour tiles and their black or white text within readable contrast against the darkened field."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-copy and odd-count scenarios wrap citations completely; no ellipsis and no clipped quote line."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Tiles now fill the mosaic including the hero tile, whose previously empty lower area was the auto-fit floor collapse. Empty and single-person states substitute intentional compositions."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Portrait photography renders with an intentional fit; the missing-and-broken-photos scenario substitutes a monogram tile rather than leaving a gap."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The colour-blocked photographic mosaic is distinct from the table, panel and dashboard examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-dark-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-empty-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-last-page-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-live-edit-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-long-copy-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-missing-and-broken-photos-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-odd-five-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-prime-seven-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-row-array-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-single-person-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "scenario-two-people-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: tiles fill the mosaic, names and citations are complete and legible, photo fallbacks are intentional, no clipping or void."
+		}
+	],
+	"unresolvedFindings": []
 }

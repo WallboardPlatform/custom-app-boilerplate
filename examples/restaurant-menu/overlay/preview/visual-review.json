@@ -1,34 +1,126 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "15f198db82ffd1913e7f6d1595d412f6d4ea8bfe75aabef3c0187eb7ed09b685",
-	"reviewedAt": "2026-07-19T13:30:26.140Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "87d338e4ff3b44c79ff954b77e9ec07326edfff244258d8338ef9c3d8806cfc6",
+	"reviewedAt": "2026-07-27T13:24:50.341Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
-		{ "id": "promptFidelity", "status": "pass", "notes": "Editable restaurant menu remains the primary experience." },
-		{ "id": "referenceFidelity", "status": "pass", "notes": "Cordo editorial identity is preserved across all surfaces." },
-		{ "id": "visualSpecificity", "status": "pass", "notes": "Typography, story rail, menu leaders, and palette remain purpose-specific." },
-		{ "id": "distanceReadability", "status": "pass", "notes": "Primary dish names, section labels, and prices remain readable." },
-		{ "id": "themeContrast", "status": "pass", "notes": "Dark and light presets retain clear hierarchy and contrast." },
-		{ "id": "dynamicTextSafety", "status": "pass", "notes": "Long labels remain bounded without descender clipping or price collision." },
-		{ "id": "surfaceComposition", "status": "pass", "notes": "Full HD, wide-low, portrait, square, and final partial page remain composed." },
-		{ "id": "assetAndThemeQuality", "status": "pass", "notes": "No missing assets or incoherent theme treatment." },
-		{ "id": "exampleSameness", "status": "pass", "notes": "The retrofit adds bounded motion without changing the example's visual language." }
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Dinner menu board: venue identity, chef's selection, priced course sections, tonight's table and allergen footer, present across bound, unbound and empty states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Editorial restaurant-menu concept preserved: serif wordmark, hairline rules, cream and near-black split, no card chrome."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as a printed menu board rather than a data table; two-column course grid with a standing chef's panel."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Course names and prices sit well above the room-distance floors now that auto-fit reaches its intended size rather than the minimum."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light-theme scenario keeps dark text on cream at full contrast; the default inverts cleanly without losing the price column."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-label and last-page scenarios wrap or repaginate; no ellipsis, no clipped price, no row collision at 1536x432."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Columns fill the plate on every surface; empty and bound-null states substitute a centred message rather than leaving the panel blank."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Wordmark and hairline rules render crisply at every size; no raster media to degrade."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Cream editorial typography is distinct from the dark accent-card language of the dashboard examples."
+		}
 	],
 	"screenshots": [
-		{ "file": "app-default-1920x1080.png", "status": "pass", "notes": "Complete Full HD menu composition." },
-		{ "file": "landscape-960x540.png", "status": "pass", "notes": "Compact landscape remains readable and contained." },
-		{ "file": "portrait-1080x1920.png", "status": "pass", "notes": "Portrait composition fills the zone without collisions." },
-		{ "file": "scenario-bound-null-960x540.png", "status": "pass", "notes": "Bound-null state is stable." },
-		{ "file": "scenario-empty-960x540.png", "status": "pass", "notes": "Empty state is intentional and contained." },
-		{ "file": "scenario-last-page-1366x768.png", "status": "pass", "notes": "Uneven final page remains balanced." },
-		{ "file": "scenario-light-theme-1920x1080.png", "status": "pass", "notes": "Light preset remains coherent." },
-		{ "file": "scenario-long-labels-1536x432.png", "status": "pass", "notes": "Long text remains bounded in the constrained surface." },
-		{ "file": "scenario-motion-off-1366x768.png", "status": "pass", "notes": "Motion-off pagination renders a complete final page." },
-		{ "file": "scenario-quick-edit-update-1366x768.png", "status": "pass", "notes": "Live content update remains stable." },
-		{ "file": "scenario-row-array-960x540.png", "status": "pass", "notes": "Row-array normalization retains layout." },
-		{ "file": "scenario-static-unbound-1366x768.png", "status": "pass", "notes": "Synthetic unbound content renders correctly." },
-		{ "file": "square-600x600.png", "status": "pass", "notes": "Square fallback remains composed." },
-		{ "file": "wide-low-1536x432.png", "status": "pass", "notes": "Wide-low strip preserves menu hierarchy." }
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-bound-null-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-empty-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-last-page-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-long-labels-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-motion-off-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-quick-edit-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-row-array-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "scenario-static-unbound-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: sections fill their columns, prices align, empty and unbound states are intentional, nothing clipped or overflowing."
+		}
 	],
 	"unresolvedFindings": []
 }

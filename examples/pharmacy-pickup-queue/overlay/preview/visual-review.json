@@ -1,118 +1,116 @@
 {
-    "reviewVersion":  1,
-    "sourceHash": "8d0ef54692e08cc19d583b0e29ef2988e9d443243e7d29e86e241b344c6e77b2",
-    "reviewedAt": "2026-07-19T13:26:32.719Z",
-    "reviewer": "Codex shared auto-fit migration re-review",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "The fixed 480x270 board uses ticket, counter, state, and optional note data, with one called hero and a bounded next queue."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "not-applicable",
-                         "notes":  "No visual reference was supplied; the review used the explicit task and accepted instruction-led visual direction."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "The Greenline cross, deep-green announcement field, amber direction cue, and continuous queue register are pharmacy-specific."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "The active ticket dominates at 66px, preserves a 30px stress floor, and keeps its counter larger than every secondary row."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Light and dark presets remain legible; WAIT, ON HOLD, and CHECK STATE use written and symbol cues in addition to color."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "Long active labels expand the hero and remove subordinate content; long queued labels use deliberate one-line ellipsis without clipped ink."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "Dense queues fill the split board while empty, idle, one-ticket, and oversized-hero states use the same fixed canvas intentionally."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "The app-specific cross icon and true primary-surface placeholder match the coordinated light, dark, and custom palette system."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "The single continuous announcement-and-queue composition avoids repeated dashboard cards and does not inherit example branding or chrome."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "app-default-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; active ticket, counter destination, and three-row queue establish the intended reading order."
-                        },
-                        {
-                            "file":  "scenario-dark-theme-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; dark surfaces retain separation, text contrast, and readable amber and coral state cues."
-                        },
-                        {
-                            "file":  "scenario-empty-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; the centered cross and two-line queue-clear message are calm, complete, and intentionally sparse."
-                        },
-                        {
-                            "file":  "scenario-invalid-rows-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; invalid rows disappear and the remaining called ticket expands into a balanced centered hero."
-                        },
-                        {
-                            "file":  "scenario-live-datasource-update-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; the updated B214 hero, Counter 4 destination, and next rows render in the stable composition."
-                        },
-                        {
-                            "file":  "scenario-long-labels-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; the oversized active ticket and counter remain complete at readable sizes after subordinate content is removed."
-                        },
-                        {
-                            "file":  "scenario-long-next-labels-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; long queued ticket and counter tails ellipsize without hiding queue position or state text."
-                        },
-                        {
-                            "file":  "scenario-many-waiting-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; exactly three next tickets render and the +4 MORE WAITING footer reports bounded overflow."
-                        },
-                        {
-                            "file":  "scenario-one-ticket-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; the lone ticket, arrow, and counter form one centered announcement with no empty secondary panel."
-                        },
-                        {
-                            "file":  "scenario-row-array-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; processed row-array input is visually identical to the native table output."
-                        },
-                        {
-                            "file":  "scenario-static-unbound-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; the synthetic unbound fallback matches the accepted primary queue without debug presentation."
-                        },
-                        {
-                            "file":  "scenario-unknown-state-480x270.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 480x270; no-active-call guidance is clear and the unknown Q204 row shows both question mark and CHECK STATE."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "2aa73c89d916a879340b9990d3523f89c19a7e2dc582f3d0b8ed21d9ddab8dbc",
+	"reviewedAt": "2026-07-27T13:45:39.227Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Pickup queue: called ticket, destination counter, readiness note and a numbered next-up list with waiting count, across called, waiting and cleared states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Pharmacy queue-display concept preserved: single dominant ticket panel beside a compact upcoming list."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as a purpose-built queue caller, not a dashboard; one number dominates the surface as it must at a counter."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "The called ticket is the largest element by a wide margin and stays legible at 480x270; next-up rows keep their status text above the floor."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark-theme scenario preserves the green identity band, ticket contrast and on-hold warning colour."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-label and long-next-label scenarios clamp counter and prescription text without losing the ticket identifier."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The ticket panel and list divide the surface fully; one-ticket, empty and unknown-state scenarios substitute intentional messages rather than leaving gaps."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Identity mark and status glyphs render crisply at the compact 480x270 target with no raster media to degrade."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The single-hero queue caller is structurally distinct from the multi-panel dashboard examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-dark-theme-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-empty-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-invalid-rows-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-live-datasource-update-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-long-labels-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-long-next-labels-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-many-waiting-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-one-ticket-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-row-array-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-static-unbound-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		},
+		{
+			"file": "scenario-unknown-state-480x270.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: called ticket dominates, next-up rows align, empty/invalid/unknown states are intentional, nothing clipped at the compact target."
+		}
+	],
+	"unresolvedFindings": []
 }

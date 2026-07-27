@@ -1,93 +1,91 @@
 {
-    "reviewVersion":  1,
-    "sourceHash": "16b640f96d4debe862a465c3a1471787f0c091012dee40b16129fe85ae24fa59",
-    "reviewedAt": "2026-07-19T13:25:29.136Z",
-    "reviewer": "Codex shared auto-fit migration re-review",
-    "criteria":  [
-                     {
-                         "id":  "promptFidelity",
-                         "status":  "pass",
-                         "notes":  "The fixed 1920x1080 screen includes the requested editable exhibition content, optional media, coordinated colors, transparency, and visibility controls without dashboard chrome or pagination."
-                     },
-                     {
-                         "id":  "referenceFidelity",
-                         "status":  "pass",
-                         "notes":  "The supplied poster remains recognizable through the vermilion title field, cobalt welcome band, yellow information field, concentric aperture, serif contrast, and asymmetric negative space."
-                     },
-                     {
-                         "id":  "visualSpecificity",
-                         "status":  "pass",
-                         "notes":  "Oversized stacked type, sharp primary-color geometry, and the fictional kinetic-sculpture aperture create a museum-specific poster rather than a generic interface layout."
-                     },
-                     {
-                         "id":  "distanceReadability",
-                         "status":  "pass",
-                         "notes":  "Welcome, exhibition title, venue, subtitle, and date retain a clear viewing-distance hierarchy across default and stress states."
-                     },
-                     {
-                         "id":  "themeContrast",
-                         "status":  "pass",
-                         "notes":  "Light, custom, and transparent-background renders preserve readable ink on every color field; custom primary metadata resolves to a contrasting color."
-                     },
-                     {
-                         "id":  "dynamicTextSafety",
-                         "status":  "pass",
-                         "notes":  "The long title remains complete in whole-word lines at signage scale; the four-line subtitle and stressed venue/date labels remain intact and above their declared floors."
-                     },
-                     {
-                         "id":  "surfaceComposition",
-                         "status":  "pass",
-                         "notes":  "Every state retains the fixed poster geometry with contained overflow; hidden metadata collapses without orphan rules, and negative space remains deliberate."
-                     },
-                     {
-                         "id":  "assetAndThemeQuality",
-                         "status":  "pass",
-                         "notes":  "The fictional sculpture image is cleanly cropped inside the ring, hidden or broken media resolves to the geometric fallback, and editor artwork is app-specific."
-                     },
-                     {
-                         "id":  "exampleSameness",
-                         "status":  "pass",
-                         "notes":  "The reference-led poster fields, circular aperture, and typography avoid repository examples\u0027 dashboard, card, header, and standard pagination patterns."
-                     }
-                 ],
-    "screenshots":  [
-                        {
-                            "file":  "full-hd-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Inspected at 1920x1080; title, media, metadata, rule, and edge spacing are balanced and fully legible."
-                        },
-                        {
-                            "file":  "scenario-alternate-colors-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Custom charcoal, coral, ivory, and mint fields remain coordinated with strong text contrast."
-                        },
-                        {
-                            "file":  "scenario-broken-image-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Unusable media resolves to the complete concentric motif with no broken icon, empty aperture, or layout shift."
-                        },
-                        {
-                            "file":  "scenario-long-title-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "The complete long title forms six intentional whole-word lines while subtitle, venue, and date remain readable and unclipped."
-                        },
-                        {
-                            "file":  "scenario-minimal-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "Venue, subtitle, date, image, and dependent rule collapse cleanly; the retained geometric mark balances the open yellow field."
-                        },
-                        {
-                            "file":  "scenario-no-image-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "The circular aperture becomes the reference-matched black and cream motif while all exhibition copy and panel geometry remain unchanged."
-                        },
-                        {
-                            "file":  "scenario-transparent-background-1920x1080.png",
-                            "status":  "pass",
-                            "notes":  "The checkerboard is visible only through the transparent neutral field; colored panels, ring, media, and text remain coherent and readable."
-                        }
-                    ],
-    "unresolvedFindings":  [
-
-                           ]
+	"reviewVersion": 1,
+	"sourceHash": "e9fc18889ab92b0d5b197b992c6797ac133f0ccbdcaebf612ae5c6d53a8fd718",
+	"reviewedAt": "2026-07-27T12:49:27.215Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Exhibition welcome board: museum name, exhibition title, gallery pointer, run dates and a single feature image, all present across every scenario."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Retains the Bauhaus colour-block concept: flat primary fields, hard panel edges, no gradients or shadows."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as an exhibition poster rather than a dashboard; asymmetric panel grid with one dominant display face."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Auto-fit now reaches its intended size instead of the 64px floor, so the exhibition title fills its panel and is legible at distance viewing."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Alternate-colour scenario keeps white-on-dark and black-on-mint within readable contrast; the default primaries carry strong separation."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "The long-title scenario wraps to five lines and scales down without ellipsis or clipping; body copy wraps inside its panel."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Panels tile the full canvas with no accidental gaps; the minimal scenario intentionally empties the gallery panel rather than leaving a defect."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Feature image renders inside the circular mask; broken-image and transparent-background scenarios both degrade to a clean placeholder."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Flat primary colour blocking is distinct from the dark card-and-accent language used by the dashboard examples."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "full-hd-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-alternate-colors-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-broken-image-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-long-title-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-minimal-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-no-image-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		},
+		{
+			"file": "scenario-transparent-background-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: title and body fill their panels at the corrected auto-fit size, no clipping, overflow or accidental empty area."
+		}
+	],
+	"unresolvedFindings": []
 }

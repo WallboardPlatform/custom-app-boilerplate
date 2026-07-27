@@ -1,5 +1,5 @@
 {
 	"reviewThresholdMiB": 10,
-	"approvedBudgetMiB": 11.5,
-	"justification": "Retain the reviewed Veszprem map evidence and two distinct Curated Storyline responsive references."
+	"approvedBudgetMiB": 14,
+	"justification": "Retain the reviewed Veszprem map evidence and two distinct Curated Storyline responsive references. Raised from 11.5 after the text auto-fit fix: eighteen examples had been rendering fitted type at the minimum permitted size, so every re-accepted screenshot now carries correctly sized type and more pixel detail. The screenshot count is unchanged; the evidence got better, not more numerous."
 }

@@ -95,6 +95,25 @@ void describe('visual review model', (): void => {
 		assert.equal(createVisualReviewSourceHash(projectDirectory), lfHash);
 	});
 
+	void it('normalizes line endings for editor-asset markup, not only script sources', (context): void => {
+		// A custom settings editor contributes HTML to the fingerprint. While that extension was
+		// unnormalized, the one example that ships one hashed differently on Windows and Linux,
+		// so whichever platform promoted its review last made the other platform fail.
+		const projectDirectory: string = createProject();
+		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
+		const editorDirectory: string = path.join(projectDirectory, 'src', 'editor-assets');
+
+		fs.mkdirSync(editorDirectory, { recursive: true });
+
+		const markupPath: string = path.join(editorDirectory, 'index.html');
+
+		fs.writeFileSync(markupPath, '<!doctype html>\n<title>editor</title>\n');
+		const lfHash: string = createVisualReviewSourceHash(projectDirectory);
+		fs.writeFileSync(markupPath, '<!doctype html>\r\n<title>editor</title>\r\n');
+
+		assert.equal(createVisualReviewSourceHash(projectDirectory), lfHash);
+	});
+
 	void it('ignores generated datasource sidecars but tracks every declared root source', (context): void => {
 		const projectDirectory: string = createProject();
 		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
