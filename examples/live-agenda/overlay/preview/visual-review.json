@@ -1,115 +1,115 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "ee3d13a49e1867c9840ff51f0b8e5111c75c63cba4e27c5b49a2c90ba927a9f3",
-	"reviewedAt": "2026-07-19T13:21:31.245Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "41815a06d67a7ca35b332e6da5e7f0a3e02fae8f3c0cc8dac342586338ec776f",
+	"reviewedAt": "2026-07-27T14:01:51.609Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The agenda preserves current-event emphasis, chronological upcoming events, calendar normalization, live progress, and all-day states."
+			"notes": "Forum agenda: venue identity, running clock, current session with time range, room and progress, plus a three-item upcoming list with times and rooms."
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
-			"notes": "No external visual reference was declared; the agent-authored venue-programme brief is the review authority."
+			"status": "pass",
+			"notes": "Conference-agenda concept retained: one dominant now-card beside a timeline-marked upcoming column."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "An editorial current-event field paired with a continuous chronological rail gives the agenda a venue-specific identity."
+			"notes": "Reads as a hall agenda board rather than a calendar widget; the progress rail and now-marker are session-specific."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+			"notes": "Session title dominates the card and reaches its intended size now that auto-fit resolves; upcoming titles and times stay above their floors."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+			"notes": "Light-theme scenario preserves accent, now-marker and divider contrast; the default holds mint and coral against near-black."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+			"notes": "Long-label and iCalendar scenarios wrap session titles completely; upcoming rows clamp the room line without losing the title."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+			"notes": "The now-card uses a deliberate three-zone rhythm: marker pinned top, content centred, meta pinned bottom above the progress rail. The upcoming column repeats that rhythm, and the empty state substitutes a centred message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Dark and light themes coordinate feature, timeline, progress, and empty-state treatments without external assets."
+			"notes": "Timeline markers, dividers and progress rail render crisply from 600x600 through 1920x1080; no raster media involved."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+			"notes": "Shares a dark palette with other operational examples, but the now-card plus timeline structure is not duplicated elsewhere."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-all-day-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-empty-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-icalendar-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-light-theme-1280x720.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-long-labels-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "scenario-microsoft-calendar-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet, with the Full HD default verified at full resolution: session title and upcoming rows are complete and legible, spacing is a deliberate centred rhythm rather than leftover space, nothing clipped."
 		}
 	],
 	"unresolvedFindings": []
