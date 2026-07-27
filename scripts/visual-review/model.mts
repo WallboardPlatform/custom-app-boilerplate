@@ -51,8 +51,16 @@ const SOURCE_EXTENSIONS: string[] = [
 	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json',
 	'.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.woff', '.woff2', '.ttf'
 ];
+/**
+ * Line endings are normalized for these so a review hash does not depend on whether the
+ * checkout is Windows or Linux. Every text format an example can contribute to the
+ * fingerprint has to be listed: `.html` was missing, and because the custom settings editor
+ * is the only HTML in `editor-assets`, that one example hashed differently per platform and
+ * whichever side promoted it last made the other side fail.
+ */
 const TEXT_SOURCE_EXTENSIONS = new Set([
-	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json', '.svg'
+	'.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.css', '.scss', '.sass', '.json', '.svg',
+	'.html', '.htm', '.txt', '.md', '.xml'
 ]);
 const SOURCE_ALIASES: Readonly<Record<string, string>> = {
 	'@components': 'src/components',
