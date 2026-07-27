@@ -4,6 +4,8 @@ import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import solidSvg from 'vite-plugin-solid-svg';
 
+import { resolvedPathAliases } from '../scripts/path-aliases.mts';
+
 const repositoryRoot: string = resolve(__dirname, '..');
 
 export default defineConfig({
@@ -30,14 +32,8 @@ export default defineConfig({
 		}
 	},
 	resolve: {
-		alias: {
-			'@contexts': resolve(repositoryRoot, 'src/contexts'),
-			'@services': resolve(repositoryRoot, 'src/services'),
-			'@components': resolve(repositoryRoot, 'src/components'),
-			'@interfaces': resolve(repositoryRoot, 'src/interfaces'),
-			'@hooks': resolve(repositoryRoot, 'src/hooks'),
-			'@utils': resolve(repositoryRoot, 'src/utils')
-		}
+		// Declared once in tsconfig.json; see scripts/path-aliases.mts.
+		alias: resolvedPathAliases(repositoryRoot)
 	},
 	server: {
 		strictPort: true
