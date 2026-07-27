@@ -56,6 +56,19 @@ if (mode === '--prepare') {
 		throw new Error(`Review workspace '${reviewDirectory}' does not exist. Prepare it first.`);
 	}
 
+	// validate:visual-review only proves the workspace agrees with its own snapshot. This proves
+	// the snapshot still matches the repository, so a workspace left behind by an experiment
+	// cannot be promoted as evidence for code that has since changed.
+	const currency = spawnSync(
+		process.platform === 'win32' ? 'npx.cmd' : 'npx',
+		['tsx', path.join('scripts', 'visual-review', 'assert-workspace-current.mts'), exampleId, reviewDirectory],
+		{ cwd: rootDirectory, shell: process.platform === 'win32', stdio: 'inherit' }
+	);
+
+	if (currency.status !== 0) {
+		throw new Error(`The '${exampleId}' review workspace is not current. Prepare it again before promoting.`);
+	}
+
 	runNpm('validate:visual-review');
 	const sourceScreenshotDirectory = path.join(reviewDirectory, 'preview', 'output');
 	const targetScreenshotDirectory = path.join(exampleDirectory, 'screenshots');

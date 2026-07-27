@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "8ace0193e1ebca3054285e79c5f4eb56f786ead21fb5adad214db36eb2c07631",
-	"reviewedAt": "2026-07-27T14:02:41.627Z",
+	"sourceHash": "59b41b5809a222f93fd4a626171d234eff94ad1429000d57ca5369199d836c9f",
+	"reviewedAt": "2026-07-27T17:26:10.157Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
@@ -37,7 +37,7 @@
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Metric row, table and distribution panel divide the surface at both sizes; reduced row counts stay balanced and the empty state substitutes a centred message."
+			"notes": "Metric row, table and distribution panel divide the surface at both sizes; reduced row counts stay balanced and the empty state substitutes a centred message. The empty state now passes the shared empty-state conformance suite: non-blank, identity retained, message legible at room distance, not orphaned against the top edge."
 		},
 		{
 			"id": "assetAndThemeQuality",
