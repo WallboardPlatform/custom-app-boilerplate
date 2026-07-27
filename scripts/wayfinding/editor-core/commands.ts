@@ -36,15 +36,61 @@ const patchElement = (
 ): WayfindingStudioElement => ({ ...element, ...patch } as WayfindingStudioElement);
 
 export const isProjectCommand = (command: EditorCommand): boolean =>
-	command.type === 'element/patch'
+	command.type === 'asset/add'
+	|| command.type === 'asset/remove'
+	|| command.type === 'destination/add'
+	|| command.type === 'destination/patch'
+	|| command.type === 'destination/remove'
+	|| command.type === 'element/add'
+	|| command.type === 'element/patch'
+	|| command.type === 'element/remove'
 	|| command.type === 'floor/add'
 	|| command.type === 'floor/remove'
 	|| command.type === 'floor/update'
+	|| command.type === 'graph/edge-add'
+	|| command.type === 'graph/edge-patch'
+	|| command.type === 'graph/edge-remove'
+	|| command.type === 'graph/node-add'
+	|| command.type === 'graph/node-patch'
+	|| command.type === 'graph/node-remove'
 	|| command.type === 'project/name'
 	|| command.type === 'project/replace';
 
 export const applyEditorCommand = (state: EditorState, command: EditorCommand): EditorState => {
 	switch (command.type) {
+		case 'asset/add':
+			return mutateProject(state, (project): void => {
+				const index = project.assets.findIndex((asset): boolean => asset.id === command.asset.id);
+
+				if (index >= 0) project.assets[index] = structuredClone(command.asset);
+				else project.assets.push(structuredClone(command.asset));
+			});
+
+		case 'asset/remove':
+			return mutateProject({
+				...state,
+				activeAssetId: state.activeAssetId === command.assetId ? undefined : state.activeAssetId
+			}, (project): void => {
+				project.assets = project.assets.filter((asset): boolean => asset.id !== command.assetId);
+
+				for (const floor of project.floors) {
+					if (floor.backgroundAssetId === command.assetId) delete floor.backgroundAssetId;
+					floor.elements = floor.elements.filter((element): boolean =>
+						!('assetId' in element) || element.assetId !== command.assetId
+					);
+				}
+
+				for (const destination of project.destinations) {
+					if (destination.logoAssetId === command.assetId) delete destination.logoAssetId;
+					destination.photoAssetIds = destination.photoAssetIds?.filter((assetId): boolean => assetId !== command.assetId);
+				}
+			});
+
+		case 'asset/select':
+			return command.assetId === undefined || state.project.assets.some((asset): boolean => asset.id === command.assetId)
+				? { ...state, activeAssetId: command.assetId }
+				: state;
+
 		case 'camera/set':
 			return {
 				...state,
@@ -53,6 +99,33 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 					[command.floorId]: { ...command.camera }
 				}
 			};
+
+		case 'destination/add':
+			return mutateProject(state, (project): void => {
+				if (!project.destinations.some((destination): boolean => destination.id === command.destination.id)) {
+					project.destinations.push(structuredClone(command.destination));
+				}
+			});
+
+		case 'destination/patch':
+			return mutateProject(state, (project): void => {
+				const index: number = project.destinations.findIndex((destination): boolean => destination.id === command.destinationId);
+
+				if (index >= 0) project.destinations[index] = { ...project.destinations[index], ...command.patch };
+			});
+
+		case 'destination/remove':
+			return mutateProject(state, (project): void => {
+				project.destinations = project.destinations.filter((destination): boolean => destination.id !== command.destinationId);
+
+				for (const floor of project.floors) {
+					for (const element of floor.elements) {
+						if ('destinationId' in element && element.destinationId === command.destinationId) {
+							delete element.destinationId;
+						}
+					}
+				}
+			});
 
 		case 'document/error':
 			return { ...state, document: { ...state.document, saveState: 'error' } };
@@ -73,6 +146,20 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'document/saving':
 			return { ...state, document: { ...state.document, saveState: 'saving' } };
 
+		case 'draft/clear':
+			return { ...state, draft: undefined };
+
+		case 'draft/set':
+			return { ...state, draft: structuredClone(command.draft) };
+
+		case 'element/add':
+			return mutateProject(state, (project): void => {
+				const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === command.floorId);
+
+				if (!floor || floor.elements.some((element): boolean => element.id === command.element.id)) return;
+				floor.elements.push(structuredClone(command.element));
+			});
+
 		case 'element/patch':
 			return mutateProject(state, (project): void => {
 				for (const floor of project.floors) {
@@ -83,6 +170,13 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 
 						return;
 					}
+				}
+			});
+
+		case 'element/remove':
+			return mutateProject(state, (project): void => {
+				for (const floor of project.floors) {
+					floor.elements = floor.elements.filter((element): boolean => element.id !== command.elementId);
 				}
 			});
 
@@ -138,6 +232,45 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 				}
 			};
 
+		case 'graph/edge-add':
+			return mutateProject(state, (project): void => {
+				if (!project.graph.edges.some((edge): boolean => edge.id === command.edge.id)) {
+					project.graph.edges.push(structuredClone(command.edge));
+				}
+			});
+
+		case 'graph/edge-patch':
+			return mutateProject(state, (project): void => {
+				const index: number = project.graph.edges.findIndex((edge): boolean => edge.id === command.edgeId);
+
+				if (index >= 0) project.graph.edges[index] = { ...project.graph.edges[index], ...command.patch };
+			});
+
+		case 'graph/edge-remove':
+			return mutateProject(state, (project): void => {
+				project.graph.edges = project.graph.edges.filter((edge): boolean => edge.id !== command.edgeId);
+			});
+
+		case 'graph/node-add':
+			return mutateProject(state, (project): void => {
+				if (!project.graph.nodes.some((node): boolean => node.id === command.node.id)) {
+					project.graph.nodes.push(structuredClone(command.node));
+				}
+			});
+
+		case 'graph/node-patch':
+			return mutateProject(state, (project): void => {
+				const index: number = project.graph.nodes.findIndex((node): boolean => node.id === command.nodeId);
+
+				if (index >= 0) project.graph.nodes[index] = { ...project.graph.nodes[index], ...command.patch };
+			});
+
+		case 'graph/node-remove':
+			return mutateProject(state, (project): void => {
+				project.graph.nodes = project.graph.nodes.filter((node): boolean => node.id !== command.nodeId);
+				project.graph.edges = project.graph.edges.filter((edge): boolean => edge.from !== command.nodeId && edge.to !== command.nodeId);
+			});
+
 		case 'panel/resize':
 			return {
 				...state,
@@ -173,6 +306,8 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 					openedFrom: command.openedFrom,
 					saveState: 'idle'
 				},
+				activeTool: 'select',
+				activeAssetId: undefined,
 				panels: state.panels
 			};
 		}
@@ -197,12 +332,26 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'selection/set':
 			return { ...state, selection: command.selection };
 
+		case 'tool/set':
+			return {
+				...state,
+				activeTool: command.tool,
+				draft: undefined,
+				selection: command.tool === 'pan' ? undefined : state.selection
+			};
+
 		case 'view/set':
 			return { ...state, viewMode: command.viewMode };
 
 		case 'workspace/set':
 			return {
 				...state,
+				activeTool: command.workspace === 'route-edit'
+					? 'select'
+					: command.workspace === 'map'
+						? state.activeTool === 'route-node' || state.activeTool === 'route-edge' ? 'select' : state.activeTool
+						: 'pan',
+				draft: undefined,
 				selection: command.workspace === 'visitor-preview' ? undefined : state.selection,
 				workspace: command.workspace
 			};

@@ -1,10 +1,15 @@
 import {
+	AlertTriangle,
 	Box,
+	ChevronRight,
 	CircleHelp,
+	Clock3,
 	Frame,
+	ImagePlus,
 	PanelLeftOpen,
 	PanelRightClose,
 	PanelRightOpen,
+	ShieldAlert,
 	SquareDashedMousePointer,
 	X
 } from 'lucide-solid';
@@ -12,9 +17,12 @@ import {
 	createEffect,
 	createMemo,
 	createSignal,
+	For,
+	lazy,
 	onCleanup,
 	onMount,
 	Show,
+	Suspense,
 	type JSX
 } from 'solid-js';
 import {
@@ -22,9 +30,12 @@ import {
 	createWayfindingStudioProject,
 	validateWayfindingStudioDelivery,
 	validateWayfindingStudioProject,
-	type WayfindingStudioDestination
+	type WayfindingStudioDestination,
+	type WayfindingStudioIssue,
+	type WayfindingStudioProject
 } from '../../studio-project.mts';
 import { BrowserPersistenceAdapter } from '../../editor-core/persistence';
+import { buildFloorRouteNetwork } from '../../editor-core/route-builder.mts';
 import {
 	elementDisplayName,
 	selectedElement
@@ -32,7 +43,6 @@ import {
 import { createEditorStore } from '../../editor-core/store';
 import type { EditorStore } from '../../editor-core/types';
 import { Canvas2d } from './Canvas2d';
-import { Scene3dView } from './Scene3dView';
 import { AppBar } from './components/AppBar';
 import {
 	DestinationInspector,
@@ -41,12 +51,20 @@ import {
 	ProjectOverview
 } from './components/InspectorContent';
 import { ProjectPanel } from './components/ProjectPanel';
+import { RoutePanel } from './components/RoutePanel';
 import { ShortcutsDialog } from './components/ShortcutsDialog';
 import { StatusBar } from './components/StatusBar';
+import { ToolRail } from './components/ToolRail';
 import { updateProject } from './components/project-edit';
 import { VisitorPanel } from './components/VisitorPanel';
 import { IconButton } from './ui';
 import './styles/app.scss';
+
+const Scene3dView = lazy(async () => {
+	const module = await import('./Scene3dView');
+
+	return { default: module.Scene3dView };
+});
 
 interface ToastState {
 	message: string;
@@ -84,6 +102,8 @@ const App = (): JSX.Element => {
 	const [pointer, setPointer] = createSignal<{ x: number; y: number }>();
 	const [visitorQuery, setVisitorQuery] = createSignal('');
 	const [shortcutsOpen, setShortcutsOpen] = createSignal(false);
+	const [recoveryProject, setRecoveryProject] = createSignal<WayfindingStudioProject>();
+	const [exportIssues, setExportIssues] = createSignal<WayfindingStudioIssue[]>([]);
 	const [visitorLanguage, setVisitorLanguage] = createSignal(
 		store.getSnapshot().state.project.defaultLanguage ?? 'en'
 	);
@@ -93,6 +113,13 @@ const App = (): JSX.Element => {
 
 	const state = createMemo(() => snapshot().state);
 	const element = createMemo(() => selectedElement(state()));
+	const currentFloor = createMemo(() =>
+		state().project.floors.find((floor) => floor.id === state().currentFloorId)
+		?? state().project.floors[0]
+	);
+	const canvasIsEmpty = createMemo(() =>
+		!currentFloor().backgroundAssetId && currentFloor().elements.length === 0
+	);
 	const selectedDestination = createMemo(() => {
 		const selection = state().selection;
 
@@ -203,6 +230,73 @@ const App = (): JSX.Element => {
 		});
 		queueMicrotask(fitCanvas);
 	};
+	const restoreRecovery = (): void => {
+		const project = recoveryProject();
+
+		if (!project) return;
+		store.dispatch({ type: 'project/load', project, openedFrom: 'browser-recovery' });
+		setRecoveryProject(undefined);
+		notify('Restored your local editing session.', 'success');
+		queueMicrotask(fitCanvas);
+	};
+	const discardRecovery = (): void => {
+		void persistence.clearRecovery();
+		setRecoveryProject(undefined);
+		notify('Local recovery discarded.', 'info');
+	};
+	const revealIssue = (issue: WayfindingStudioIssue): void => {
+		const id = issue.elementIds[0];
+
+		setExportIssues([]);
+		store.dispatch({ type: 'workspace/set', workspace: 'map' });
+		store.dispatch({ type: 'panel/toggle', panelId: 'right', collapsed: false });
+
+		if (!id) return;
+		const destination = state().project.destinations.some((candidate) => candidate.id === id);
+		store.dispatch({
+			type: 'selection/set',
+			selection: { id, kind: destination ? 'destination' : 'element' }
+		});
+	};
+	const deleteFloor = async (floorId: string, floorName: string): Promise<void> => {
+		if (!await confirm({
+			body: `${floorName} and every object authored on it will be removed. This can be undone until the project is closed.`,
+			confirmLabel: 'Delete floor',
+			title: `Delete ${floorName}?`
+		})) return;
+		store.dispatch({ type: 'floor/remove', floorId });
+		notify(`${floorName} deleted.`, 'info');
+		queueMicrotask(fitCanvas);
+	};
+	const buildRoutes = async (): Promise<void> => {
+		const currentFloorId = state().currentFloorId;
+		const floorNodeIds = new Set(state().project.graph.nodes
+			.filter((node) => node.levelId === currentFloorId)
+			.map((node) => node.id));
+		const existingEdges = state().project.graph.edges.filter((edge) =>
+			floorNodeIds.has(edge.from) || floorNodeIds.has(edge.to)
+		);
+
+		if (existingEdges.length > 0 && !await confirm({
+			body: `This replaces ${existingEdges.length} route segment${existingEdges.length === 1 ? '' : 's'} on the current floor, including manual adjustments. The change can be undone.`,
+			confirmLabel: 'Rebuild routes',
+			title: 'Replace the current route network?'
+		})) return;
+
+		try {
+			const result = buildFloorRouteNetwork(state().project, currentFloorId);
+			store.dispatch({
+				type: 'project/replace',
+				label: existingEdges.length ? 'Rebuild route network' : 'Build route network',
+				project: result.project
+			});
+			store.dispatch({ type: 'selection/clear' });
+			store.dispatch({ type: 'tool/set', tool: 'select' });
+			notify(`Built ${result.edges} route segments from ${result.nodes} network nodes.`, 'success');
+		} catch (error) {
+			notify(error instanceof Error ? error.message : 'The route network could not be built.', 'danger');
+		}
+	};
 
 	const exportRuntime = (): void => {
 		try {
@@ -211,8 +305,9 @@ const App = (): JSX.Element => {
 			notify('Runtime bundle exported.', 'success');
 		} catch {
 			const issues = deliveryIssues().filter((issue) => issue.severity === 'error');
+			setExportIssues(issues);
 			notify(issues.length
-				? `${issues.length} issue${issues.length === 1 ? '' : 's'} must be resolved before export.`
+				? `Runtime export needs ${issues.length} correction${issues.length === 1 ? '' : 's'}.`
 				: 'Runtime export failed.', 'danger');
 			store.dispatch({ type: 'panel/toggle', panelId: 'right', collapsed: false });
 		}
@@ -248,8 +343,7 @@ const App = (): JSX.Element => {
 			const currentState = store.getSnapshot().state;
 
 			if (!project || currentState.document.openedFrom !== 'new' || currentState.document.dirty) return;
-			store.dispatch({ type: 'project/load', project, openedFrom: 'browser-recovery' });
-			notify('Recovered your last local editing session.', 'info');
+			setRecoveryProject(project);
 		});
 	});
 
@@ -296,12 +390,25 @@ const App = (): JSX.Element => {
 
 			<div class="work-area">
 				<Show when={state().workspace !== 'visitor-preview'}>
-					<ProjectPanel
-						onNew={() => void newProject()}
-						onOpen={() => void open()}
-						snapshot={snapshot}
-						store={store}
-					/>
+					<Show
+						when={state().workspace === 'map'}
+						fallback={
+							<RoutePanel
+								onBuildRoutes={() => void buildRoutes()}
+								snapshot={snapshot}
+								store={store}
+							/>
+						}
+					>
+						<ProjectPanel
+							onDeleteFloor={(floorId, floorName) => void deleteFloor(floorId, floorName)}
+							onNew={() => void newProject()}
+							onNotify={notify}
+							onOpen={() => void open()}
+							snapshot={snapshot}
+							store={store}
+						/>
+					</Show>
 
 					<Show when={state().panels.left.collapsed}>
 						<button
@@ -314,6 +421,7 @@ const App = (): JSX.Element => {
 				</Show>
 
 				<main class="stage">
+					<ToolRail snapshot={snapshot} store={store} />
 					<div class="stage-toolbar">
 						<div class="view-switcher" role="group" aria-label="Map view">
 							<button
@@ -349,7 +457,11 @@ const App = (): JSX.Element => {
 					</div>
 					<Show
 						when={state().viewMode === '2d'}
-						fallback={<Scene3dView snapshot={snapshot} store={store} />}
+						fallback={(
+							<Suspense fallback={<div class="scene-loading">Loading 3D view...</div>}>
+								<Scene3dView snapshot={snapshot} store={store} />
+							</Suspense>
+						)}
 					>
 						<Canvas2d
 							registerFit={(fit) => {
@@ -359,10 +471,26 @@ const App = (): JSX.Element => {
 							store={store}
 							onPointerCoordinate={setPointer}
 						/>
+						<Show when={canvasIsEmpty() && state().workspace === 'map'}>
+							<div class="canvas-empty-state">
+								<div class="empty-state-icon"><ImagePlus size={24} /></div>
+								<strong>Add a floor plan</strong>
+								<span>Start with a map image, then trace destinations and pedestrian space.</span>
+								<button
+									type="button"
+									class="button primary"
+									onClick={() => document.querySelector<HTMLInputElement>('[data-floor-background-input]')?.click()}
+								>
+									<ImagePlus size={16} /> Choose image
+								</button>
+							</div>
+						</Show>
 					</Show>
 					<Show when={state().workspace === 'visitor-preview'}>
 						<VisitorPanel
+							assets={() => state().project.assets}
 							destinations={visibleDestinations}
+							floors={() => state().project.floors}
 							language={visitorLanguage}
 							languages={() => state().project.languages ?? []}
 							layerVisible={(layerId) => state().layerVisibility[layerId]}
@@ -404,11 +532,32 @@ const App = (): JSX.Element => {
 										when={selectedDestination()}
 										fallback={<ProjectOverview issues={deliveryIssues} snapshot={snapshot} />}
 									>
-										<DestinationInspector destination={selectedDestination()!} patch={patchDestination} />
+										<DestinationInspector
+											assets={state().project.assets}
+											categories={state().project.categories ?? []}
+											defaultLanguage={state().project.defaultLanguage ?? 'en'}
+											destination={selectedDestination()!}
+											floors={state().project.floors}
+											languages={state().project.languages ?? []}
+											patch={patchDestination}
+										/>
 									</Show>
 								}
 							>
-								<ElementInspector element={element()!} store={store} />
+								<>
+								<ElementInspector element={element()!} projectAssets={state().project.assets} store={store} />
+									<Show when={selectedDestination()}>
+										<DestinationInspector
+											assets={state().project.assets}
+											categories={state().project.categories ?? []}
+											defaultLanguage={state().project.defaultLanguage ?? 'en'}
+											destination={selectedDestination()!}
+											floors={state().project.floors}
+											languages={state().project.languages ?? []}
+											patch={patchDestination}
+										/>
+									</Show>
+								</>
 							</Show>
 							<Problems issues={projectIssues} store={store} />
 						</div>
@@ -436,6 +585,43 @@ const App = (): JSX.Element => {
 							<button type="button" class="button primary" onClick={() => resolveConfirm(true)}>
 								{confirmState()!.confirmLabel}
 							</button>
+						</div>
+					</div>
+				</div>
+			</Show>
+			<Show when={recoveryProject()}>
+				<div class="modal-backdrop" role="presentation">
+					<div class="dialog recovery-dialog" role="dialog" aria-modal="true" aria-labelledby="recovery-title">
+						<div class="dialog-icon"><Clock3 size={20} /></div>
+						<h2 id="recovery-title">Restore unsaved local work?</h2>
+						<p>
+							The browser has a recovery copy of <strong>{recoveryProject()!.name}</strong>.
+							Restore it before starting a new project, or discard it permanently.
+						</p>
+						<div class="dialog-actions">
+							<button type="button" class="button danger-ghost" onClick={discardRecovery}>Discard recovery</button>
+							<button type="button" class="button primary" onClick={restoreRecovery}>Restore work</button>
+						</div>
+					</div>
+				</div>
+			</Show>
+			<Show when={exportIssues().length > 0}>
+				<div class="modal-backdrop" role="presentation">
+					<div class="dialog export-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title">
+						<div class="dialog-icon danger"><ShieldAlert size={20} /></div>
+						<h2 id="export-title">Runtime bundle needs attention</h2>
+						<p>Correct these project issues, then export again. Select an issue to open the relevant map object.</p>
+						<div class="export-issue-list">
+							<For each={exportIssues()}>{(issue) => (
+								<button type="button" onClick={() => revealIssue(issue)}>
+									<AlertTriangle size={16} />
+									<span><strong>{issue.message}</strong><small>{issue.elementIds.length ? 'Open affected item' : 'Open project settings'}</small></span>
+									<ChevronRight size={16} />
+								</button>
+							)}</For>
+						</div>
+						<div class="dialog-actions">
+							<button type="button" class="button" onClick={() => setExportIssues([])}>Close</button>
 						</div>
 					</div>
 				</div>

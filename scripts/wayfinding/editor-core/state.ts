@@ -38,6 +38,8 @@ export const createEditorState = (project: WayfindingStudioProject = createWayfi
 	const currentFloorId: string = project.floors[0]?.id ?? 'level-0';
 
 	return {
+		activeAssetId: undefined,
+		activeTool: 'select',
 		camera2dByFloor: {},
 		currentFloorId,
 		document: {

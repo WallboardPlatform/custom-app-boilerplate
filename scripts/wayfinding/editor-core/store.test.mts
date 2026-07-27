@@ -4,6 +4,7 @@ import test from 'node:test';
 import { createWayfindingStudioProject } from '../studio-project.mts';
 import { createEditorState } from './state.ts';
 import { createEditorStore } from './store.ts';
+import type { EditorCamera2d } from './types.ts';
 
 void test('project commands are undoable without rewinding viewport state', (): void => {
 	const store = createEditorStore(createEditorState(createWayfindingStudioProject('history-test')));
@@ -53,4 +54,215 @@ void test('visitor preview clears authoring selection without changing the selec
 	assert.equal(store.getSnapshot().state.workspace, 'visitor-preview');
 	assert.equal(store.getSnapshot().state.viewMode, '3d');
 	assert.equal(store.getSnapshot().state.selection, undefined);
+});
+
+void test('a location and its destination are created as one undoable authoring transaction', (): void => {
+	const store = createEditorStore();
+
+	store.run({
+		commands: [
+			{
+				type: 'destination/add',
+				destination: {
+					floorId: 'level-0',
+					id: 'destination-reception',
+					name: 'Reception',
+					routeable: true,
+					status: 'confirmed'
+				}
+			},
+			{
+				type: 'element/add',
+				floorId: 'level-0',
+				element: {
+					destinationId: 'destination-reception',
+					floorId: 'level-0',
+					geometry: [
+						{ x: 10, y: 10 },
+						{ x: 90, y: 10 },
+						{ x: 90, y: 70 },
+						{ x: 10, y: 70 }
+					],
+					id: 'location-reception',
+					provenance: 'reviewer-authored',
+					status: 'confirmed',
+					type: 'location'
+				}
+			}
+		],
+		label: 'Create Reception'
+	});
+
+	let snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.project.destinations.length, 1);
+	assert.equal(snapshot.state.project.floors[0].elements.length, 1);
+
+	store.undo();
+	snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.project.destinations.length, 0);
+	assert.equal(snapshot.state.project.floors[0].elements.length, 0);
+
+	store.redo();
+	snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.project.destinations[0]?.name, 'Reception');
+	assert.equal(snapshot.state.project.floors[0].elements[0]?.id, 'location-reception');
+});
+
+void test('tool and polygon draft changes do not pollute document history', (): void => {
+	const store = createEditorStore();
+
+	store.dispatch({ type: 'tool/set', tool: 'location' });
+	store.dispatch({
+		type: 'draft/set',
+		draft: {
+			elementType: 'location',
+			kind: 'polygon',
+			points: [
+				{ x: 12, y: 16 },
+				{ x: 48, y: 16 }
+			]
+		}
+	});
+
+	const snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.activeTool, 'location');
+	assert.equal(snapshot.state.draft?.kind, 'polygon');
+	assert.equal(snapshot.canUndo, false);
+	assert.equal(snapshot.state.document.dirty, false);
+});
+
+void test('vertex edits are undoable while preserving the current camera', (): void => {
+	const store = createEditorStore();
+	const camera: EditorCamera2d = { offsetX: 240, offsetY: 96, scale: 2.4 };
+
+	store.dispatch({
+		type: 'element/add',
+		floorId: 'level-0',
+		element: {
+			floorId: 'level-0',
+			geometry: [
+				{ x: 10, y: 10 },
+				{ x: 90, y: 10 },
+				{ x: 90, y: 70 },
+				{ x: 10, y: 70 }
+			],
+			id: 'walkable-main',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'walkable'
+		}
+	});
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'walkable-main',
+		patch: {
+			geometry: [
+				{ x: 10, y: 10 },
+				{ x: 110, y: 10 },
+				{ x: 90, y: 70 },
+				{ x: 10, y: 70 }
+			]
+		}
+	});
+	store.dispatch({ type: 'camera/set', floorId: 'level-0', camera });
+
+	store.undo();
+	const snapshot = store.getSnapshot();
+	const element = snapshot.state.project.floors[0].elements[0];
+	assert.equal(element.type, 'walkable');
+	assert.deepEqual(element.type === 'walkable' ? element.geometry[1] : undefined, { x: 90, y: 10 });
+	assert.deepEqual(snapshot.state.camera2dByFloor['level-0'], camera);
+});
+
+void test('route graph mutations keep edges and nodes referentially consistent', (): void => {
+	const store = createEditorStore();
+
+	store.run({
+		commands: [
+			{
+				type: 'graph/node-add',
+				node: { id: 'node-a', kind: 'route', levelId: 'level-0', x: 10, y: 10 }
+			},
+			{
+				type: 'graph/node-add',
+				node: { id: 'node-b', kind: 'route', levelId: 'level-0', x: 90, y: 10 }
+			},
+			{
+				type: 'graph/edge-add',
+				edge: {
+					accessible: true,
+					bidirectional: true,
+					from: 'node-a',
+					geometry: [
+						{ x: 10, y: 10 },
+						{ x: 90, y: 10 }
+					],
+					id: 'edge-a-b',
+					kind: 'walk',
+					to: 'node-b'
+				}
+			}
+		],
+		label: 'Create route segment'
+	});
+
+	assert.equal(store.getSnapshot().state.project.graph.edges.length, 1);
+	store.dispatch({ type: 'graph/node-remove', nodeId: 'node-a' });
+	assert.equal(store.getSnapshot().state.project.graph.nodes.length, 1);
+	assert.equal(store.getSnapshot().state.project.graph.edges.length, 0);
+	store.undo();
+	assert.equal(store.getSnapshot().state.project.graph.nodes.length, 2);
+	assert.equal(store.getSnapshot().state.project.graph.edges.length, 1);
+});
+
+void test('removing an asset clears destination and map references in one undoable edit', (): void => {
+	const project = createWayfindingStudioProject('asset-reference-test');
+	project.assets.push(
+		{
+			dataUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"/%3E',
+			id: 'logo-reception',
+			kind: 'logo',
+			mimeType: 'image/svg+xml',
+			name: 'Reception logo'
+		},
+		{
+			dataUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"/%3E',
+			id: 'photo-reception',
+			kind: 'photo',
+			mimeType: 'image/svg+xml',
+			name: 'Reception photo'
+		}
+	);
+	project.destinations.push({
+		id: 'destination-reception',
+		logoAssetId: 'logo-reception',
+		name: 'Reception',
+		photoAssetIds: ['photo-reception']
+	});
+	project.floors[0].elements.push({
+		assetId: 'logo-reception',
+		floorId: 'level-0',
+		height: 48,
+		id: 'logo-on-map',
+		point: { x: 120, y: 80 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'logo',
+		width: 48
+	});
+
+	const store = createEditorStore(createEditorState(project));
+	store.dispatch({ type: 'asset/remove', assetId: 'logo-reception' });
+
+	let snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.project.assets.some((asset): boolean => asset.id === 'logo-reception'), false);
+	assert.equal(snapshot.state.project.destinations[0]?.logoAssetId, undefined);
+	assert.equal(snapshot.state.project.floors[0].elements.length, 0);
+	assert.deepEqual(snapshot.state.project.destinations[0]?.photoAssetIds, ['photo-reception']);
+
+	store.undo();
+	snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.project.assets.some((asset): boolean => asset.id === 'logo-reception'), true);
+	assert.equal(snapshot.state.project.destinations[0]?.logoAssetId, 'logo-reception');
+	assert.equal(snapshot.state.project.floors[0].elements[0]?.id, 'logo-on-map');
 });
