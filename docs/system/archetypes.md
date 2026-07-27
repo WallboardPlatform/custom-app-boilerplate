@@ -75,6 +75,19 @@ Suite: `preview/conformance/status-indicator.ts`. Applies wherever colour carrie
 
 The `stateLabel` locator is required. An earlier version accepted any text anywhere in the indicator, so a row carrying a station name and a timestamp passed with its state label deleted — the same too-broad-scope flaw as the first empty-state legibility check.
 
+## Paginated content
+
+Suite: `preview/conformance/pagination.ts`. Seven examples page through more records than fit.
+
+| Level | Rule | Why |
+|-------|------|-----|
+| MUST | Every record appears exactly once per cycle | The silent failure. A pager that drops a record shows a board that looks entirely correct; nobody watching can tell their flight is the one never scheduled into a page. |
+| MUST | No page is empty while records exist | A blank page mid-rotation reads as a broken player. |
+| MUST | A full cycle returns to the first page | Drift compounds until the rotation no longer covers the set. |
+| MAY | Indicator style, transition, rows per page, balancing | Appearance is the app's. |
+
+The suite needs the app to expose page index, page count and a stable per-record key, and to let a test step the rotation. Match the app's own rotation delay exactly when installing a controlled timer — a looser filter also captures the clock tick, and invoking that advances nothing.
+
 ## Promoting a review
 
 `example:review:promote` refuses a workspace prepared from source the repository no longer holds. `validate:visual-review` only proves a workspace agrees with its own snapshot, so an experiment that re-prepares an example with a reverted change leaves a workspace that passes validation while carrying evidence for code that is gone. That happened twice while these standards were being written.
