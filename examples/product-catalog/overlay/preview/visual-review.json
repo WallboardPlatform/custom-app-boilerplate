@@ -1,125 +1,125 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "60369c6c3d3731c25b8938c464d73ac5102ac5ca105eb012ac55791e0d5dfca9",
-	"reviewedAt": "2026-07-20T08:45:53.639Z",
-	"reviewer": "Codex live-field hardening review",
+	"sourceHash": "6e3fe3e51eb19264f56a843a86596422c71fe63c8d53f5b55f9ef5b76466d559",
+	"reviewedAt": "2026-07-27T13:48:47.743Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The app implements one editable product TABLE containing both copy and file-picker media references, plus fallback and bounded rotation."
+			"notes": "Product spotlight: collection eyebrow, product name, description, price, product code, availability chip and progress through the collection."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "No external visual reference was supplied; the creative-led result consistently follows the accepted editorial retail concept."
+			"notes": "Editorial catalogue concept retained: pale paper field, serif product name, hairline rules, single hero product photograph."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The field-note retail spread, serif product typography, large photography, and restrained progress marks are specific and not dashboard-like."
+			"notes": "Reads as a printed catalogue page rather than an e-commerce card grid; one product occupies the surface."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Product name, price, availability, and key details remain room-readable across the declared signage surfaces."
+			"notes": "Product name and price are the dominant elements and clear the room-distance floors on every surface."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "The single light editorial palette maintains strong text, badge, rule, media, and fallback contrast in every reviewed state."
+			"notes": "Paper and ink palette holds contrast on all surfaces; the availability chip stays distinguishable against the field."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long collection, product, and description copy plus compact and portrait layouts remain contained through auto-fit, wrapping, and intentional omission."
+			"notes": "Long-copy scenario wraps the product name to three lines and keeps the description complete without ellipsis."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "The composition fills Full HD, wide-low, landscape, portrait, square, compact, and empty surfaces without overflow or accidental dead zones."
+			"notes": "Image and detail column divide the surface at every aspect; the empty state substitutes a centred collection message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Synthetic product photography, package icon, placeholder, fallback illustration, and palette form a coherent upload-safe set."
+			"notes": "Product photography renders with an intentional fit; the missing-image scenario shows a deliberate placeholder outline rather than a gap."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with maintained examples, the catalog uses a distinct retail-editorial composition and does not copy the operational dashboard language."
+			"notes": "Pale editorial catalogue styling is distinct from the dark dashboard and transit examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD default inspected; primary hierarchy, image crop, details, price, status, and progress are complete."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Landscape surface inspected; all content remains balanced, readable, and contained."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Portrait surface inspected; vertical media and copy flow use the full zone without overlap."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-compact-600x600.png",
 			"status": "pass",
-			"notes": "Compact square inspected; optional copy is omitted while identity, product, price, and status remain legible."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-empty-1920x1080.png",
 			"status": "pass",
-			"notes": "Empty state inspected; the intentionally sparse collection message remains centered and readable."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-last-product-1920x1080.png",
 			"status": "pass",
-			"notes": "Last product inspected; final-page content and progress state are complete with no blank frame."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-live-product-update-1920x1080.png",
 			"status": "pass",
-			"notes": "Live TABLE update inspected; updated name and price render without resetting the composition."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-long-copy-1920x1080.png",
 			"status": "pass",
-			"notes": "Long-copy state inspected; fitted title and wrapped description preserve hierarchy and full text ink."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-missing-image-1920x1080.png",
 			"status": "pass",
-			"notes": "Missing TABLE file-picker asset inspected; deterministic local fallback replaces the image without breaking layout."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-motion-off-1920x1080.png",
 			"status": "pass",
-			"notes": "Motion-off state inspected; content remains complete and rotation behavior stays functional without animation."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-portrait-catalog-1080x1920.png",
 			"status": "pass",
-			"notes": "Explicit portrait scenario inspected; media, product copy, details, and progress remain contained."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "scenario-wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Explicit wide-low scenario inspected; the horizontal composition remains dense, readable, and unclipped."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Square surface inspected; compact rules preserve the essential product story and visual balance."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Wide-low surface inspected; image crop, short copy, price, status, and progress fit the shallow zone."
+			"notes": "Inspected in the contact sheet: product image and detail column fill their halves, price and name legible, empty and missing-image states intentional, no clipping."
 		}
 	],
 	"unresolvedFindings": []
