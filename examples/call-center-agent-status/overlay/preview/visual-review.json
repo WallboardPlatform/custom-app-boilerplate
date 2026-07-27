@@ -1,125 +1,125 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "7affd62187b2b84c0fff4a1253022d9b767d9964ff5b028955943d812aba38e6",
-	"reviewedAt": "2026-07-19T11:20:01.103Z",
-	"reviewer": "Codex shared auto-fit migration re-review",
+	"sourceHash": "18237a570edd7d71852c07b8c272427dd4e243f0e288e5fda1f88d4e6155853b",
+	"reviewedAt": "2026-07-27T13:54:33.668Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The roster shows eight sorted agents per page, semantic states, uneven final pages, and compact handling metrics."
+			"notes": "Workforce wall: per-agent status, handled and presented counts, average talk time, plus aggregate ready/active/attention/offline counters."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The light avatar-led roster and analytical surfaces retain the supplied dashboard references without copying their exact grid."
+			"notes": "Operations status-wall concept retained: uniform agent cards with a colour-coded state rail down the left edge."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Horizontal identity lanes, state rails, and a segmented pagination marker distinguish this workforce wall."
+			"notes": "Reads as a contact-centre wall rather than a generic KPI dashboard; the state rail and per-agent metric triplet are domain-specific."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary hierarchy and operational values remain legible at each rendered signage distance and target ratio."
+			"notes": "Agent names hold the primary role; metric values and labels sit at their intended roles now that auto-fit resolves rather than pinning to the floor."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Every rendered preset and state was inspected; text, status, and surface contrast remain readable after theme changes."
+			"notes": "Dark-theme and grouping scenarios preserve state-rail hue separation and keep metric text legible against the card field."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long, compact, wrapped, and descender-bearing labels show complete ink or deliberate ellipsis with no partial lines."
+			"notes": "Long-label and descender-title scenarios keep agent names complete; the descender scenario specifically confirms no baseline clipping."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Content fills the declared surface intentionally across fixed and adaptive ratios without overlap or accidental dead space."
+			"notes": "The card grid fills the wall at full counts. Partially filled final pages leave empty cells, which is correct paging behaviour, and the empty state substitutes a centred message."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Light and dark presets coordinate identity, status, metric, and empty-state surfaces without broken assets."
+			"notes": "Agent initials discs and state rails render crisply from 600x600 through 1920x1080; no raster media involved."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "Compared with all nine other maintained examples; composition, pagination, hierarchy, and visual language remain distinct."
+			"notes": "The state-railed agent card wall is structurally distinct from the panel and table examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "landscape-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "portrait-1080x1920.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-dark-theme-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; theme surfaces, text, accents, and semantic colors remain coordinated and readable."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-descender-title-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-empty-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; the fallback or empty state is legible, contained, and intentionally sparse."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-invalid-rows-960x540.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-live-datasource-update-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-long-labels-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; long dynamic labels fit, wrap, or ellipsize deliberately without partial glyph lines."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-mixed-states-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-second-page-1366x768.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "scenario-unknown-state-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "square-600x600.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		},
 		{
 			"file": "wide-low-1536x432.png",
 			"status": "pass",
-			"notes": "Inspected at rendered size; hierarchy, boundaries, text ink, and state presentation are intentional."
+			"notes": "Inspected in the contact sheet: cards align on a consistent grid, state rails and metrics are legible, empty and unknown states are intentional, no clipping or descender loss."
 		}
 	],
 	"unresolvedFindings": []
