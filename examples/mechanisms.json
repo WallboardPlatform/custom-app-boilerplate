@@ -8,7 +8,9 @@
 		"fixed-canvas-scaling": "A reference-led composition scaled to fit with letterboxing.",
 		"published-map-package": "A .wbmap runtime package consumed by the app.",
 		"platform-media-cache": "Media resolved through the platform cache from a setting or row.",
-		"packaged-media": "Media bundled with the app and listed in the resource list."
+		"packaged-media": "Media bundled with the app and listed in the resource list.",
+		"idle-screensaver": "An attract state after inactivity, with its own branding and reset behaviour.",
+		"multi-timezone": "Several places shown at once, each in its own local time."
 	},
 	"capability": {
 		"on-screen-keyboard": "Touch text entry bound to a field.",
@@ -23,7 +25,9 @@
 		"internal-datasource-write": "The app writing rows back to an internal datasource.",
 		"aggregate-of-submissions": "A view deriving metrics from records another app wrote.",
 		"weather-binding": "A weather datasource with its own failure states.",
-		"settings-only": "No datasource at all: the app is driven entirely by settings and time."
+		"settings-only": "No datasource at all: the app is driven entirely by settings and time.",
+		"scheduled-visibility": "Rows appearing and expiring on their own schedule, with retention after expiry.",
+		"typed-column-formatting": "Formatting driven by the datasource column type rather than by guesswork."
 	},
 	"composition": {
 		"dense-table-board": "Many rows of uniform records read at distance.",
@@ -34,12 +38,27 @@
 		"split-stage": "A dominant primary panel beside a subordinate column.",
 		"ultra-wide-marquee": "Continuous horizontal motion on a wide-low surface.",
 		"tall-column-board": "A narrow portrait column of grouped rows.",
-		"status-wall": "Uniform records whose state is the primary signal rather than their content."
+		"status-wall": "Uniform records whose state is the primary signal rather than their content.",
+		"count-adaptive-layout": "A different composition chosen by how many records exist, not by surface size."
 	},
 	"interaction": {
 		"directory-search": "Search and filter across a browsable set.",
 		"guided-form": "Stepped input with validation and submission.",
 		"custom-settings-editor": "An editor surface beyond the property sidebar.",
 		"map-orientation": "Selecting a destination and showing the way to it."
+	},
+	"referenceExample": {
+		"note": "The example an agent should read first for this mechanism. Absent means no example is a standout, or none exists yet. Changing an entry is how a better teacher replaces an incumbent without either being deleted.",
+		"content-paging": "recognition-mosaic",
+		"dense-table-board": "airport-departures",
+		"directory-search": "campus-directory",
+		"editorial-poster": "museum-welcome",
+		"guided-form": "factory-safety-questionnaire",
+		"map-orientation": "veszprem-wayfinding",
+		"on-screen-keyboard": "veszprem-wayfinding",
+		"photographic-overlay": "weather-window",
+		"published-map-package": "spatial-wayfinding",
+		"status-wall": "call-center-agent-status",
+		"ultra-wide-marquee": "market-rotation-ticker"
 	}
 }

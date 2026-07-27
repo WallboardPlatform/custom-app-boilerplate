@@ -4,7 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { findOverlaps, readClaims, readVocabulary, validateClaims } from './example-mechanisms.mts';
+import {
+	findOverlaps,
+	readClaims,
+	readVocabulary,
+	validateClaims,
+	validateReferenceTeachers
+} from './example-mechanisms.mts';
 
 const claimsOf = (entries: Record<string, string[]>): Map<string, string[]> => new Map(Object.entries(entries));
 
@@ -60,6 +66,60 @@ void describe('example mechanism registry', (): void => {
 		const overlaps = findOverlaps(claimsOf({ one: ['a'], two: ['a'] }));
 
 		assert.equal(overlaps.length, 2);
+	});
+
+	void it('accepts a reference teacher that claims the mechanism', (): void => {
+		const problems: string[] = validateReferenceTeachers(
+			{ note: 'prose', 'dense-table-board': 'airport' },
+			claimsOf({ airport: ['dense-table-board'] }),
+			new Set(['dense-table-board'])
+		);
+
+		assert.deepEqual(problems, []);
+	});
+
+	void it('rejects a reference teacher that does not claim the mechanism', (): void => {
+		// Caught two of my own assignments the first time it ran.
+		const problems: string[] = validateReferenceTeachers(
+			{ 'dense-table-board': 'museum' },
+			claimsOf({ museum: ['editorial-poster'] }),
+			new Set(['dense-table-board', 'editorial-poster'])
+		);
+
+		assert.match(problems[0] ?? '', /does not claim it/);
+	});
+
+	void it('rejects a reference teacher naming an example that does not exist', (): void => {
+		const problems: string[] = validateReferenceTeachers(
+			{ 'dense-table-board': 'ghost' },
+			claimsOf({ airport: ['dense-table-board'] }),
+			new Set(['dense-table-board'])
+		);
+
+		assert.match(problems[0] ?? '', /is not an example/);
+	});
+
+	void it('rejects a reference for something that is not a mechanism', (): void => {
+		const problems: string[] = validateReferenceTeachers(
+			{ invented: 'airport' },
+			claimsOf({ airport: ['dense-table-board'] }),
+			new Set(['dense-table-board'])
+		);
+
+		assert.match(problems[0] ?? '', /is not a mechanism/);
+	});
+
+	void it('the shipped reference teachers are all consistent', (): void => {
+		const examplesDirectory: string = path.join(process.cwd(), 'examples');
+		const registryPath: string = path.join(examplesDirectory, 'mechanisms.json');
+		const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as { referenceExample?: Record<string, string> };
+		const problems: string[] = validateReferenceTeachers(
+			registry.referenceExample ?? {},
+			readClaims(examplesDirectory),
+			readVocabulary(registryPath)
+		);
+
+		assert.deepEqual(problems, []);
 	});
 
 	void it('ignores directories without a manifest', (context): void => {

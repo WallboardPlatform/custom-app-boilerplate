@@ -24,7 +24,7 @@ export interface OverlapFinding {
 	coveredBy: string[];
 }
 
-const VOCABULARY_KEYS_TO_SKIP = new Set(['note']);
+const VOCABULARY_KEYS_TO_SKIP = new Set(['note', 'referenceExample']);
 
 export const readVocabulary = (registryPath: string): Set<string> => {
 	const raw = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as Record<string, unknown>;
@@ -79,6 +79,40 @@ export const findOverlaps = (claims: Map<string, string[]>): OverlapFinding[] =>
 	}
 
 	return findings;
+};
+
+/**
+ * The registry answers "is this mechanism covered?". It does not answer "which example teaches
+ * it best", and those are different questions: an app can teach an already-covered mechanism
+ * better than the incumbent. Recording a reference teacher makes that a decision the repository
+ * holds, so a better example can take over without either one being deleted.
+ */
+export const validateReferenceTeachers = (
+	referenceExample: Record<string, string>,
+	claims: Map<string, string[]>,
+	vocabulary: Set<string>
+): string[] => {
+	const problems: string[] = [];
+
+	for (const [mechanism, exampleId] of Object.entries(referenceExample)) {
+		if (mechanism === 'note') continue;
+
+		if (!vocabulary.has(mechanism)) {
+			problems.push(`referenceExample names '${mechanism}', which is not a mechanism.`);
+
+			continue;
+		}
+
+		const claimed: string[] | undefined = claims.get(exampleId);
+
+		if (!claimed) {
+			problems.push(`referenceExample for '${mechanism}' names '${exampleId}', which is not an example.`);
+		} else if (!claimed.includes(mechanism)) {
+			problems.push(`referenceExample for '${mechanism}' names '${exampleId}', which does not claim it.`);
+		}
+	}
+
+	return problems;
 };
 
 export const validateClaims = (
