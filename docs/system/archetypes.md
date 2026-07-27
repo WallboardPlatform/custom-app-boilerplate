@@ -61,6 +61,20 @@ Suite: `preview/conformance/empty-state.ts`. Applies to any app whose datasource
 
 The `message` locator is required rather than inferred. An earlier version measured the largest text anywhere in the widget, which is always the app title, so the legibility assertion could never fail — a conformance test that cannot fail is worse than none.
 
+## Status indicator
+
+Suite: `preview/conformance/status-indicator.ts`. Applies wherever colour carries meaning — 13 examples tint by state.
+
+| Level | Rule | Why |
+|-------|------|-----|
+| MUST | State is named in words, not only tinted | Colour alone excludes about one viewer in twelve, and survives none of the conditions signage runs in: sunlit panels, miscalibrated screens, a greyscale photo of the board in a report. |
+| MUST | Distinct states read distinctly | Identical wording across states means the words are decoration and the colour is still doing the work. |
+| MUST | State text clears 3:1 against **its own** background | A chip usually tints its own background, which is where contrast collapses even when the surrounding surface is fine. |
+| SHOULD | Expose the state in a `data-` attribute | Makes the state assertable without reading colour. |
+| MAY | Which hues mean what, glyphs, chip shape | Appearance is the app's. |
+
+The `stateLabel` locator is required. An earlier version accepted any text anywhere in the indicator, so a row carrying a station name and a timestamp passed with its state label deleted — the same too-broad-scope flaw as the first empty-state legibility check.
+
 ## Promoting a review
 
 `example:review:promote` refuses a workspace prepared from source the repository no longer holds. `validate:visual-review` only proves a workspace agrees with its own snapshot, so an experiment that re-prepares an example with a reverted change leaves a workspace that passes validation while carrying evidence for code that is gone. That happened twice while these standards were being written.
