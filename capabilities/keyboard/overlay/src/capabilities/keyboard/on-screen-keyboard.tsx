@@ -2,6 +2,7 @@ import { createMemo, createSignal, For } from 'solid-js';
 import type { JSX } from 'solid-js';
 
 import {
+	appendKeyboardSpace,
 	appendKeyboardValue,
 	ENGLISH_KEYBOARD_LAYOUT,
 	type KeyboardLayout,
@@ -14,6 +15,8 @@ export interface OnScreenKeyboardProps {
 	accentColor?: string;
 	backgroundColor?: string;
 	borderColor?: string;
+	/** Blocks every action, not just the appearance of the keys. */
+	disabled?: boolean;
 	label?: string;
 	labels?: Partial<OnScreenKeyboardLabels>;
 	layouts?: readonly KeyboardLayout[];
@@ -33,6 +36,18 @@ export interface OnScreenKeyboardLabels {
 	shift: string;
 	space: string;
 }
+
+/**
+ * Pressing a key must never move focus off the field the keyboard is typing into: losing it
+ * hides the caret and breaks physical typing alongside the touch keys. Both events are needed —
+ * `pointerdown` covers touch and modern mice, `mousedown` covers the compatibility event that
+ * legacy players still emit — and every control needs it, not only the letters. Only the letter
+ * keys were guarded before, so space, delete, clear, shift and close each stole focus.
+ */
+const retainFieldFocus = {
+	onPointerDown: (event: Event): void => event.preventDefault(),
+	onMouseDown: (event: Event): void => event.preventDefault()
+};
 
 const DEFAULT_LABELS: OnScreenKeyboardLabels = {
 	clear: 'Clear',
@@ -56,11 +71,19 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 	}));
 
 	const enterKey = (key: string): void => {
+		if (props.disabled) return;
+
 		props.onInput(appendKeyboardValue(props.value, shifted() ? key.toLocaleUpperCase() : key, props.maximumLength));
 
 		if (shifted()) {
 			setShifted(false);
 		}
+	};
+	/** Guards every action, so a disabled keyboard cannot be driven by a stray synthetic click. */
+	const act = (action: () => void): (() => void) => {
+		return (): void => {
+			if (!props.disabled) action();
+		};
 	};
 
 	return (
@@ -72,15 +95,17 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 						<For each={layouts()}>{(candidate, index): JSX.Element => (
 							<button
 								type="button"
+								disabled={props.disabled}
 								aria-pressed={candidate.id === layout().id}
-								onClick={(): void => {
+								{...retainFieldFocus}
+								onClick={act((): void => {
 									setLayoutIndex(index());
-								}}
+								})}
 							>
 								{candidate.label}
 							</button>
 						)}</For>
-						<button type="button" onClick={(): void => props.onClose()}>{labels().close}</button>
+						<button type="button" disabled={props.disabled} {...retainFieldFocus} onClick={act((): void => props.onClose())}>{labels().close}</button>
 					</div>
 				</header>
 
@@ -92,8 +117,9 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 							<For each={row}>{(key): JSX.Element => (
 								<button
 									type="button"
+									disabled={props.disabled}
 									aria-label={`Key ${shifted() ? key.toLocaleUpperCase() : key}`}
-									onPointerDown={(event): void => event.preventDefault()}
+									{...retainFieldFocus}
 									onClick={(): void => enterKey(key)}
 								>
 									{shifted() ? key.toLocaleUpperCase() : key}
@@ -104,16 +130,18 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 				</div>
 
 				<footer>
-					<button type="button" aria-pressed={shifted()} onClick={(): void => { setShifted((value): boolean => !value); }}>{labels().shift}</button>
-					<button type="button" onClick={(): void => props.onInput(appendKeyboardValue(props.value, ' ', props.maximumLength))}>{labels().space}</button>
-					<button type="button" onClick={(): void => props.onInput(removeLastKeyboardCharacter(props.value))}>{labels().delete}</button>
-					<button type="button" onClick={(): void => props.onInput('')}>{labels().clear}</button>
+					<button type="button" disabled={props.disabled} aria-pressed={shifted()} {...retainFieldFocus} onClick={act((): void => { setShifted((value): boolean => !value); })}>{labels().shift}</button>
+					<button type="button" disabled={props.disabled} {...retainFieldFocus} onClick={act((): void => props.onInput(appendKeyboardSpace(props.value, props.maximumLength)))}>{labels().space}</button>
+					<button type="button" disabled={props.disabled} {...retainFieldFocus} onClick={act((): void => props.onInput(removeLastKeyboardCharacter(props.value)))}>{labels().delete}</button>
+					<button type="button" disabled={props.disabled} {...retainFieldFocus} onClick={act((): void => props.onInput(''))}>{labels().clear}</button>
 					<button
 						class={style.submit}
 						type="button"
-						onClick={(): void => {
+						disabled={props.disabled}
+						{...retainFieldFocus}
+						onClick={act((): void => {
 							props.onSubmit?.();
-						}}
+						})}
 					>
 						{props.submitLabel ?? 'Done'}
 					</button>

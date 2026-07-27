@@ -1,4 +1,5 @@
 export {
+	appendKeyboardSpace,
 	appendKeyboardValue,
 	ENGLISH_KEYBOARD_LAYOUT,
 	HUNGARIAN_KEYBOARD_LAYOUT,
