@@ -1,7 +1,7 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "eb2e044e4689dfd68f93f1298f52c81856af7040966371c8083874a12df693da",
-	"reviewedAt": "2026-07-27T14:01:54.248Z",
+	"sourceHash": "ceb1eef7fadd5a856bfa969181fab9310610237dac5b9f3e4ffef402dd4fc166",
+	"reviewedAt": "2026-07-27T18:01:05.896Z",
 	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
@@ -27,7 +27,7 @@
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light-theme scenario preserves state-colour separation across normal, attention and stopped rows without losing row banding."
+			"notes": "Light-theme scenario preserves state-colour separation across normal, attention and stopped rows without losing row banding. Station rows now pass the shared status-indicator conformance suite: each state is named in words, distinct states read distinctly, and the state text clears 3:1 against its own tint."
 		},
 		{
 			"id": "dynamicTextSafety",
