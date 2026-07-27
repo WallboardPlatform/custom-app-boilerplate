@@ -37,7 +37,6 @@
 				<button id="studio-export-project" type="button" title="Save to the opened project file (Ctrl+S)">Save</button>
 				<button id="studio-save-as" type="button" title="Choose a new project file (Ctrl+Shift+S)">Save as</button>
 				<button id="studio-export-runtime" type="button" title="Publish the .wbmap package consumed by a wayfinding custom app">Publish map</button>
-				<button id="shortcut-help" type="button" title="Show all keyboard shortcuts (?)">Shortcuts <kbd>?</kbd></button>
 			</div>
 		</div>
 		<div class="status">
@@ -48,6 +47,10 @@
 	</header>
 	<main>
 		<aside class="controls" aria-label="Authoring controls">
+			<div class="panel-rail">
+				<strong>Authoring</strong>
+				<button id="toggle-left-panel" type="button" class="panel-collapse-command" title="Hide authoring controls" aria-pressed="true" aria-label="Hide authoring controls">&#9665;</button>
+			</div>
 			<section class="workflow-step project-panel">
 				<span class="step-number">1</span><h2>Project</h2>
 				<div id="project-context" class="project-context" data-portable="missing">
@@ -380,8 +383,6 @@
 			</section>
 		</aside>
 		<section class="stage-shell" aria-label="Map authoring stage">
-			<button id="toggle-left-panel" type="button" class="stage-panel-toggle stage-panel-toggle-left" title="Show or hide authoring controls" aria-pressed="true" aria-label="Hide authoring controls">&#9665;</button>
-			<button id="toggle-right-panel" type="button" class="stage-panel-toggle stage-panel-toggle-right" title="Show or hide properties" aria-pressed="true" aria-label="Hide properties">&#9655;</button>
 			<div id="studio-notice" class="studio-notice" role="status" aria-live="polite" hidden></div>
 			<div id="stage-empty" class="stage-empty"><strong>Open a project or add a background</strong><span>Background artwork is optional; semantic geometry and routes remain independently editable.</span></div>
 			<canvas id="stage" width="1341" height="947"></canvas>
@@ -412,14 +413,22 @@
 					<span id="runtime-preview-category"></span>
 					<h2 id="runtime-preview-name"></h2>
 					<p id="runtime-preview-description"></p>
+					<div id="runtime-preview-route" class="runtime-preview-route" hidden></div>
 					<dl id="runtime-preview-facts"></dl>
 					<div id="runtime-preview-photos" class="runtime-preview-photos"></div>
 				</article>
 			</section>
 			<output id="cursor-position" class="cursor-position" title="Pointer position in map pixels">x -, y -</output>
-			<footer><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add a shape or route point</span></footer>
+			<footer class="stage-footer">
+				<div class="stage-hints"><span><kbd>Wheel</kbd> Zoom</span><span><kbd>Space</kbd> Pan</span><span><kbd>Enter</kbd> Finish drawing</span><span><kbd>Double-click</kbd> Add a shape or route point</span></div>
+				<button id="shortcut-help" type="button" title="Show all keyboard shortcuts (?)">Shortcuts <kbd>?</kbd></button>
+			</footer>
 		</section>
 		<aside class="review" aria-label="Route review">
+			<div class="panel-rail">
+				<strong>Properties</strong>
+				<button id="toggle-right-panel" type="button" class="panel-collapse-command" title="Hide properties" aria-pressed="true" aria-label="Hide properties">&#9655;</button>
+			</div>
 			<details id="object-explorer-panel" class="object-explorer workspace-panel" data-workspace-panel="map" open>
 				<summary class="object-explorer-heading">
 					<div><span>MAP OBJECTS</span><h2>Layers and items</h2></div>

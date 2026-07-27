@@ -269,13 +269,27 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	});
 	page.on('pageerror', (error): void => { errors.push(error.message); });
 	const project: WayfindingStudioProject = createRouteTestProject();
+	project.languages = [
+		{ code: 'en', label: 'English' },
+		{ code: 'hu', label: 'Hungarian' }
+	];
+	project.defaultLanguage = 'en';
 	project.destinations[0] = {
 		...project.destinations[0],
+		accessible: true,
 		category: 'Meeting rooms',
 		description: 'Weekly team briefings and visitor presentations.',
 		hours: '08:00 - 18:00',
 		mapNumber: 'G-12',
-		status: 'Open'
+		phone: '+1 972 555 0100',
+		status: 'Open',
+		translations: {
+			hu: {
+				description: 'Heti csapategyeztetesek es latogatoi bemutatok.',
+				name: 'Targyalo'
+			}
+		},
+		website: 'https://example.com/meeting-room'
 	};
 	const projectPath: string = testInfo.outputPath('visitor-preview-project.wbwayfinding');
 	fs.writeFileSync(projectPath, JSON.stringify(project));
@@ -283,6 +297,9 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	await page.goto('/');
 	await page.locator('#studio-project-file').setInputFiles(projectPath);
 	await expect(page.locator('#shortcut-help')).toHaveCount(1);
+	await expect(page.locator('.stage-footer > #shortcut-help')).toBeVisible();
+	await expect(page.locator('.controls > .panel-rail > #toggle-left-panel')).toBeVisible();
+	await expect(page.locator('.review > .panel-rail > #toggle-right-panel')).toBeVisible();
 
 	const stage = page.locator('.stage-shell');
 	const canvas = page.locator('#stage');
@@ -301,10 +318,14 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	const initialViewport = await readViewport();
 	await page.locator('#toggle-left-panel').click();
 	await expect(page.locator('body')).toHaveAttribute('data-left-panel', 'closed');
-	await expect(page.locator('.controls')).toBeHidden();
+	await expect(page.locator('.controls')).toBeVisible();
+	await expect(page.locator('.controls > .panel-rail')).toBeVisible();
+	await expect(page.locator('.controls > :not(.panel-rail)').first()).toBeHidden();
 	await page.locator('#toggle-right-panel').click();
 	await expect(page.locator('body')).toHaveAttribute('data-right-panel', 'closed');
-	await expect(page.locator('.review')).toBeHidden();
+	await expect(page.locator('.review')).toBeVisible();
+	await expect(page.locator('.review > .panel-rail')).toBeVisible();
+	await expect(page.locator('.review > :not(.panel-rail)').first()).toBeHidden();
 	await page.waitForTimeout(220);
 	const expandedBounds = await stage.boundingBox();
 	expect((expandedBounds?.width ?? 0)).toBeGreaterThan(initialBounds?.width ?? 0);
@@ -328,11 +349,26 @@ test('expands the map workspace and provides a focused visitor preview', async (
 	await expect(page.locator('#runtime-preview-name')).toHaveText('Meeting room');
 	await expect(page.locator('#runtime-preview-description')).toContainText('Weekly team briefings');
 	await expect(page.locator('#runtime-preview-facts')).toContainText('G-12');
+	await expect(page.locator('#runtime-preview-facts')).toContainText('+1 972 555 0100');
+	await expect(page.locator('#runtime-preview-facts')).toContainText('Step-free access verified');
+	await expect(page.locator('#runtime-preview-facts a[href="https://example.com/meeting-room"]')).toBeVisible();
+	await expect(page.locator('#runtime-preview-route')).toBeVisible();
+	await expect(page.locator('#runtime-preview-route')).toContainText('m');
+	await expect(page.locator('#runtime-preview-route')).toContainText('min walk');
+	await expect(page.locator('.runtime-preview-result')).toContainText('Meeting rooms / G-12 / Open');
+
+	await page.locator('#runtime-preview-search').clear();
+	await page.locator('#runtime-preview-language').selectOption('hu');
+	await expect(page.locator('#runtime-preview-name')).toHaveText('Targyalo');
+	await expect(page.locator('#runtime-preview-description')).toContainText('Heti csapategyeztetesek');
 
 	await page.locator('#runtime-preview-icons').uncheck();
 	await page.locator('#runtime-preview-labels').uncheck();
 	await expect(canvas).toHaveAttribute('data-runtime-icons-visible', 'false');
 	await expect(canvas).toHaveAttribute('data-runtime-labels-visible', 'false');
+	const previewScreenshotPath: string = testInfo.outputPath('visitor-preview.png');
+	await page.screenshot({ fullPage: true, path: previewScreenshotPath });
+	await testInfo.attach('visitor-preview', { contentType: 'image/png', path: previewScreenshotPath });
 	const closeHitTarget = await page.locator('#runtime-preview-details-close').evaluate((element: HTMLElement): string | undefined => {
 		const bounds = element.getBoundingClientRect();
 		return document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)?.id;

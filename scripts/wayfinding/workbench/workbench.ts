@@ -294,6 +294,7 @@ const runtimePreviewDetailsClose = requireElement<HTMLButtonElement>('#runtime-p
 const runtimePreviewCategory = requireElement<HTMLElement>('#runtime-preview-category');
 const runtimePreviewName = requireElement<HTMLElement>('#runtime-preview-name');
 const runtimePreviewDescription = requireElement<HTMLElement>('#runtime-preview-description');
+const runtimePreviewRoute = requireElement<HTMLElement>('#runtime-preview-route');
 const runtimePreviewFacts = requireElement<HTMLElement>('#runtime-preview-facts');
 const runtimePreviewPhotos = requireElement<HTMLElement>('#runtime-preview-photos');
 const routeSetupChecklist = requireElement<HTMLElement>('#route-setup-checklist');
@@ -3257,20 +3258,54 @@ const renderRuntimePreviewDetails = (destination: DestinationRow): void => {
 	runtimePreviewCategory.textContent = destination.category?.trim() || 'Destination';
 	runtimePreviewName.textContent = runtimePreviewDisplayName(destination);
 	runtimePreviewDescription.textContent = runtimePreviewDisplayDescription(destination);
-	const facts: Array<[string, string | undefined]> = [
-		['Floor', destination.floor || currentFloor().name],
-		['Directory', destination.mapNumber],
-		['Hours', destination.hours],
-		['Status', destination.status],
-		['Access', destination.accessible === true ? 'Accessible' : destination.accessible === false ? 'Accessibility not confirmed' : undefined]
+	const hasCurrentRoute: boolean = destination.id === runtimePreviewDestinationId && Boolean(simulatedRoute);
+	if (hasCurrentRoute && simulatedRoute) {
+		const distance: HTMLElement = document.createElement('strong');
+		const duration: HTMLElement = document.createElement('span');
+		distance.textContent = `${simulatedRoute.walkingDistance} m`;
+		duration.textContent = `Approx. ${Math.max(1, Math.ceil(simulatedRoute.walkingSeconds / 60))} min walk`;
+		runtimePreviewRoute.replaceChildren(distance, duration);
+		runtimePreviewRoute.hidden = false;
+	} else {
+		runtimePreviewRoute.replaceChildren();
+		runtimePreviewRoute.hidden = true;
+	}
+	const facts: Array<{ href?: string; label: string; value?: string }> = [
+		{ label: 'Floor', value: destination.floor || currentFloor().name },
+		{ label: 'Directory', value: destination.mapNumber },
+		{ label: 'Hours', value: destination.hours },
+		{ label: 'Status', value: destination.status },
+		{
+			label: 'Access',
+			value: destination.accessible === true
+				? 'Step-free access verified'
+				: destination.accessible === false ? 'Not step-free' : undefined
+		},
+		{ label: 'Phone', value: destination.phone },
+		{ label: 'Website', value: destination.website }
 	];
+	const phoneFact = facts.find((fact): boolean => fact.label === 'Phone');
+	if (phoneFact?.value) phoneFact.href = `tel:${phoneFact.value.replace(/\s+/g, '')}`;
+	const websiteFact = facts.find((fact): boolean => fact.label === 'Website');
+	if (websiteFact?.value) websiteFact.href = /^https?:\/\//i.test(websiteFact.value) ? websiteFact.value : `https://${websiteFact.value}`;
 	runtimePreviewFacts.replaceChildren(...facts
-		.filter((fact): fact is [string, string] => Boolean(fact[1]))
-		.flatMap(([label, value]): HTMLElement[] => {
+		.filter((fact): fact is { href?: string; label: string; value: string } => Boolean(fact.value))
+		.flatMap(({ href, label, value }): HTMLElement[] => {
 			const term: HTMLElement = document.createElement('dt');
 			const description: HTMLElement = document.createElement('dd');
 			term.textContent = label;
-			description.textContent = value;
+			if (href) {
+				const link: HTMLAnchorElement = document.createElement('a');
+				link.href = href;
+				link.textContent = value;
+				if (label === 'Website') {
+					link.target = '_blank';
+					link.rel = 'noreferrer';
+				}
+				description.append(link);
+			} else {
+				description.textContent = value;
+			}
 
 			return [term, description];
 		}));
@@ -3297,7 +3332,9 @@ function openRuntimePreviewDetails(elementId: string): boolean {
 	selectedEdgeId = undefined;
 	renderRuntimePreviewDetails(destination);
 	renderRuntimePreview();
-	if ((element.type !== 'location' && element.type !== 'poi') || !routeToSemanticElement(element.id)) draw();
+	const routed: boolean = (element.type === 'location' || element.type === 'poi') && routeToSemanticElement(element.id);
+	renderRuntimePreviewDetails(destination);
+	if (!routed) draw();
 
 	return true;
 }
@@ -3361,8 +3398,11 @@ function renderRuntimePreview(): void {
 				runtimePreviewDisplayName(destination),
 				runtimePreviewDisplayDescription(destination),
 				destination.category,
+				destination.mapNumber,
 				destination.hours,
-				destination.status
+				destination.status,
+				destination.phone,
+				destination.website
 			].some((value: string | undefined): boolean => value?.toLocaleLowerCase().includes(query) ?? false);
 		})
 		.sort((left: DestinationRow, right: DestinationRow): number => runtimePreviewDisplayName(left).localeCompare(runtimePreviewDisplayName(right)));
@@ -3383,7 +3423,12 @@ function renderRuntimePreview(): void {
 		button.classList.toggle('active', destination.id === runtimePreviewDestinationId);
 		button.disabled = !element;
 		name.textContent = runtimePreviewDisplayName(destination);
-		detail.textContent = [destination.category, destination.floor || currentFloor().name].filter(Boolean).join(' / ');
+		detail.textContent = [
+			destination.category,
+			destination.mapNumber,
+			destination.status,
+			destination.floor || currentFloor().name
+		].filter(Boolean).join(' / ');
 		button.append(name, detail);
 		button.addEventListener('click', (): void => {
 			if (element) openRuntimePreviewDetails(element.id);
