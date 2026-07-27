@@ -135,6 +135,7 @@ AI image generation is optional. It may simplify artwork or propose a signage-re
 ## Routing Rules
 
 - Route graph coordinates use each floor's coordinate system.
+- A floor reports distance and walking time only when its `unitsPerMeter` scale is set. Uncalibrated floors hide both rather than present map units as metres. Cross-floor edges still carry explicit `distanceMeters`.
 - Location nodes are leaf entrances at reviewed doors/approaches, never polygon centroids or transit shortcuts.
 - Add a node at every real junction and every bend needed for route shape.
 - Cross-floor pairs become explicit stairs/elevator/escalator edges; set physical distance and accessibility.

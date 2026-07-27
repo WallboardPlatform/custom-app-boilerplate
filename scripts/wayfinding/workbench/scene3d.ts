@@ -66,8 +66,10 @@ const labelElevation = (
 		.reverse()
 		.find((element): boolean => pointInPolygon(point, element.geometry));
 
-	return (polygon ? polygonHeight(floor, polygon, defaults) : 0) + Math.min(floor.width, floor.height) * 0.018;
+	return (polygon ? polygonHeight(floor, polygon, defaults) : 0) + groundClearance(floor);
 };
+
+const groundClearance = (floor: WayfindingStudioFloor): number => Math.min(floor.width, floor.height) * 0.018;
 
 const createTextTexture = (
 	label: WayfindingStudioLabelElement,
@@ -472,13 +474,17 @@ export class WayfindingScene3d {
 			delete this.host.dataset.routeAnimation;
 			delete this.host.dataset.routeProgress;
 			delete this.host.dataset.routeWidth;
+			delete this.host.dataset.routeElevation;
+			delete this.host.dataset.floorPeak;
 			return;
 		}
 		const defaults: WayfindingStudioProjectDefaults = wayfindingStudioProjectDefaults(project);
+		// A walking route stays on the pedestrian plane. Using label elevation would lift it onto
+		// the extruded top face of any room polygon it crosses, which is not a walkable surface.
 		const vectors: THREE.Vector3[] = points.map((point): THREE.Vector3 => centeredPoint(
 			floor,
 			point,
-			labelElevation(floor, floor.elements, point, defaults)
+			groundClearance(floor)
 		));
 		const curve = new THREE.CurvePath<THREE.Vector3>();
 		for (let index = 1; index < vectors.length; index += 1) {
@@ -493,6 +499,11 @@ export class WayfindingScene3d {
 		this.scene.add(route);
 		this.host.dataset.routeAnimation = defaults.route.animation;
 		this.host.dataset.routeWidth = String(defaults.route.lineWidth);
+		this.host.dataset.routeElevation = groundClearance(floor).toFixed(3);
+		this.host.dataset.floorPeak = floor.elements
+			.filter((element): element is WayfindingStudioPolygonElement => 'geometry' in element)
+			.reduce((peak: number, polygon): number => Math.max(peak, polygonHeight(floor, polygon, defaults)), 0)
+			.toFixed(3);
 		const markers: THREE.Mesh[] = [];
 		if (defaults.route.animation !== 'none') {
 			const markerGeometry = new THREE.SphereGeometry(radius * 1.32, 12, 8);

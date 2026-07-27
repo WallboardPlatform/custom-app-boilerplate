@@ -54,6 +54,8 @@ export interface WayfindingPublishedFloor {
 	order: number;
 	scenePath: string;
 	svgPath: string;
+	/** Map units per real-world metre. Absent means the floor is uncalibrated and route distance has no physical meaning. */
+	unitsPerMeter?: number;
 	width: number;
 }
 
@@ -212,6 +214,7 @@ const compileWayfindingMapPackage = (project: WayfindingStudioProject): Wayfindi
 			order: floor.order,
 			scenePath: `floors/${safeId}.scene.json`,
 			svgPath: `floors/${safeId}.svg`,
+			unitsPerMeter: floor.unitsPerMeter,
 			width: floor.width
 		};
 
@@ -283,6 +286,7 @@ export const createWayfindingMapPackage = (project: WayfindingStudioProject): Ui
 			id: floor.id,
 			name: floor.name,
 			order: floor.order,
+			unitsPerMeter: floor.unitsPerMeter,
 			width: floor.width
 		});
 		entries[floor.svgPath] = strToU8(floor.svg);
@@ -376,6 +380,7 @@ export const wayfindingMapPackageToRuntimeBundle = (archive: Uint8Array): Wayfin
 			name: floor.name,
 			order: floor.order,
 			svg: inlinePackageSvgAssets(floor.svg, published.assets),
+			unitsPerMeter: floor.unitsPerMeter,
 			width: floor.width
 		})),
 		graph: structuredClone(published.graph),

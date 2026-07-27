@@ -178,6 +178,8 @@ export interface RuntimeFloor {
 	name: string;
 	order: number;
 	svg: string;
+	/** Map units per real-world metre, authored in the Studio project. */
+	unitsPerMeter?: number;
 	width: number;
 }
 

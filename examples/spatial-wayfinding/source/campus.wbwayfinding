@@ -700,7 +700,8 @@
       "name": "Ground floor",
       "order": 0,
       "pedestrianSpaceSource": "polygons",
-      "width": 1200
+      "width": 1200,
+      "unitsPerMeter": 13
     }
   ],
   "graph": {

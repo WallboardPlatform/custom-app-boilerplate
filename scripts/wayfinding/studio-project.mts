@@ -178,6 +178,8 @@ export interface WayfindingStudioFloor {
 	name: string;
 	order: number;
 	pedestrianSpaceSource?: WayfindingStudioPedestrianSpaceSource;
+	/** Floor-plan units per real-world metre. Absent means the floor is uncalibrated and route distances have no physical meaning. */
+	unitsPerMeter?: number;
 	walkableMask?: WayfindingWalkableMaskDocument;
 	width: number;
 }
@@ -245,6 +247,7 @@ export interface WayfindingRuntimeBundle {
 		name: string;
 		order: number;
 		svg: string;
+		unitsPerMeter?: number;
 		width: number;
 	}>;
 	graph: WayfindingGraphDocument;
@@ -406,6 +409,10 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 	project.defaults = wayfindingStudioProjectDefaults(project);
 
 	for (const floor of project.floors) {
+		if (floor.unitsPerMeter !== undefined && (!Number.isFinite(floor.unitsPerMeter) || floor.unitsPerMeter <= 0)) {
+			delete floor.unitsPerMeter;
+		}
+
 		if (floor.pedestrianSpaceSource !== 'mask' && floor.pedestrianSpaceSource !== 'polygons') {
 			floor.pedestrianSpaceSource = floor.elements.some((element): boolean => element.type === 'walkable')
 				? 'polygons'
@@ -1029,6 +1036,7 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 			elements: structuredClone(floor.elements),
 			height: floor.height,
 			id: floor.id,
+			unitsPerMeter: floor.unitsPerMeter,
 			name: floor.name,
 			order: floor.order,
 			svg: renderWayfindingFloorSvg(project, floor.id),

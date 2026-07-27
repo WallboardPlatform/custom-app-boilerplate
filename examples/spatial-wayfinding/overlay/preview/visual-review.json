@@ -1,85 +1,85 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "b0321247bce9d49b0c233bf5a98b961c6fc0a895ea0ab2608ef147c7dce1a485",
-	"reviewedAt": "2026-07-25T14:35:00.000Z",
-	"reviewer": "Codex visual QA",
+	"sourceHash": "9bf2d678f75b689a7800d12b53532fbfa01cb19f5ebf9d731982f804f93b5453",
+	"reviewedAt": "2026-07-27T09:31:16.948Z",
+	"reviewer": "Claude visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Published map package, visitor directory, destination details, routes, floor controls, and media match the approved runtime scope."
+			"notes": "Published .wbmap drives the visitor directory, floor and category filters, language selector, layer toggles, and 2D/3D switch; scope matches the approved runtime."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The Northline campus concept retains its authored map geometry, destination hierarchy, branding, and source-specific spatial composition."
+			"notes": "Northline campus geometry, destination hierarchy, directory numbering, and brand mark are preserved from the authored project rather than restyled."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The runtime reads as a purpose-built spatial product with map-first composition, restrained directory controls, and destination-specific details."
+			"notes": "Map-first composition with a restrained directory rail reads as a purpose-built spatial product, not a dashboard template."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary destination names, active route, floor label, and directory controls remain legible at both Full HD and compact signage sizes."
+			"notes": "Destination names on the extrusions and the directory rows stay legible at 1920x1080 and 1366x768; room-distance floors are met."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Light and dark presets preserve readable controls, route contrast, selected-location emphasis, and detail-panel hierarchy."
+			"notes": "Dark preset inverts the chrome with adequate contrast. The floor plate stays light by design because it is authored artwork, not a themed surface."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long translated destination names and descriptions stay bounded through wrapping, clamping, and the intentional directory scroll region."
+			"notes": "Directory rows clamp category and status text; the compact list scrolls with a deliberately clipped final row instead of overflowing."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "The map remains dominant while directory, filters, destination details, and route actions stay organized without overlap or clipped controls."
+			"notes": "Map holds the dominant area and controls stay bounded. The 2D idle state is intentionally sparse: fills are hidden until selection, leaving labels on the plate."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Brand, symbol, and photo assets render from the packaged artifact; theme colors and selection treatments remain coherent in both views."
+			"notes": "Brand mark, visitor-information symbol, and floor artwork all resolve from the packaged artifact with no missing-media fallback visible."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The spatial canvas, 2D and 3D representations, semantic map layers, and visitor directory are distinct from the repository's dashboard examples."
+			"notes": "The spatial canvas, dual 2D/3D presentation, and semantic map layers remain distinct from the repository dashboard and editorial examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD 3D runtime is nonblank, correctly framed, and shows the directory, route, selected destination, details, and packaged media."
+			"notes": "Full HD 3D idle view renders nonblank and correctly framed. No destination is selected, so no route or detail panel is expected here."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact runtime keeps the map usable and all controls bounded; the destination list scrolls intentionally without obscuring details."
+			"notes": "Compact 3D keeps the map usable; the directory scrolls with a partially visible final row as the intended scroll affordance."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Default scenario reproduces the complete visitor flow with map, route, destination selection, controls, and detail content."
+			"notes": "Matches the default scenario framing; only the origin-marker pulse phase differs between runs."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact scenario preserves responsive structure, readable controls, and correct selected-location emphasis without overlap."
+			"notes": "Compact scenario preserves the rail structure and readable controls with no overlap or clipped control."
 		},
 		{
 			"file": "scenario-dark-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Dark scenario maintains sufficient foreground, route, control, and selected-area contrast across the compact surface."
+			"notes": "Dark chrome keeps headings, directory rows, status text, and the active view toggle readable against the dark panel."
 		},
 		{
 			"file": "scenario-flat-map-1920x1080.png",
 			"status": "pass",
-			"notes": "Flat-map scenario hides 3D extrusion while retaining the background map, semantic selection, route, media, and destination details."
+			"notes": "Flat-map scenario hides extrusions and keeps labels, brand mark, symbol, and origin marker; byte-identical to the previously accepted reference."
 		}
 	],
 	"unresolvedFindings": []

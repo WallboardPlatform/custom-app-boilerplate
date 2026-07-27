@@ -301,6 +301,20 @@ body[data-workspace="runtime-preview"] .review {
 	border: 0;
 }
 
+/* The pointer readout reports 2D map pixels, which have no meaning in the orbiting 3D view. */
+.stage-shell.view-3d .cursor-position {
+	display: none;
+}
+
+/* Visitor preview approximates the installed kiosk, so authoring chrome must not appear in it. */
+body[data-workspace="runtime-preview"] .toolbar-group[data-toolbar="history"],
+body[data-workspace="runtime-preview"] .toolbar-group[data-toolbar="project"],
+body[data-workspace="runtime-preview"] .status,
+body[data-workspace="runtime-preview"] .cursor-position,
+body[data-workspace="runtime-preview"] .stage-footer {
+	display: none;
+}
+
 .controls,
 .review {
 	min-height: 0;
@@ -1317,6 +1331,7 @@ body[data-workspace="route-edit"] [data-workspace-panel="route-edit"] { display:
 	color: currentColor;
 }
 .studio-notice[data-kind="error"] { border-color: #b94034; background: #fbe7e4; color: #7f261f; }
+.studio-notice[data-kind="info"] { border-color: #1f6f5c; background: #e9f4f0; color: #14483c; }
 .studio-notice[hidden] { display: none; }
 
 .runtime-preview {

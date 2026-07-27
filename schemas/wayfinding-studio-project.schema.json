@@ -231,6 +231,7 @@
 				"width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 },
 				"backgroundAssetId": { "$ref": "#/$defs/nonEmptyString" },
 				"camera3d": { "$ref": "#/$defs/camera3d" },
+				"unitsPerMeter": { "type": "number", "exclusiveMinimum": 0 },
 				"pedestrianSpaceSource": { "enum": ["mask", "polygons"] },
 				"walkableMask": { "$ref": "wayfinding-walkable-mask.schema.json" },
 				"elements": { "type": "array", "items": { "oneOf": [
