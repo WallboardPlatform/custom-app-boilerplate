@@ -1,4 +1,23 @@
-# Archetype standards
+# Archetype standards and the mechanism registry
+
+## Deciding whether something becomes an example
+
+`examples/mechanisms.json` is a closed vocabulary of what an example may claim to teach, and
+`example.json` declares each example's claims. An example must own at least one mechanism no
+other example owns; `validate-example-mechanisms` enforces it.
+
+Three outcomes, not two, when a delivered app arrives:
+
+| Outcome | When |
+|---------|------|
+| **Add** | It teaches a mechanism the vocabulary lacks, or that no example claims. |
+| **Replace** | It teaches a covered mechanism better. Point `referenceExample` at it; the incumbent keeps its slot for whatever else it owns. |
+| **Harvest** | Its technique is worth taking and its content is not. Most delivered apps land here — they carry customer data and predate the current gates. |
+
+Mechanisms with no example are reported, not failed. Naming a gap before filling it is the point:
+the report is the portfolio backlog.
+
+
 
 Recurring interactive elements have a conformance floor. The floor constrains **behaviour and capability, never appearance** — an app may render an archetype however its design calls for, and must still pass.
 

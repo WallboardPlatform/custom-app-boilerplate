@@ -1,7 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { findOverlaps, readClaims, readVocabulary, validateClaims } from './example-mechanisms.mts';
+import {
+	findOverlaps,
+	readClaims,
+	readVocabulary,
+	validateClaims,
+	validateReferenceTeachers
+} from './example-mechanisms.mts';
 import type { OverlapFinding } from './example-mechanisms.mts';
 
 const rootDirectory: string = process.cwd();
@@ -12,9 +18,14 @@ interface MechanismPolicy {
 	acknowledgedOverlaps: Record<string, string>;
 }
 
-const vocabulary = readVocabulary(path.join(examplesDirectory, 'mechanisms.json'));
+const registryPath: string = path.join(examplesDirectory, 'mechanisms.json');
+const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as { referenceExample?: Record<string, string> };
+const vocabulary = readVocabulary(registryPath);
 const claims = readClaims(examplesDirectory);
-const problems: string[] = validateClaims(claims, vocabulary);
+const problems: string[] = [
+	...validateClaims(claims, vocabulary),
+	...validateReferenceTeachers(registry.referenceExample ?? {}, claims, vocabulary)
+];
 
 if (problems.length > 0) {
 	throw new Error(`Example mechanisms are not declared correctly:\n${problems.join('\n')}`);
@@ -52,8 +63,15 @@ if (stale.length > 0) {
 }
 
 const distinct = new Set([...claims.values()].flat());
+const unclaimed: string[] = [...vocabulary].filter((mechanism: string): boolean => !distinct.has(mechanism));
 
 process.stdout.write(
 	`Example mechanisms: ${claims.size} examples, ${distinct.size} of ${vocabulary.size} vocabulary entries claimed, `
 	+ `${overlaps.length} acknowledged overlap(s).\n`
 );
+
+// Unclaimed entries are the portfolio backlog: mechanisms the framework names and no example
+// demonstrates. Reported rather than failed, because naming a gap before filling it is the point.
+if (unclaimed.length > 0) {
+	process.stdout.write(`Mechanisms with no example yet: ${unclaimed.join(', ')}.\n`);
+}
