@@ -17,6 +17,10 @@ export interface OnScreenKeyboardProps {
 	borderColor?: string;
 	/** Blocks every action, not just the appearance of the keys. */
 	disabled?: boolean;
+	/** Sits the keyboard inside the layout instead of floating it over the app. */
+	embedded?: boolean;
+	/** Fill behind each key; transparent by default so the panel colour shows through. */
+	keyColor?: string;
 	label?: string;
 	labels?: Partial<OnScreenKeyboardLabels>;
 	layouts?: readonly KeyboardLayout[];
@@ -24,8 +28,13 @@ export interface OnScreenKeyboardProps {
 	onClose: () => void;
 	onInput: (value: string) => void;
 	onSubmit?: () => void;
+	/** Where the keyboard is anchored, exposed for styling rather than behaviour. */
+	placement?: 'directory' | 'page';
 	submitLabel?: string;
+	submitTextColor?: string;
 	textColor?: string;
+	/** Percentage of the base key size, clamped to a legible range. */
+	textScale?: number;
 	value: string;
 }
 
@@ -63,11 +72,17 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 	const layouts = createMemo((): readonly KeyboardLayout[] => props.layouts?.length ? props.layouts : [ENGLISH_KEYBOARD_LAYOUT]);
 	const layout = createMemo((): KeyboardLayout => layouts()[Math.min(layoutIndex(), layouts().length - 1)]);
 	const labels = createMemo((): OnScreenKeyboardLabels => ({ ...DEFAULT_LABELS, ...props.labels }));
+	// Clamped rather than trusted: a scale outside this range makes keys either unreadable or too
+	// large to fit the panel, and the setting comes from an editor field.
+	const textScale = createMemo((): number => Math.min(150, Math.max(80, props.textScale ?? 100)));
 	const rootStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-keyboard-accent': props.accentColor ?? '#42d6b5',
 		'--wb-keyboard-background': props.backgroundColor ?? '#121918',
 		'--wb-keyboard-border': props.borderColor ?? '#34413e',
-		'--wb-keyboard-text': props.textColor ?? '#f5f2e9'
+		'--wb-keyboard-text': props.textColor ?? '#f5f2e9',
+		'--wb-keyboard-key': props.keyColor ?? 'transparent',
+		'--wb-keyboard-submit-text': props.submitTextColor ?? '#ffffff',
+		'--wb-keyboard-font-size': `${16 * (textScale() / 100)}px`
 	}));
 
 	const enterKey = (key: string): void => {
@@ -87,7 +102,14 @@ export const OnScreenKeyboard = (props: OnScreenKeyboardProps): JSX.Element => {
 	};
 
 	return (
-		<div class={style.overlay} role="dialog" aria-label={props.label ?? 'On-screen keyboard'} style={rootStyle()}>
+		<div
+			class={`${style.overlay} ${props.embedded ? style.embedded : ''} ${props.placement === 'directory' ? style.directory : ''}`}
+			role="dialog"
+			aria-label={props.label ?? 'On-screen keyboard'}
+			data-embedded={Boolean(props.embedded)}
+			data-placement={props.placement ?? 'page'}
+			style={rootStyle()}
+		>
 			<div class={style.panel}>
 				<header>
 					<strong>{props.label ?? 'On-screen keyboard'}</strong>

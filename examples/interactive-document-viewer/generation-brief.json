@@ -1,0 +1,622 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "Create a responsive interactive-kiosk document directory and PDF viewer backed by a Wallboard internal TABLE datasource.",
+		"audience": "Residents and visitors using portrait or landscape municipal self-service kiosks at close touch distance.",
+		"primaryGoal": "Help visitors browse categories, search records, inspect document metadata, and read PDFs with accessible touch controls."
+	},
+	"assumptions": [
+		"Datasource field mapping is configured with text properties because the current custom-app editor cannot populate a select control dynamically from arbitrary table columns.",
+		"The configured category column may be a dropdown, string, or text column and is normalized to a display string.",
+		"The optional schedule mapping accepts only a Wallboard scheduling-type column. Null or invalid schedules fail open, while configured start and end date-times control visibility in kiosk-local time.",
+		"PDF values use Wallboard filePicker objects containing id, name, and location; rows without a usable PDF remain visible but disabled.",
+		"Accessibility mode increases touch targets and lowers primary controls without replacing configured colors, borders, or branding, but deployment owners remain responsible for complete ADA review, physical mounting, and assistive-technology testing.",
+		"The supplied civic screenshot leads visual hierarchy and palette while fictional preview content replaces customer data.",
+		"Idle screensaver state is placement-local and dismisses on pointer, touch, or keyboard activity.",
+		"The non-overlay touch keyboard remains page-docked below the workspace in portrait and directory-docked on every nonportrait surface so opening it does not resize the PDF reader."
+	],
+	"app": { "mode": "new", "name": "Interactive Document Viewer", "version": 1 },
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The same kiosk app must reflow across full-screen portrait and landscape installations plus compact editor previews."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Landscape kiosk with directory and PDF workspace visible together.",
+			"minimumContentCoverage": { "width": 94, "height": 92 }
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Portrait kiosk with stacked directory and document reader.",
+			"minimumContentCoverage": { "width": 94, "height": 94 }
+		},
+		{
+			"id": "compact",
+			"width": 800,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact placement with a condensed directory and reader controls.",
+			"minimumContentCoverage": { "width": 94, "height": 90 }
+		},
+		{
+			"id": "square",
+			"width": 768,
+			"height": 768,
+			"role": "fallback",
+			"purpose": "Square preview and embedded kiosk zone.",
+			"minimumContentCoverage": { "width": 93, "height": 91 }
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [{ "property": "documentsData", "source": "existing", "contract": "EXISTING", "access": "read" }]
+	},
+	"ownership": [
+		{
+			"id": "document-records",
+			"area": "content",
+			"owner": "datasource",
+			"targets": ["documentsData"],
+			"rationale": "The selected editable internal table owns document records, categories, metadata, filePicker values, dates, and schedules."
+		},
+		{
+			"id": "column-mapping",
+			"area": "content",
+			"owner": "setting",
+			"targets": [
+				"titleColumn",
+				"pdfColumn",
+				"categoryColumn",
+				"metadataColumn1",
+				"metadataColumn2",
+				"metadataColumn3",
+				"metadataColumn4",
+				"metadataColumn5",
+				"metadataColumn6",
+				"scheduleColumn",
+				"scheduleRetentionDays"
+			],
+			"rationale": "The placement owner maps arbitrary table columns without rebuilding the app."
+		},
+		{
+			"id": "kiosk-branding",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": [
+				"showEyebrow",
+				"eyebrowText",
+				"showAppTitle",
+				"appTitle",
+				"logoFile",
+				"showDirectoryIcon",
+				"directoryIconFile",
+				"backgroundMode",
+				"backgroundImage",
+				"backgroundColor",
+				"backgroundColorTwo",
+				"panelColor",
+				"buttonColor",
+				"buttonTextColor",
+				"listColor",
+				"primaryTextColor",
+				"mutedTextColor",
+				"keyboardColor",
+				"keyboardKeyColor"
+			],
+			"rationale": "Brand identity, optional header copy, directory iconography, and semantic surfaces remain editable per placement."
+		},
+		{
+			"id": "clock-and-reader",
+			"area": "behavior",
+			"owner": "setting",
+			"targets": [
+				"showClock",
+				"timeFormat",
+				"dateFormat",
+				"fit",
+				"pageMode",
+				"showControls",
+				"portraitReaderFirst",
+				"portraitReaderAfterSelection",
+				"renderTextLayer",
+				"interactiveAnnotations",
+				"renderForms",
+				"zoomMinimum",
+				"zoomMaximum",
+				"zoomStep",
+				"keyboardEnabled",
+				"keyboardTextScale",
+				"showAccessibilityButton",
+				"searchPlaceholder"
+			],
+			"rationale": "Operators choose kiosk clock, PDF behavior, portrait flow, search, and accessibility controls."
+		},
+		{
+			"id": "idle-experience",
+			"area": "behavior",
+			"owner": "setting",
+			"targets": [
+				"screensaverEnabled",
+				"idleSeconds",
+				"screensaverImage",
+				"screensaverOverlayColor",
+				"screensaverLogoFile",
+				"screensaverMessage",
+				"screensaverSubtext"
+			],
+			"rationale": "Each placement can opt into a branded idle prompt and choose its timeout."
+		},
+		{
+			"id": "reader-session",
+			"area": "state",
+			"owner": "interaction",
+			"targets": [
+				"selected-category",
+				"selected-document",
+				"search-query",
+				"accessibility-mode",
+				"current-page",
+				"zoom",
+				"screensaver-visible"
+			],
+			"rationale": "Visitor actions remain instance-local and reset after idle dismissal or remount."
+		},
+		{
+			"id": "pdf-runtime",
+			"area": "behavior",
+			"owner": "locked",
+			"targets": ["pdfjs-version", "lazy-rendering", "source-normalization", "resource-cleanup"],
+			"rationale": "PDF compatibility and lifecycle safety are code-owned invariants."
+		}
+	],
+	"experience": {
+		"mode": "interactive",
+		"views": [
+			{ "id": "directory", "purpose": "Browse category buttons and document rows with mapped metadata." },
+			{ "id": "reader", "purpose": "Render the selected PDF with large kiosk navigation and zoom controls." },
+			{ "id": "search", "purpose": "Filter document records through physical or app-owned touch keyboard entry." },
+			{ "id": "screensaver", "purpose": "Show an idle full-screen invitation that dismisses on interaction." }
+		],
+		"inputs": [
+			{
+				"id": "touch-directory",
+				"type": "touch",
+				"action": "Select a category, document, page, zoom level, accessibility mode, or screensaver dismissal."
+			},
+			{
+				"id": "keyboard-search",
+				"type": "keyboard",
+				"action": "Enter and clear a document search using the app-owned or physical keyboard."
+			},
+			{
+				"id": "pointer-controls",
+				"type": "pointer",
+				"action": "Use every touch action with a mouse in editor and desktop preview."
+			}
+		],
+		"session": {
+			"reset": "timeout",
+			"timeoutSeconds": 120,
+			"expectation": "Idle timeout shows the screensaver; dismissal clears search, returns to the first available category, and restores the configured portrait directory-first state."
+		}
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "reflow",
+		"letterbox": "background",
+		"rationale": "Directory and reader regions reflow while PDF pages retain their native proportions; the portrait keyboard consumes page space below the workspace, while the nonportrait keyboard consumes only directory-list space and leaves the reader geometry unchanged."
+	},
+	"motion": {
+		"default": "off",
+		"transition": "none",
+		"techniques": [],
+		"rationale": "Direct state changes reduce vestibular load and keep kiosk feedback immediate."
+	},
+	"media": [
+		{
+			"id": "brand-logo",
+			"type": "image",
+			"source": "setting",
+			"fit": "contain",
+			"properties": ["logoFile"],
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Render the packaged government icon.",
+			"rationale": "Customers can replace the civic header mark without rebuilding the app."
+		},
+		{
+			"id": "directory-icon",
+			"type": "image",
+			"source": "setting",
+			"fit": "contain",
+			"properties": ["directoryIconFile"],
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Render the packaged PDF icon when document icons are enabled.",
+			"rationale": "Customers can hide or replace the icon treatment used on document rows."
+		},
+		{
+			"id": "screensaver-image",
+			"type": "image",
+			"source": "setting",
+			"fit": "cover",
+			"properties": ["screensaverImage"],
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Use the configured gradient and touch invitation.",
+			"rationale": "An optional branded image gives the idle experience a deliberate full-screen treatment."
+		},
+		{
+			"id": "screensaver-logo",
+			"type": "image",
+			"source": "setting",
+			"fit": "contain",
+			"properties": ["screensaverLogoFile"],
+			"cache": "platform",
+			"preview": "platform-mock",
+			"fallback": "Omit the screensaver logo while retaining the touch prompt.",
+			"rationale": "The idle experience can use a top-centered brand mark with responsive edge spacing independently from the header logo."
+		}
+	],
+	"branding": {
+		"source": "reference",
+		"editable": true,
+		"provenance": "User-supplied civic kiosk screenshot with navy, white, restrained blue-gray, and large touch controls.",
+		"fallback": "Use the calm white-to-blue-white gradient and civic navy semantic palette."
+	},
+	"presentation": {
+		"themes": ["custom"],
+		"density": "balanced",
+		"viewingDistance": "near",
+		"textRoles": [
+			{
+				"role": "primary",
+				"selectors": ["[data-text-role='app-title']", "[data-text-role='document-title']"]
+			},
+			{
+				"role": "secondary",
+				"selectors": [
+					"[data-text-role='header-eyebrow']",
+					"[data-text-role='document-metadata']",
+					"[data-text-role='category-label']",
+					"[data-text-role='screensaver-subtext']"
+				]
+			},
+			{ "role": "metadata", "selectors": ["[data-text-role='clock-date']", "[data-text-role='page-readout']"] }
+		]
+	},
+	"cadence": { "mode": "static" },
+	"settings": [
+		{ "property": "titleColumn", "purpose": "Names the document-title column." },
+		{ "property": "pdfColumn", "purpose": "Names the PDF filePicker column." },
+		{
+			"property": "categoryColumn",
+			"purpose": "Names the dropdown, string, or text column used to create category buttons."
+		},
+		{ "property": "metadataColumn1", "purpose": "Maps optional row metadata field one." },
+		{ "property": "metadataColumn2", "purpose": "Maps optional row metadata field two." },
+		{ "property": "metadataColumn3", "purpose": "Maps optional row metadata field three." },
+		{ "property": "metadataColumn4", "purpose": "Maps optional row metadata field four." },
+		{ "property": "metadataColumn5", "purpose": "Maps optional row metadata field five." },
+		{ "property": "metadataColumn6", "purpose": "Maps optional row metadata field six." },
+		{
+			"property": "scheduleColumn",
+			"purpose": "Names the optional Wallboard scheduling-type column; an empty value disables schedule filtering."
+		},
+		{
+			"property": "scheduleRetentionDays",
+			"purpose": "Keeps expired documents visible for a configured number of days; zero removes them immediately."
+		},
+		{ "property": "showEyebrow", "purpose": "Shows or hides the optional header eyebrow." },
+		{ "property": "eyebrowText", "purpose": "Sets the optional header eyebrow text." },
+		{ "property": "showAppTitle", "purpose": "Shows or hides the app title beside the logo." },
+		{ "property": "appTitle", "purpose": "Sets the kiosk header title." },
+		{ "property": "logoFile", "purpose": "Selects a replacement header logo." },
+		{ "property": "showDirectoryIcon", "purpose": "Shows or hides the icon area on document rows." },
+		{ "property": "directoryIconFile", "purpose": "Selects an optional replacement document-row icon." },
+		{ "property": "showClock", "purpose": "Shows or hides the live time and date." },
+		{ "property": "timeFormat", "purpose": "Selects 12-hour or 24-hour time." },
+		{ "property": "dateFormat", "purpose": "Selects the displayed date pattern." },
+		{ "property": "fit", "purpose": "Selects PDF fitting behavior." },
+		{ "property": "pageMode", "purpose": "Selects continuous or single-page PDF rendering." },
+		{ "property": "showControls", "purpose": "Shows page and zoom controls." },
+		{ "property": "portraitReaderFirst", "purpose": "Places the reader above the directory in portrait." },
+		{
+			"property": "portraitReaderAfterSelection",
+			"purpose": "Keeps portrait kiosks directory-first until a document is selected."
+		},
+		{ "property": "renderTextLayer", "purpose": "Enables selectable PDF text." },
+		{ "property": "interactiveAnnotations", "purpose": "Enables PDF links and annotations." },
+		{ "property": "renderForms", "purpose": "Enables interactive PDF form fields." },
+		{ "property": "zoomMinimum", "purpose": "Sets the minimum zoom." },
+		{ "property": "zoomMaximum", "purpose": "Sets the maximum zoom." },
+		{ "property": "zoomStep", "purpose": "Sets each zoom increment." },
+		{ "property": "keyboardEnabled", "purpose": "Shows or hides the app-owned touch keyboard." },
+		{
+			"property": "keyboardTextScale",
+			"purpose": "Scales responsive on-screen keyboard label text from 80% to 150%, with 100% preserving automatic sizing.",
+			"effect": "keyboard-text-scale"
+		},
+		{ "property": "showAccessibilityButton", "purpose": "Shows or hides the accessible reach control." },
+		{ "property": "searchPlaceholder", "purpose": "Sets the document-search prompt." },
+		{ "property": "backgroundMode", "purpose": "Chooses gradient, solid, or image background." },
+		{ "property": "backgroundImage", "purpose": "Selects the image background." },
+		{ "property": "backgroundColor", "purpose": "Sets the base or solid background color." },
+		{ "property": "backgroundColorTwo", "purpose": "Sets the gradient endpoint." },
+		{ "property": "panelColor", "purpose": "Sets header and directory panels." },
+		{
+			"property": "buttonColor",
+			"purpose": "Sets category and primary control surfaces, including the keyboard Search submit button.",
+			"effect": "button-color"
+		},
+		{
+			"property": "buttonTextColor",
+			"purpose": "Sets text on primary controls, including the keyboard Search submit label."
+		},
+		{ "property": "listColor", "purpose": "Sets document-row surfaces." },
+		{ "property": "primaryTextColor", "purpose": "Sets primary text." },
+		{ "property": "mutedTextColor", "purpose": "Sets secondary text." },
+		{
+			"property": "keyboardColor",
+			"purpose": "Sets the keyboard panel, which defaults to clean white for visual continuity with the directory."
+		},
+		{ "property": "keyboardKeyColor", "purpose": "Sets individual keyboard keys." },
+		{ "property": "screensaverEnabled", "purpose": "Enables the idle screensaver." },
+		{
+			"property": "idleSeconds",
+			"purpose": "Sets idle time before the screensaver appears.",
+			"effect": "idle-timeout"
+		},
+		{ "property": "screensaverImage", "purpose": "Selects an optional full-screen idle image." },
+		{
+			"property": "screensaverOverlayColor",
+			"purpose": "Sets the color of the fixed-70%-opacity overlay above the screensaver background."
+		},
+		{
+			"property": "screensaverLogoFile",
+			"purpose": "Selects an optional top-centered screensaver logo independently from the header logo."
+		},
+		{ "property": "screensaverMessage", "purpose": "Sets the idle touch invitation." },
+		{
+			"property": "screensaverSubtext",
+			"purpose": "Sets the secondary instruction below the screensaver touch invitation."
+		}
+	],
+	"dynamicText": [
+		{
+			"id": "header-eyebrow",
+			"role": "secondary",
+			"source": { "type": "setting", "properties": ["eyebrowText"] },
+			"selectors": ["[data-text-role='header-eyebrow']"],
+			"strategy": "ellipsis",
+			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
+			"fallback": "Hide the optional eyebrow or ellipsize it only when the available header width is exhausted.",
+			"rationale": "The optional kiosk eyebrow should stay compact and legible without displacing the logo or clock.",
+			"evidenceScenario": "custom-branding"
+		},
+		{
+			"id": "header-title",
+			"role": "primary",
+			"source": { "type": "setting", "properties": ["appTitle"] },
+			"selectors": ["[data-text-role='app-title']"],
+			"strategy": "ellipsis",
+			"limits": { "minimumFontSize": 22, "maximumLines": 1 },
+			"fallback": "Hide the optional title or ellipsize it only when the available header width is exhausted.",
+			"rationale": "The optional kiosk title must stay legible without displacing the logo or clock.",
+			"evidenceScenario": "custom-branding"
+		},
+		{
+			"id": "document-titles",
+			"role": "primary",
+			"source": { "type": "datasource", "properties": ["documentsData"] },
+			"selectors": ["[data-text-role='document-title']"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Wrap to two lines and preserve complete essential identity in the selected-document panel.",
+			"rationale": "Visitors must distinguish similarly named records.",
+			"evidenceScenario": "portrait-selected"
+		},
+		{
+			"id": "document-metadata",
+			"role": "secondary",
+			"source": { "type": "datasource", "properties": ["documentsData"] },
+			"selectors": ["[data-text-role='document-metadata']"],
+			"strategy": "ellipsis",
+			"limits": { "maximumLines": 1 },
+			"fallback": "Hide the lowest-priority mapped metadata fields first on constrained surfaces.",
+			"rationale": "Title and touch target size take precedence over optional metadata.",
+			"evidenceScenario": "maximum-content"
+		},
+		{
+			"id": "category-labels",
+			"role": "secondary",
+			"source": { "type": "datasource", "properties": ["documentsData"] },
+			"selectors": ["[data-text-role='category-label']"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 5 },
+			"fallback": "Wrap category labels into additional visible rows; use overflow only when the complete set cannot fit at a usable touch size.",
+			"rationale": "Visitors should see the available document categories without having to discover a hidden scroll region.",
+			"evidenceScenario": "long-labels"
+		},
+		{
+			"id": "screensaver-subtext",
+			"role": "secondary",
+			"source": { "type": "setting", "properties": ["screensaverSubtext"] },
+			"selectors": ["[data-text-role='screensaver-subtext']"],
+			"strategy": "wrap",
+			"limits": { "maximumLines": 2 },
+			"fallback": "Wrap onto two centered lines while keeping the primary touch invitation dominant.",
+			"rationale": "The secondary start instruction must remain readable across kiosk orientations.",
+			"evidenceScenario": "screensaver-branding"
+		}
+	],
+	"states": [
+		{
+			"scenario": "landscape",
+			"expectation": "The category rail, directory, active PDF, clock, and touch controls are visible together."
+		},
+		{
+			"scenario": "landscape-keyboard",
+			"expectation": "The touch keyboard docks entirely inside the document directory, retains usable list space, and leaves the landscape PDF reader bounds unchanged. Its transparent wrapper, borderless white panel, rounded controls, evenly centered key rows, uppercase key labels, footer-level Close action, apparent directory boundary, and solid Search submit match the portrait treatment and surrounding UI."
+		},
+		{
+			"scenario": "portrait",
+			"expectation": "The configured directory-first portrait state fills the workspace until a visitor selects a document."
+		},
+		{
+			"scenario": "portrait-selected",
+			"expectation": "After selection, the portrait reader appears above the still-visible directory and all datasource categories remain discoverable without horizontal scrolling."
+		},
+		{
+			"scenario": "custom-branding",
+			"expectation": "A custom header logo and directory icon replace both defaults while the optional eyebrow and app title render independently."
+		},
+		{
+			"scenario": "keyboard-inline",
+			"expectation": "In portrait, the touch keyboard remains full-width and page-docked below the workspace without a dimming overlay, leaving the document directory visible. Its borderless white panel, rounded controls, evenly centered key rows, uppercase key labels, footer-level Close action, apparent directory boundary, and solid Search submit match the landscape treatment and surrounding UI."
+		},
+		{
+			"scenario": "keyboard-scale",
+			"expectation": "A 120% keyboard-text override visibly enlarges labels while retaining the responsive layout and stable kiosk-sized key targets; the setting supports 80% through 150% and defaults to 100%."
+		},
+		{
+			"scenario": "compact",
+			"expectation": "The directory and reader condense side by side while search and core reader controls remain available."
+		},
+		{ "scenario": "square", "expectation": "The primary browsing and reading actions fit without clipping." },
+		{
+			"scenario": "empty",
+			"expectation": "An explicit datasource-empty message replaces the directory and PDF error noise."
+		},
+		{
+			"scenario": "invalid-rows",
+			"expectation": "Rows with missing PDFs remain readable and disabled while valid rows continue to work."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long categories, titles, and mapped metadata remain contained and readable."
+		},
+		{
+			"scenario": "maximum-content",
+			"expectation": "A large datasource remains stable through directory scrolling and filtering."
+		},
+		{
+			"scenario": "screensaver",
+			"expectation": "The idle view fills the screen and clearly presents the configured touch invitation and secondary start instruction."
+		},
+		{
+			"scenario": "screensaver-branding",
+			"expectation": "A configurable overlay color remains readable above the background while an independent logo is centered above the editable screensaver message and subtext with generous margins."
+		},
+		{
+			"scenario": "accessibility",
+			"expectation": "Accessibility mode increases target size and moves navigation lower without replacing configured colors, borders, or branding."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "New or edited rows refresh categories and documents without remounting the app."
+		}
+	],
+	"behaviors": [
+		{
+			"id": "category-filter",
+			"expectation": "Category buttons derive from the configured datasource column and filter the document directory.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "document-selection",
+			"expectation": "Selecting any row loads that row's exact bound PDF and preserves mapped metadata, including the first portrait selection from All documents and the first selection after returning to All documents without showing a stale first-row PDF.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "touch-search",
+			"expectation": "Tapping the directory search field opens the non-overlay touch keyboard in its responsive placement without adding a blue focus outline, while physical input and on-screen keys filter titles and mapped metadata. The keyboard omits language, Shift, visible heading, and duplicate-value controls; uppercase key labels produce first-letter-capitalized words, and Search uses the configured primary and button-text colors.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "responsive-keyboard-placement",
+			"expectation": "The keyboard is page-docked below the workspace in portrait and directory-docked on nonportrait surfaces so opening it does not resize the PDF reader; both placements share a transparent wrapper, borderless white panel, consistent rounding, an apparent top separator, evenly centered key rows, uppercase labels, no reserved header space, and a footer-level Close action.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "schedule-visibility",
+			"expectation": "Rows without schedules remain visible; future rows appear at their configured local start time; expired rows disappear immediately or after the configured retention days; only scheduling-type columns are accepted.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "keyboard-text-scale",
+			"expectation": "The 80% to 150% text-scale override enlarges keyboard labels without materially changing key target dimensions, while 100% preserves automatic sizing.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "reader-controls",
+			"expectation": "Large page and zoom controls update the selected PDF within configured bounds; portrait preserves equal zoom-control heights and the visible separator before the zoom group.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "accessibility-mode",
+			"expectation": "When the operator exposes the control, the visitor can toggle larger lower-reach controls for the current session without changing the configured theme.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "idle-screensaver",
+			"expectation": "Configured inactivity shows the editable full-screen message and subtext with the selected overlay color and optional independent top-centered logo with responsive edge spacing, and interaction resets it cleanly.",
+			"evidence": { "testFile": "preview/behavior.spec.ts" }
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource changes recalculate categories and records without leaving a stale selected item.",
+			"evidence": { "scenario": "live-datasource-update" }
+		}
+	],
+	"assets": [
+		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
+		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
+		{
+			"id": "preview-pdf-one",
+			"source": "packaged",
+			"path": "preview/pdf-assets/northline-operations-handbook.pdf",
+			"required": true
+		},
+		{
+			"id": "preview-pdf-two",
+			"source": "packaged",
+			"path": "preview/pdf-assets/northline-shift-brief.pdf",
+			"required": true
+		}
+	],
+	"visualDirection": {
+		"source": "reference-led",
+		"summary": "A calm civic kiosk workspace with Prosper-inspired navy hierarchy, bright white surfaces, blue-white ambient depth, strong touch targets, and a clear clock.",
+		"references": ["Screenshot 2026-07-21 at 12.52.59 AM.png"],
+		"signatureChoices": [
+			"A navy header with replaceable logo and oversized clock anchors the experience.",
+			"Category pills and white directory cards use the screenshot's civic rhythm while the PDF reader occupies the largest remaining region.",
+			"An optional lower-reach accessibility control changes scale and control placement without overriding the configured brand palette."
+		],
+		"avoid": [
+			"Generic admin dashboard cards",
+			"Tiny browser toolbar controls",
+			"Decorative motion",
+			"Customer-specific preview records or logos"
+		]
+	},
+	"visualReview": {
+		"intent": "A trustworthy municipal records kiosk that feels modern, touchable, and calm while keeping the active PDF visually dominant.",
+		"focus": [
+			"Verify portrait and landscape compositions preserve category, directory, reader, search, and controls without crowding.",
+			"Verify every touch target is at least 48 CSS pixels and accessibility mode meaningfully enlarges and lowers primary controls without changing configured colors or borders.",
+			"Verify the white-to-blue-white gradient, navy hierarchy, thin borders, and row proportions retain the screenshot's restrained civic character.",
+			"Verify long categories and six mapped metadata values do not hide document identity or PDF navigation.",
+			"Verify the portrait and landscape keyboards share a borderless white surface, UI-matched rounding, an apparent content separator, evenly centered key rows, uppercase labels, no reserved header space, and no language, Shift, visible heading, or duplicate-search controls.",
+			"Verify the idle screensaver is inviting, clearly dismissible, supports editable primary and secondary instructions, an independent top-centered logo with responsive edge spacing, and configurable overlay color without exposing private datasource content."
+		]
+	}
+}

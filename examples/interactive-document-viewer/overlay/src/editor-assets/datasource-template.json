@@ -1,0 +1,80 @@
+{
+	"Documents": {
+		"header": {
+			"Name": "string",
+			"Date": "date",
+			"PDF": "filePicker",
+			"Category": "dropdown",
+			"Scheduling": "scheduling"
+		},
+		"rows": [
+			{
+				"Name": "Meeting Agenda: Riverway Transit Workshop",
+				"Date": "2027-02-11",
+				"PDF": {
+					"id": "sample-pdf-agenda",
+					"name": "riverway-transit-workshop-agenda.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "City Council & Meetings",
+				"Scheduling": null
+			},
+			{
+				"Name": "Meeting Minutes: Community Services Session",
+				"Date": "2027-02-18",
+				"PDF": {
+					"id": "sample-pdf-minutes",
+					"name": "community-services-session-minutes.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "City Council & Meetings",
+				"Scheduling": null
+			},
+			{
+				"Name": "Public Notice: Harbor Avenue Lane Closure",
+				"Date": "2027-03-04",
+				"PDF": {
+					"id": "sample-pdf-notice",
+					"name": "harbor-avenue-lane-closure-notice.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "Public Notices",
+				"Scheduling": null
+			},
+			{
+				"Name": "Budget Report: Fiscal Year 2027 Proposal",
+				"Date": "2027-03-19",
+				"PDF": {
+					"id": "sample-pdf-budget",
+					"name": "fiscal-year-2027-budget-proposal.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "Budgets & Finance",
+				"Scheduling": null
+			},
+			{
+				"Name": "Master Plan: Greenway Access Study",
+				"Date": "2027-04-08",
+				"PDF": {
+					"id": "sample-pdf-plan",
+					"name": "greenway-access-study.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "Plans & Projects",
+				"Scheduling": null
+			},
+			{
+				"Name": "Permit Guide: Residential Renovations",
+				"Date": "2027-04-22",
+				"PDF": {
+					"id": "sample-pdf-permit",
+					"name": "residential-renovation-permit-guide.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "Building & Permits",
+				"Scheduling": null
+			}
+		],
+		"connectors": {}
+	}
+}

@@ -1,0 +1,40 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "documentsData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "EXISTING",
+		"structureType": "TABLE",
+		"table": "Documents",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Document Viewer",
+		"quickEditEligible": false
+	},
+	"columns": [
+		{ "name": "Name", "type": "string", "required": true },
+		{ "name": "Date", "type": "date", "required": false },
+		{ "name": "PDF", "type": "filePicker", "required": false },
+		{ "name": "Category", "type": "dropdown", "required": true },
+		{ "name": "Scheduling", "type": "scheduling", "required": false }
+	],
+	"rationale": "The app binds the customer's existing Documents TABLE and maps its columns at placement time. PDF values remain row-owned Wallboard filePicker references rather than a separate File System binding.",
+	"acceptedValueShapes": [
+		"native datasource object containing the Documents table",
+		"selected Documents table object containing rows",
+		"processed document row array",
+		"JSON string of any documented shape"
+	],
+	"behavior": {
+		"unbound": "render synthetic representative documents in local preview only",
+		"boundEmpty": "render the configured empty state without substituting sample records",
+		"invalidRows": "retain readable rows with missing PDF values and disable their document-open action",
+		"fieldMapping": "read title, PDF, category, up to six optional metadata values, and an optional scheduling-type column from configured column names",
+		"assetLookup": "preserve each PDF filePicker id, name, and location and cache the selected location through the platform before rendering",
+		"filtering": "derive category buttons from schedule-eligible rows, retain unscheduled rows, hide rows before their local schedule start or after their end plus configured retention days, and search title, category, PDF name, and mapped metadata"
+	}
+}
