@@ -509,16 +509,31 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			const canvasContext: CanvasRenderingContext2D | null = canvas.getContext('2d');
 
 			/**
-			 * Broken images are collected before the visibility filter, not inside it.
+			 * A broken image counts as a defect only when the widget leaves it on screen.
 			 *
-			 * An image that fails to load has no intrinsic size, so unless the layout gives it one it
-			 * collapses to a 0x0 box and the visibility filter skips it — meaning the check could never
-			 * fire on the breakage it exists to catch. It only ever fired on images that were still
-			 * loading but already had a laid-out box, which is a race rather than a defect.
+			 * This deliberately does not reuse the general visibility filter. That filter also rejects
+			 * zero-size elements, and an image that fails to load has no intrinsic size, so it collapses
+			 * to a 0x0 box and was always skipped — the check could never fire on the breakage it exists
+			 * to catch, and only ever fired on images that were still loading but already had a laid-out
+			 * box, which is a race rather than a defect.
+			 *
+			 * What does matter is whether the widget handled the failure. Removing the image from the
+			 * DOM or hiding it behind a designed fallback is correct behaviour and must stay quiet;
+			 * leaving a broken image rendered is the defect.
 			 */
 			const collectBrokenImages = (): string[] => {
 				return Array.from(root.querySelectorAll('img'))
-					.filter((image: HTMLImageElement): boolean => image.complete && image.naturalWidth === 0)
+					.filter((image: HTMLImageElement): boolean => {
+						if (!image.complete || image.naturalWidth > 0) {
+							return false;
+						}
+
+						const imageStyle: CSSStyleDeclaration = window.getComputedStyle(image);
+
+						return imageStyle.display !== 'none'
+							&& imageStyle.visibility !== 'hidden'
+							&& Number(imageStyle.opacity) !== 0;
+					})
 					.map((image: HTMLImageElement): string => describeElement(image));
 			};
 
