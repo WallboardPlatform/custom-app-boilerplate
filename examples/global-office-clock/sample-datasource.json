@@ -1,0 +1,18 @@
+{
+	"Offices": {
+		"header": {
+			"name": "string",
+			"region": "string",
+			"timeZone": "string",
+			"opensAtHour": "number",
+			"closesAtHour": "number"
+		},
+		"rows": [
+			{ "name": "Riverbend Studio", "region": "Hungary", "timeZone": "Europe/Budapest", "opensAtHour": 9, "closesAtHour": 18 },
+			{ "name": "Harbour Works", "region": "Ireland", "timeZone": "Europe/Dublin", "opensAtHour": 8, "closesAtHour": 17 },
+			{ "name": "Foundry East", "region": "Singapore", "timeZone": "Asia/Singapore", "opensAtHour": 9, "closesAtHour": 18 },
+			{ "name": "Prairie Exchange", "region": "United States", "timeZone": "America/Chicago", "opensAtHour": 8, "closesAtHour": 17 }
+		],
+		"connectors": {}
+	}
+}
