@@ -1,3 +1,12 @@
+/*
+ * One board of parallel office columns, separated by hairlines rather than built as tiles.
+ *
+ * Size carries the composition at the large tier: four offices of short fields cannot fill a
+ * 1080px board by adding rows, so the clock is deliberately large and the supporting fields sit
+ * close to it. Smaller tiers shed fields in order of importance instead of shrinking everything
+ * toward the legibility floor.
+ */
+
 .wb-global-office-clock {
   @include reset-styles();
 
@@ -22,7 +31,7 @@
 :global(.wb-global-office-clock-header) {
   display: flex;
   min-width: 0;
-  margin-bottom: 2.2%;
+  margin-bottom: 2.4%;
   padding-bottom: 1.2%;
   flex: 0 0 auto;
   align-items: baseline;
@@ -37,12 +46,12 @@
   padding-bottom: 0.1em;
   overflow: hidden;
   color: var(--wb-office-primary, #14110e);
-  font-size: 76px;
+  font-size: 82px;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.16;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.24;
 }
 
 :global(.wb-global-office-clock-count) {
@@ -55,8 +64,6 @@
   text-transform: uppercase;
 }
 
-/* Hairline rules rather than filled tiles: the offices have to read as one board, not as four
-   separate widgets that happen to sit next to each other. */
 :global(.wb-global-office-clock-board) {
   display: grid;
   min-width: 0;
@@ -86,19 +93,21 @@
 :global(.wb-global-office-clock-identity) {
   display: flex;
   min-width: 0;
-  padding-top: 5%;
+  padding-top: 4%;
   flex: 0 0 auto;
   flex-direction: column;
 }
 
+/* Uppercase micro-labels carry generous tracking: it is the difference between small text that
+   reads as considered and small text that reads as leftover. */
 :global(.wb-global-office-clock-region) {
   display: block;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.55em;
   overflow: hidden;
   color: var(--wb-office-accent, #9a6316);
   font-size: 17px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.24em;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
@@ -110,7 +119,7 @@
   max-height: 2.6em;
   overflow: hidden;
   color: var(--wb-office-primary, #14110e);
-  font-size: 40px;
+  font-size: 46px;
   font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.3;
@@ -119,7 +128,7 @@
 :global(.wb-global-office-clock-reading) {
   display: flex;
   min-width: 0;
-  margin-top: 0.5em;
+  margin-top: 0.1em;
   flex: 0 0 auto;
   flex-direction: column;
 }
@@ -127,25 +136,44 @@
 :global(.wb-global-office-clock-time) {
   display: block;
   color: var(--wb-office-primary, #14110e);
-  font-size: 92px;
+  font-size: 132px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.035em;
-  line-height: 1.16;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+:global(.wb-global-office-clock-meta) {
+  display: flex;
+  min-width: 0;
+  margin-top: 0.3em;
+  flex-direction: column;
 }
 
 :global(.wb-global-office-clock-offset) {
   display: block;
-  margin-top: 0.4em;
   color: var(--wb-office-secondary, #6d6357);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 650;
+}
+
+:global(.wb-global-office-clock-zone) {
+  display: block;
+  margin-top: 0.4em;
+  overflow: hidden;
+  color: var(--wb-office-secondary, #6d6357);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 :global(.wb-global-office-clock-hours) {
   display: block;
-  margin-top: 1.1em;
-  padding-top: 0.7em;
+  margin-top: 0.9em;
+  padding-top: 0.75em;
   color: var(--wb-office-secondary, #6d6357);
   border-top: 1px solid var(--wb-office-divider, #ddd4c4);
   font-size: 21px;
@@ -153,18 +181,22 @@
   font-variant-numeric: tabular-nums;
 }
 
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-hours) {
-  display: none;
-}
-
 :global(.wb-global-office-clock-foot) {
   display: flex;
   min-width: 0;
   margin-top: auto;
-  padding-bottom: 5%;
+  padding-bottom: 4%;
   flex: 0 0 auto;
   flex-direction: column;
   align-items: flex-start;
+}
+
+:global(.wb-global-office-clock-transition) {
+  display: block;
+  margin-bottom: 0.45em;
+  color: var(--wb-office-primary, #14110e);
+  font-size: 26px;
+  font-weight: 700;
 }
 
 :global(.wb-global-office-clock-date) {
@@ -224,24 +256,29 @@
   border-top: 0;
 }
 
-/* Type steps down with the surface so a small or wide-low panel reduces the board rather than
-   letting a column overflow. */
+/* Medium tier: the clock steps down and the date goes, because the transition line says more. */
 :global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-title) {
   font-size: 46px;
-}
-
-:global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-time) {
-  font-size: 62px;
 }
 
 :global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-office-name) {
   font-size: 28px;
 }
 
+:global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-time) {
+  font-size: 66px;
+}
+
+:global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-zone) {
+  font-size: 12px;
+}
+
 :global(.wb-global-office-clock[data-tier='medium']) :global(.wb-global-office-clock-date) {
   display: none;
 }
 
+/* Small tier keeps only identity, time and state. Everything else is metadata a passer-by does
+   not need on a panel this size. */
 :global(.wb-global-office-clock[data-tier='small']) {
   padding: 2.2% 2.6%;
 }
@@ -260,56 +297,39 @@
   font-size: 14px;
 }
 
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-time) {
-  font-size: 38px;
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-identity) {
+  padding-top: 0;
 }
 
 :global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-office-name) {
   font-size: 20px;
 }
 
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-region),
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-time) {
+  font-size: 40px;
+}
+
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-meta) {
+  margin-top: 0.2em;
+}
+
 :global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-offset) {
   font-size: 13px;
+}
+
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-zone),
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-hours),
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-transition),
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-date) {
+  display: none;
+}
+
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-foot) {
+  padding-bottom: 0;
 }
 
 :global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-open-state) {
   margin-top: 0.35em;
   padding: 0.18em 0.5em;
   font-size: 13px;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-date) {
-  display: none;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-identity) {
-  padding-top: 0;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-hours) {
-  display: block;
-  margin-top: 1.1em;
-  padding-top: 0.7em;
-  color: var(--wb-office-secondary, #6d6357);
-  border-top: 1px solid var(--wb-office-divider, #ddd4c4);
-  font-size: 21px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-hours) {
-  display: none;
-}
-
-:global(.wb-global-office-clock-foot) {
-  padding-bottom: 0;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-region) {
-  margin-bottom: 0.3em;
-}
-
-:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-offset) {
-  margin-top: 0.25em;
 }

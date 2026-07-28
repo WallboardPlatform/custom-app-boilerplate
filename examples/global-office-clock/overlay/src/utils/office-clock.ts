@@ -135,6 +135,37 @@ export const hoursLabel = (office: Office): string => {
 	return `${pad(office.opensAtHour)}:00 – ${pad(office.closesAtHour)}:00 local`;
 };
 
+/** Zone abbreviation and UTC offset, both derivable — no extra column for the operator to fill. */
+export const zoneLabel = (office: Office, at: Date): string => {
+	if (!office.zoneResolved) return 'UTC fallback';
+
+	const abbreviation: string = new Intl.DateTimeFormat('en-GB', { timeZone: office.timeZone, timeZoneName: 'short' })
+		.formatToParts(at)
+		.find((part): boolean => part.type === 'timeZoneName')?.value ?? '';
+	const offset: string = new Intl.DateTimeFormat('en-GB', { timeZone: office.timeZone, timeZoneName: 'longOffset' })
+		.formatToParts(at)
+		.find((part): boolean => part.type === 'timeZoneName')?.value ?? '';
+
+	return [abbreviation, offset].filter(Boolean).join(' · ');
+};
+
+/**
+ * Hours until the office next changes state. "Closed" answers less than a passer-by wants: the
+ * question behind the board is when the other end becomes reachable.
+ */
+export const transitionLabel = (office: Office, at: Date): string => {
+	if (!office.zoneResolved) return '';
+
+	const current: number = localHour(office, at);
+	const open: boolean = openStateOf(office, at) === 'open';
+	const target: number = open ? office.closesAtHour : office.opensAtHour;
+	const hours: number = (target - current + 24) % 24;
+
+	if (hours === 0) return open ? 'Closing now' : 'Opening now';
+
+	return open ? `Closes in ${hours}h` : `Opens in ${hours}h`;
+};
+
 const OPEN_LABELS: Record<OfficeOpenState, string> = {
 	open: 'Open now',
 	closed: 'Closed',
@@ -170,25 +201,38 @@ export const readOffice = (
 
 export type SurfaceTier = 'small' | 'medium' | 'large';
 
-/** Tiers the surface so type and column count step down together instead of clipping. */
-export const tierFor = (width: number, height: number): SurfaceTier => {
-	const shortest: number = Math.min(width, height);
-
-	if (shortest < 700) return 'small';
-
-	return shortest < 900 ? 'medium' : 'large';
-};
-
 /**
- * Column count is chosen by how many offices there are, not by the surface width alone: two
- * offices stretched across six columns reads as a broken board. A narrow surface still caps the
- * count, because four columns of clock on a square panel overflow rather than shrink.
+ * Column count follows the office count, not the surface width: two offices stretched across six
+ * columns reads as a broken board.
  */
-export const columnsFor = (count: number, portrait: boolean, tier: SurfaceTier = 'large'): number => {
+export const columnsFor = (count: number, portrait: boolean): number => {
 	if (count <= 0) return 1;
 	if (portrait) return count <= 4 ? 1 : 2;
 
-	const cap: number = tier === 'small' ? 2 : tier === 'medium' ? 2 : 4;
+	return count <= 4 ? count : 3;
+};
 
-	return Math.min(count, Math.min(cap, count <= 4 ? count : 3));
+/**
+ * Tiers by the size of a single column, not by the size of the board.
+ *
+ * Six offices on a 1920x1080 wall give 640x430 cells; tiering on the surface calls that "large"
+ * and sizes the clock for a cell three times taller than the one it actually gets. What has to
+ * fit is the column.
+ */
+export const tierForCell = (
+	boardWidth: number,
+	boardHeight: number,
+	count: number,
+	portrait: boolean
+): SurfaceTier => {
+	const columns: number = columnsFor(count, portrait);
+	const rows: number = Math.max(1, Math.ceil(Math.max(count, 1) / columns));
+	// The header and board padding take roughly a fifth of the height before any column starts.
+	const cellHeight: number = (boardHeight * 0.8) / rows;
+	const cellWidth: number = boardWidth / columns;
+	const shortest: number = Math.min(cellWidth, cellHeight);
+
+	if (shortest < 260 || cellHeight < 360) return 'small';
+
+	return shortest < 420 || cellHeight < 520 ? 'medium' : 'large';
 };

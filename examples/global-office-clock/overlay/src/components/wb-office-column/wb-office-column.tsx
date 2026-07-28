@@ -11,6 +11,8 @@ export interface WbOfficeColumnProps {
 	offsetLabel: string;
 	reading: OfficeReading;
 	showOpenState: boolean;
+	transitionLabel: string;
+	zoneLabel: string;
 }
 
 export default (props: WbOfficeColumnProps): JSX.Element => {
@@ -39,11 +41,17 @@ export default (props: WbOfficeColumnProps): JSX.Element => {
 
 			<div class="wb-global-office-clock-reading">
 				<strong class="wb-global-office-clock-time">{props.reading.time}</strong>
-				<span class="wb-global-office-clock-offset">{props.home ? 'Home' : props.offsetLabel}</span>
+				<div class="wb-global-office-clock-meta">
+					<span class="wb-global-office-clock-offset">{props.home ? 'Home' : props.offsetLabel}</span>
+					<span class="wb-global-office-clock-zone">{props.zoneLabel}</span>
+				</div>
 				<span class="wb-global-office-clock-hours">{props.hoursLabel}</span>
 			</div>
 
 			<div class="wb-global-office-clock-foot">
+				<Show when={props.transitionLabel}>
+					<span class="wb-global-office-clock-transition">{props.transitionLabel}</span>
+				</Show>
 				<span class="wb-global-office-clock-date">{props.reading.date}</span>
 				<Show when={props.showOpenState}>
 					<span class="wb-global-office-clock-open-state">{props.reading.openLabel}</span>

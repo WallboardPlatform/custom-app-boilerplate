@@ -1,0 +1,136 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "b6b099de274b89f1d6a11244909dae6d7f9e9166d94414ff8e810b86b4c856f7",
+	"reviewedAt": "2026-07-28T09:40:34.439Z",
+	"reviewer": "Claude visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Every office shows its own local time, date, working window, offset from home and open state, across two to six offices plus empty and invalid-zone states."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Instruction-led rather than reference-led: parallel columns of equal weight, no site visually privileged, open state carried by a word."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Reads as one editorial board rather than repeated widgets. Hairline rules instead of tiles, a paper base, and a single dominant clock per column."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "The clock is the largest element by a wide margin at every tier, and tiers are derived from the column cell rather than the surface so six offices do not inherit a four-office type scale."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "The dark preset inverts the paper base while keeping the accent open-state chip and hairlines distinguishable."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Office names auto-fit against a two-line budget, so a long name never forms the third line that a fixed clamp would half-expose."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Identity, time and metadata form one block with the next-change and status pinned at the foot; the space between them separates now from next. It is airier than the delivered reference this was modelled against, which carries roughly twice the fields per column. Square 600x600 places four offices in four narrow columns, which is legible but tight."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "No raster media. Rules, chips and tabular numerals render crisply from 600x600 through 1920x1080."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The only paper-based board in the portfolio, and the only one showing several places at once."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "compact-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-all-closed-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-compact-960x540.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-dark-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-empty-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-invalid-timezone-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-long-labels-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-six-offices-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "scenario-two-offices-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: columns read as one board, the clock dominates, sparse tiers shed metadata rather than clipping it."
+		}
+	],
+	"unresolvedFindings": []
+}

@@ -8,7 +8,17 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Office, OfficeReading } from '@interfaces/office-clock.interface';
 
-import { columnsFor, normalizeOffices, hoursLabel, offsetFromHome, offsetLabel, readOffice, tierFor } from '@utils/office-clock';
+import {
+	columnsFor,
+	hoursLabel,
+	normalizeOffices,
+	offsetFromHome,
+	offsetLabel,
+	readOffice,
+	tierForCell,
+	transitionLabel,
+	zoneLabel
+} from '@utils/office-clock';
 import type { SurfaceTier } from '@utils/office-clock';
 
 import WbOfficeColumn from '@components/wb-office-column/wb-office-column';
@@ -20,7 +30,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const settings: Accessor<Settings> = useSettings();
 	const [now, setNow] = createSignal<Date>(new Date());
 	const [portrait, setPortrait] = createSignal(false);
-	const [tier, setTier] = createSignal<SurfaceTier>('large');
+	const [board, setBoard] = createSignal<{ height: number; width: number }>({ height: 1080, width: 1920 });
 
 	const fitTitle = useAutoFitText({
 		minFontSize: 20,
@@ -36,7 +46,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return offices().map((office: Office): OfficeReading => readOffice(office, at, options));
 	});
-	const columns: Accessor<number> = createMemo((): number => columnsFor(offices().length, portrait(), tier()));
+	const columns: Accessor<number> = createMemo((): number => columnsFor(offices().length, portrait()));
+	const tier: Accessor<SurfaceTier> = createMemo((): SurfaceTier => {
+		return tierForCell(board().width, board().height, offices().length, portrait());
+	});
 
 	// A shared board clock rather than one timer per office: every column must tick together, and
 	// one instance-local interval is one thing to clean up.
@@ -52,7 +65,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const element: HTMLDivElement = props.hostElement;
 		const measure = (): void => {
 			setPortrait(element.clientHeight > element.clientWidth * 1.1);
-			setTier(tierFor(element.clientWidth, element.clientHeight));
+			setBoard({ width: element.clientWidth, height: element.clientHeight });
 		};
 
 		measure();
@@ -116,6 +129,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 								reading={reading}
 								home={index() === 0}
 								hoursLabel={hoursLabel(reading.office)}
+								zoneLabel={zoneLabel(reading.office, now())}
+								transitionLabel={transitionLabel(reading.office, now())}
 								offsetLabel={offsetLabel(offsetFromHome(offices()[0] as Office, reading.office, now()))}
 								showOpenState={settings().showOpenState}
 							/>
