@@ -1,0 +1,67 @@
+{
+	"Categories": {
+		"header": {
+			"Category": "string",
+			"Label": "string",
+			"Description": "text",
+			"Order": "number"
+		},
+		"rows": [
+			{
+				"Category": "Founders Circle",
+				"Label": "Founders Circle",
+				"Description": "Honoring transformational support that established new possibilities.",
+				"Order": 1
+			},
+			{
+				"Category": "Legacy Society",
+				"Label": "Legacy Society",
+				"Description": "Recognizing enduring commitments from longtime supporters.",
+				"Order": 2
+			},
+			{
+				"Category": "Leadership Circle",
+				"Label": "Leadership Circle",
+				"Description": "Celebrating sustained leadership and meaningful annual support.",
+				"Order": 3
+			},
+			{
+				"Category": "Community Friends",
+				"Label": "Community Friends",
+				"Description": "Celebrating neighbors whose generosity strengthens every program.",
+				"Order": 4
+			},
+			{
+				"Category": "Discovery Guild",
+				"Label": "Discovery Guild",
+				"Description": "Supporting curiosity, research, and hands-on discovery.",
+				"Order": 5
+			},
+			{
+				"Category": "Learning Partners",
+				"Label": "Learning Partners",
+				"Description": "Expanding access to education and lifelong learning.",
+				"Order": 6
+			},
+			{
+				"Category": "Garden Stewards",
+				"Label": "Garden Stewards",
+				"Description": "Helping shared spaces and community programs flourish.",
+				"Order": 7
+			},
+			{
+				"Category": "Future Builders",
+				"Label": "Future Builders",
+				"Description": "Investing in the next generation of community leadership.",
+				"Order": 8
+			},
+			{
+				"Category": "Heritage Champions",
+				"Label": "Heritage Champions",
+				"Description": "Preserving stories, traditions, and places for the future.",
+				"Order": 9
+			}
+		],
+		"connectors": {}
+	}
+}

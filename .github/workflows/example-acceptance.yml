@@ -50,6 +50,7 @@ jobs:
           - campus-directory
           - civic-venue-pulse
           - curated-storyline
+          - donor-directory
           - factory-safety-questionnaire
           - factory-safety-results-dashboard
           - global-office-clock
