@@ -227,7 +227,20 @@ export const collectVisualReviewSourceFiles = (projectDirectory: string): string
 		}
 	}
 
-	const files: string[] = collectReachableFiles(projectDirectory, seeds);
+	/*
+	 * Shared conformance suites are excluded.
+	 *
+	 * The hash answers one question: has the app, fixture, brief or datasource sample moved since a
+	 * reviewer looked at the screenshots? A conformance suite is none of those -- it is boilerplate
+	 * harness copied identically into every example, it renders nothing, and `visual.spec.ts`, which
+	 * actually produces the screenshots, is already excluded for the same reason. Including them
+	 * meant one edit to a shared test invalidated every example's visual review and demanded a
+	 * re-inspection that could not reveal anything, which devalues the act of reviewing.
+	 */
+	const conformanceDirectory: string = path.join(previewDirectory, 'conformance');
+	const files: string[] = collectReachableFiles(projectDirectory, seeds).filter(
+		(filePath: string): boolean => !path.resolve(filePath).startsWith(path.resolve(conformanceDirectory))
+	);
 	files.push(
 		...collectFiles(path.join(projectDirectory, 'src', 'editor-assets')).filter(
 			(filePath) =>

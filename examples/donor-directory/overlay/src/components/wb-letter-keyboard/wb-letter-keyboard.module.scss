@@ -1,0 +1,120 @@
+.letter-keyboard {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	min-width: 0;
+	padding: 8px 10px 10px;
+	border-top: 1px solid var(--wb-donor-directory-rule);
+	background: var(--wb-donor-directory-keyboard-background);
+	touch-action: manipulation;
+}
+
+.letter-keyboard,
+.letter-keyboard * {
+	@include box-sizing();
+}
+
+.key-row {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	min-width: 0;
+}
+
+.key {
+	display: block;
+	flex: 1 1 0;
+	min-width: 0;
+	min-height: 50px;
+	margin: 3px;
+	padding: 7px 5px;
+	border: 1px solid var(--wb-donor-directory-rule);
+	border-radius: var(--wb-donor-directory-radius-small);
+	background: var(--wb-donor-directory-keyboard-key);
+	box-shadow: 0 2px 0 var(--wb-donor-directory-rule);
+	color: var(--wb-donor-directory-keyboard-text);
+	font: inherit;
+	font-size: 19px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-align: center;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.key:hover,
+.key:focus {
+	border-color: var(--wb-donor-directory-accent);
+	outline: 2px solid var(--wb-donor-directory-accent);
+	outline-offset: -2px;
+}
+
+.key:active {
+	box-shadow: none;
+	transform: translateY(2px);
+}
+
+.key:disabled {
+	cursor: default;
+	opacity: 0.45;
+	transform: none;
+}
+
+.key-label {
+	display: block;
+	overflow: hidden;
+	line-height: 1.22;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.function-row {
+	margin-top: 2px;
+}
+
+.function-key {
+	flex: 0 1 24%;
+	background: var(--wb-donor-directory-category-button);
+	color: var(--wb-donor-directory-category-button-text);
+	font-size: 14px;
+	letter-spacing: 0.06em;
+}
+
+.space-key {
+	flex: 1 1 auto;
+}
+
+.search-key {
+	border-color: var(--wb-donor-directory-accent);
+	background: var(--wb-donor-directory-accent);
+	color: var(--wb-donor-directory-accent-text);
+}
+
+@media (max-height: 760px) {
+	.letter-keyboard {
+		padding: 4px 6px 5px;
+	}
+
+	.key {
+		min-height: 44px;
+		margin: 2px;
+		padding: 4px 3px;
+		font-size: 15px;
+	}
+
+	.function-key {
+		font-size: 11px;
+	}
+}
+
+@media (max-width: 720px) {
+	.key {
+		min-height: 44px;
+		font-size: 15px;
+	}
+
+	.function-key {
+		font-size: 11px;
+		letter-spacing: 0.02em;
+	}
+}

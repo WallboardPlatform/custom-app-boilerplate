@@ -55,82 +55,115 @@ const parseRgb = (value: string): number[] | undefined => {
 	return parts.length >= 3 ? parts.slice(0, 3) : undefined;
 };
 
-export const registerStatusIndicatorConformance = (target: StatusIndicatorConformanceTarget): void => {
+/**
+ * The assertions, separated from their registration, so a gate test can drive them against
+ * deliberately non-conforming DOM. An earlier version of this suite accepted any text anywhere in
+ * an indicator, which meant it could not fail; nothing caught that except reading it.
+ */
+export const assertStateIsNotColourAlone = async (
+	target: StatusIndicatorConformanceTarget,
+	page: Page
+): Promise<void> => {
+	await target.open(page);
+
+	const indicators: Locator = target.indicators(page);
+	const total: number = await indicators.count();
+
+	expect(total, 'no status indicators found; check the selector').toBeGreaterThan(0);
+
+	const wording = new Map<string, string>();
+
+	for (let index = 0; index < total; index += 1) {
+		const indicator: Locator = indicators.nth(index);
+		const state: string = (await indicator.getAttribute(target.stateAttribute)) ?? '(unset)';
+		const label: Locator = target.stateLabel(indicator).first();
+		const text: string = (await label.count()) > 0
+			? ((await label.getAttribute('aria-label')) ?? await label.innerText()).replace(/\s+/g, ' ').trim()
+			: '';
+
+		expect(text.length, `state "${state}" is signalled without any words`).toBeGreaterThan(0);
+		wording.set(state, text);
+	}
+
+	// Distinct states reading identically means the words are decoration and the colour is
+	// still doing the work.
+	const distinctStates: number = wording.size;
+	const distinctWords: number = new Set(wording.values()).size;
+
+	expect(
+		distinctWords,
+		`${distinctStates} states share only ${distinctWords} distinct labels: ${JSON.stringify([...wording])}`
+	).toBe(distinctStates);
+};
+
+export const assertStateTextIsLegible = async (
+	target: StatusIndicatorConformanceTarget,
+	page: Page
+): Promise<void> => {
 	const minimumContrast: number = target.minimumContrast ?? 3;
 
-	test.describe(`status-indicator conformance: ${target.name}`, (): void => {
-		test('state is never conveyed by colour alone', async ({ page }): Promise<void> => {
-			await target.open(page);
+	// A status chip commonly tints its own background, which is where contrast quietly
+	// collapses even though the surrounding surface is fine.
+	await target.open(page);
 
-			const indicators: Locator = target.indicators(page);
-			const total: number = await indicators.count();
+	const indicators: Locator = target.indicators(page);
+	const total: number = await indicators.count();
 
-			expect(total, 'no status indicators found; check the selector').toBeGreaterThan(0);
+	expect(total, 'no status indicators found; check the selector').toBeGreaterThan(0);
 
-			const wording = new Map<string, string>();
+	for (let index = 0; index < total; index += 1) {
+		const indicator: Locator = indicators.nth(index);
+		const state: string = (await indicator.getAttribute(target.stateAttribute)) ?? '(unset)';
+		/*
+		 * Measured on the state label, not on the indicator that contains it. Reading the container's
+		 * computed colour describes whatever the chip inherits, which is not necessarily the colour
+		 * the state word is actually painted in -- the same wrong-element mistake that once let this
+		 * suite pass an indicator whose state label had been deleted.
+		 */
+		const label: Locator = target.stateLabel(indicator).first();
 
-			for (let index = 0; index < total; index += 1) {
-				const indicator: Locator = indicators.nth(index);
-				const state: string = (await indicator.getAttribute(target.stateAttribute)) ?? '(unset)';
-				const label: Locator = target.stateLabel(indicator).first();
-				const text: string = (await label.count()) > 0
-					? ((await label.getAttribute('aria-label')) ?? await label.innerText()).replace(/\s+/g, ' ').trim()
-					: '';
+		if (await label.count() === 0) {
+			continue;
+		}
 
-				expect(text.length, `state "${state}" is signalled without any words`).toBeGreaterThan(0);
-				wording.set(state, text);
+		const colours = await label.evaluate((element: Element): { background: string; text: string } => {
+			const style: CSSStyleDeclaration = getComputedStyle(element);
+			let background: string = style.backgroundColor;
+			let node: Element | null = element;
+
+			// Walk up while the background is transparent, as a chip often inherits it.
+			while (node && (background === 'rgba(0, 0, 0, 0)' || background === 'transparent')) {
+				node = node.parentElement;
+				background = node ? getComputedStyle(node).backgroundColor : 'rgb(255, 255, 255)';
 			}
 
-			// Distinct states reading identically means the words are decoration and the colour is
-			// still doing the work.
-			const distinctStates: number = wording.size;
-			const distinctWords: number = new Set(wording.values()).size;
+			return { background, text: style.color };
+		});
 
-			expect(
-				distinctWords,
-				`${distinctStates} states share only ${distinctWords} distinct labels: ${JSON.stringify([...wording])}`
-			).toBe(distinctStates);
+		const background: number[] | undefined = parseRgb(colours.background);
+		const text: number[] | undefined = parseRgb(colours.text);
+
+		if (!background || !text) continue;
+
+		const lighter: number = Math.max(relativeLuminance(background), relativeLuminance(text));
+		const darker: number = Math.min(relativeLuminance(background), relativeLuminance(text));
+		const ratio: number = (lighter + 0.05) / (darker + 0.05);
+
+		expect(
+			Number(ratio.toFixed(2)),
+			`state "${state}" renders ${colours.text} on ${colours.background}`
+		).toBeGreaterThanOrEqual(minimumContrast);
+	}
+};
+
+export const registerStatusIndicatorConformance = (target: StatusIndicatorConformanceTarget): void => {
+	test.describe(`status-indicator conformance: ${target.name}`, (): void => {
+		test('state is never conveyed by colour alone', async ({ page }): Promise<void> => {
+			await assertStateIsNotColourAlone(target, page);
 		});
 
 		test('state text stays legible against its own background', async ({ page }): Promise<void> => {
-			// A status chip commonly tints its own background, which is where contrast quietly
-			// collapses even though the surrounding surface is fine.
-			await target.open(page);
-
-			const indicators: Locator = target.indicators(page);
-			const total: number = await indicators.count();
-
-			for (let index = 0; index < total; index += 1) {
-				const indicator: Locator = indicators.nth(index);
-				const state: string = (await indicator.getAttribute(target.stateAttribute)) ?? '(unset)';
-				const colours = await indicator.evaluate((element: Element): { background: string; text: string } => {
-					const style: CSSStyleDeclaration = getComputedStyle(element);
-					let background: string = style.backgroundColor;
-					let node: Element | null = element;
-
-					// Walk up while the background is transparent, as a chip often inherits it.
-					while (node && (background === 'rgba(0, 0, 0, 0)' || background === 'transparent')) {
-						node = node.parentElement;
-						background = node ? getComputedStyle(node).backgroundColor : 'rgb(255, 255, 255)';
-					}
-
-					return { background, text: style.color };
-				});
-
-				const background: number[] | undefined = parseRgb(colours.background);
-				const text: number[] | undefined = parseRgb(colours.text);
-
-				if (!background || !text) continue;
-
-				const lighter: number = Math.max(relativeLuminance(background), relativeLuminance(text));
-				const darker: number = Math.min(relativeLuminance(background), relativeLuminance(text));
-				const ratio: number = (lighter + 0.05) / (darker + 0.05);
-
-				expect(
-					Number(ratio.toFixed(2)),
-					`state "${state}" renders ${colours.text} on ${colours.background}`
-				).toBeGreaterThanOrEqual(minimumContrast);
-			}
+			await assertStateTextIsLegible(target, page);
 		});
 	});
 };

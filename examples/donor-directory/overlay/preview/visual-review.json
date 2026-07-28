@@ -1,0 +1,226 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "fc0803544cd2ffa3a9a5a1afd8f47bd5d0b9d7b797815856f365e356280e6f28",
+	"reviewedAt": "2026-07-28T00:00:00.000Z",
+	"reviewer": "Claude (agent)",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Touch donor wall: letter search, category filter, paged donor grid, amounts formatted from the column type."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Keeps the reference kiosk structure - masthead, category rail, dense two/three-column donor grid - without copying its styling."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Deep green on warm paper with a serif masthead; distinct from the dark dashboard look shared by other examples."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Names carry the grid at every density; the sparse-page height cap stops rows stretching into unreadable spacing."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light, dark and custom presets all verified; the accent stays legible on both backgrounds."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Donor names and category labels are auto-fitted; long-content and single-field-long scenarios show no clipping."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Verified from 600x600 to 1920x1080 and portrait, including many-categories and uneven-last-page."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "One bundled background; icons are inline SVG following currentColor, so nothing degrades by surface size."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Only example that maps arbitrary customer columns to display roles and formats amounts from the TABLE column type."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "compact-landscape-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-category-metadata-order-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-category-metadata-unbound-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-compact-landscape-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-currency-number-columns-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-custom-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-dark-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-density-20-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-empty-donors-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-invalid-mapping-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-keyboard-open-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-live-category-update-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-live-donor-update-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-long-content-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-maximum-content-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-missing-logo-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-portrait-many-categories-1080x1920.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-row-array-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-search-active-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-search-no-results-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-single-field-long-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-square-1080x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-three-field-entries-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-unbound-1280x720.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-uneven-last-page-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "scenario-uneven-last-page-capped-1920x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "square-1080x1080.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Re-inspected after the background was re-encoded to JPEG; no visible degradation."
+		}
+	],
+	"unresolvedFindings": []
+}

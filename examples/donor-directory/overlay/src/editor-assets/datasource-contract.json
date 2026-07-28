@@ -1,0 +1,64 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "donorData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "EXISTING",
+				"table": "Donor Information",
+				"sampleData": "sample-datasource-donorData.json"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Donor Directory",
+				"quickEditEligible": false
+			},
+			"columns": [
+				{ "name": "Name", "type": "string", "required": true },
+				{ "name": "Category", "type": "dropdown", "required": true },
+				{ "name": "Amount", "type": "number", "required": false }
+			]
+		},
+		{
+			"property": "categoryData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"table": "Categories",
+				"sampleData": "sample-datasource-categoryData.json"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Donor Directory - Categories",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "Category", "type": "string", "required": true },
+				{ "name": "Label", "type": "string", "required": false },
+				{ "name": "Description", "type": "text", "required": false },
+				{ "name": "Order", "type": "number", "required": false }
+			]
+		}
+	],
+  "rationale": "The user supplied and corrected an existing INTERNAL/TABLE source whose Donor Information table contains Name, Category, and Amount. The directory exposes three generic editor mappings: Entry Field 1 is required, while Entry Fields 2 and 3 are optional and may point at any supported column in the selected table. An opt-in display formatter uses the TABLE header type—not cell-value inference—to add locale grouping and a literal currency prefix to any mapped number column. Optional category metadata remains an independent generated TABLE because it has separate ownership and editing cadence.",
+	"acceptedValueShapes": [
+		"donorData: native datasource object containing the configured Donor Information table",
+		"donorData: selected table object containing header, rows, and optional connectors",
+		"donorData: processed donor row array",
+		"categoryData: native datasource object containing one configured category table",
+		"categoryData: selected category table object containing header, rows, and optional connectors",
+		"categoryData: processed category row array"
+	],
+	"behavior": {
+		"unbound": "an unbound donorData picker shows explicit editor guidance; an unbound categoryData picker keeps derived categories in alphabetical order with no description",
+		"boundEmpty": "a bound empty donor source shows the configured empty-state message and never substitutes synthetic rows",
+		"invalidRows": "rows without a readable mapped Entry Field 1 or category are skipped; invalid required table/mapping combinations show a stable configuration state",
+    "fieldMapping": "read Entry Fields 1, 2, and 3 plus category and sort values from editor-configured column names; blank optional mappings hide their fields",
+    "numberFormatting": "when enabled, add locale-aware grouping and the configured literal prefix only to mapped fields whose selected/native TABLE header type is number; leave text columns, invalid number cells, and headerless row-array values raw",
+    "categoryJoin": "normalize category keys for case, accents, and whitespace; first duplicate metadata row wins; numeric order wins and original row index is the fallback",
+    "categoryPresentation": "always make the active metadata description available above donor rows and optionally repeat it beneath category-button labels; the two placements have independent typography and color settings",
+		"complexCells": "render primitives directly; a deliberately mapped structured date may contribute its date string and a mapped filePicker-like value may contribute only a non-empty name; unsupported objects are omitted rather than stringified",
+		"ordering": "ALL is first in manual mode; metadata-listed donor categories follow numeric or source-row order, unmatched donor categories append alphabetically, and metadata-only empty categories are omitted",
+		"pagination": "page size is directory columns times configured entries per column from one through twenty; preserve category/page across live updates when valid and clamp or reset deterministically otherwise"
+	}
+}

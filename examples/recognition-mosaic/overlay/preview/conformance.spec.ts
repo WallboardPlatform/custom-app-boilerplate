@@ -1,3 +1,4 @@
+import sampleDatasource from '../sample-datasource.json';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -84,5 +85,13 @@ registerPaginationConformance({
 		return page.locator('.recognition-card').evaluateAll((cards: Element[]): string[] => {
 			return cards.map((card: Element): string => card.getAttribute('data-person') ?? '');
 		});
+	},
+	/*
+	 * Read from the same sample datasource the scenario is built from, rather than from anything the
+	 * app renders: the point is to catch a record the app never put on a page, so the expectation has
+	 * to come from outside the app.
+	 */
+	expectedKeys: async (): Promise<string[]> => {
+		return sampleDatasource.Recognitions.rows.map((row: { name: string }): string => row.name);
 	}
 });

@@ -1,0 +1,32 @@
+{
+	"title": "Donor Directory",
+	"description": "Touch donor wall that maps whichever columns the customer's table happens to have, formats amounts from the column type, and filters by letter and category.",
+	"mechanisms": [
+		"typed-column-formatting",
+		"directory-search",
+		"on-screen-keyboard",
+		"multi-source-merge",
+		"content-paging",
+		"dense-table-board"
+	],
+	"capabilities": [
+		"keyboard"
+	],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource-donorData.json",
+		"sample-datasource-categoryData.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
+}

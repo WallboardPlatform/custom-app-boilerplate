@@ -1,5 +1,5 @@
 {
 	"reviewThresholdMiB": 10,
-	"approvedBudgetMiB": 14,
-	"justification": "Retain the reviewed Veszprem map evidence and two distinct Curated Storyline responsive references. Raised from 11.5 after the text auto-fit fix: eighteen examples had been rendering fitted type at the minimum permitted size, so every re-accepted screenshot now carries correctly sized type and more pixel detail. The screenshot count is unchanged; the evidence got better, not more numerous."
+	"approvedBudgetMiB": 15,
+	"justification": "Retain the reviewed Veszprem map evidence and two distinct Curated Storyline responsive references. Raised from 11.5 after the text auto-fit fix: eighteen examples had been rendering fitted type at the minimum permitted size, so every re-accepted screenshot now carries correctly sized type and more pixel detail. The screenshot count is unchanged; the evidence got better, not more numerous. Raised from 14 for the Donor Directory, the twenty-fifth example: it contributes only its two reference screenshots, because the 1.2 MiB mint background it arrived with was re-encoded to 62 KiB of JPEG first - the artwork is smooth gradient with no transparency, so PNG was paying for precision the image does not use."
 }

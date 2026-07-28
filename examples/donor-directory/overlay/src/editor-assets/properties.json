@@ -1,0 +1,1043 @@
+{
+	"version": "1",
+	"name": "Donor Directory",
+	"interactive": true,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Donor datasource",
+			"type": "dataPicker",
+			"property": "donorData",
+			"dataPickerType": "any",
+			"tooltip": "Bind the internal TABLE that contains the donor records."
+		},
+		{
+			"label": "Category metadata datasource",
+			"type": "dataPicker",
+			"property": "categoryData",
+			"dataPickerType": "any",
+			"tooltip": "Optional TABLE for public category labels, descriptions, and ordering. Its category key must match the donor category values."
+		},
+		{
+			"label": "Donor data mapping",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Donor table name",
+					"type": "text",
+					"property": "donorTableName",
+					"default": "Donor Information"
+				},
+				{
+					"label": "Category column",
+					"type": "text",
+					"property": "categoryColumn",
+					"default": "Category",
+					"tooltip": "Values in this column are cross-referenced with the category metadata key column."
+				},
+				{
+					"label": "Entry field 1 column",
+					"type": "text",
+					"property": "entryField1Column",
+					"default": "Name",
+					"tooltip": "Required primary value. It identifies each donor and powers search."
+				},
+				{
+					"label": "Entry field 2 column",
+					"type": "text",
+					"property": "entryField2Column",
+					"default": "Amount",
+					"tooltip": "Optional. Leave blank to hide the second value."
+				},
+				{
+					"label": "Entry field 3 column",
+					"type": "text",
+					"property": "entryField3Column",
+					"default": "",
+					"tooltip": "Optional. Leave blank to hide the third value."
+				},
+				{
+					"label": "Sort column",
+					"type": "text",
+					"property": "sortColumn",
+					"default": "Name"
+				},
+				{
+					"label": "Sort direction",
+					"type": "select",
+					"property": "sortDirection",
+					"default": "ascending",
+					"options": [
+						{
+							"label": "Source order",
+							"value": "source"
+						},
+						{
+							"label": "Ascending",
+							"value": "ascending"
+						},
+						{
+							"label": "Descending",
+							"value": "descending"
+						}
+					]
+				},
+				{
+					"label": "Locale",
+					"type": "text",
+					"property": "numberLocale",
+					"default": "en-US",
+					"tooltip": "Locale used for stable text sorting, grouped number formatting, and header date/time formatting."
+				},
+				{
+					"label": "Format number columns with currency prefix",
+					"type": "checkbox",
+					"property": "formatNumberColumnsAsCurrency",
+					"default": false,
+					"tooltip": "When enabled, mapped entry fields whose TABLE header type is number receive grouping separators and the prefix below. Text columns are never reformatted."
+				},
+				{
+					"label": "Currency symbol or prefix",
+					"type": "text",
+					"property": "currencySymbol",
+					"default": "$",
+					"tooltip": "Placed directly before formatted number-column values, for example $50,000. You may also enter a longer prefix such as USD .",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": true,
+								"dependsOn": "formatNumberColumnsAsCurrency"
+							}
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		},
+		{
+			"label": "Category metadata mapping",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Category table name",
+					"type": "text",
+					"property": "categoryTableName",
+					"default": "Categories"
+				},
+				{
+					"label": "Category key column",
+					"type": "text",
+					"property": "categoryKeyColumn",
+					"default": "Category",
+					"tooltip": "This cross-reference key must match values from the donor category column after trimming and case normalization."
+				},
+				{
+					"label": "Public label column",
+					"type": "text",
+					"property": "categoryLabelColumn",
+					"default": "Label"
+				},
+				{
+					"label": "Description column",
+					"type": "text",
+					"property": "categoryDescriptionColumn",
+					"default": "Description"
+				},
+				{
+					"label": "Show descriptions on category buttons",
+					"type": "checkbox",
+					"property": "showCategoryButtonDescriptions",
+					"default": false,
+					"tooltip": "Displays each category metadata description beneath its public label on the category button."
+				},
+				{
+					"label": "Order column",
+					"type": "text",
+					"property": "categoryOrderColumn",
+					"default": "Order"
+				}
+			]
+		},
+		{
+			"label": "Content and header",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Title",
+					"type": "text",
+					"property": "title",
+					"default": "Our Donors"
+				},
+				{
+					"label": "Title font size",
+					"type": "number",
+					"property": "titleFontSize",
+					"default": 46,
+					"min": 18,
+					"max": 72,
+					"step": 1,
+					"tooltip": "Sets the preferred title size. Long titles still auto-fit within the available header space."
+				},
+				{
+					"label": "Subtitle",
+					"type": "text",
+					"property": "subtitle",
+					"default": "With gratitude to those who make our work possible"
+				},
+				{
+					"label": "All categories label",
+					"type": "text",
+					"property": "allLabel",
+					"default": "All Donors"
+				},
+				{
+					"label": "All categories label font size",
+					"type": "number",
+					"property": "allLabelFontSize",
+					"default": 27,
+					"min": 12,
+					"max": 64,
+					"step": 1,
+					"tooltip": "Sets the size of the All Donors heading above the donor entries. Long labels still auto-fit instead of truncating."
+				},
+				{
+					"label": "Empty datasource message",
+					"type": "textArea",
+					"property": "emptyStateText",
+					"default": "No donor records are available."
+				},
+				{
+					"label": "No search results message",
+					"type": "textArea",
+					"property": "noResultsText",
+					"default": "No donors match your search."
+				},
+				{
+					"label": "Search placeholder",
+					"type": "text",
+					"property": "searchPlaceholder",
+					"default": "Search donor names"
+				},
+				{
+					"label": "Header logo",
+					"type": "file",
+					"property": "logo",
+					"tooltip": "Optional Wallboard-managed logo. Leave unselected to use the full header for text."
+				},
+				{
+					"label": "Logo height",
+					"type": "number",
+					"property": "logoScale",
+					"default": 72,
+					"min": 32,
+					"max": 180,
+					"step": 1
+				},
+				{
+					"label": "Date format",
+					"type": "select",
+					"property": "dateFormat",
+					"default": "long",
+					"options": [
+						{
+							"label": "Long",
+							"value": "long"
+						},
+						{
+							"label": "Short",
+							"value": "short"
+						},
+						{
+							"label": "None",
+							"value": "none"
+						}
+					]
+				},
+				{
+					"label": "Time format",
+					"type": "select",
+					"property": "timeFormat",
+					"default": "12-hour",
+					"options": [
+						{
+							"label": "12-hour",
+							"value": "12-hour"
+						},
+						{
+							"label": "24-hour",
+							"value": "24-hour"
+						},
+						{
+							"label": "None",
+							"value": "none"
+						}
+					]
+				},
+				{
+					"label": "Time zone",
+					"type": "text",
+					"property": "timeZone",
+					"default": "",
+					"tooltip": "Optional IANA time zone, such as America/New_York. Blank or invalid values use the device time zone."
+				}
+			]
+		},
+		{
+			"label": "Directory behavior",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Maximum columns",
+					"type": "number",
+					"property": "directoryColumns",
+					"default": 3,
+					"min": 1,
+					"max": 4,
+					"step": 1,
+					"tooltip": "Sets the upper limit for the donor grid. Landscape supports up to 4 columns, portrait up to 3, and square placements up to 2; compact landscape placements may use fewer columns to preserve readability."
+				},
+				{
+					"label": "Entries per column",
+					"type": "number",
+					"property": "entriesPerColumn",
+					"default": 8,
+					"min": 1,
+					"max": 20,
+					"step": 1,
+					"tooltip": "Higher values reduce row padding and text sizes down to each field's configured maximum and readable floor."
+				},
+				{
+					"label": "Maximum donor row height",
+					"type": "number",
+					"property": "maximumRowHeight",
+					"default": 0,
+					"min": 0,
+					"max": 320,
+					"step": 1,
+					"tooltip": "Optional pixel cap for donor rows on sparse pages. Use 0 to preserve the current automatic equal-height sizing."
+				},
+				{
+					"label": "Enable touch keyboard",
+					"type": "checkbox",
+					"property": "showKeyboard",
+					"default": true,
+					"tooltip": "Adds a keyboard icon beside search. The keyboard opens only when requested."
+				},
+				{
+					"label": "Autoplay seconds per page",
+					"type": "number",
+					"property": "autoplayIntervalSeconds",
+					"default": 8,
+					"min": 3,
+					"max": 120,
+					"step": 1,
+					"tooltip": "Fallback duration used when the enable pagination action does not provide a valid override."
+				},
+				{
+					"label": "Stop at final page",
+					"type": "checkbox",
+					"property": "stopAtEnd",
+					"default": false,
+					"tooltip": "Applies only while pagination mode was started by the enablePaginationMode Wallboard action."
+				},
+				{
+					"label": "Motion",
+					"type": "select",
+					"property": "motionPreset",
+					"default": "subtle",
+					"options": [
+						{
+							"label": "Off",
+							"value": "off"
+						},
+						{
+							"label": "Subtle",
+							"value": "subtle"
+						}
+					]
+				}
+			]
+		},
+		{
+			"label": "Display typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "displayFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "displayFont"
+				}
+			]
+		},
+		{
+			"label": "Interface typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "interfaceFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "interfaceFont"
+				}
+			]
+		},
+		{
+			"label": "Category button typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "categoryFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "categoryFont"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "categoryMaxFontSize",
+					"default": 18,
+					"min": 12,
+					"max": 40,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Category button description typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "categoryButtonDescriptionFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "categoryButtonDescriptionFont"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "categoryButtonDescriptionMaxFontSize",
+					"default": 14,
+					"min": 14,
+					"max": 28,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Active category description typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "activeCategoryDescriptionFont"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "activeCategoryDescriptionFont"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "activeCategoryDescriptionMaxFontSize",
+					"default": 14,
+					"min": 14,
+					"max": 32,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Entry field 1 typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "entryField1Font"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "entryField1Font"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "entryField1MaxFontSize",
+					"default": 28,
+					"min": 18,
+					"max": 56,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Entry field 2 typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "entryField2Font"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "entryField2Font"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "entryField2MaxFontSize",
+					"default": 18,
+					"min": 14,
+					"max": 40,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Entry field 3 typography",
+			"type": "group",
+			"properties": [
+				{
+					"type": "fontFamily",
+					"propertyContainer": "entryField3Font"
+				},
+				{
+					"type": "fontStyle",
+					"propertyContainer": "entryField3Font"
+				},
+				{
+					"label": "Maximum font size",
+					"type": "number",
+					"property": "entryField3MaxFontSize",
+					"default": 14,
+					"min": 11,
+					"max": 32,
+					"step": 1
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "light",
+					"tooltip": "Light and Dark are complete coordinated palettes. Choose Custom to edit every semantic color below. Background image and overlay controls remain available in every scheme.",
+					"options": [
+						{
+							"label": "Light",
+							"value": "light"
+						},
+						{
+							"label": "Dark",
+							"value": "dark"
+						},
+						{
+							"label": "Custom",
+							"value": "custom"
+						}
+					]
+				},
+				{
+					"label": "Corner radius",
+					"type": "number",
+					"property": "cornerRadius",
+					"default": 18,
+					"min": 0,
+					"max": 32,
+					"step": 1
+				},
+				{
+					"label": "Background image",
+					"type": "file",
+					"property": "backgroundImage",
+					"tooltip": "Optional Wallboard-managed canvas image for Light, Dark, or Custom. Clearing it restores the packaged mint image in Light/Custom and the solid canvas in Dark."
+				},
+				{
+					"label": "Background overlay color",
+					"type": "color",
+					"property": "backgroundOverlayColor",
+					"default": "#000000",
+					"tooltip": "Color layered above the background image and below the directory shell in every color scheme."
+				},
+				{
+					"label": "Background overlay opacity",
+					"type": "number",
+					"property": "backgroundOverlayOpacity",
+					"default": 0,
+					"min": 0,
+					"max": 100,
+					"step": 1,
+					"tooltip": "Overlay strength as a percentage. Use 0 to preserve the unaltered image."
+				},
+				{
+					"label": "Page background",
+					"type": "color",
+					"property": "backgroundColor",
+					"default": "#dff3e4",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Header background",
+					"type": "color",
+					"property": "headerBackgroundColor",
+					"default": "#073c35",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Header text",
+					"type": "color",
+					"property": "headerTextColor",
+					"default": "#f7faf7",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Directory panel",
+					"type": "color",
+					"property": "panelColor",
+					"default": "#f7faf7",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Primary text",
+					"type": "color",
+					"property": "primaryTextColor",
+					"default": "#151a17",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Secondary text",
+					"type": "color",
+					"property": "secondaryTextColor",
+					"default": "#66736d",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Category button description text",
+					"type": "color",
+					"property": "categoryButtonDescriptionTextColor",
+					"default": "#65726c",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Active category description text",
+					"type": "color",
+					"property": "activeCategoryDescriptionTextColor",
+					"default": "#66736d",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Entry field 1 text",
+					"type": "color",
+					"property": "entryField1TextColor",
+					"default": "#161b18",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Entry field 2 text",
+					"type": "color",
+					"property": "entryField2TextColor",
+					"default": "#2f8f46",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Entry field 3 text",
+					"type": "color",
+					"property": "entryField3TextColor",
+					"default": "#6c7772",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Category button",
+					"type": "color",
+					"property": "categoryButtonColor",
+					"default": "#f1f5f2",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Category button text",
+					"type": "color",
+					"property": "categoryButtonTextColor",
+					"default": "#25342e",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Active category",
+					"type": "color",
+					"property": "categoryActiveColor",
+					"default": "#ccefd5",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Active category text",
+					"type": "color",
+					"property": "categoryActiveTextColor",
+					"default": "#153b2b",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Donor entry",
+					"type": "color",
+					"property": "donorCardColor",
+					"default": "#ffffff",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Donor entry rule",
+					"type": "color",
+					"property": "donorCardBorderColor",
+					"default": "#d7e0d9",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Search background",
+					"type": "color",
+					"property": "searchBackgroundColor",
+					"default": "#ffffff",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Search text and icon",
+					"type": "color",
+					"property": "searchTextColor",
+					"default": "#18211d",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Search and shell border",
+					"type": "color",
+					"property": "searchBorderColor",
+					"default": "#cbd7ce",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent",
+					"type": "color",
+					"property": "accentColor",
+					"default": "#35a853",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent text",
+					"type": "color",
+					"property": "accentTextColor",
+					"default": "#ffffff",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Keyboard panel",
+					"type": "color",
+					"property": "keyboardBackgroundColor",
+					"default": "#f6f8f5",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Keyboard key",
+					"type": "color",
+					"property": "keyboardKeyColor",
+					"default": "#ffffff",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Keyboard key text",
+					"type": "color",
+					"property": "keyboardKeyTextColor",
+					"default": "#18211d",
+					"visibilityConditions": {
+						"conditions": [
+							{
+								"id": "#1",
+								"type": "EQUALS",
+								"value": "custom",
+								"dependsOn": "themePreset"
+							}
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js",
+		"assets/index.jpg"
+	],
+	"externalCommands": [
+		{
+			"label": "Enable pagination mode",
+			"command": "enablePaginationMode",
+			"parameters": [
+				{
+					"parameter": "durationSeconds",
+					"label": "Seconds per page",
+					"type": "number"
+				}
+			]
+		},
+		{
+			"label": "Disable pagination mode",
+			"command": "disablePaginationMode"
+		},
+		{
+			"label": "Reset donor directory",
+			"command": "resetExperience"
+		}
+	]
+}

@@ -1,0 +1,30 @@
+{
+	"Donor Information": {
+		"header": {
+			"Name": "string",
+			"Category": "dropdown",
+			"Amount": "number"
+		},
+		"rows": [
+			{ "Name": "Alina Marlow", "Category": "Founders Circle", "Amount": 125000 },
+			{ "Name": "Alexandra Vale", "Category": "Legacy Society", "Amount": 118000 },
+			{ "Name": "Élodie Fern", "Category": "Leadership Circle", "Amount": 96500 },
+			{ "Name": "Eloise Grove", "Category": "Community Friends", "Amount": 87500 },
+			{ "Name": "Coraline Alden", "Category": "Discovery Guild", "Amount": 74000 },
+			{ "Name": "Avery Stone", "Category": "Learning Partners", "Amount": 62500 },
+			{ "Name": "Morgan Vale", "Category": "Garden Stewards", "Amount": 51000 },
+			{ "Name": "Riley North", "Category": "Future Builders", "Amount": 42500 },
+			{ "Name": "Jordan Briar", "Category": "Heritage Champions", "Amount": 36000 },
+			{ "Name": "Taylor Lark", "Category": "Founders Circle", "Amount": 28500 },
+			{ "Name": "Cameron Reed", "Category": "Legacy Society", "Amount": 24000 },
+			{ "Name": "Quinn Harbor", "Category": "Leadership Circle", "Amount": 19500 },
+			{ "Name": "Parker Elm", "Category": "Community Friends", "Amount": 15000 },
+			{ "Name": "Skyler Ash", "Category": "Discovery Guild", "Amount": 12000 },
+			{ "Name": "Robin Marlow", "Category": "Learning Partners", "Amount": 9500 },
+			{ "Name": "Emerson Field", "Category": "Garden Stewards", "Amount": 7500 },
+			{ "Name": "Dakota Wren", "Category": "Future Builders", "Amount": 5000 },
+			{ "Name": "Casey Linden", "Category": "Heritage Champions", "Amount": 2500 }
+		],
+		"connectors": {}
+	}
+}
