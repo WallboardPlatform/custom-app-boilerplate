@@ -160,8 +160,8 @@
 	],
 	"states": [
 		{
-			"scenario": "light-theme",
-			"expectation": "The light preset keeps open and closed states distinguishable and the time legible."
+			"scenario": "dark-theme",
+			"expectation": "The dark preset keeps open and closed states distinguishable and the time legible."
 		},
 		{
 			"scenario": "empty",

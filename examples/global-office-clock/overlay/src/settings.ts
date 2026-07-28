@@ -13,7 +13,7 @@ const booleanSetting = (value: boolean | undefined, fallback: boolean): boolean 
 const timeFormatSetting = (value: string | undefined): HourFormat => value === '12' ? '12' : '24';
 
 export default (config: ConfigValues): Settings => {
-	const palette = resolveTheme(themePresetSetting(config.themePreset), {
+	const palette = resolveTheme(themePresetSetting(config.themePreset ?? 'light'), {
 		dark: {
 			backgroundColor: '#12100d',
 			surfaceColor: '#1b1815',
@@ -31,12 +31,12 @@ export default (config: ConfigValues): Settings => {
 			dividerColor: '#ddd4c4'
 		},
 		custom: {
-			backgroundColor: textSetting(config.backgroundColor, '#12100d'),
-			surfaceColor: textSetting(config.surfaceColor, '#1b1815'),
-			primaryTextColor: textSetting(config.primaryTextColor, '#f4f1ea'),
-			secondaryTextColor: textSetting(config.secondaryTextColor, '#a2988a'),
-			accentColor: textSetting(config.accentColor, '#d8a657'),
-			dividerColor: textSetting(config.dividerColor, '#2f2a25')
+			backgroundColor: textSetting(config.backgroundColor, '#f3ede5'),
+			surfaceColor: textSetting(config.surfaceColor, '#fffdf8'),
+			primaryTextColor: textSetting(config.primaryTextColor, '#14110e'),
+			secondaryTextColor: textSetting(config.secondaryTextColor, '#6d6357'),
+			accentColor: textSetting(config.accentColor, '#9a6316'),
+			dividerColor: textSetting(config.dividerColor, '#ddd4c4')
 		}
 	});
 

@@ -96,6 +96,45 @@ export const openStateOf = (office: Office, at: Date): OfficeOpenState => {
 		: (current >= office.opensAtHour || current < office.closesAtHour ? 'open' : 'closed');
 };
 
+/**
+ * Hours ahead of or behind the first office. A distributed team reads the board to answer "can I
+ * call them now", and that is a difference, not an absolute. The first row is home rather than
+ * the player's own zone so the board renders identically wherever it is previewed.
+ */
+export const offsetFromHome = (home: Office, office: Office, at: Date): number => {
+	const read = (zone: string): number => {
+		const parts: string = new Intl.DateTimeFormat('en-GB', {
+			timeZone: zone,
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		}).format(at);
+		const [day, clock] = parts.split(', ');
+		const [hours, minutes] = (clock ?? '00:00').split(':');
+
+		return Number(day) * 1440 + Number(hours) * 60 + Number(minutes);
+	};
+	const difference: number = read(office.timeZone) - read(home.timeZone);
+	// A day boundary between the two zones shows up as a ~24h jump; fold it back.
+	const folded: number = difference > 720 ? difference - 1440 : difference < -720 ? difference + 1440 : difference;
+
+	return Math.round(folded / 60);
+};
+
+export const offsetLabel = (hours: number): string => {
+	if (hours === 0) return 'Same time';
+
+	return `${hours > 0 ? '+' : '−'}${Math.abs(hours)}h`;
+};
+
+/** The office's own working window, so a viewer can see why it reads open or closed. */
+export const hoursLabel = (office: Office): string => {
+	const pad = (value: number): string => String(value).padStart(2, '0');
+
+	return `${pad(office.opensAtHour)}:00 – ${pad(office.closesAtHour)}:00 local`;
+};
+
 const OPEN_LABELS: Record<OfficeOpenState, string> = {
 	open: 'Open now',
 	closed: 'Closed',
@@ -135,7 +174,7 @@ export type SurfaceTier = 'small' | 'medium' | 'large';
 export const tierFor = (width: number, height: number): SurfaceTier => {
 	const shortest: number = Math.min(width, height);
 
-	if (shortest < 560) return 'small';
+	if (shortest < 700) return 'small';
 
 	return shortest < 900 ? 'medium' : 'large';
 };

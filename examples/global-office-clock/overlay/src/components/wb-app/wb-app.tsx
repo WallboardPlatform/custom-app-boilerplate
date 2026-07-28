@@ -8,7 +8,7 @@ import { useSettings } from '@hooks/system/useSettings';
 import type { DataSources, Settings } from '@interfaces/application.interface';
 import type { Office, OfficeReading } from '@interfaces/office-clock.interface';
 
-import { columnsFor, normalizeOffices, readOffice, tierFor } from '@utils/office-clock';
+import { columnsFor, normalizeOffices, hoursLabel, offsetFromHome, offsetLabel, readOffice, tierFor } from '@utils/office-clock';
 import type { SurfaceTier } from '@utils/office-clock';
 
 import WbOfficeColumn from '@components/wb-office-column/wb-office-column';
@@ -96,6 +96,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		>
 			<header class="wb-global-office-clock-header">
 				<h1 ref={fitTitle} class="wb-global-office-clock-title">{settings().boardTitle}</h1>
+				<Show when={readings().length > 0}>
+					<span class="wb-global-office-clock-count">{readings().length} offices</span>
+				</Show>
 			</header>
 
 			<Show
@@ -108,8 +111,14 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			>
 				<div class="wb-global-office-clock-board">
 					<For each={readings()}>
-						{(reading: OfficeReading): JSX.Element => (
-							<WbOfficeColumn reading={reading} showOpenState={settings().showOpenState} />
+						{(reading: OfficeReading, index): JSX.Element => (
+							<WbOfficeColumn
+								reading={reading}
+								home={index() === 0}
+								hoursLabel={hoursLabel(reading.office)}
+								offsetLabel={offsetLabel(offsetFromHome(offices()[0] as Office, reading.office, now()))}
+								showOpenState={settings().showOpenState}
+							/>
 						)}
 					</For>
 				</div>
