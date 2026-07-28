@@ -49,8 +49,13 @@ jobs:
           - call-center-agent-status
           - campus-directory
           - civic-venue-pulse
+          - curated-storyline
+          - factory-safety-questionnaire
+          - factory-safety-results-dashboard
+          - global-office-clock
           - kpi-operations
           - live-agenda
+          - lumen-media-program
           - manufacturing-andon
           - market-rotation-ticker
           - museum-welcome
@@ -61,6 +66,7 @@ jobs:
           - recognition-mosaic
           - restaurant-menu
           - single-hero-clock
+          - spatial-wayfinding
           - veszprem-wayfinding
           - weather-window
 

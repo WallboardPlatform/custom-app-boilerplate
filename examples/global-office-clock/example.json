@@ -1,0 +1,14 @@
+{
+	"title": "Global Office Clock",
+	"description": "Parallel office columns each in their own local time, with open state stated in words rather than carried by colour.",
+	"mechanisms": ["multi-timezone", "count-adaptive-layout"],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"],
+	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+}

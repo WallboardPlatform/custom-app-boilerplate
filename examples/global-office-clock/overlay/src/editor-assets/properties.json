@@ -1,0 +1,112 @@
+{
+	"version": "1",
+	"name": "Global Office Clock",
+	"interactive": false,
+	"size": { "width": "1920px", "height": "1080px" },
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"],
+	"properties": [
+		{
+			"label": "Offices",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Office table",
+					"type": "dataPicker",
+					"property": "officeData",
+					"tooltip": "TABLE with columns: name, region, timeZone (IANA, e.g. Europe/Budapest), opensAtHour, closesAtHour."
+				},
+				{ "label": "Board title", "type": "text", "property": "boardTitle", "default": "Global offices" },
+				{
+					"label": "Message when empty",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No offices are configured yet."
+				}
+			]
+		},
+		{
+			"label": "Time",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Clock format",
+					"type": "select",
+					"property": "timeFormat",
+					"default": "24",
+					"options": [
+						{ "label": "24 hour", "value": "24" },
+						{ "label": "12 hour", "value": "12" }
+					]
+				},
+				{ "label": "Show seconds", "type": "checkbox", "property": "showSeconds", "default": false },
+				{
+					"label": "Show open and closed",
+					"type": "checkbox",
+					"property": "showOpenState",
+					"default": true,
+					"tooltip": "Uses each office's own local working hours."
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Color scheme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "dark",
+					"tooltip": "Dark and Light are coordinated presets. Choose Custom to use the color controls below.",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Background color",
+					"type": "color",
+					"property": "backgroundColor",
+					"default": "#12100d",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				},
+				{
+					"label": "Panel color",
+					"type": "color",
+					"property": "surfaceColor",
+					"default": "#1b1815",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				},
+				{
+					"label": "Primary text color",
+					"type": "color",
+					"property": "primaryTextColor",
+					"default": "#f4f1ea",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				},
+				{
+					"label": "Secondary text color",
+					"type": "color",
+					"property": "secondaryTextColor",
+					"default": "#a2988a",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				},
+				{
+					"label": "Accent color",
+					"type": "color",
+					"property": "accentColor",
+					"default": "#d8a657",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				},
+				{
+					"label": "Divider color",
+					"type": "color",
+					"property": "dividerColor",
+					"default": "#2f2a25",
+					"visibilityConditions": { "conditions": [{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }], "rule": "#1" }
+				}
+			]
+		}
+	]
+}
