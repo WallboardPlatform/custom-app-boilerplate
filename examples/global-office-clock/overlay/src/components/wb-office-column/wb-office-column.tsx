@@ -10,6 +10,7 @@ export interface WbOfficeColumnProps {
 	hoursLabel: string;
 	offsetLabel: string;
 	reading: OfficeReading;
+	row: number;
 	showOpenState: boolean;
 	transitionLabel: string;
 	zoneLabel: string;
@@ -33,6 +34,7 @@ export default (props: WbOfficeColumnProps): JSX.Element => {
 			class="wb-global-office-clock-office"
 			data-open-state={props.reading.openState}
 			data-home={props.home}
+			data-row={props.row}
 		>
 			<div class="wb-global-office-clock-identity">
 				<span class="wb-global-office-clock-region">{props.reading.office.region || 'Office'}</span>

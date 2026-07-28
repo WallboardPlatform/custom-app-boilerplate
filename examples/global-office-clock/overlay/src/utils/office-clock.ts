@@ -201,15 +201,42 @@ export const readOffice = (
 
 export type SurfaceTier = 'small' | 'medium' | 'large';
 
-/**
- * Column count follows the office count, not the surface width: two offices stretched across six
- * columns reads as a broken board.
- */
-export const columnsFor = (count: number, portrait: boolean): number => {
-	if (count <= 0) return 1;
-	if (portrait) return count <= 4 ? 1 : 2;
+/** Below this a column cannot hold an office name and a clock without the name wrapping to three lines. */
+const MINIMUM_COLUMN_WIDTH = 210;
 
-	return count <= 4 ? count : 3;
+/**
+ * Column count follows the office count first, then the surface: two offices stretched across six
+ * columns reads as a broken board, but four offices on a 600px square would each get a 150px
+ * sliver, so the board wraps into rows rather than shrinking past what a column can carry.
+ */
+export const columnsFor = (count: number, portrait: boolean, boardWidth: number): number => {
+	if (count <= 0) {
+		return 1;
+	}
+
+	const ideal: number = portrait
+		? (count <= 4 ? 1 : 2)
+		: (count <= 4 ? count : 3);
+	const affordable: number[] = [];
+
+	for (let columns: number = ideal; columns >= 1; columns -= 1) {
+		if (boardWidth <= 0 || boardWidth / columns >= MINIMUM_COLUMN_WIDTH) {
+			affordable.push(columns);
+		}
+	}
+
+	const widest: number = affordable[0] ?? 1;
+
+	/*
+	 * A row that is one column short leaves a hole the eye reads as a missing office, so an even
+	 * split is worth one column of width — but only down to two. Dropping to a single column to
+	 * divide evenly would stack every office in a tall strip, which is worse than the hole.
+	 */
+	if (count % widest === 0 || widest - 1 < 2 || count % (widest - 1) !== 0) {
+		return widest;
+	}
+
+	return widest - 1;
 };
 
 /**
@@ -225,7 +252,7 @@ export const tierForCell = (
 	count: number,
 	portrait: boolean
 ): SurfaceTier => {
-	const columns: number = columnsFor(count, portrait);
+	const columns: number = columnsFor(count, portrait, boardWidth);
 	const rows: number = Math.max(1, Math.ceil(Math.max(count, 1) / columns));
 	// The header and board padding take roughly a fifth of the height before any column starts.
 	const cellHeight: number = (boardHeight * 0.8) / rows;

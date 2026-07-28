@@ -64,22 +64,27 @@
   text-transform: uppercase;
 }
 
+/* Wrapping flexbox rather than grid: the legacy bundle targets Chromium 56, which predates it.
+   Columns come from an explicit width so the board keeps the authored column count. */
 :global(.wb-global-office-clock-board) {
-  display: grid;
+  display: flex;
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
-  grid-template-columns: repeat(var(--wb-office-columns, 3), minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  flex-wrap: wrap;
   align-content: stretch;
 }
 
 :global(.wb-global-office-clock-office) {
   display: flex;
+  width: calc(100% / var(--wb-office-columns, 3));
   min-width: 0;
   min-height: 0;
-  padding: 0 4%;
+  /* A fixed gutter, not a percentage: percentage padding on a flex item resolves against the whole
+     board rather than the column, which would multiply the gutter by the column count. */
+  padding: 0 28px;
   overflow: hidden;
+  flex: 0 0 auto;
   flex-direction: column;
   justify-content: flex-start;
   border-left: 1px solid var(--wb-office-divider, #ddd4c4);
@@ -88,6 +93,12 @@
 :global(.wb-global-office-clock-office:first-child) {
   padding-left: 0;
   border-left: 0;
+}
+
+/* A wrapped row needs its own rule; without it the state chip of one row sits straight on top of
+   the next row's region label and the board reads as one run-on column. */
+:global(.wb-global-office-clock-office:not([data-row='0'])) {
+  border-top: 1px solid var(--wb-office-divider, #ddd4c4);
 }
 
 :global(.wb-global-office-clock-identity) {
@@ -181,6 +192,9 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The foot is pinned to the bottom edge so the state chips share one baseline across the board.
+   `auto` rather than a fixed margin: it only absorbs space that is already free, so a wrapped
+   board cannot be pushed past its own height. */
 :global(.wb-global-office-clock-foot) {
   display: flex;
   min-width: 0;
@@ -247,6 +261,7 @@
 
 /* Portrait stacks the offices, so the rule runs between rows instead of columns. */
 :global(.wb-global-office-clock[data-orientation='portrait']) :global(.wb-global-office-clock-office) {
+  width: 100%;
   padding: 0;
   border-left: 0;
   border-top: 1px solid var(--wb-office-divider, #ddd4c4);
@@ -295,6 +310,10 @@
 
 :global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-count) {
   font-size: 14px;
+}
+
+:global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-office) {
+  padding: 0 10px;
 }
 
 :global(.wb-global-office-clock[data-tier='small']) :global(.wb-global-office-clock-identity) {

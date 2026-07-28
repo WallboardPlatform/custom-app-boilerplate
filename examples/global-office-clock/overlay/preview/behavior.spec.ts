@@ -77,3 +77,17 @@ test('the board clock ticks and is cleaned up on destroy', async ({ page }): Pro
 
 	await expect(page.locator(ROOT)).toHaveCount(0);
 });
+
+test('a narrow board wraps offices into rows instead of slivers', async ({ page }): Promise<void> => {
+	// Four offices earn four columns on a wide board, but on a 600px square that would be 150px
+	// each — too narrow to carry a name beside a clock, so the board splits into two rows of two.
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	const response = await page.goto('/preview/widget.html?scenario=app-default&background=dark');
+
+	expect(response?.ok()).toBe(true);
+	await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true');
+	await expect(page.locator(ROOT)).toHaveAttribute('data-columns', '4');
+
+	await page.setViewportSize({ width: 600, height: 600 });
+	await expect(page.locator(ROOT)).toHaveAttribute('data-columns', '2');
+});

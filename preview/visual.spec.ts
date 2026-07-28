@@ -26,6 +26,7 @@ import {
 } from './legibility';
 
 const DEFAULT_VISUAL_SETTLE_MS = 650;
+const IMAGE_SETTLE_TIMEOUT_MS = 5000;
 
 interface VisualPreset {
 	name: string;
@@ -146,6 +147,41 @@ const scenarioPresets: VisualPreset[] = previewScenarios.map((scenario: PreviewS
 	minimumContentCoverage: scenario.minimumContentCoverage,
 	liveDatasourceUpdate: scenario.liveDatasourceUpdate
 }));
+
+/**
+ * Wait for every image to stop loading before anything is measured or captured.
+ *
+ * `HTMLImageElement.complete` is false while a request is still in flight, so an image that simply
+ * had not arrived yet was indistinguishable from one that failed. Under CI load that produced
+ * intermittent `brokenImages` failures on real, working assets, and screenshots that captured a
+ * half-loaded frame. Settling first makes the later `!complete` check mean what it says: an image
+ * that never resolved. Images that resolve to an error still settle, so genuine breakage is
+ * reported by `naturalWidth === 0` rather than by a race.
+ */
+const settleImages = async (page: Page): Promise<void> => {
+	await page.evaluate(async (timeoutMs: number): Promise<void> => {
+		const pending: HTMLImageElement[] = [...document.images].filter(
+			(image: HTMLImageElement): boolean => !image.complete
+		);
+
+		if (pending.length === 0) {
+			return;
+		}
+
+		await Promise.all(pending.map((image: HTMLImageElement): Promise<void> => {
+			return new Promise<void>((resolve): void => {
+				const finish = (): void => {
+					window.clearTimeout(timer);
+					resolve();
+				};
+				const timer: number = window.setTimeout(finish, timeoutMs);
+
+				image.addEventListener('load', finish, { once: true });
+				image.addEventListener('error', finish, { once: true });
+			});
+		}));
+	}, IMAGE_SETTLE_TIMEOUT_MS);
+};
 
 const screenshotDirectory: string = path.resolve(process.cwd(), 'preview', 'output');
 const coverageMeasurementDirectory: string = path.join(screenshotDirectory, 'coverage-measurements');
@@ -311,6 +347,9 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			}, preset.readySelector);
 		}
 
+		await settleImages(page);
+
+
 		const dynamicTextPolicies: DynamicTextPolicy[] = generationBrief.dynamicText.filter(
 			(policy: DynamicTextPolicy): boolean => policy.evidenceScenario === preset.scenario
 		);
@@ -464,11 +503,24 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			const horizontalOverflow: string[] = [];
 			const verticalOverflow: string[] = [];
 			const outsideRoot: string[] = [];
-			const brokenImages: string[] = [];
 			const leafRects: DOMRect[] = [];
 			const textInkMeasurements: TextInkMeasurement[] = [];
 			const canvas: HTMLCanvasElement = document.createElement('canvas');
 			const canvasContext: CanvasRenderingContext2D | null = canvas.getContext('2d');
+
+			/**
+			 * Broken images are collected before the visibility filter, not inside it.
+			 *
+			 * An image that fails to load has no intrinsic size, so unless the layout gives it one it
+			 * collapses to a 0x0 box and the visibility filter skips it — meaning the check could never
+			 * fire on the breakage it exists to catch. It only ever fired on images that were still
+			 * loading but already had a laid-out box, which is a race rather than a defect.
+			 */
+			const collectBrokenImages = (): string[] => {
+				return Array.from(root.querySelectorAll('img'))
+					.filter((image: HTMLImageElement): boolean => image.complete && image.naturalWidth === 0)
+					.map((image: HTMLImageElement): string => describeElement(image));
+			};
 
 			const describeElement = (element: HTMLElement): string => {
 				const id: string = element.id ? `#${element.id}` : '';
@@ -519,10 +571,6 @@ for (const preset of [...presets, ...scenarioPresets]) {
 					element.childElementCount === 0 &&
 					style.textOverflow === 'ellipsis' &&
 					['clip', 'hidden'].includes(style.overflowX);
-
-				if (element instanceof HTMLImageElement && (!element.complete || element.naturalWidth === 0)) {
-					brokenImages.push(describeElement(element));
-				}
 
 				if (
 					!allowsOffCanvasContent &&
@@ -658,7 +706,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				horizontalOverflow: [...new Set(horizontalOverflow)],
 				verticalOverflow: [...new Set(verticalOverflow)],
 				outsideRoot: [...new Set(outsideRoot)],
-				brokenImages: [...new Set(brokenImages)],
+				brokenImages: [...new Set(collectBrokenImages())],
 				textInkMeasurements
 			};
 		});

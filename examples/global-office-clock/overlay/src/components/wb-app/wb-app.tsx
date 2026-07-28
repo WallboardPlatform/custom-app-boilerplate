@@ -46,7 +46,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return offices().map((office: Office): OfficeReading => readOffice(office, at, options));
 	});
-	const columns: Accessor<number> = createMemo((): number => columnsFor(offices().length, portrait()));
+	const columns: Accessor<number> = createMemo((): number => columnsFor(offices().length, portrait(), board().width));
+	const rows: Accessor<number> = createMemo((): number => {
+		return Math.max(1, Math.ceil(Math.max(offices().length, 1) / columns()));
+	});
 	const tier: Accessor<SurfaceTier> = createMemo((): SurfaceTier => {
 		return tierForCell(board().width, board().height, offices().length, portrait());
 	});
@@ -95,6 +98,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-host-ready={Boolean(props.hostElement)}
 			data-office-count={offices().length}
 			data-columns={columns()}
+			data-rows={rows()}
 			data-orientation={portrait() ? 'portrait' : 'landscape'}
 			data-tier={tier()}
 			style={{
@@ -128,10 +132,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<WbOfficeColumn
 								reading={reading}
 								home={index() === 0}
+								row={Math.floor(index() / columns())}
 								hoursLabel={hoursLabel(reading.office)}
 								zoneLabel={zoneLabel(reading.office, now())}
 								transitionLabel={transitionLabel(reading.office, now())}
-								offsetLabel={offsetLabel(offsetFromHome(offices()[0] as Office, reading.office, now()))}
+								offsetLabel={offsetLabel(offsetFromHome(offices()[0], reading.office, now()))}
 								showOpenState={settings().showOpenState}
 							/>
 						)}
