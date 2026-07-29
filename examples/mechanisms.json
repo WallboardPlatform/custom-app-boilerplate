@@ -45,7 +45,8 @@
 		"directory-search": "Search and filter across a browsable set.",
 		"guided-form": "Stepped input with validation and submission.",
 		"custom-settings-editor": "An editor surface beyond the property sidebar.",
-		"map-orientation": "Selecting a destination and showing the way to it."
+		"map-orientation": "Selecting a destination and showing the way to it.",
+		"accessible-reach": "A viewer-toggled layout that moves controls within reach and enlarges touch targets, for kiosks used from a seated height."
 	},
 	"referenceExample": {
 		"note": "The example an agent should read first for this mechanism. Absent means no example is a standout, or none exists yet. Changing an entry is how a better teacher replaces an incumbent without either being deleted.",
@@ -59,6 +60,7 @@
 		"photographic-overlay": "weather-window",
 		"published-map-package": "spatial-wayfinding",
 		"status-wall": "call-center-agent-status",
-		"ultra-wide-marquee": "market-rotation-ticker"
+		"ultra-wide-marquee": "market-rotation-ticker",
+		"accessible-reach": "interactive-document-viewer"
 	}
 }

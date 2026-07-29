@@ -64,6 +64,7 @@ jobs:
           - factory-safety-questionnaire
           - factory-safety-results-dashboard
           - global-office-clock
+          - interactive-document-viewer
           - kpi-operations
           - live-agenda
           - lumen-media-program
@@ -71,7 +72,6 @@ jobs:
           - market-rotation-ticker
           - museum-welcome
           - newsroom-spotlight
-          - pdf-document-workspace
           - pharmacy-pickup-queue
           - product-catalog
           - recognition-mosaic
