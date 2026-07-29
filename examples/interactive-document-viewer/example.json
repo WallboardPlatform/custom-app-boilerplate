@@ -2,8 +2,8 @@
 	"title": "Interactive Document Viewer",
 	"description": "Municipal self-service kiosk: a searchable document directory backed by a TABLE datasource, with an in-place PDF reader carrying outlines, links, zoom and an idle return to the directory.",
 	"mechanisms": [
+		"accessible-reach",
 		"pdf-rendering",
-		"on-screen-keyboard",
 		"directory-search",
 		"idle-screensaver",
 		"scheduled-visibility",
