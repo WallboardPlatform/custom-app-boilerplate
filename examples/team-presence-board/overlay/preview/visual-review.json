@@ -1,0 +1,141 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "e09726eaa3e2bdd223f532a9b10fbd159983ff7fae3b3cf0e2ad4200be18dc60",
+	"reviewedAt": "2026-07-29T00:00:00.000Z",
+	"reviewer": "Claude (agent)",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Live Teams availability for a configured group, grouped by state, with the board reshaping as the headcount changes."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Follows the reference door-card and status-wall treatments without copying their styling."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Near-black board with saturated presence rings and a live rail; distinct from the other dark examples, which are tabular."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Names and state words carry at room distance; the hero and compact tiers grow both rather than adding rows."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark and light themes both verified, including presence colours against each background."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-names scenario shows names truncating cleanly rather than clipping or overflowing their tiles."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Verified 600x600 through 1920x1080 plus portrait and 1536x432; layout switches tier rather than shrinking."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Avatars degrade to initials when a photo fails, verified by the broken-photos scenario."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Only example bound to live presence, where state changes on its own rather than on a refresh cycle."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-all-offline-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-broken-photos-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-chrome-hidden-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-compact-trio-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-dense-wall-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-empty-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-hero-door-card-1280x800.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-hidden-offline-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-long-names-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "scenario-malformed-data-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected; grouping, presence state and tier layout correct at this surface."
+		}
+	],
+	"unresolvedFindings": []
+}
