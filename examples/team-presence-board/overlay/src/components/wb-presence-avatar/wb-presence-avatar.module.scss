@@ -1,0 +1,104 @@
+/** utf-8:  o */
+
+/* <editor-fold desc="Presence avatar"> ----------------------------- */
+
+.wb-presence-avatar {
+	position: relative;
+	width: var(--wb-presence-card-avatar);
+	height: var(--wb-presence-card-avatar);
+	flex: 0 0 auto;
+}
+
+:global(.wb-presence-avatar.wb-presence-avatar--feature) {
+	width: var(--wb-presence-compact-avatar);
+	height: var(--wb-presence-compact-avatar);
+}
+
+:global(.wb-presence-avatar .wb-presence-avatar-media) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	align-items: center;
+	justify-content: center;
+	border: 3px solid var(--wb-presence-status);
+	border-radius: 50%;
+	background: var(--wb-presence-panel);
+}
+
+:global(.wb-presence-avatar.wb-presence-avatar--feature .wb-presence-avatar-media) {
+	border-width: 5px;
+}
+
+:global(.wb-presence-app:not([data-motion='off']) .wb-presence-avatar-media) {
+	transition: border-color 0.35s ease;
+}
+
+:global(.wb-presence-avatar .wb-presence-avatar-media) img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+:global(.wb-presence-avatar[data-group='offline'] .wb-presence-avatar-media) {
+	-webkit-filter: grayscale(1);
+	filter: grayscale(1);
+	opacity: 0.55;
+}
+
+:global(.wb-presence-avatar .wb-presence-initials) {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	color: #FFFFFF;
+	font-size: var(--wb-presence-initials-size);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 1;
+}
+
+:global(.wb-presence-avatar.wb-presence-avatar--feature .wb-presence-initials) {
+	font-size: var(--wb-presence-feature-initials);
+}
+
+:global(.wb-presence-avatar .wb-presence-ring-pulse) {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border: 3px solid var(--wb-presence-status);
+	border-radius: 50%;
+	opacity: 0;
+	pointer-events: none;
+}
+
+:global(.wb-presence-avatar .wb-presence-badge) {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	width: 30%;
+	min-width: 18px;
+	height: 30%;
+	min-height: 18px;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid var(--wb-presence-bg);
+	border-radius: 50%;
+	background: var(--wb-presence-status);
+}
+
+:global(.wb-presence-avatar .wb-presence-badge) svg {
+	display: block;
+	width: 68%;
+	height: 68%;
+}
+
+/* </editor-fold desc="Presence avatar"> ---------------------------- */

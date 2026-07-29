@@ -78,6 +78,7 @@ jobs:
           - restaurant-menu
           - single-hero-clock
           - spatial-wayfinding
+          - team-presence-board
           - veszprem-wayfinding
           - weather-window
 

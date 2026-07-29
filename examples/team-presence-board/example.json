@@ -1,0 +1,25 @@
+{
+	"title": "Team Presence Board",
+	"description": "Live Microsoft Teams availability for a configured group, with the board changing shape between dense, quadrant, compact and hero door-card layouts as the number of people changes.",
+	"mechanisms": [
+		"presence-binding",
+		"status-wall",
+		"count-adaptive-layout"
+	],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
+}

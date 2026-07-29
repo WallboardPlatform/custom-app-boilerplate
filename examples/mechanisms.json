@@ -27,7 +27,8 @@
 		"weather-binding": "A weather datasource with its own failure states.",
 		"settings-only": "No datasource at all: the app is driven entirely by settings and time.",
 		"scheduled-visibility": "Rows appearing and expiring on their own schedule, with retention after expiry.",
-		"typed-column-formatting": "Formatting driven by the datasource column type rather than by guesswork."
+		"typed-column-formatting": "Formatting driven by the datasource column type rather than by guesswork.",
+		"presence-binding": "Live availability for named people from an identity or collaboration platform, where the state changes on its own rather than on a refresh cycle."
 	},
 	"composition": {
 		"dense-table-board": "Many rows of uniform records read at distance.",
@@ -61,6 +62,7 @@
 		"published-map-package": "spatial-wayfinding",
 		"status-wall": "call-center-agent-status",
 		"ultra-wide-marquee": "market-rotation-ticker",
-		"accessible-reach": "interactive-document-viewer"
+		"accessible-reach": "interactive-document-viewer",
+		"presence-binding": "team-presence-board"
 	}
 }

@@ -1,0 +1,629 @@
+/** utf-8:  o */
+
+/* <editor-fold desc="Root"> ---------------------------------------- */
+
+.wb-app {
+	@include reset-styles();
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+	flex-direction: column;
+	background: var(--wb-presence-bg);
+	color: var(--wb-presence-text);
+	font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.wb-app,
+.wb-app * {
+	@include box-sizing();
+}
+
+:global(.wb-presence-app) {
+	--wb-presence-available: #6BB700;
+	--wb-presence-busy: #D13438;
+	--wb-presence-away: #F8A800;
+	--wb-presence-offline: #7A8585;
+	--wb-presence-status: #7A8585;
+	--wb-presence-pad: 24px;
+	--wb-presence-title-size: 30px;
+	--wb-presence-scope-size: 24px;
+	--wb-presence-clock-size: 34px;
+	--wb-presence-meta-size: 14px;
+	--wb-presence-zone-title-size: 18px;
+	--wb-presence-card-name-size: 20px;
+	--wb-presence-card-status-size: 14px;
+	--wb-presence-card-avatar: 76px;
+	--wb-presence-card-width: 158px;
+	--wb-presence-card-margin: 8px;
+	--wb-presence-initials-size: 30px;
+	--wb-presence-feature-name-size: 46px;
+	--wb-presence-feature-status-size: 24px;
+	--wb-presence-feature-initials: 64px;
+	--wb-presence-for-size: 18px;
+	--wb-presence-hero-name-size: 68px;
+	--wb-presence-hero-status-size: 30px;
+	--wb-presence-hero-initials: 100px;
+	--wb-presence-ticker-size: 16px;
+}
+
+:global(.wb-presence-app.wb-presence-medium) {
+	--wb-presence-pad: 18px;
+	--wb-presence-title-size: 24px;
+	--wb-presence-scope-size: 18px;
+	--wb-presence-clock-size: 26px;
+	--wb-presence-zone-title-size: 15px;
+	--wb-presence-card-avatar: 60px;
+	--wb-presence-card-width: 142px;
+	--wb-presence-initials-size: 24px;
+	--wb-presence-feature-name-size: 34px;
+	--wb-presence-feature-status-size: 21px;
+	--wb-presence-feature-initials: 44px;
+	--wb-presence-for-size: 15px;
+	--wb-presence-hero-name-size: 46px;
+	--wb-presence-hero-status-size: 24px;
+	--wb-presence-hero-initials: 72px;
+	--wb-presence-ticker-size: 14px;
+}
+
+:global(.wb-presence-app.wb-presence-small) {
+	--wb-presence-pad: 12px;
+	--wb-presence-title-size: 20px;
+	--wb-presence-scope-size: 14px;
+	--wb-presence-clock-size: 17px;
+	--wb-presence-zone-title-size: 14px;
+	--wb-presence-card-avatar: 46px;
+	--wb-presence-card-width: 118px;
+	--wb-presence-card-margin: 5px;
+	--wb-presence-initials-size: 18px;
+	--wb-presence-feature-name-size: 28px;
+	--wb-presence-feature-status-size: 20px;
+	--wb-presence-feature-initials: 32px;
+	--wb-presence-for-size: 14px;
+	--wb-presence-hero-name-size: 28px;
+	--wb-presence-hero-status-size: 20px;
+	--wb-presence-hero-initials: 44px;
+	--wb-presence-ticker-size: 14px;
+}
+
+:global(.wb-presence-app[data-layout='dense']) {
+	--wb-presence-card-avatar: 56px;
+	--wb-presence-card-width: 136px;
+	--wb-presence-card-margin: 6px;
+	--wb-presence-initials-size: 22px;
+}
+
+:global(.wb-presence-app.wb-presence-medium[data-layout='dense']) {
+	--wb-presence-card-avatar: 48px;
+	--wb-presence-card-width: 126px;
+	--wb-presence-initials-size: 19px;
+}
+
+:global(.wb-presence-app.wb-presence-small[data-layout='dense']) {
+	--wb-presence-card-avatar: 40px;
+	--wb-presence-card-width: 112px;
+	--wb-presence-initials-size: 16px;
+}
+
+:global(.wb-presence-app [data-group='available']) {
+	--wb-presence-status: var(--wb-presence-available);
+}
+
+:global(.wb-presence-app [data-group='busy']) {
+	--wb-presence-status: var(--wb-presence-busy);
+}
+
+:global(.wb-presence-app [data-group='away']) {
+	--wb-presence-status: var(--wb-presence-away);
+}
+
+:global(.wb-presence-app [data-group='offline']) {
+	--wb-presence-status: var(--wb-presence-offline);
+}
+
+/* </editor-fold desc="Root"> --------------------------------------- */
+
+/* <editor-fold desc="Header"> -------------------------------------- */
+
+:global(.wb-presence-header) {
+	display: flex;
+	min-width: 0;
+	padding: 12px var(--wb-presence-pad);
+	align-items: center;
+	flex: 0 0 auto;
+	background: var(--wb-presence-well);
+	border-bottom: 3px solid var(--wb-presence-accent);
+}
+
+:global(.wb-presence-title-block) {
+	display: flex;
+	min-width: 0;
+	overflow: hidden;
+	align-items: baseline;
+	flex: 1 1 auto;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-board-title) {
+	min-width: 0;
+	margin: 0;
+	overflow: hidden;
+	flex: 0 1 auto;
+	font-size: var(--wb-presence-title-size);
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	line-height: 1.25;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-scope) {
+	min-width: 0;
+	margin-left: 12px;
+	overflow: hidden;
+	flex: 0 4 auto;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-scope-size);
+	line-height: 1.3;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-header-right) {
+	display: flex;
+	margin-left: 16px;
+	align-items: center;
+	flex: 0 0 auto;
+}
+
+:global(.wb-presence-live) {
+	display: flex;
+	padding: 5px 12px;
+	align-items: center;
+	border: 1px solid var(--wb-presence-accent);
+	color: var(--wb-presence-accent);
+	font-size: var(--wb-presence-meta-size);
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	line-height: 1.3;
+	text-transform: uppercase;
+}
+
+:global(.wb-presence-live) i {
+	width: 8px;
+	height: 8px;
+	margin-right: 8px;
+	flex: 0 0 auto;
+	border-radius: 50%;
+	background: var(--wb-presence-accent);
+}
+
+:global(.wb-presence-date-block) {
+	margin: 0 18px;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-meta-size);
+	letter-spacing: 0.14em;
+	text-align: right;
+	text-transform: uppercase;
+}
+
+:global(.wb-presence-date-block) span {
+	display: block;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-app.wb-presence-narrow .wb-presence-date-block) {
+	display: none;
+}
+
+:global(.wb-presence-clock-time) {
+	font-size: var(--wb-presence-clock-size);
+	font-weight: 800;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+/* </editor-fold desc="Header"> ------------------------------------- */
+
+/* <editor-fold desc="Body and zones"> ------------------------------ */
+
+:global(.wb-presence-body) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	flex: 1 1 auto;
+	flex-direction: column;
+}
+
+:global(.wb-presence-zones) {
+	display: flex;
+	min-height: 0;
+	overflow: hidden;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
+	align-content: stretch;
+}
+
+:global(.wb-presence-zone) {
+	display: flex;
+	width: 50%;
+	min-width: 0;
+	height: 50%;
+	min-height: 0;
+	overflow: hidden;
+	flex-direction: column;
+	background: var(--wb-presence-panel);
+	border-right: 1px solid var(--wb-presence-divider);
+	border-bottom: 1px solid var(--wb-presence-divider);
+}
+
+:global(.wb-presence-app[data-zones='3'] .wb-presence-zone[data-zone='away']) {
+	width: 100%;
+}
+
+:global(.wb-presence-app.wb-presence-wide .wb-presence-zone) {
+	width: 25%;
+	height: 100%;
+}
+
+:global(.wb-presence-app.wb-presence-wide[data-zones='3'] .wb-presence-zone),
+:global(.wb-presence-app.wb-presence-wide[data-zones='3'] .wb-presence-zone[data-zone='away']) {
+	width: 33.3333%;
+	height: 100%;
+}
+
+:global(.wb-presence-zone-header) {
+	display: flex;
+	min-width: 0;
+	padding: 9px 14px;
+	align-items: center;
+	flex: 0 0 auto;
+	border-bottom: 1px solid var(--wb-presence-divider);
+}
+
+:global(.wb-presence-zone-swatch) {
+	width: 10px;
+	height: 10px;
+	margin-right: 10px;
+	flex: 0 0 auto;
+	background: var(--wb-presence-muted);
+}
+
+:global(.wb-presence-zone[data-zone='available'] .wb-presence-zone-swatch) {
+	background: var(--wb-presence-available);
+}
+
+:global(.wb-presence-zone[data-zone='busy'] .wb-presence-zone-swatch) {
+	background: var(--wb-presence-busy);
+}
+
+:global(.wb-presence-zone[data-zone='away'] .wb-presence-zone-swatch) {
+	background: var(--wb-presence-away);
+}
+
+:global(.wb-presence-zone[data-zone='offline'] .wb-presence-zone-swatch) {
+	background: var(--wb-presence-offline);
+}
+
+:global(.wb-presence-zone-title) {
+	min-width: 0;
+	margin: 0;
+	overflow: hidden;
+	flex: 1 1 auto;
+	font-size: var(--wb-presence-zone-title-size);
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	line-height: 1.3;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-zone-count) {
+	margin-left: 10px;
+	flex: 0 0 auto;
+	font-size: var(--wb-presence-zone-title-size);
+	font-weight: 800;
+	line-height: 1.3;
+}
+
+:global(.wb-presence-zone[data-zone='available'] .wb-presence-zone-title),
+:global(.wb-presence-zone[data-zone='available'] .wb-presence-zone-count) {
+	color: var(--wb-presence-available);
+}
+
+:global(.wb-presence-zone[data-zone='busy'] .wb-presence-zone-title),
+:global(.wb-presence-zone[data-zone='busy'] .wb-presence-zone-count) {
+	color: var(--wb-presence-busy);
+}
+
+:global(.wb-presence-zone[data-zone='away'] .wb-presence-zone-title),
+:global(.wb-presence-zone[data-zone='away'] .wb-presence-zone-count) {
+	color: var(--wb-presence-away);
+}
+
+:global(.wb-presence-zone[data-zone='offline'] .wb-presence-zone-title),
+:global(.wb-presence-zone[data-zone='offline'] .wb-presence-zone-count) {
+	color: var(--wb-presence-muted);
+}
+
+:global(.wb-presence-zone-cards) {
+	display: flex;
+	min-height: 0;
+	padding: 8px;
+	overflow: hidden;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
+	align-content: flex-start;
+}
+
+:global(.wb-presence-more) {
+	display: flex;
+	width: var(--wb-presence-card-width);
+	min-width: 0;
+	margin: var(--wb-presence-card-margin);
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	flex-direction: column;
+	text-align: center;
+}
+
+:global(.wb-presence-more-disc) {
+	display: flex;
+	width: var(--wb-presence-card-avatar);
+	height: var(--wb-presence-card-avatar);
+	align-items: center;
+	justify-content: center;
+	border: 3px solid var(--wb-presence-divider);
+	border-radius: 50%;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-initials-size);
+	font-weight: 700;
+	line-height: 1;
+}
+
+:global(.wb-presence-more-label) {
+	margin: 9px 0 0;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-meta-size);
+	letter-spacing: 0.14em;
+	line-height: 1.3;
+	text-transform: uppercase;
+}
+
+:global(.wb-presence-zone-empty) {
+	display: flex;
+	min-height: 0;
+	padding: 12px;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 auto;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-meta-size);
+	letter-spacing: 0.12em;
+	line-height: 1.4;
+	opacity: 0.55;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+/* </editor-fold desc="Body and zones"> ----------------------------- */
+
+/* <editor-fold desc="Compact and hero"> ---------------------------- */
+
+:global(.wb-presence-compact) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	flex: 1 1 auto;
+}
+
+:global(.wb-presence-compact-panel) {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	padding: var(--wb-presence-pad);
+	overflow: hidden;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 0%;
+	flex-direction: column;
+	background: var(--wb-presence-panel);
+	border-right: 1px solid var(--wb-presence-divider);
+	text-align: center;
+}
+
+:global(.wb-presence-compact-panel:last-child) {
+	border-right: 0;
+}
+
+:global(.wb-presence-app.wb-presence-portrait .wb-presence-compact) {
+	flex-direction: column;
+}
+
+:global(.wb-presence-app.wb-presence-portrait .wb-presence-compact-panel) {
+	border-right: 0;
+	border-bottom: 1px solid var(--wb-presence-divider);
+}
+
+:global(.wb-presence-app.wb-presence-portrait .wb-presence-compact-panel:last-child) {
+	border-bottom: 0;
+}
+
+:global(.wb-presence-feature-glow) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+:global([data-group='available'] .wb-presence-feature-glow) {
+	background: radial-gradient(circle at 50% 42%, rgba(107, 183, 0, 0.2) 0%, rgba(107, 183, 0, 0) 62%);
+}
+
+:global([data-group='busy'] .wb-presence-feature-glow) {
+	background: radial-gradient(circle at 50% 42%, rgba(209, 52, 56, 0.2) 0%, rgba(209, 52, 56, 0) 62%);
+}
+
+:global([data-group='away'] .wb-presence-feature-glow) {
+	background: radial-gradient(circle at 50% 42%, rgba(248, 168, 0, 0.18) 0%, rgba(248, 168, 0, 0) 62%);
+}
+
+:global([data-group='offline'] .wb-presence-feature-glow) {
+	background: radial-gradient(circle at 50% 42%, rgba(122, 133, 133, 0.16) 0%, rgba(122, 133, 133, 0) 62%);
+}
+
+:global(.wb-presence-compact-name) {
+	max-width: 94%;
+	margin: 24px 0 0;
+	padding-bottom: 0.1em;
+	overflow: hidden;
+	font-size: var(--wb-presence-feature-name-size);
+	font-weight: 800;
+	line-height: 1.22;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-compact-status),
+:global(.wb-presence-hero-status) {
+	max-width: 94%;
+	max-height: 2.6em;
+	margin: 10px 0 0;
+	overflow: hidden;
+	color: var(--wb-presence-status);
+	font-size: var(--wb-presence-feature-status-size);
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	line-height: 1.3;
+	text-transform: uppercase;
+}
+
+:global(.wb-presence-hero-status) {
+	font-size: var(--wb-presence-hero-status-size);
+}
+
+:global(.wb-presence-feature-for) {
+	margin: 8px 0 0;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-for-size);
+	line-height: 1.35;
+}
+
+:global(.wb-presence-hero) {
+	--wb-presence-compact-avatar: var(--wb-presence-hero-avatar);
+	--wb-presence-feature-initials: var(--wb-presence-hero-initials);
+	position: relative;
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	padding: var(--wb-presence-pad);
+	overflow: hidden;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 auto;
+	flex-direction: column;
+	text-align: center;
+}
+
+:global(.wb-presence-hero-name) {
+	max-width: 94%;
+	margin: 28px 0 0;
+	padding-bottom: 0.1em;
+	overflow: hidden;
+	font-size: var(--wb-presence-hero-name-size);
+	font-weight: 800;
+	line-height: 1.2;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* </editor-fold desc="Compact and hero"> --------------------------- */
+
+/* <editor-fold desc="Empty and ticker"> ---------------------------- */
+
+:global(.wb-presence-empty) {
+	display: flex;
+	min-height: 0;
+	padding: 24px;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 auto;
+	flex-direction: column;
+	text-align: center;
+}
+
+:global(.wb-presence-empty-kicker) {
+	color: var(--wb-presence-accent);
+	font-size: var(--wb-presence-meta-size);
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	line-height: 1.35;
+	text-transform: uppercase;
+}
+
+:global(.wb-presence-empty-title) {
+	max-width: 92%;
+	margin: 12px 0 0;
+	font-size: var(--wb-presence-feature-status-size);
+	font-weight: 700;
+	line-height: 1.3;
+}
+
+:global(.wb-presence-empty-hint) {
+	max-width: 92%;
+	margin: 8px 0 0;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-meta-size);
+	line-height: 1.4;
+}
+
+:global(.wb-presence-ticker) {
+	display: flex;
+	min-width: 0;
+	padding: 9px var(--wb-presence-pad);
+	align-items: center;
+	flex: 0 0 auto;
+	background: var(--wb-presence-well);
+	border-top: 1px solid var(--wb-presence-divider);
+}
+
+:global(.wb-presence-ticker-label) {
+	margin-right: 14px;
+	padding: 3px 10px;
+	flex: 0 0 auto;
+	border: 1px solid var(--wb-presence-divider);
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-meta-size);
+	letter-spacing: 0.16em;
+	line-height: 1.3;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-ticker-text) {
+	min-width: 0;
+	overflow: hidden;
+	flex: 0 1 auto;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-ticker-size);
+	line-height: 1.4;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-ticker-text) strong {
+	color: var(--wb-presence-text);
+	font-weight: 700;
+}
+
+/* </editor-fold desc="Empty and ticker"> --------------------------- */
