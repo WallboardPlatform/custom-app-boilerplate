@@ -8,6 +8,7 @@ export type RouteGeometryIssueCode =
 	| 'backtracking'
 	| 'excessive-bends'
 	| 'missing-endpoint'
+	| 'short-zigzag'
 	| 'unsnapped-endpoint'
 	| 'zero-length-segment';
 
@@ -18,9 +19,22 @@ export interface RouteGeometryIssue {
 	severity: 'error' | 'warning';
 }
 
+export interface RouteGeometryQuality {
+	bendCount: number;
+	length: number;
+	score: number;
+}
+
+export interface RouteNetworkQuality {
+	bendCount: number;
+	length: number;
+	score: number;
+}
+
 const SNAP_TOLERANCE = 1.5;
 const DUPLICATE_TOLERANCE = 0.5;
 const BACKTRACKING_COSINE = -0.88;
+const MINIMUM_ZIGZAG_TURN_DEGREES = 22;
 
 const distance = (left: WayfindingPoint, right: WayfindingPoint): number =>
 	Math.hypot(right.x - left.x, right.y - left.y);
@@ -45,6 +59,56 @@ const backtrackingCosine = (
 	return (
 		incomingX * outgoingX + incomingY * outgoingY
 	) / (incomingLength * outgoingLength);
+};
+
+const signedTurnDegrees = (
+	previous: WayfindingPoint,
+	current: WayfindingPoint,
+	next: WayfindingPoint
+): number => {
+	const incomingX = current.x - previous.x;
+	const incomingY = current.y - previous.y;
+	const outgoingX = next.x - current.x;
+	const outgoingY = next.y - current.y;
+
+	if (
+		Math.hypot(incomingX, incomingY) <= Number.EPSILON
+		|| Math.hypot(outgoingX, outgoingY) <= Number.EPSILON
+	) return 0;
+
+	return Math.atan2(
+		incomingX * outgoingY - incomingY * outgoingX,
+		incomingX * outgoingX + incomingY * outgoingY
+	) * 180 / Math.PI;
+};
+
+const isShortZigzag = (
+	geometry: readonly WayfindingPoint[],
+	leftTurnIndex: number
+): boolean => {
+	if (leftTurnIndex < 1 || leftTurnIndex + 2 >= geometry.length) return false;
+	const leftTurn = signedTurnDegrees(
+		geometry[leftTurnIndex - 1],
+		geometry[leftTurnIndex],
+		geometry[leftTurnIndex + 1]
+	);
+	const rightTurn = signedTurnDegrees(
+		geometry[leftTurnIndex],
+		geometry[leftTurnIndex + 1],
+		geometry[leftTurnIndex + 2]
+	);
+
+	if (
+		Math.abs(leftTurn) < MINIMUM_ZIGZAG_TURN_DEGREES
+		|| Math.abs(rightTurn) < MINIMUM_ZIGZAG_TURN_DEGREES
+		|| Math.sign(leftTurn) === Math.sign(rightTurn)
+	) return false;
+
+	const bridgeLength = distance(geometry[leftTurnIndex], geometry[leftTurnIndex + 1]);
+	const incomingLength = distance(geometry[leftTurnIndex - 1], geometry[leftTurnIndex]);
+	const outgoingLength = distance(geometry[leftTurnIndex + 1], geometry[leftTurnIndex + 2]);
+
+	return bridgeLength <= Math.max(2, Math.min(incomingLength, outgoingLength) * 0.34);
 };
 
 const pointToSegmentDistance = (
@@ -140,6 +204,17 @@ export const inspectRouteGeometry = (
 		}
 	}
 
+	for (let index = 1; index < geometry.length - 2; index += 1) {
+		if (!isShortZigzag(geometry, index)) continue;
+		issues.push({
+			code: 'short-zigzag',
+			geometryIndex: index,
+			message: `Segment ${edge.id} contains a short left-right jog near bend ${index}.`,
+			severity: 'warning'
+		});
+		index += 1;
+	}
+
 	if (geometry.length > 10) {
 		issues.push({
 			code: 'excessive-bends',
@@ -149,6 +224,61 @@ export const inspectRouteGeometry = (
 	}
 
 	return issues;
+};
+
+const issuePenalty: Record<RouteGeometryIssueCode, number> = {
+	backtracking: 28,
+	'excessive-bends': 12,
+	'missing-endpoint': 60,
+	'short-zigzag': 14,
+	'unsnapped-endpoint': 35,
+	'zero-length-segment': 18
+};
+
+export const measureRouteGeometry = (
+	edge: WayfindingEdge,
+	nodes: readonly WayfindingNode[]
+): RouteGeometryQuality => {
+	const { from, to } = endpoints(edge, nodes);
+
+	if (!from || !to) return { bendCount: 0, length: 0, score: 0 };
+	const geometry = orientedGeometry(edge, from, to);
+	const issues = inspectRouteGeometry(edge, nodes);
+	const length = geometry.slice(1).reduce(
+		(total, point, index) => total + distance(geometry[index], point),
+		0
+	);
+	const score = Math.max(0, Math.round(
+		100 - issues.reduce((total, issue) => total + issuePenalty[issue.code], 0)
+	));
+
+	return {
+		bendCount: Math.max(0, geometry.length - 2),
+		length,
+		score
+	};
+};
+
+export const measureRouteNetwork = (
+	edges: readonly WayfindingEdge[],
+	nodes: readonly WayfindingNode[]
+): RouteNetworkQuality => {
+	const measurements = edges.map((edge) => measureRouteGeometry(edge, nodes));
+	const totalLength = measurements.reduce((total, measurement) => total + measurement.length, 0);
+	const weightedScore = measurements.reduce(
+		(total, measurement) => total + measurement.score * Math.max(1, measurement.length),
+		0
+	);
+	const weight = measurements.reduce(
+		(total, measurement) => total + Math.max(1, measurement.length),
+		0
+	);
+
+	return {
+		bendCount: measurements.reduce((total, measurement) => total + measurement.bendCount, 0),
+		length: totalLength,
+		score: measurements.length === 0 ? 0 : Math.round(weightedScore / weight)
+	};
 };
 
 const removeDuplicatePoints = (geometry: WayfindingPoint[]): WayfindingPoint[] =>

@@ -5,6 +5,7 @@ import type {
 	WayfindingNode
 } from '../../../../../src/utils/wayfinding.js';
 import {
+	constrainPointToAngle,
 	insertGeometryPoint,
 	moveGraphNodeTransaction,
 	nearestSegment,
@@ -13,6 +14,15 @@ import {
 	simplifyPolygonGeometry,
 	translateGeometry
 } from './editing.ts';
+
+void test('constrains authored geometry to predictable 45 degree increments', (): void => {
+	const horizontal = constrainPointToAngle({ x: 10, y: 10 }, { x: 93, y: 24 });
+	const diagonal = constrainPointToAngle({ x: 10, y: 10 }, { x: 65, y: 71 });
+
+	assert.ok(Math.abs(horizontal.y - 10) < 0.0001);
+	assert.ok(Math.abs(diagonal.x - diagonal.y) < 0.0001);
+	assert.ok(Math.abs(Math.hypot(83, 14) - Math.hypot(horizontal.x - 10, horizontal.y - 10)) < 0.0001);
+});
 
 void test('requires a visible pointer movement before geometry starts dragging', (): void => {
 	assert.equal(pointerMoved({ x: 20, y: 20 }, { x: 21, y: 21 }, 1), false);

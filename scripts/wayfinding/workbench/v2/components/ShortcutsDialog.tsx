@@ -11,7 +11,12 @@ const shortcuts = [
 	{ keys: ['Ctrl', 'Z'], label: 'Undo map edit' },
 	{ keys: ['Ctrl', 'Shift', 'Z'], label: 'Redo map edit' },
 	{ keys: ['Mouse wheel'], label: 'Zoom the 2D map' },
-	{ keys: ['Drag'], label: 'Pan an empty part of the 2D map' }
+	{ keys: ['Space', 'Drag'], label: 'Pan the 2D map' },
+	{ keys: ['Shift'], label: 'Constrain new geometry to 45 degrees or rotation to 15 degrees' },
+	{ keys: ['Arrow keys'], label: 'Nudge the selected map object by one unit' },
+	{ keys: ['Shift', 'Arrow keys'], label: 'Nudge the selected map object by ten units' },
+	{ keys: ['Enter'], label: 'Finish an area or route' },
+	{ keys: ['Esc'], label: 'Cancel the active tool or drawing' }
 ];
 
 export const ShortcutsDialog = (props: ShortcutsDialogProps): JSX.Element => {

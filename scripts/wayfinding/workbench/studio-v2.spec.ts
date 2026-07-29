@@ -561,6 +561,108 @@ const openProjectSettings = async (page: Page): Promise<void> => {
 	await expect(page.getByLabel('Project name')).toBeVisible();
 };
 
+const panelLayoutProblems = (page: Page): Promise<string[]> => page.evaluate(() => {
+	const visible = (element: Element): boolean => {
+		const style = getComputedStyle(element);
+		const bounds = element.getBoundingClientRect();
+
+		return element.checkVisibility({
+			checkOpacity: true,
+			checkVisibilityCSS: true
+		})
+			&& !element.closest('details:not([open])')
+			&& style.display !== 'none'
+			&& style.visibility !== 'hidden'
+			&& Number(style.opacity) > 0
+			&& bounds.width > 1
+			&& bounds.height > 1
+			&& bounds.right > 0
+			&& bounds.bottom > 0
+			&& bounds.left < innerWidth
+			&& bounds.top < innerHeight;
+	};
+	const label = (element: Element): string => {
+		const html = element as HTMLElement;
+		const name = html.getAttribute('aria-label')
+			?? html.getAttribute('title')
+			?? html.textContent?.trim().replace(/\s+/gu, ' ').slice(0, 44)
+			?? '';
+
+		return `${element.tagName.toLocaleLowerCase()}.${html.className || '-'}:${name}`;
+	};
+	const intersectionArea = (left: DOMRect, right: DOMRect): number =>
+		Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left))
+		* Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+	const clippedBounds = (element: Element, root: Element): DOMRect => {
+		const bounds = element.getBoundingClientRect();
+		let left = bounds.left;
+		let top = bounds.top;
+		let right = bounds.right;
+		let bottom = bounds.bottom;
+		let ancestor = element.parentElement;
+
+		while (ancestor) {
+			if (ancestor === root || /(auto|clip|hidden|scroll)/u.test(
+				`${getComputedStyle(ancestor).overflow} ${getComputedStyle(ancestor).overflowX} ${getComputedStyle(ancestor).overflowY}`
+			)) {
+				const clip = ancestor.getBoundingClientRect();
+				left = Math.max(left, clip.left);
+				top = Math.max(top, clip.top);
+				right = Math.min(right, clip.right);
+				bottom = Math.min(bottom, clip.bottom);
+			}
+
+			if (ancestor === root) break;
+			ancestor = ancestor.parentElement;
+		}
+
+		return new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
+	};
+	const problems: string[] = [];
+	const roots = [...document.querySelectorAll('.panel-shell, .visitor-panel')].filter(visible);
+
+	for (const root of roots) {
+		const rootBounds = root.getBoundingClientRect();
+		const controls = [...root.querySelectorAll('button, input, select, textarea, summary')]
+			.filter(visible)
+			.filter((element) => {
+				const bounds = element.getBoundingClientRect();
+
+				return bounds.bottom > rootBounds.top && bounds.top < rootBounds.bottom;
+			});
+
+		for (const control of controls) {
+			const bounds = control.getBoundingClientRect();
+
+			if (bounds.left < rootBounds.left - 1 || bounds.right > rootBounds.right + 1) {
+				problems.push(`escapes ${label(root)} -> ${label(control)}`);
+			}
+		}
+
+		for (let leftIndex = 0; leftIndex < controls.length; leftIndex += 1) {
+			for (let rightIndex = leftIndex + 1; rightIndex < controls.length; rightIndex += 1) {
+				const left = controls[leftIndex];
+				const right = controls[rightIndex];
+
+				if (left.contains(right) || right.contains(left)) continue;
+
+				if (intersectionArea(clippedBounds(left, root), clippedBounds(right, root)) <= 1) continue;
+				problems.push(`overlap ${label(left)} <> ${label(right)}`);
+			}
+		}
+	}
+
+	for (const toast of [...document.querySelectorAll('.toast')].filter(visible)) {
+		for (const root of roots) {
+			if (intersectionArea(toast.getBoundingClientRect(), root.getBoundingClientRect()) > 1) {
+				problems.push(`toast covers ${label(root)}`);
+			}
+		}
+	}
+
+	return problems;
+});
+
 test('project context and command palette switch workspaces without moving the map', async ({ page }) => {
 	await openEditor(page);
 	const before = await mapTransform(page);
@@ -612,6 +714,19 @@ const clickMapPoint = async (
 		bounds!.x + point.x / 1920 * bounds!.width,
 		bounds!.y + point.y / 1080 * bounds!.height,
 		{ clickCount: options?.clickCount ?? 1 }
+	);
+};
+
+const moveMapPointer = async (
+	page: Page,
+	point: { x: number; y: number }
+): Promise<void> => {
+	const map = page.locator('.map-transform');
+	const bounds = await map.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.mouse.move(
+		bounds!.x + point.x / 1920 * bounds!.width,
+		bounds!.y + point.y / 1080 * bounds!.height
 	);
 };
 
@@ -1047,6 +1162,28 @@ test('keeps the workbench contained at a compact desktop viewport', async ({ pag
 	});
 });
 
+test('keeps dense editor and visitor panels collision-free', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.locator('.left-panel').getByRole('button', { name: 'Edit', exact: true }).click();
+	await page.locator('.route-advanced-list > summary').click();
+	await page.locator('.route-object-main').filter({ hasText: 'route-main' }).click();
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	await openProjectSettings(page);
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	await page.getByRole('button', { name: /Show directions/ }).click();
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await page.waitForTimeout(250);
+	expect(await panelLayoutProblems(page)).toEqual([]);
+});
+
 test('renders a non-empty 3D scene and saves and restores its floor camera', async ({ page }, testInfo) => {
 	await openEditor(page);
 	await page.getByRole('button', { name: '3D' }).click();
@@ -1276,7 +1413,20 @@ test('authors a manual route segment in route edit mode', async ({ page }) => {
 	await page.getByRole('button', { name: /Draw route segment/ }).click();
 
 	await clickMapPoint(page, { x: 520, y: 760 });
-	await clickMapPoint(page, { x: 860, y: 760 });
+	await moveMapPointer(page, { x: 860, y: 805 });
+	await expect(page.locator('.draft-route-line')).toBeVisible();
+	expect((await page.locator('.draft-route-line').getAttribute('points'))?.trim().split(/\s+/u)).toHaveLength(2);
+	await page.keyboard.down('Shift');
+	await moveMapPointer(page, { x: 860, y: 805 });
+	const constrainedPoint = (await page.locator('.draft-route-line').getAttribute('points'))
+		?.trim()
+		.split(/\s+/u)
+		.at(-1)
+		?.split(',')
+		.map(Number);
+	expect(constrainedPoint?.[1]).toBeCloseTo(760, 0);
+	await clickMapPoint(page, { x: 860, y: 805 });
+	await page.keyboard.up('Shift');
 	await clickMapPoint(page, { x: 1120, y: 620 });
 	await page.keyboard.press('Enter');
 

@@ -136,6 +136,15 @@ void test('route journey preserves ordered floors and explicit transitions', ():
 		kind: 'elevator',
 		toFloorId: 'first'
 	}]);
+	assert.deepEqual(journey.instructions.map((instruction) => instruction.kind), [
+		'start',
+		'continue',
+		'transition',
+		'continue',
+		'arrive'
+	]);
+	assert.equal(journey.instructions[0]?.text, 'Start at Ground-floor kiosk.');
+	assert.equal(journey.instructions.at(-1)?.text, 'Arrive at Gallery.');
 	assert.equal(journey.result.nodeIds[0], 'semantic:origin');
 	assert.equal(journey.result.nodeIds.at(-1), 'semantic:gallery-location');
 	assert.deepEqual(journey.metrics, { calibrated: false });
@@ -149,6 +158,7 @@ void test('route journey preserves ordered floors and explicit transitions', ():
 		distanceMeters: 18,
 		walkingSeconds: 13
 	});
+	assert.equal(calibratedJourney?.instructions[1]?.text, 'Continue for 7 m.');
 });
 
 void test('route journey uses the explicitly selected origin', (): void => {

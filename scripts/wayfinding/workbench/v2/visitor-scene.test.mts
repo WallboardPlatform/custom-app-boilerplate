@@ -67,6 +67,7 @@ void test('visitor scene keeps presentation layers and removes authoring evidenc
 	const projected = visitorSceneProject(project, visibility());
 	assert.deepEqual(projected.floors[0].elements.map((element) => element.id), [
 		'location-1',
+		'walkable-1',
 		'origin-1',
 		'label-1'
 	]);

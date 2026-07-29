@@ -335,6 +335,142 @@ void test('projects a door connector through the walkable side of the doorway', 
 	);
 });
 
+void test('connects point anchors directly without a cell-center backtracking kink', () => {
+	const project = createWayfindingStudioProject('Direct point connector test');
+	const floor = project.floors[0];
+	floor.width = 320;
+	floor.height = 200;
+	floor.unitsPerMeter = 10;
+	floor.elements.push(
+		{
+			floorId: floor.id,
+			geometry: [
+				{ x: 20, y: 60 },
+				{ x: 300, y: 60 },
+				{ x: 300, y: 170 },
+				{ x: 20, y: 170 }
+			],
+			id: 'walkable-corridor',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'walkable'
+		},
+		{
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'You are here',
+			point: { x: 160, y: 116 },
+			provenance: 'reviewer-authored',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		},
+		{
+			angle: 0,
+			floorId: floor.id,
+			id: 'door-north',
+			length: 42,
+			locationId: 'room-north',
+			point: { x: 260, y: 60 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'door'
+		}
+	);
+	synchronizeWayfindingStudioGraph(project);
+
+	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6, clearanceCells: 1 });
+	const originNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'origin-main');
+	const connector = result.project.graph.edges.find((edge) =>
+		originNode && edge.id === `generated:${floor.id}:connector:${originNode.id}`
+	);
+
+	assert.ok(connector?.geometry);
+	assert.equal(connector.geometry.length, 2);
+});
+
+void test('does not duplicate the connector for a destination and its linked door', () => {
+	const project = createWayfindingStudioProject('Canonical doorway route test');
+	const floor = project.floors[0];
+	floor.width = 320;
+	floor.height = 200;
+	floor.unitsPerMeter = 10;
+	project.destinations.push({
+		floor: floor.id,
+		id: 'room-north',
+		name: 'Room north',
+		routeable: true
+	});
+	floor.elements.push(
+		{
+			floorId: floor.id,
+			geometry: [
+				{ x: 20, y: 60 },
+				{ x: 300, y: 60 },
+				{ x: 300, y: 170 },
+				{ x: 20, y: 170 }
+			],
+			id: 'walkable-corridor',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'walkable'
+		},
+		{
+			destinationId: 'room-north',
+			floorId: floor.id,
+			geometry: [
+				{ x: 120, y: 10 },
+				{ x: 200, y: 10 },
+				{ x: 200, y: 60 },
+				{ x: 120, y: 60 }
+			],
+			id: 'room-north-shape',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'You are here',
+			point: { x: 40, y: 120 },
+			provenance: 'reviewer-authored',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		},
+		{
+			angle: 0,
+			floorId: floor.id,
+			id: 'door-north',
+			length: 42,
+			locationId: 'room-north-shape',
+			point: { x: 160, y: 60 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'door'
+		}
+	);
+	synchronizeWayfindingStudioGraph(project);
+
+	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6, clearanceCells: 1 });
+	const destinationNode = result.project.graph.nodes.find((node) => node.locationId === 'room-north');
+	const destinationConnectors = result.project.graph.edges.filter((edge) =>
+		destinationNode
+		&& edge.id === `generated:${floor.id}:connector:${destinationNode.id}`
+	);
+
+	assert.ok(destinationNode);
+	assert.equal(result.totalSemanticNodes, 2);
+	assert.equal(destinationConnectors.length, 1);
+	assert.equal(
+		result.project.graph.nodes.some((node) => node.semanticElementId === 'door-north'),
+		false
+	);
+});
+
 void test('does not replace a curved centerline with a long diagonal shortcut', () => {
 	const project = createWayfindingStudioProject('Shape preserving route test');
 	const floor = project.floors[0];

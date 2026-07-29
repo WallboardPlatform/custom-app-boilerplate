@@ -12,9 +12,11 @@ const visibleInVisitorScene = (
 ): boolean => {
 	if (
 		element.type === 'location'
+		|| element.type === 'obstacle'
 		|| element.type === 'origin'
 		|| element.type === 'poi'
 		|| element.type === 'transition'
+		|| element.type === 'walkable'
 	) return true;
 
 	if (element.type === 'icon' || element.type === 'logo' || element.type === 'label') {

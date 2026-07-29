@@ -22,6 +22,7 @@ import type { EditorSnapshot, EditorStore } from '../../../editor-core/types';
 import type { CanvasSelectionActions } from '../Canvas2d';
 import {
 	inspectRouteGeometry,
+	measureRouteNetwork,
 	repairRouteGeometry,
 	type RouteGeometryIssue
 } from '../route-geometry';
@@ -72,6 +73,7 @@ export const RouteGraphNavigator = (props: RouteGraphNavigatorProps): JSX.Elemen
 			kind: 'graph-edge' as const
 		})))
 	]);
+	const quality = createMemo(() => measureRouteNetwork(edges(), state().project.graph.nodes));
 	const normalizedQuery = createMemo(() => query().trim().toLocaleLowerCase());
 	const filteredNodes = createMemo(() => nodes().filter((node) =>
 		!normalizedQuery() || `${node.id} ${node.kind}`.toLocaleLowerCase().includes(normalizedQuery())
@@ -103,7 +105,9 @@ export const RouteGraphNavigator = (props: RouteGraphNavigatorProps): JSX.Elemen
 			<div class="route-graph-heading">
 				<span>
 					<strong>Route network health</strong>
-					<small>{edges().length} segments connect {nodes().length} junctions</small>
+					<small>
+						{edges().length} segments / {nodes().length} junctions / {quality().score || '-'} quality
+					</small>
 				</span>
 				<Show
 					when={issues().length > 0}

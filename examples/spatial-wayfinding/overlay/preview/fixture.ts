@@ -41,6 +41,7 @@ export const previewScenarios: PreviewScenario[] = [
 	{
 		id: 'flat-map',
 		fixture: createFixture('spatial-wayfinding-flat', { ...baseConfig, defaultView: '2d' }),
+		interactionSteps: [{ type: 'click', role: 'button', name: 'The Forum' }],
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		minimumContentCoverage: { width: 99, height: 97 }
 	},

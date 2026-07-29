@@ -399,6 +399,26 @@ export const VisitorPanel = (props: {
 									);
 								}}</For>
 							</div>
+							<div class="visitor-journey__instructions" aria-label="Turn-by-turn directions">
+								<div class="visitor-journey__instructions-heading">
+									<strong>Step-by-step</strong>
+									<span>{props.routeJourney()!.instructions.length} steps</span>
+								</div>
+								<ol>
+									<For each={props.routeJourney()!.instructions}>{(instruction, index) => (
+										<li class={`instruction-${instruction.kind}`}>
+											<span>{index() + 1}</span>
+											<div>
+												<small>{
+													props.floors().find((floor) => floor.id === instruction.floorId)?.name
+													?? instruction.floorId
+												}</small>
+												<strong>{instruction.text}</strong>
+											</div>
+										</li>
+									)}</For>
+								</ol>
+							</div>
 						</Show>
 						<button
 							type="button"

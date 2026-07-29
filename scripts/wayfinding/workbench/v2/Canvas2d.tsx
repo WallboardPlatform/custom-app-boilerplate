@@ -43,6 +43,7 @@ import {
 	simplifyFreehandPolygon
 } from './canvas/freehand';
 import {
+	constrainPointToAngle,
 	insertGeometryPoint,
 	moveGraphNodeTransaction,
 	nearestSegment,
@@ -132,6 +133,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	const [interactionGraphPoint, setInteractionGraphPoint] = createSignal<WayfindingPoint>();
 	const [interactionElementPreview, setInteractionElementPreview] = createSignal<ElementInteractionPreview>();
 	const [freehandGeometry, setFreehandGeometry] = createSignal<WayfindingPoint[]>();
+	const [draftCursor, setDraftCursor] = createSignal<WayfindingPoint>();
 	const [traceSource, setTraceSource] = createSignal<RegionDetectionSource>();
 	const currentFloorId = createMemo(() => props.snapshot().state.currentFloorId);
 	const floor = createMemo(() => props.snapshot().state.project.floors.find(
@@ -720,10 +722,14 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			const currentDraft: Extract<EditorDraft, { kind: 'polygon' }> = activeDraft?.kind === 'polygon' && activeDraft.elementType === elementType
 				? activeDraft
 				: { elementType, kind: 'polygon', points: [] };
+			const point = event.shiftKey && currentDraft.points.length > 0
+				? constrainPointToAngle(currentDraft.points.at(-1)!, mapPoint)
+				: mapPoint;
 			props.store.dispatch({
 				type: 'draft/set',
-				draft: { ...currentDraft, points: [...currentDraft.points, mapPoint] }
+				draft: { ...currentDraft, points: [...currentDraft.points, point] }
 			});
+			setDraftCursor(point);
 
 			return;
 		}
@@ -751,10 +757,14 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			const currentDraft: EditorDraft = draft()?.kind === 'route-edge'
 				? draft()!
 				: { kind: 'route-edge', points: [] };
+			const point = event.shiftKey && currentDraft.points.length > 0
+				? constrainPointToAngle(currentDraft.points.at(-1)!, mapPoint)
+				: mapPoint;
 			props.store.dispatch({
 				type: 'draft/set',
-				draft: { ...currentDraft, points: [...currentDraft.points, mapPoint] }
+				draft: { ...currentDraft, points: [...currentDraft.points, point] }
 			});
+			setDraftCursor(point);
 
 			return;
 		}
@@ -938,6 +948,14 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		const point = pointInViewport(event);
 		const mapPoint = pointInMap(event);
 		props.onPointerCoordinate?.(mapPoint);
+		const activeDraft = draft();
+		const previousDraftPoint = activeDraft?.points.at(-1);
+
+		setDraftCursor(activeDraft && previousDraftPoint
+			? event.shiftKey
+				? constrainPointToAngle(previousDraftPoint, mapPoint)
+				: mapPoint
+			: undefined);
 
 		if (!interaction) return;
 
@@ -988,9 +1006,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		if (interaction.kind === 'direction') {
 			const deltaX = mapPoint.x - interaction.origin.x;
 			const deltaY = mapPoint.y - interaction.origin.y;
-			interaction.angle = interaction.property === 'angle'
+			const angle = interaction.property === 'angle'
 				? Math.atan2(deltaY, deltaX) * 180 / Math.PI
 				: Math.atan2(deltaX, -deltaY) * 180 / Math.PI;
+			interaction.angle = event.shiftKey ? Math.round(angle / 15) * 15 : angle;
 			interaction.moved = true;
 			setInteractionElementPreview({
 				elementId: interaction.elementId,
@@ -1471,6 +1490,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			tabIndex={0}
 			onDblClick={finishDraft}
 			onPointerDown={pointerDown}
+			onPointerLeave={(): void => { if (!interaction) setDraftCursor(undefined); }}
 			onPointerMove={pointerMove}
 			onPointerUp={pointerUp}
 			onPointerCancel={pointerUp}
@@ -1487,6 +1507,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 				beginVertexDrag={beginVertexDrag}
 				camera={camera}
 				draft={draft}
+				draftCursor={draftCursor}
 				elements={floorElements}
 				floor={floor}
 				floorGraphEdges={floorGraphEdges}
@@ -1518,7 +1539,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			<Show when={draft()}>
 				<div class="draft-hint">
 					<strong>{draft()?.kind === 'polygon' ? 'Drawing area' : 'Drawing route'}</strong>
-					<span>Click to add points. Enter or double-click to finish. Esc cancels.</span>
+					<span>Click to add points. Hold Shift for 45°. Enter or double-click to finish. Esc cancels.</span>
 				</div>
 			</Show>
 		</div>

@@ -20,6 +20,25 @@ const pointDistance = (left: WayfindingPoint, right: WayfindingPoint): number =>
 const samePoint = (left: WayfindingPoint, right: WayfindingPoint, tolerance: number): boolean =>
 	pointDistance(left, right) <= tolerance;
 
+export const constrainPointToAngle = (
+	origin: WayfindingPoint,
+	point: WayfindingPoint,
+	incrementDegrees = 45
+): WayfindingPoint => {
+	const deltaX = point.x - origin.x;
+	const deltaY = point.y - origin.y;
+	const length = Math.hypot(deltaX, deltaY);
+
+	if (length === 0 || incrementDegrees <= 0) return { ...point };
+	const increment = incrementDegrees * Math.PI / 180;
+	const angle = Math.round(Math.atan2(deltaY, deltaX) / increment) * increment;
+
+	return {
+		x: origin.x + Math.cos(angle) * length,
+		y: origin.y + Math.sin(angle) * length
+	};
+};
+
 export const pointerMoved = (
 	start: WayfindingPoint,
 	current: WayfindingPoint,

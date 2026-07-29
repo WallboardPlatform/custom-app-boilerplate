@@ -20,20 +20,23 @@ const visibility = Object.fromEntries([
 	'walkable'
 ].map((layer) => [layer, true])) as Record<EditorLayerId, boolean>;
 
-void test('route preview removes authoring evidence while retaining the installed origin', () => {
+void test('route preview keeps spatial context while removing authoring-only labels', () => {
 	const project = createWayfindingStudioProject();
 	const rendered = renderEditorFloorSvg(project, project.floors[0].id, visibility, undefined, false, 'route-preview');
 
 	assert.match(rendered, /#Labels\{display:none\}/);
-	assert.match(rendered, /#Walkable\{display:none\}/);
+	assert.doesNotMatch(rendered, /#Walkable\{display:none\}/);
+	assert.match(rendered, /#Walkable polygon\{fill:#eef4f2/);
 	assert.doesNotMatch(rendered, /#Origins\{display:none\}/);
 });
 
-void test('visitor presentation removes every authoring overlay', () => {
+void test('visitor presentation hides technical layers but retains styled map geometry', () => {
 	const project = createWayfindingStudioProject();
 	const rendered = renderEditorFloorSvg(project, project.floors[0].id, visibility, undefined, false, 'visitor');
 
 	assert.match(rendered, /#Origins\{display:none\}/);
-	assert.match(rendered, /#Locations\{display:none\}/);
+	assert.doesNotMatch(rendered, /#Locations\{display:none\}/);
+	assert.match(rendered, /class="visitor-floor-surface"/);
+	assert.match(rendered, /#Locations polygon\{fill-opacity:.86/);
 	assert.match(rendered, /#Labels\{display:none\}/);
 });

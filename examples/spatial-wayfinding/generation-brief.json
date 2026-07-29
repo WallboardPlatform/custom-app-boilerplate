@@ -3,14 +3,14 @@
 	"request": {
 		"summary": "Prove that an editable Wayfinding Studio project can publish a portable map package that powers a polished interactive Wallboard custom app in both 2D and 3D.",
 		"audience": "Visitors using a landscape touch display at a modern campus.",
-		"primaryGoal": "Let a visitor select a destination and inspect a reviewed route while rotating, panning, and zooming the same semantic map in 3D."
+		"primaryGoal": "Let a visitor select a destination, follow floor-aware turn-by-turn guidance, and inspect the same reviewed route while rotating, panning, and zooming the semantic map in 3D."
 	},
 	"assumptions": [
 		"The Northline campus data is synthetic and license-safe.",
 		"The checked-in .wbwayfinding project is the editable source and the bundled .wbmap is its published runtime package.",
 		"The primary surfaces are Full HD and 1366x768 landscape touch displays."
 	],
-	"app": { "mode": "replacement", "name": "Northline Spatial Wayfinding", "version": "1" },
+	"app": { "mode": "replacement", "name": "Northline Spatial Wayfinding", "version": "2" },
 	"surfaceStrategy": {
 		"mode": "bounded",
 		"rationale": "The map and touch directory form a deliberate landscape kiosk composition."
@@ -29,7 +29,7 @@
 		"mode": "interactive",
 		"views": [
 			{ "id": "3d-map", "purpose": "Rotate, pan, zoom, select extruded spaces, and inspect the route." },
-			{ "id": "2d-map", "purpose": "Use the same artifact as a flat accessible fallback." }
+			{ "id": "2d-map", "purpose": "Use the same artifact as a legible architectural map with directional route flow and turn-by-turn guidance." }
 		],
 		"inputs": [
 			{ "id": "touch-map", "type": "touch", "action": "Rotate, pan, zoom, and select destinations." },
@@ -92,12 +92,13 @@
 	"states": [
 		{ "scenario": "app-default", "expectation": "The nonblank 3D map, complete directory, and authored camera fill the Full-HD kiosk." },
 		{ "scenario": "compact", "expectation": "The same interaction remains readable at 1366x768." },
-		{ "scenario": "flat-map", "expectation": "The 2D renderer uses the same zones, labels, origin, and graph route." },
+		{ "scenario": "flat-map", "expectation": "The 2D renderer keeps all authored spaces legible, emphasizes the selected destination, and presents the shared route with direction and journey steps." },
 		{ "scenario": "dark-theme", "expectation": "The coordinated dark interface keeps the 3D scene and directory legible." }
 	],
 	"behaviors": [
 		{ "id": "webgl-runtime", "expectation": "The packaged custom app renders nonblank WebGL from the Studio artifact.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "shared-route", "expectation": "Destination selection drives the same graph route in 3D and 2D.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "shared-route", "expectation": "Destination selection drives the same graph route in 3D and 2D, with a floor-independent origin and floor-aware journey guidance.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
+		{ "id": "turn-guidance", "expectation": "Calibrated route geometry produces deterministic turn, transition, and arrival steps without showing false zero-distance guidance.", "evidence": { "testFile": "preview/route-guidance.spec.ts" } },
 		{ "id": "session-reset", "expectation": "Reset clears selection and restores the authored camera without recreating the app.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
 	],
 	"assets": [

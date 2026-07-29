@@ -59,6 +59,7 @@ interface CanvasSceneProps {
 	beginVertexDrag: (event: PointerEvent, vertexIndex: number) => void;
 	camera: Accessor<EditorCamera2d>;
 	draft: Accessor<EditorDraft | undefined>;
+	draftCursor: Accessor<WayfindingPoint | undefined>;
 	elements: Accessor<WayfindingStudioElement[]>;
 	floor: Accessor<WayfindingStudioFloor>;
 	floorGraphEdges: Accessor<WayfindingEdge[]>;
@@ -131,6 +132,65 @@ const routePath = (points: WayfindingPoint[], radius: number): string => {
 	return commands.join(' ');
 };
 
+interface RouteDirectionMarker {
+	angle: number;
+	x: number;
+	y: number;
+}
+
+const routeDirectionMarkers = (
+	points: readonly WayfindingPoint[],
+	spacing: number,
+	endInset: number
+): RouteDirectionMarker[] => {
+	if (points.length < 2) return [];
+	const segments = points.slice(1).map((point, index) => {
+		const start = points[index];
+		const length = Math.hypot(point.x - start.x, point.y - start.y);
+
+		return { end: point, length, start };
+	}).filter((segment) => segment.length > Number.EPSILON);
+	const totalLength = segments.reduce((total, segment) => total + segment.length, 0);
+
+	if (segments.length === 0 || totalLength <= endInset * 2) return [];
+	const count = Math.max(1, Math.floor((totalLength - endInset * 2) / Math.max(1, spacing)) + 1);
+	const interval = (totalLength - endInset * 2) / count;
+	const distances = Array.from(
+		{ length: count },
+		(_, index) => endInset + interval * (index + 0.5)
+	);
+
+	return distances.map((targetDistance): RouteDirectionMarker => {
+		let cursor = targetDistance;
+
+		for (const segment of segments) {
+			if (cursor <= segment.length) {
+				const ratio = cursor / segment.length;
+
+				return {
+					angle: Math.atan2(
+						segment.end.y - segment.start.y,
+						segment.end.x - segment.start.x
+					) * 180 / Math.PI,
+					x: segment.start.x + (segment.end.x - segment.start.x) * ratio,
+					y: segment.start.y + (segment.end.y - segment.start.y) * ratio
+				};
+			}
+			cursor -= segment.length;
+		}
+		const finalSegment = segments[segments.length - 1];
+
+		return {
+			angle: Math.atan2(
+				finalSegment.end.y - finalSegment.start.y,
+				finalSegment.end.x - finalSegment.start.x
+			) * 180 / Math.PI,
+			x: finalSegment.end.x,
+			y: finalSegment.end.y
+		};
+	});
+};
+
 const directionEndpoint = (
 	element: WayfindingStudioDoorElement | WayfindingStudioOriginElement
 ): WayfindingPoint => {
@@ -182,6 +242,11 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 	const showSimulatedRoute = (): boolean => (
 		workspace() === 'route-preview' || workspace() === 'visitor-preview'
 	) && state().layerVisibility['simulated-route'] && props.route().length >= 2;
+	const directionMarkers = (): RouteDirectionMarker[] => routeDirectionMarkers(
+		props.route(),
+		110 / props.camera().scale,
+		42 / props.camera().scale
+	);
 	const visitorMarkers = (): Set<string> => visitorMarkerIds(
 		props.visitorMapItems(),
 		props.camera().scale,
@@ -281,20 +346,59 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 					<path
 						class="simulated-route-casing"
 						d={routePath(props.route(), routeDefaults().cornerRadius)}
-						style={{ 'stroke-width': `${routeDefaults().lineWidth + 5}px` }}
+						style={{ 'stroke-width': `${routeDefaults().lineWidth + 8}px` }}
 					/>
 					<path
 						class="simulated-route"
 						classList={{
-							animated: routeDefaults().animation === 'flow',
 							pulsing: routeDefaults().animation === 'pulse'
 						}}
 						d={routePath(props.route(), routeDefaults().cornerRadius)}
 						style={{
-							'animation-duration': `${Math.max(0.35, 72 / Math.max(1, routeDefaults().animationSpeed))}s`,
 							stroke: routeDefaults().color,
 							'stroke-width': `${routeDefaults().lineWidth}px`
 						}}
+					/>
+					<Show when={routeDefaults().animation === 'flow'}>
+						<path
+							class="simulated-route-flow"
+							d={routePath(props.route(), routeDefaults().cornerRadius)}
+							style={{
+								'animation-duration': `${Math.max(0.35, 72 / Math.max(1, routeDefaults().animationSpeed))}s`,
+								'stroke-width': `${Math.max(2, routeDefaults().lineWidth * 0.3)}px`
+							}}
+						/>
+					</Show>
+					<For each={directionMarkers()}>
+						{(marker) => (
+							<path
+								class="simulated-route-chevron"
+								d="M -7 -5 L 0 0 L -7 5"
+								style={{ 'stroke-width': '2.4px' }}
+								transform={`translate(${marker.x} ${marker.y}) rotate(${marker.angle}) scale(${1 / props.camera().scale})`}
+							/>
+						)}
+					</For>
+					<circle
+						class="simulated-route-start"
+						cx={props.route()[0]?.x}
+						cy={props.route()[0]?.y}
+						r={9 / props.camera().scale}
+						style={{ stroke: routeDefaults().color, 'stroke-width': '4px' }}
+					/>
+					<circle
+						class="simulated-route-arrival-halo"
+						cx={props.route()[props.route().length - 1]?.x}
+						cy={props.route()[props.route().length - 1]?.y}
+						r={15 / props.camera().scale}
+						style={{ stroke: routeDefaults().color, 'stroke-width': '3px' }}
+					/>
+					<circle
+						class="simulated-route-arrival"
+						cx={props.route()[props.route().length - 1]?.x}
+						cy={props.route()[props.route().length - 1]?.y}
+						r={7 / props.camera().scale}
+						style={{ fill: routeDefaults().color, 'stroke-width': '3px' }}
 					/>
 				</Show>
 			</svg>
@@ -760,7 +864,9 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 							<>
 								<polyline
 									class="draft-line"
-									points={pointsAttribute(draft().points)}
+									points={pointsAttribute(props.draftCursor()
+										? [...draft().points, props.draftCursor()!]
+										: draft().points)}
 								/>
 								<For each={draft().points}>
 									{(point) => (
@@ -772,6 +878,16 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 										/>
 									)}
 								</For>
+								<Show when={props.draftCursor()}>
+									{(point) => (
+										<circle
+											class="draft-point cursor"
+											cx={point().x}
+											cy={point().y}
+											r={props.handleRadius() * 0.64}
+										/>
+									)}
+								</Show>
 							</>
 						)}
 					</Show>
@@ -786,7 +902,9 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 							<>
 								<polyline
 									class="draft-route-line"
-									points={pointsAttribute(draft().points)}
+									points={pointsAttribute(props.draftCursor()
+										? [...draft().points, props.draftCursor()!]
+										: draft().points)}
 								/>
 								<For each={draft().points}>
 									{(point) => (
@@ -798,6 +916,16 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 										/>
 									)}
 								</For>
+								<Show when={props.draftCursor()}>
+									{(point) => (
+										<circle
+											class="draft-point route cursor"
+											cx={point().x}
+											cy={point().y}
+											r={props.handleRadius() * 0.64}
+										/>
+									)}
+								</Show>
 							</>
 						)}
 					</Show>

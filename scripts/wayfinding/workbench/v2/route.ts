@@ -26,7 +26,22 @@ export interface VisitorRouteTransition {
 	toFloorId: string;
 }
 
+export type VisitorRouteInstructionKind =
+	| 'arrive'
+	| 'continue'
+	| 'start'
+	| 'transition'
+	| 'turn-left'
+	| 'turn-right';
+
+export interface VisitorRouteInstruction {
+	floorId: string;
+	kind: VisitorRouteInstructionKind;
+	text: string;
+}
+
 export interface VisitorRouteJourney {
+	instructions: VisitorRouteInstruction[];
 	metrics: {
 		calibrated: boolean;
 		distanceMeters?: number;
@@ -194,6 +209,125 @@ const routeTransitions = (
 	}];
 });
 
+const routeSegmentLength = (points: readonly WayfindingPoint[]): number =>
+	points.slice(1).reduce(
+		(total, point, index) => total + Math.hypot(
+			point.x - points[index].x,
+			point.y - points[index].y
+		),
+		0
+	);
+
+const signedTurnDegrees = (
+	previous: WayfindingPoint,
+	current: WayfindingPoint,
+	next: WayfindingPoint
+): number => Math.atan2(
+	(current.x - previous.x) * (next.y - current.y)
+		- (current.y - previous.y) * (next.x - current.x),
+	(current.x - previous.x) * (next.x - current.x)
+		+ (current.y - previous.y) * (next.y - current.y)
+) * 180 / Math.PI;
+
+const instructionDistance = (
+	project: WayfindingStudioProject,
+	floorId: string,
+	mapDistance: number
+): string | undefined => {
+	const unitsPerMeter = project.floors.find((floor) => floor.id === floorId)?.unitsPerMeter;
+
+	return unitsPerMeter && unitsPerMeter > 0
+		? `${Math.max(1, Math.round(mapDistance / unitsPerMeter))} m`
+		: undefined;
+};
+
+const routeInstructions = (
+	project: WayfindingStudioProject,
+	destinationId: string,
+	originId: string | undefined,
+	segments: readonly VisitorRouteFloorSegment[],
+	transitions: readonly VisitorRouteTransition[]
+): VisitorRouteInstruction[] => {
+	const destination = project.destinations.find((candidate) => candidate.id === destinationId);
+	const origin = project.floors
+		.flatMap((floor) => floor.elements)
+		.find((element) => element.type === 'origin' && (!originId || element.id === originId));
+	const instructions: VisitorRouteInstruction[] = [];
+
+	for (const [segmentIndex, segment] of segments.entries()) {
+		if (segmentIndex === 0) {
+			instructions.push({
+				floorId: segment.floorId,
+				kind: 'start',
+				text: `Start at ${origin?.type === 'origin' ? origin.label || 'You are here' : 'You are here'}.`
+			});
+		}
+		let distanceSinceInstruction = 0;
+		let turnCount = 0;
+
+		for (let index = 1; index < segment.points.length; index += 1) {
+			distanceSinceInstruction += Math.hypot(
+				segment.points[index].x - segment.points[index - 1].x,
+				segment.points[index].y - segment.points[index - 1].y
+			);
+
+			if (index >= segment.points.length - 1) continue;
+			const turn = signedTurnDegrees(
+				segment.points[index - 1],
+				segment.points[index],
+				segment.points[index + 1]
+			);
+
+			if (Math.abs(turn) < 32) continue;
+			const direction = turn > 0 ? 'right' : 'left';
+			const distance = instructionDistance(project, segment.floorId, distanceSinceInstruction);
+
+			instructions.push({
+				floorId: segment.floorId,
+				kind: direction === 'right' ? 'turn-right' : 'turn-left',
+				text: `${distance ? `In ${distance}, t` : 'T'}urn ${direction}.`
+			});
+			turnCount += 1;
+			distanceSinceInstruction = 0;
+		}
+
+		if (turnCount === 0 && segment.points.length >= 2) {
+			const distance = instructionDistance(
+				project,
+				segment.floorId,
+				routeSegmentLength(segment.points)
+			);
+
+			instructions.push({
+				floorId: segment.floorId,
+				kind: 'continue',
+				text: distance ? `Continue for ${distance}.` : 'Continue along the highlighted route.'
+			});
+		}
+		const transition = transitions.find((candidate) => candidate.fromFloorId === segment.floorId);
+
+		if (transition) {
+			const destinationFloor = project.floors.find((floor) => floor.id === transition.toFloorId);
+
+			instructions.push({
+				floorId: segment.floorId,
+				kind: 'transition',
+				text: `Take the ${transition.kind} to ${destinationFloor?.name ?? transition.toFloorId}.`
+			});
+		}
+	}
+
+	if (segments.length > 0) {
+		instructions.push({
+			floorId: segments[segments.length - 1].floorId,
+			kind: 'arrive',
+			text: `Arrive at ${destination?.name ?? 'your destination'}.`
+		});
+	}
+
+	return instructions;
+};
+
 const edgeLength = (
 	edge: WayfindingEdge,
 	from: WayfindingNode,
@@ -258,12 +392,21 @@ export const routeJourneyToDestination = (
 		...result,
 		path: cleanRoutePath(result.path)
 	};
+	const segments = routeSegments(cleanedResult.path);
+	const transitions = routeTransitions(project, cleanedResult);
 
 	return {
+		instructions: routeInstructions(
+			project,
+			destinationId!,
+			originId,
+			segments,
+			transitions
+		),
 		metrics: routeMetrics(project, cleanedResult),
 		result: cleanedResult,
-		segments: routeSegments(cleanedResult.path),
-		transitions: routeTransitions(project, cleanedResult)
+		segments,
+		transitions
 	};
 };
 

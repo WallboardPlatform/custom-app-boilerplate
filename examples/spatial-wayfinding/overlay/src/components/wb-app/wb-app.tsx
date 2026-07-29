@@ -24,6 +24,8 @@ import { SpatialScene } from '@utils/spatial-scene';
 import style from '@components/wb-app/wb-app.module.scss';
 
 import runtimePackageUrl from '../../assets/campus.wbmap';
+import { buildRouteGuidance } from '../../utils/route-guidance';
+import type { RouteGuidanceLeg } from '../../utils/route-guidance';
 
 interface WbAppProps {
 	hostElement: HTMLElement;
@@ -147,29 +149,42 @@ export default (props: WbAppProps): JSX.Element => {
 	);
 	const originNodeId = createMemo((): string | undefined => {
 		const loaded = runtime();
-		const activeFloor = floor();
 
-		if (!loaded || !activeFloor) return undefined;
-		const originElement: RuntimeOrigin | undefined = activeFloor.elements.find(
-			(element): element is RuntimeOrigin => element.type === 'origin'
-		);
+		if (!loaded) return undefined;
+		const originElement: RuntimeOrigin | undefined = loaded.floors
+			.flatMap((candidate): RuntimeElement[] => candidate.elements)
+			.find((element): element is RuntimeOrigin => element.type === 'origin');
 
 		return loaded.graph.nodes.find((node: WayfindingNode): boolean =>
-			node.levelId === activeFloor.id && node.semanticElementId === originElement?.id
+			node.semanticElementId === originElement?.id
 		)?.id;
 	});
 	const route = createMemo((): WayfindingRouteResult | undefined => {
 		const destinationId: string | undefined = selectedId();
+		const destination = selected();
 		const activeGraph: WayfindingGraph | undefined = graph();
 		const startId: string | undefined = originNodeId();
 		const node = destinationId && activeGraph ? activeGraph.locationNode(destinationId) : undefined;
+		const startFloorId = startId ? runtime()?.graph.nodes.find((candidate): boolean => candidate.id === startId)?.levelId : undefined;
+		const startFloor = runtime()?.floors.find((candidate): boolean => candidate.id === startFloorId);
 
 		// The published floor owns its scale. Authored edge distances win; this only sizes the
 		// pixel fallback, so a regenerated route network cannot silently report map units as metres.
-		return node && activeGraph && startId
-			? activeGraph.route(startId, node.id, { mapRatio: floor()?.unitsPerMeter })
+		return destination?.routeable !== false && node && activeGraph && startId
+			? activeGraph.route(startId, node.id, { mapRatio: startFloor?.unitsPerMeter })
 			: undefined;
 	});
+	const routeJourney = createMemo((): RouteGuidanceLeg[] => {
+		const result = route();
+		const loaded = runtime();
+
+		return result && loaded
+			? buildRouteGuidance(result, loaded.floors, loaded.graph.edges, loaded.graph.nodes)
+			: [];
+	});
+	const activeRouteLeg = createMemo((): RouteGuidanceLeg | undefined =>
+		routeJourney().find((leg): boolean => leg.floorId === floor()?.id)
+	);
 	const activeRoutePoints = createMemo((): WayfindingPoint[] => {
 		const floorId: string | undefined = floor()?.id;
 
@@ -185,8 +200,9 @@ export default (props: WbAppProps): JSX.Element => {
 	});
 	const selectedTarget = createMemo((): WayfindingPoint | undefined => {
 		const activeFloor: RuntimeFloor | undefined = floor();
+		const routeTarget = activeRoutePoints().at(-1);
 
-		return activeFloor ? pointForDestination(activeFloor, selectedId()) : undefined;
+		return routeTarget ?? (activeFloor ? pointForDestination(activeFloor, selectedId()) : undefined);
 	});
 	const themeStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-spatial-accent': settings().accentColor,
@@ -305,6 +321,20 @@ export default (props: WbAppProps): JSX.Element => {
 								role="img"
 								aria-label="Two-dimensional campus map"
 							>
+								<defs>
+									<marker
+										id="wb-spatial-wayfinding-route-arrow"
+										viewBox="0 0 10 10"
+										refX="8"
+										refY="5"
+										markerWidth="24"
+										markerHeight="24"
+										markerUnits="userSpaceOnUse"
+										orient="auto-start-reverse"
+									>
+										<path d="M 0 0 L 10 5 L 0 10 z" class="wb-spatial-wayfinding-route-arrow" />
+									</marker>
+								</defs>
 								<rect x="0" y="0" width={activeFloor().width} height={activeFloor().height} class="wb-spatial-wayfinding-floor" />
 								<Show when={backgroundAsset()}>
 									{(asset: Accessor<RuntimeAsset>): JSX.Element => (
@@ -319,6 +349,8 @@ export default (props: WbAppProps): JSX.Element => {
 											class="wb-spatial-wayfinding-zone"
 											classList={{
 												'wb-spatial-wayfinding-destination-zone': polygon.type === 'location' && Boolean(polygon.destinationId),
+												'wb-spatial-wayfinding-location': polygon.type === 'location',
+												'wb-spatial-wayfinding-obstacle': polygon.type === 'obstacle',
 												'wb-spatial-wayfinding-selected': polygon.destinationId === selectedId(),
 												'wb-spatial-wayfinding-walkable': polygon.type === 'walkable'
 											}}
@@ -331,7 +363,18 @@ export default (props: WbAppProps): JSX.Element => {
 								</For>
 								<Show when={activeRoutePoints().length > 1}>
 									<polyline class="wb-spatial-wayfinding-route-shadow" points={polygonPoints(activeRoutePoints())} />
-									<polyline class="wb-spatial-wayfinding-route" points={polygonPoints(activeRoutePoints())} />
+									<polyline
+										class="wb-spatial-wayfinding-route"
+										marker-end="url(#wb-spatial-wayfinding-route-arrow)"
+										points={polygonPoints(activeRoutePoints())}
+									/>
+									<polyline class="wb-spatial-wayfinding-route-flow" points={polygonPoints(activeRoutePoints())} />
+									<circle
+										class="wb-spatial-wayfinding-route-start"
+										cx={activeRoutePoints()[0].x}
+										cy={activeRoutePoints()[0].y}
+										r="10"
+									/>
 								</Show>
 								<Show when={showLabels()}>
 									<For each={activeFloor().elements.filter((element): element is RuntimeLabel => element.type === 'label')}>
@@ -399,7 +442,10 @@ export default (props: WbAppProps): JSX.Element => {
 								</For>
 								<Show when={selectedTarget()}>
 									{(target: Accessor<WayfindingPoint>): JSX.Element => (
-										<circle class="wb-spatial-wayfinding-target-pulse" cx={target().x} cy={target().y} r="28" />
+										<g class="wb-spatial-wayfinding-target">
+											<circle class="wb-spatial-wayfinding-target-pulse" cx={target().x} cy={target().y} r="28" />
+											<circle class="wb-spatial-wayfinding-target-core" cx={target().x} cy={target().y} r="9" />
+										</g>
 									)}
 								</Show>
 							</svg>
@@ -408,7 +454,10 @@ export default (props: WbAppProps): JSX.Element => {
 								<strong>{view() === '3d' ? 'Drag to rotate. Pinch or wheel to zoom.' : 'Tap a destination for details and directions.'}</strong>
 							</div>
 						</section>
-						<aside class="wb-spatial-wayfinding-directory">
+						<aside
+							class="wb-spatial-wayfinding-directory"
+							classList={{ 'wb-spatial-wayfinding-has-selection': Boolean(selected()) }}
+						>
 							<div class="wb-spatial-wayfinding-directory-heading">
 								<span>FIND A DESTINATION</span>
 								<h2>Where would you like to go?</h2>
@@ -472,10 +521,54 @@ export default (props: WbAppProps): JSX.Element => {
 											<Show when={destination().phone}><div><dt>Phone</dt><dd>{destination().phone}</dd></div></Show>
 											<Show when={destination().website}><div><dt>Website</dt><dd>{destination().website}</dd></div></Show>
 										</dl>
-										<div class="wb-spatial-wayfinding-route-summary">
-											<strong>{route()?.walkingDistance ?? 0} m</strong>
-											<span>Approx. {Math.max(1, Math.ceil((route()?.walkingSeconds ?? 0) / 60))} min walk</span>
-										</div>
+										<Show
+											when={route()}
+											fallback={
+												<div class="wb-spatial-wayfinding-route-unavailable" role="status">
+													<strong>Directions unavailable</strong>
+													<span>This destination is not connected to the published route network.</span>
+												</div>
+											}
+										>
+											{(activeRoute: Accessor<WayfindingRouteResult>): JSX.Element => (
+												<>
+													<Show when={routeJourney().length > 1}>
+														<div class="wb-spatial-wayfinding-route-floors" role="group" aria-label="Route floors">
+															<For each={routeJourney()}>
+																{(leg: RouteGuidanceLeg, index): JSX.Element => (
+																	<button
+																		type="button"
+																		classList={{ 'wb-spatial-wayfinding-active': leg.floorId === floor()?.id }}
+																		onClick={(): void => { setSelectedFloorId(leg.floorId); }}
+																	>
+																		<span>{index() + 1}</span>
+																		<strong>{leg.floorName}</strong>
+																	</button>
+																)}
+															</For>
+														</div>
+													</Show>
+													<Show when={activeRouteLeg()}>
+														{(leg: Accessor<RouteGuidanceLeg>): JSX.Element => (
+															<ol class="wb-spatial-wayfinding-instructions" aria-label={`Directions on ${leg().floorName}`}>
+																<For each={leg().instructions}>
+																	{(instruction, index): JSX.Element => (
+																		<li class={`wb-spatial-wayfinding-instruction-${instruction.kind}`}>
+																			<span>{index() + 1}</span>
+																			<strong>{instruction.text}</strong>
+																		</li>
+																	)}
+																</For>
+															</ol>
+														)}
+													</Show>
+													<div class="wb-spatial-wayfinding-route-summary">
+														<strong>{activeRoute().walkingDistance} m</strong>
+														<span>Approx. {Math.max(1, Math.ceil(activeRoute().walkingSeconds / 60))} min walk</span>
+													</div>
+												</>
+											)}
+										</Show>
 									</div>
 								)}
 							</Show>

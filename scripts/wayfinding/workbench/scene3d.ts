@@ -416,12 +416,62 @@ export class WayfindingScene3d {
 			this.host.clientWidth / Math.max(1, this.host.clientHeight)
 		);
 		const horizontalFitScale: number = Math.max(1, 1.35 / viewportAspect);
+		const contentBounds = this.presentationMode === 'visitor' && !floor.backgroundAssetId
+			? this.visitorContentBounds(floor)
+			: { height: floor.height, width: floor.width, x: floor.width / 2, y: floor.height / 2 };
+		const contentScale = Math.max(
+			contentBounds.width / floor.width,
+			contentBounds.height / floor.height,
+			0.34
+		);
 
 		return {
 			...presentation.camera,
-			distance: presentation.camera.distance * horizontalFitScale,
-			targetX: floor.width / 2,
-			targetY: floor.height / 2
+			distance: presentation.camera.distance * contentScale * horizontalFitScale,
+			targetX: contentBounds.x,
+			targetY: contentBounds.y
+		};
+	}
+
+	private visitorContentBounds(floor: WayfindingStudioFloor): {
+		height: number;
+		width: number;
+		x: number;
+		y: number;
+	} {
+		const points: WayfindingPoint[] = floor.elements.flatMap((element): WayfindingPoint[] => {
+			if ('geometry' in element) return element.geometry;
+
+			if ('point' in element) {
+				if (element.type === 'icon' || element.type === 'logo') {
+					return [
+						{ x: element.point.x - element.width / 2, y: element.point.y - element.height / 2 },
+						{ x: element.point.x + element.width / 2, y: element.point.y + element.height / 2 }
+					];
+				}
+
+				return [element.point];
+			}
+
+			return [];
+		});
+
+		if (points.length === 0) {
+			return { height: floor.height, width: floor.width, x: floor.width / 2, y: floor.height / 2 };
+		}
+		const minimumX = Math.min(...points.map((point) => point.x));
+		const maximumX = Math.max(...points.map((point) => point.x));
+		const minimumY = Math.min(...points.map((point) => point.y));
+		const maximumY = Math.max(...points.map((point) => point.y));
+		const padding = Math.max(28, Math.max(maximumX - minimumX, maximumY - minimumY) * 0.14);
+		const width = Math.min(floor.width, Math.max(floor.width * 0.28, maximumX - minimumX + padding * 2));
+		const height = Math.min(floor.height, Math.max(floor.height * 0.28, maximumY - minimumY + padding * 2));
+
+		return {
+			height,
+			width,
+			x: Math.max(width / 2, Math.min(floor.width - width / 2, (minimumX + maximumX) / 2)),
+			y: Math.max(height / 2, Math.min(floor.height - height / 2, (minimumY + maximumY) / 2))
 		};
 	}
 

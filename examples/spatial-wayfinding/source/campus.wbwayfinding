@@ -65,9 +65,9 @@
     "route": {
       "animation": "flow",
       "animationSpeed": 48,
-      "color": "#f04438",
+      "color": "#246bfd",
       "cornerRadius": 18,
-      "lineWidth": 7
+      "lineWidth": 9
     },
     "walkable": {
       "extrusionHeight": 0,

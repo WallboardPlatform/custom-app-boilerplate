@@ -289,6 +289,7 @@ const straightPathToSkeleton = (
 
 interface SemanticConnector {
 	anchorIndex?: number;
+	approachDirection?: WayfindingPoint;
 	path: number[];
 	strategy: 'door-normal' | 'point-fallback';
 }
@@ -394,6 +395,7 @@ const connectorForDoor = (
 
 	return {
 		...candidates[0],
+		approachDirection: candidates[0].direction,
 		strategy: 'door-normal'
 	};
 };
@@ -526,6 +528,7 @@ export const buildFloorRouteNetwork = (
 		floor.elements.map((element) => [element.id, element])
 	);
 	const anchorIndexByNodeId = new Map<string, number>();
+	const approachDirectionByNodeId = new Map<string, WayfindingPoint>();
 	const connectorPathByNodeId = new Map<string, number[]>();
 	const diagnostics: RouteBuildDiagnostic[] = [];
 
@@ -567,6 +570,10 @@ export const buildFloorRouteNetwork = (
 			});
 		}
 		anchorIndexByNodeId.set(node.id, anchorIndex);
+
+		if (connector.approachDirection) {
+			approachDirectionByNodeId.set(node.id, connector.approachDirection);
+		}
 		connectorPathByNodeId.set(node.id, connector.path);
 	}
 
@@ -624,13 +631,54 @@ export const buildFloorRouteNetwork = (
 		const maskPath = (connectorPathByNodeId.get(node.id) ?? [])
 			.map((index) => pointForIndex(index, columns, cellSize));
 		const containedPath = simplifyContained(maskPath, mask, columns, rows, cellSize);
-		const geometry = [
-			{ x: node.x, y: node.y },
-			...containedPath.filter((point, index) =>
-				index > 0
-				|| Math.hypot(point.x - node.x, point.y - node.y) > cellSize * 0.2
-			)
-		];
+		const nodePoint = { x: node.x, y: node.y };
+		const generatedPoint = { x: generatedNode.x, y: generatedNode.y };
+		const approachDirection = approachDirectionByNodeId.get(node.id);
+		let geometry: WayfindingPoint[];
+
+		if (
+			!approachDirection
+			&& segmentContained(nodePoint, generatedPoint, mask, columns, rows, cellSize)
+		) {
+			geometry = [nodePoint, generatedPoint];
+		} else if (approachDirection) {
+			const firstWalkablePoint = containedPath[0] ?? generatedPoint;
+			const projectedDistance = (
+				(firstWalkablePoint.x - node.x) * approachDirection.x
+				+ (firstWalkablePoint.y - node.y) * approachDirection.y
+			);
+			const entryDistance = Math.max(
+				cellSize * 0.75,
+				Math.min(cellSize * 2, projectedDistance)
+			);
+			const alignedEntry = {
+				x: node.x + approachDirection.x * entryDistance,
+				y: node.y + approachDirection.y * entryDistance
+			};
+
+			if (
+				segmentContained(nodePoint, alignedEntry, mask, columns, rows, cellSize)
+				&& segmentContained(alignedEntry, generatedPoint, mask, columns, rows, cellSize)
+			) {
+				geometry = [nodePoint, alignedEntry, generatedPoint];
+			} else {
+				geometry = [
+					nodePoint,
+					...containedPath.filter((point, index) =>
+						index > 0
+							|| Math.hypot(point.x - node.x, point.y - node.y) > cellSize * 0.2
+					)
+				];
+			}
+		} else {
+			geometry = [
+				nodePoint,
+				...containedPath.filter((point, index) =>
+					index > 0
+						|| Math.hypot(point.x - node.x, point.y - node.y) > cellSize * 0.2
+				)
+			];
+		}
 
 		if (geometry.length === 1) geometry.push({ x: generatedNode.x, y: generatedNode.y });
 		generatedEdges.push({

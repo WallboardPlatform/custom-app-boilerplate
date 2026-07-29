@@ -169,6 +169,73 @@ void test('preserves door route anchors and their connected segments during sync
 	assert.ok(project.graph.edges.some((edge): boolean => edge.id === 'corridor-to-door'));
 });
 
+void test('uses one canonical route anchor for a destination and its primary linked door', () => {
+	const project = createWayfindingStudioProject('linked-door-routing');
+	project.destinations.push({
+		floor: 'level-0',
+		id: 'meeting-room',
+		name: 'Meeting room',
+		routeable: true
+	});
+	project.floors[0].elements.push(
+		{
+			...confirmed,
+			destinationId: 'meeting-room',
+			floorId: 'level-0',
+			geometry: [
+				{ x: 60, y: 30 },
+				{ x: 140, y: 30 },
+				{ x: 140, y: 90 },
+				{ x: 60, y: 90 }
+			],
+			id: 'meeting-room-shape',
+			type: 'location'
+		},
+		{
+			...confirmed,
+			angle: 0,
+			floorId: 'level-0',
+			id: 'meeting-room-door',
+			length: 32,
+			locationId: 'meeting-room-shape',
+			point: { x: 80, y: 90 },
+			type: 'door'
+		}
+	);
+	project.graph.nodes.push(
+		{ id: 'corridor', kind: 'route', levelId: 'level-0', x: 30, y: 90 },
+		{ id: 'semantic:meeting-room-door', kind: 'route', levelId: 'level-0', semanticElementId: 'meeting-room-door', x: 80, y: 90 }
+	);
+	project.graph.edges.push({
+		accessible: true,
+		bidirectional: true,
+		from: 'corridor',
+		geometry: [{ x: 30, y: 90 }, { x: 80, y: 90 }],
+		id: 'corridor-to-door',
+		kind: 'walk',
+		reviewStatus: 'proposed',
+		to: 'semantic:meeting-room-door',
+		traversal: 'portal'
+	});
+
+	synchronizeWayfindingStudioGraph(project);
+
+	const destinationNode = project.graph.nodes.find((node): boolean => node.locationId === 'meeting-room');
+
+	assert.ok(destinationNode);
+	assert.equal(destinationNode.id, 'semantic:meeting-room-shape');
+	assert.equal(destinationNode.x, 80);
+	assert.equal(destinationNode.y, 90);
+	assert.equal(
+		project.graph.nodes.some((node): boolean => node.id === 'semantic:meeting-room-door'),
+		false
+	);
+	assert.equal(
+		project.graph.edges.find((edge): boolean => edge.id === 'corridor-to-door')?.to,
+		'semantic:meeting-room-shape'
+	);
+});
+
 void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	const project = multiFloorProject();
 	project.assets.push({

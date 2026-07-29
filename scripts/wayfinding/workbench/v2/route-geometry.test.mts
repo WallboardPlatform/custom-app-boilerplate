@@ -4,6 +4,8 @@ import test from 'node:test';
 import type { WayfindingEdge, WayfindingNode } from '../../../../src/utils/wayfinding.ts';
 import {
 	inspectRouteGeometry,
+	measureRouteGeometry,
+	measureRouteNetwork,
 	repairRouteGeometry,
 	straightenRouteGeometry
 } from './route-geometry.ts';
@@ -66,4 +68,42 @@ void test('missing graph endpoints block automatic repair', (): void => {
 
 	assert.equal(repairRouteGeometry(missing, nodes), undefined);
 	assert.equal(inspectRouteGeometry(missing, nodes)[0]?.code, 'missing-endpoint');
+});
+
+void test('route diagnostics detect short alternating jogs without penalizing normal corners', (): void => {
+	const jog = edge([
+		{ x: 0, y: 0 },
+		{ x: 40, y: 0 },
+		{ x: 43, y: 3 },
+		{ x: 100, y: 3 },
+		{ x: 100, y: 0 }
+	]);
+	const corner = edge([
+		{ x: 0, y: 0 },
+		{ x: 50, y: 0 },
+		{ x: 100, y: 0 }
+	]);
+
+	assert.ok(inspectRouteGeometry(jog, nodes).some((issue) => issue.code === 'short-zigzag'));
+	assert.equal(inspectRouteGeometry(corner, nodes).some((issue) => issue.code === 'short-zigzag'), false);
+	assert.ok(measureRouteGeometry(jog, nodes).score < measureRouteGeometry(corner, nodes).score);
+});
+
+void test('network quality is length-weighted and exposes aggregate bends', (): void => {
+	const straight = edge([{ x: 0, y: 0 }, { x: 100, y: 0 }]);
+	const defective = {
+		...edge([
+			{ x: 0, y: 0 },
+			{ x: 40, y: 0 },
+			{ x: 43, y: 3 },
+			{ x: 100, y: 3 },
+			{ x: 100, y: 0 }
+		]),
+		id: 'defective'
+	};
+	const quality = measureRouteNetwork([straight, defective], nodes);
+
+	assert.equal(quality.bendCount, 3);
+	assert.ok(quality.length > 200);
+	assert.ok(quality.score > 70 && quality.score < 100);
 });

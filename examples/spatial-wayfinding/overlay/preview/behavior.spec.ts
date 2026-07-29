@@ -33,8 +33,11 @@ test('shows destination media, metadata, and a route in both map views', async (
 	await page.getByRole('button', { name: '2D', exact: true }).click();
 	await expect(root).toHaveAttribute('data-view', '2d');
 	await expect(page.locator('.wb-spatial-wayfinding-route')).toBeVisible();
+	await expect(page.locator('.wb-spatial-wayfinding-route-flow')).toBeVisible();
 	await expect(page.locator('.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected')).toHaveCount(1);
 	await expect(page.locator('.wb-spatial-wayfinding-target-pulse')).toBeVisible();
+	await expect(page.locator('.wb-spatial-wayfinding-instructions')).toContainText('turn left');
+	await expect(page.locator('.wb-spatial-wayfinding-instructions')).toContainText('Arrive at your destination');
 });
 
 test('filters the directory, switches language, and controls map layers', async ({ page }): Promise<void> => {
@@ -55,15 +58,16 @@ test('filters the directory, switches language, and controls map layers', async 
 	await expect(page.locator('.wb-spatial-wayfinding-media[data-media-role="brand"]')).toHaveCount(1);
 });
 
-test('keeps idle floor regions quiet and emphasizes only the selected destination', async ({ page }): Promise<void> => {
+test('keeps the idle map legible and emphasizes only the selected destination', async ({ page }): Promise<void> => {
 	await openApp(page);
 	await page.getByRole('button', { name: '2D', exact: true }).click();
 	const idleZone = page.locator('.wb-spatial-wayfinding-destination-zone').first();
-	await expect(idleZone).toHaveCSS('fill-opacity', '0');
+	await expect(idleZone).toHaveCSS('fill-opacity', '0.86');
+	await expect(page.locator('.wb-spatial-wayfinding-walkable')).toHaveCSS('fill-opacity', '0.96');
 	await page.getByRole('button', { name: 'Campus Cafe' }).click();
 	const selectedZone = page.locator('.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected');
 	await expect(selectedZone).toHaveCount(1);
-	await expect(selectedZone).toHaveCSS('fill-opacity', '0.26');
+	await expect(selectedZone).toHaveCSS('fill-opacity', '0.34');
 });
 
 test('resets selection and camera without destroying the scene', async ({ page }): Promise<void> => {
