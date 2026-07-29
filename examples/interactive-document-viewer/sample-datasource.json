@@ -1,0 +1,102 @@
+{
+	"Documents": {
+		"header": {
+			"Name": "string",
+			"Date": "date",
+			"PDF": "filePicker",
+			"Category": "dropdown",
+			"Scheduling": "scheduling",
+			"Department": "string",
+			"Status": "dropdown",
+			"Audience": "string",
+			"Updated": "date"
+		},
+		"rows": [
+			{
+				"Name": "Budget Report: Fiscal Year 2027 Proposal",
+				"Date": "2027-03-02",
+				"PDF": {
+					"id": "sample-pdf-budget",
+					"name": "budget-report.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "Budgets & Finance",
+				"Department": "Finance",
+				"Status": "Published",
+				"Audience": "All residents",
+				"Updated": "2027-03-04"
+			},
+			{
+				"Name": "Meeting Minutes: Community Services Session",
+				"Date": "2027-04-18",
+				"PDF": {
+					"id": "sample-pdf-minutes",
+					"name": "meeting-minutes.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "City Council & Meetings",
+				"Department": "City Clerk",
+				"Status": "Final",
+				"Audience": "All residents",
+				"Updated": "2027-04-19"
+			},
+			{
+				"Name": "Public Notice: Harbor Avenue Lane Closure",
+				"Date": "2027-05-06",
+				"PDF": {
+					"id": "sample-pdf-public-notice",
+					"name": "public-notice.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "Public Notices",
+				"Department": "Public Works",
+				"Status": "Published",
+				"Audience": "All residents",
+				"Updated": "2027-05-07"
+			},
+			{
+				"Name": "Permit Guide: Residential Building Applications",
+				"Date": "2027-05-21",
+				"PDF": {
+					"id": "sample-pdf-permit-guide",
+					"name": "permit-guide.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "Building & Permits",
+				"Department": "Community Development",
+				"Status": "Published",
+				"Audience": "Applicants and property owners",
+				"Updated": "2027-05-22"
+			},
+			{
+				"Name": "Greenway Access Study",
+				"Date": "2027-06-11",
+				"PDF": {
+					"id": "sample-pdf-greenway-study",
+					"name": "greenway-study.pdf",
+					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
+				},
+				"Category": "Plans & Projects",
+				"Department": "Community Development",
+				"Status": "Published for public review",
+				"Audience": "All residents",
+				"Updated": "2027-06-12"
+			},
+			{
+				"Name": "Application Form: Community Grant Request",
+				"Date": "2027-06-29",
+				"PDF": {
+					"id": "sample-pdf-grant-form",
+					"name": "grant-form.pdf",
+					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
+				},
+				"Category": "Forms & Applications",
+				"Department": "City Clerk",
+				"Status": "Final",
+				"Audience": "All residents",
+				"Updated": "2027-06-30"
+			}
+		],
+		"connectors": {}
+	}
+}

@@ -1,6 +1,10 @@
 {
 	"title": "Factory Safety Questionnaire",
 	"description": "Interactive multi-view safety check that reads editable questions and appends completed results to a separate internal datasource.",
+	"mechanisms": [
+		"guided-form",
+		"internal-datasource-write"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -14,5 +18,8 @@
 		"sample-questions-datasource.json",
 		"sample-results-datasource.json"
 	],
-	"referenceScreenshots": ["full-hd-1920x1080.png", "compact-1366x768.png"]
+	"referenceScreenshots": [
+		"full-hd-1920x1080.png",
+		"compact-1366x768.png"
+	]
 }

@@ -1,0 +1,338 @@
+{
+	"version": "1",
+	"name": "Interactive Document Viewer",
+	"interactive": true,
+	"size": { "width": "1920px", "height": "1080px" },
+	"properties": [
+		{
+			"label": "Document datasource",
+			"type": "dataPicker",
+			"property": "documentsData",
+			"dataPickerType": "any",
+			"tooltip": "Bind an internal TABLE datasource. The default field names match the supplied Document Viewer table."
+		},
+		{
+			"label": "Datasource columns",
+			"type": "group",
+			"properties": [
+				{ "label": "Document title column", "type": "text", "property": "titleColumn", "default": "Name" },
+				{ "label": "PDF file column", "type": "text", "property": "pdfColumn", "default": "PDF" },
+				{
+					"label": "Category column",
+					"type": "text",
+					"property": "categoryColumn",
+					"default": "Category",
+					"tooltip": "Supports dropdown, string, and text columns."
+				},
+				{ "label": "Additional field 1", "type": "text", "property": "metadataColumn1", "default": "Date" },
+				{ "label": "Additional field 2", "type": "text", "property": "metadataColumn2", "default": "Category" },
+				{ "label": "Additional field 3", "type": "text", "property": "metadataColumn3", "default": "" },
+				{ "label": "Additional field 4", "type": "text", "property": "metadataColumn4", "default": "" },
+				{ "label": "Additional field 5", "type": "text", "property": "metadataColumn5", "default": "" },
+				{ "label": "Additional field 6", "type": "text", "property": "metadataColumn6", "default": "" },
+				{
+					"label": "Scheduling column (optional)",
+					"type": "text",
+					"property": "scheduleColumn",
+					"default": "Scheduling",
+					"tooltip": "Enter the name of a Wallboard scheduling-type column. Clear this field to ignore scheduling. Rows without a schedule remain visible."
+				},
+				{
+					"label": "Keep expired documents (days)",
+					"type": "number",
+					"property": "scheduleRetentionDays",
+					"default": 0,
+					"min": 0,
+					"max": 3650,
+					"step": 1,
+					"tooltip": "Use 0 to remove a document immediately after its schedule ends, or enter the number of days it should remain available."
+				}
+			]
+		},
+		{
+			"label": "Header and clock",
+			"type": "group",
+			"properties": [
+				{ "label": "Show eyebrow text", "type": "checkbox", "property": "showEyebrow", "default": false },
+				{
+					"label": "Eyebrow text",
+					"type": "text",
+					"property": "eyebrowText",
+					"default": "Public information kiosk",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "showEyebrow" }],
+						"rule": "#1"
+					}
+				},
+				{ "label": "Show app title", "type": "checkbox", "property": "showAppTitle", "default": false },
+				{
+					"label": "App title",
+					"type": "text",
+					"property": "appTitle",
+					"default": "Community Documents",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "showAppTitle" }],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Header logo",
+					"type": "file",
+					"property": "logoFile",
+					"fileType": "image",
+					"tooltip": "Replaces the default government icon in the top-left header."
+				},
+				{ "label": "Show time and date", "type": "checkbox", "property": "showClock", "default": true },
+				{
+					"label": "Time format",
+					"type": "select",
+					"property": "timeFormat",
+					"default": "12",
+					"options": [
+						{ "label": "12 hour", "value": "12" },
+						{ "label": "24 hour", "value": "24" }
+					]
+				},
+				{
+					"label": "Date format",
+					"type": "select",
+					"property": "dateFormat",
+					"default": "long",
+					"options": [
+						{ "label": "July 21, 2026", "value": "long" },
+						{ "label": "Jul 21, 2026", "value": "medium" },
+						{ "label": "07/21/2026", "value": "numeric" }
+					]
+				}
+			]
+		},
+		{
+			"label": "PDF reader",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Reader first in portrait",
+					"type": "checkbox",
+					"property": "portraitReaderFirst",
+					"default": true,
+					"tooltip": "Places the PDF reader above the document directory on portrait kiosks."
+				},
+				{
+					"label": "Show reader after selection in portrait",
+					"type": "checkbox",
+					"property": "portraitReaderAfterSelection",
+					"default": true,
+					"tooltip": "Starts portrait kiosks on the directory and reveals the reader only after a visitor selects a document."
+				},
+				{
+					"label": "Page mode",
+					"type": "select",
+					"property": "pageMode",
+					"default": "single",
+					"options": [
+						{ "label": "Single page", "value": "single" },
+						{ "label": "Continuous", "value": "continuous" }
+					]
+				},
+				{
+					"label": "Fit",
+					"type": "select",
+					"property": "fit",
+					"default": "contain",
+					"options": [
+						{ "label": "Contain", "value": "contain" },
+						{ "label": "Fit width", "value": "width" },
+						{ "label": "Fit height", "value": "height" },
+						{ "label": "Actual size", "value": "actual" },
+						{ "label": "Fill", "value": "fill" },
+						{ "label": "Cover", "value": "cover" }
+					]
+				},
+				{ "label": "Show kiosk controls", "type": "checkbox", "property": "showControls", "default": true },
+				{ "label": "Selectable text", "type": "checkbox", "property": "renderTextLayer", "default": true },
+				{ "label": "Links and annotations", "type": "checkbox", "property": "interactiveAnnotations", "default": true },
+				{ "label": "Interactive forms", "type": "checkbox", "property": "renderForms", "default": true },
+				{
+					"label": "Minimum zoom",
+					"type": "number",
+					"property": "zoomMinimum",
+					"default": 0.5,
+					"min": 0.1,
+					"max": 1,
+					"step": 0.05
+				},
+				{
+					"label": "Maximum zoom",
+					"type": "number",
+					"property": "zoomMaximum",
+					"default": 4,
+					"min": 1,
+					"max": 10,
+					"step": 0.25
+				},
+				{
+					"label": "Zoom step",
+					"type": "number",
+					"property": "zoomStep",
+					"default": 0.2,
+					"min": 0.05,
+					"max": 1,
+					"step": 0.05
+				}
+			]
+		},
+		{
+			"label": "Search and accessibility",
+			"type": "group",
+			"properties": [
+				{ "label": "Show on-screen keyboard", "type": "checkbox", "property": "keyboardEnabled", "default": true },
+				{
+					"label": "Keyboard text size (%)",
+					"type": "number",
+					"property": "keyboardTextScale",
+					"default": 100,
+					"min": 80,
+					"max": 150,
+					"step": 5,
+					"tooltip": "Keeps the responsive keyboard sizing at 100%. Increase this value for slightly larger key labels."
+				},
+				{
+					"label": "Show accessible reach button",
+					"type": "checkbox",
+					"property": "showAccessibilityButton",
+					"default": false
+				},
+				{
+					"label": "Search placeholder",
+					"type": "text",
+					"property": "searchPlaceholder",
+					"default": "Search documents"
+				}
+			]
+		},
+		{
+			"label": "Document directory",
+			"type": "group",
+			"properties": [
+				{ "label": "Show document icon", "type": "checkbox", "property": "showDirectoryIcon", "default": true },
+				{
+					"label": "Document icon",
+					"type": "file",
+					"property": "directoryIconFile",
+					"fileType": "image",
+					"tooltip": "Replaces the default PDF icon shown at the left of each document row.",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": true, "dependsOn": "showDirectoryIcon" }],
+						"rule": "#1"
+					}
+				}
+			]
+		},
+		{
+			"label": "Background",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Background type",
+					"type": "select",
+					"property": "backgroundMode",
+					"default": "gradient",
+					"options": [
+						{ "label": "Gradient", "value": "gradient" },
+						{ "label": "Solid color", "value": "solid" },
+						{ "label": "Image", "value": "image" }
+					]
+				},
+				{
+					"label": "Background image",
+					"type": "file",
+					"property": "backgroundImage",
+					"fileType": "image",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "image", "dependsOn": "backgroundMode" }],
+						"rule": "#1"
+					}
+				},
+				{ "label": "Background color", "type": "color", "property": "backgroundColor", "default": "#ffffff" },
+				{
+					"label": "Gradient color",
+					"type": "color",
+					"property": "backgroundColorTwo",
+					"default": "#eef6ff",
+					"visibilityConditions": {
+						"conditions": [{ "id": "#1", "type": "EQUALS", "value": "gradient", "dependsOn": "backgroundMode" }],
+						"rule": "#1"
+					}
+				}
+			]
+		},
+		{
+			"label": "Brand colors",
+			"type": "group",
+			"properties": [
+				{ "label": "Header and panel", "type": "color", "property": "panelColor", "default": "#09265f" },
+				{ "label": "Buttons", "type": "color", "property": "buttonColor", "default": "#0a2d6f" },
+				{ "label": "Button text", "type": "color", "property": "buttonTextColor", "default": "#ffffff" },
+				{ "label": "Document rows", "type": "color", "property": "listColor", "default": "#ffffff" },
+				{ "label": "Primary text", "type": "color", "property": "primaryTextColor", "default": "#14233a" },
+				{ "label": "Secondary text", "type": "color", "property": "mutedTextColor", "default": "#60708a" },
+				{ "label": "Keyboard panel", "type": "color", "property": "keyboardColor", "default": "#ffffff" },
+				{ "label": "Keyboard keys", "type": "color", "property": "keyboardKeyColor", "default": "#e8eef5" }
+			]
+		},
+		{
+			"label": "Idle screensaver",
+			"type": "group",
+			"properties": [
+				{ "label": "Enable screensaver", "type": "checkbox", "property": "screensaverEnabled", "default": true },
+				{
+					"label": "Idle time (seconds)",
+					"type": "slider",
+					"property": "idleSeconds",
+					"default": 120,
+					"min": 15,
+					"max": 1800,
+					"step": 5
+				},
+				{ "label": "Screensaver image", "type": "file", "property": "screensaverImage", "fileType": "image" },
+				{
+					"label": "Screensaver overlay",
+					"type": "color",
+					"property": "screensaverOverlayColor",
+					"default": "#051b45",
+					"tooltip": "Applied at 70% opacity over the screensaver background."
+				},
+				{
+					"label": "Screensaver logo",
+					"type": "file",
+					"property": "screensaverLogoFile",
+					"fileType": "image",
+					"tooltip": "Shown above the screensaver message and independent from the header logo."
+				},
+				{
+					"label": "Touch message",
+					"type": "text",
+					"property": "screensaverMessage",
+					"default": "Touch anywhere to explore community documents"
+				},
+				{
+					"label": "Screensaver subtext",
+					"type": "text",
+					"property": "screensaverSubtext",
+					"default": "Tap or press any key to begin"
+				}
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js", "assets/pdf.worker.js"],
+	"externalCommands": [
+		{ "label": "First page", "command": "firstPage" },
+		{ "label": "Previous page", "command": "previousPage" },
+		{ "label": "Next page", "command": "nextPage" },
+		{ "label": "Last page", "command": "lastPage" },
+		{ "label": "Zoom in", "command": "zoomIn" },
+		{ "label": "Zoom out", "command": "zoomOut" },
+		{ "label": "Reset zoom", "command": "resetZoom" },
+		{ "label": "Reset kiosk", "command": "resetKiosk" }
+	]
+}

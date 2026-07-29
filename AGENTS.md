@@ -17,6 +17,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 | Charts | `charting.md` |
 | Reusable mechanics | `capabilities.md` |
 | On-screen keyboard, recurring interactive elements | `archetypes.md` |
+| Promoting a new example | `examples/mechanisms.json` — declare what it teaches; it must be something no other example teaches |
 | Wayfinding/maps | `wayfinding.md`, `datasource-contracts.md` |
 | Packaging/replacement | `app-identity-and-delivery.md` |
 

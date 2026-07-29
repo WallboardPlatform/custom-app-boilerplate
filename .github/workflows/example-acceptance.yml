@@ -16,7 +16,9 @@ jobs:
   repository-contracts:
     name: Repository contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The gates themselves take about two minutes; the headroom is for a slow browser download,
+    # which has cancelled this job before.
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -31,6 +33,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --registry=https://registry.npmjs.org/
 
+      - name: Restore Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          path: ~/.cache/ms-playwright
+
+      # The browser binary is cached; its system libraries are not, so --with-deps still runs.
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
@@ -49,18 +59,26 @@ jobs:
           - call-center-agent-status
           - campus-directory
           - civic-venue-pulse
+          - curated-storyline
+          - donor-directory
+          - factory-safety-questionnaire
+          - factory-safety-results-dashboard
+          - global-office-clock
+          - interactive-document-viewer
           - kpi-operations
           - live-agenda
+          - lumen-media-program
           - manufacturing-andon
           - market-rotation-ticker
           - museum-welcome
           - newsroom-spotlight
-          - pdf-document-workspace
           - pharmacy-pickup-queue
           - product-catalog
           - recognition-mosaic
           - restaurant-menu
           - single-hero-clock
+          - spatial-wayfinding
+          - team-presence-board
           - veszprem-wayfinding
           - weather-window
 
@@ -77,6 +95,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --registry=https://registry.npmjs.org/
 
+      - name: Restore Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          path: ~/.cache/ms-playwright
+
+      # The browser binary is cached; its system libraries are not, so --with-deps still runs.
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

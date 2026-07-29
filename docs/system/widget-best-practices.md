@@ -217,7 +217,7 @@ Avoid:
 
 | Rule | Practice |
 |------|----------|
-| Resolve from the app bundle | Use static imports for local images and media. Do not use `new URL(..., import.meta.url)` inside components. |
+| Resolve from the app bundle | Use static imports for local images and media; lint enforces this. See `configuration.md`. |
 | Cache every emitted asset | Add every file under `dist/assets/` to `properties.json.resourceList`. |
 | Ship real editor images | `icon.png` and `placeholder.png` must be structurally valid PNG files with non-zero dimensions. |
 | Validate the package | Run `npm run validate:package`; a successful Vite build alone does not prove that media loads in the displayer. |

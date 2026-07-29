@@ -1,6 +1,10 @@
 {
 	"title": "Pharmacy Pickup Queue",
 	"description": "Fixed 480x270 service display with compact queue normalization, semantic states, and bounded overflow.",
+	"mechanisms": [
+		"single-hero-callout",
+		"table-binding"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -8,6 +12,13 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"],
-	"referenceScreenshots": ["app-default-480x270.png", "scenario-dark-theme-480x270.png"]
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-480x270.png",
+		"scenario-dark-theme-480x270.png"
+	]
 }

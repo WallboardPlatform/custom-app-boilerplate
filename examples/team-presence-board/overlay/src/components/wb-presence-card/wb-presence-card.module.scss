@@ -1,0 +1,44 @@
+/** utf-8:  o */
+
+/* <editor-fold desc="Presence card"> ------------------------------- */
+
+.wb-presence-card {
+	position: relative;
+	display: flex;
+	width: var(--wb-presence-card-width);
+	min-width: 0;
+	margin: var(--wb-presence-card-margin);
+	align-items: center;
+	flex: 0 0 auto;
+	flex-direction: column;
+	text-align: center;
+}
+
+:global(.wb-presence-card .wb-presence-card-name) {
+	max-width: 100%;
+	margin: 9px 0 0;
+	padding: 0 2px;
+	overflow: hidden;
+	font-size: var(--wb-presence-card-name-size);
+	font-weight: 600;
+	line-height: 1.3;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+:global(.wb-presence-card[data-group='offline'] .wb-presence-card-name) {
+	color: var(--wb-presence-muted);
+}
+
+:global(.wb-presence-card .wb-presence-card-status) {
+	max-width: 100%;
+	margin: 2px 0 0;
+	overflow: hidden;
+	color: var(--wb-presence-muted);
+	font-size: var(--wb-presence-card-status-size);
+	line-height: 1.3;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* </editor-fold desc="Presence card"> ------------------------------ */

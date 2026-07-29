@@ -1,0 +1,68 @@
+{
+	"note": "Closed vocabulary of mechanisms an example may claim to teach. Adding an entry is a deliberate act: it asserts a genuinely new thing an agent would come to an example to learn. Every example must own at least one mechanism no other example declares, or be recorded in example-mechanisms-policy.json with a reason.",
+	"runtime": {
+		"auto-fit-text": "Bounded text scaled to fit its box without losing content.",
+		"content-paging": "More records than fit, cycled so every record is reachable.",
+		"timed-rotation": "Instance-local timers advancing content, cleaned up on destroy.",
+		"bounded-transition": "A page change that animates for a fixed duration and settles.",
+		"fixed-canvas-scaling": "A reference-led composition scaled to fit with letterboxing.",
+		"published-map-package": "A .wbmap runtime package consumed by the app.",
+		"platform-media-cache": "Media resolved through the platform cache from a setting or row.",
+		"packaged-media": "Media bundled with the app and listed in the resource list.",
+		"idle-screensaver": "An attract state after inactivity, with its own branding and reset behaviour.",
+		"multi-timezone": "Several places shown at once, each in its own local time."
+	},
+	"capability": {
+		"on-screen-keyboard": "Touch text entry bound to a field.",
+		"pdf-rendering": "PDF.js document rendering and navigation.",
+		"video-playback": "Folder or playlist video playback.",
+		"charting": "Chart.js or ECharts rendering sized for signage."
+	},
+	"data": {
+		"table-binding": "An operator-editable TABLE datasource.",
+		"feed-or-calendar-binding": "A native FEED or CALENDAR datasource.",
+		"multi-source-merge": "Two or more datasources reconciled into one view.",
+		"internal-datasource-write": "The app writing rows back to an internal datasource.",
+		"aggregate-of-submissions": "A view deriving metrics from records another app wrote.",
+		"weather-binding": "A weather datasource with its own failure states.",
+		"settings-only": "No datasource at all: the app is driven entirely by settings and time.",
+		"scheduled-visibility": "Rows appearing and expiring on their own schedule, with retention after expiry.",
+		"typed-column-formatting": "Formatting driven by the datasource column type rather than by guesswork.",
+		"presence-binding": "Live availability for named people from an identity or collaboration platform, where the state changes on its own rather than on a refresh cycle."
+	},
+	"composition": {
+		"dense-table-board": "Many rows of uniform records read at distance.",
+		"single-hero-callout": "One value dominating the surface.",
+		"editorial-poster": "Typographic composition with deliberate colour blocking.",
+		"photographic-overlay": "Data laid over full-bleed photography.",
+		"card-grid-mosaic": "Asymmetric tiles of mixed media and text.",
+		"split-stage": "A dominant primary panel beside a subordinate column.",
+		"ultra-wide-marquee": "Continuous horizontal motion on a wide-low surface.",
+		"tall-column-board": "A narrow portrait column of grouped rows.",
+		"status-wall": "Uniform records whose state is the primary signal rather than their content.",
+		"count-adaptive-layout": "A different composition chosen by how many records exist, not by surface size."
+	},
+	"interaction": {
+		"directory-search": "Search and filter across a browsable set.",
+		"guided-form": "Stepped input with validation and submission.",
+		"custom-settings-editor": "An editor surface beyond the property sidebar.",
+		"map-orientation": "Selecting a destination and showing the way to it.",
+		"accessible-reach": "A viewer-toggled layout that moves controls within reach and enlarges touch targets, for kiosks used from a seated height."
+	},
+	"referenceExample": {
+		"note": "The example an agent should read first for this mechanism. Absent means no example is a standout, or none exists yet. Changing an entry is how a better teacher replaces an incumbent without either being deleted.",
+		"content-paging": "recognition-mosaic",
+		"dense-table-board": "airport-departures",
+		"directory-search": "campus-directory",
+		"editorial-poster": "museum-welcome",
+		"guided-form": "factory-safety-questionnaire",
+		"map-orientation": "veszprem-wayfinding",
+		"on-screen-keyboard": "veszprem-wayfinding",
+		"photographic-overlay": "weather-window",
+		"published-map-package": "spatial-wayfinding",
+		"status-wall": "call-center-agent-status",
+		"ultra-wide-marquee": "market-rotation-ticker",
+		"accessible-reach": "interactive-document-viewer",
+		"presence-binding": "team-presence-board"
+	}
+}

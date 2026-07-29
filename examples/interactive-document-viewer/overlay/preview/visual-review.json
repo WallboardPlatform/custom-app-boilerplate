@@ -1,0 +1,166 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "2dbd7e6e7fbc29721fc89b80b5cecbfb423f0ac591cf9ab6a83b64a41e6ad986",
+	"reviewedAt": "2026-07-29T00:00:00.000Z",
+	"reviewer": "Claude (agent)",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Municipal kiosk: searchable document directory bound to a TABLE, with the PDF opening in place beside it."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Keeps the reference kiosk structure - masthead, category rail, directory list, reader - without copying its styling."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Deep navy institutional palette with a civic masthead; distinct from the warm paper of the donor wall and the dark dashboards."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Kiosk viewing distance: document titles and category buttons carry at arm length, and accessible reach mode enlarges both."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Default and custom branding both verified, including an independently themed screensaver overlay."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-labels and maximum-content scenarios show titles wrapping without clipping at every surface."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Verified 600x600 through 1920x1080 plus portrait and 1536x432; the reader and directory reflow rather than shrink."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Icons are inline SVG following currentColor; the only raster assets are the operator-supplied logo and screensaver image."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Only example teaching accessible reach mode - a viewer-toggled layout that brings controls within seated reach."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "compact-800x600.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-accessibility-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-compact-800x600.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-custom-branding-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-empty-1080x720.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-invalid-rows-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-landscape-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-landscape-keyboard-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-live-datasource-update-1366x768.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-long-labels-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-maximum-content-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-portrait-selected-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-screensaver-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-screensaver-branding-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "scenario-square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected; directory, reader and control layout correct at this surface."
+		}
+	],
+	"unresolvedFindings": []
+}

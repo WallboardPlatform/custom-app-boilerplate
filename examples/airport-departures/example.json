@@ -1,6 +1,11 @@
 {
 	"title": "Airport Departures",
 	"description": "Editable TABLE flight board with adaptive pagination, status hierarchy, long-label handling, and live datasource updates.",
+	"mechanisms": [
+		"dense-table-board",
+		"table-binding",
+		"timed-rotation"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +18,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

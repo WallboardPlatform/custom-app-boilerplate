@@ -1,0 +1,32 @@
+{
+	"title": "Interactive Document Viewer",
+	"description": "Municipal self-service kiosk: a searchable document directory backed by a TABLE datasource, with an in-place PDF reader carrying outlines, links, zoom and an idle return to the directory.",
+	"mechanisms": [
+		"accessible-reach",
+		"pdf-rendering",
+		"directory-search",
+		"idle-screensaver",
+		"scheduled-visibility",
+		"table-binding"
+	],
+	"capabilities": [
+		"keyboard",
+		"pdf"
+	],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
+}

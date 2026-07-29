@@ -1,6 +1,12 @@
 {
 	"title": "Recognition Mosaic",
 	"description": "Photo-led editorial recognition wall with bundled media, asymmetric layouts, and designed media fallbacks.",
+	"mechanisms": [
+		"card-grid-mosaic",
+		"content-paging",
+		"packaged-media",
+		"table-binding"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -8,6 +14,13 @@
 		"src/editor-assets/layout-editor",
 		"src/editor-assets/popup-wizard"
 	],
-	"artifacts": ["generation-brief.json", "datasource-contract.json", "sample-datasource.json"],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

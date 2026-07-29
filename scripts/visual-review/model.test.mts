@@ -28,6 +28,41 @@ const createProject = (): string => {
 };
 
 void describe('visual review model', (): void => {
+	void it('ignores shared conformance suites when hashing the reviewed source', (context): void => {
+		// The hash answers whether the app, fixture, brief or datasource sample moved since a reviewer
+		// looked at the screenshots. A conformance suite is boilerplate harness that renders nothing,
+		// so editing one must not invalidate every example's review and demand a re-inspection that
+		// cannot reveal anything.
+		const projectDirectory: string = createProject();
+		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
+
+		fs.mkdirSync(path.join(projectDirectory, 'preview', 'conformance'), { recursive: true });
+		fs.writeFileSync(
+			path.join(projectDirectory, 'preview', 'conformance', 'pagination.ts'),
+			'export const registerPaginationConformance = (): void => undefined;\n'
+		);
+		fs.writeFileSync(
+			path.join(projectDirectory, 'preview', 'conformance.spec.ts'),
+			"import { registerPaginationConformance } from './conformance/pagination';\nregisterPaginationConformance();\n"
+		);
+
+		const before: string = createVisualReviewSourceHash(projectDirectory);
+
+		fs.writeFileSync(
+			path.join(projectDirectory, 'preview', 'conformance', 'pagination.ts'),
+			'export const registerPaginationConformance = (): void => { /* stricter now */ };\n'
+		);
+
+		assert.equal(createVisualReviewSourceHash(projectDirectory), before);
+
+		fs.writeFileSync(path.join(projectDirectory, 'src', 'app.tsx'), 'export const value = 2;');
+		assert.notEqual(
+			createVisualReviewSourceHash(projectDirectory),
+			before,
+			'an app change must still invalidate the review'
+		);
+	});
+
 	void it('creates one criterion and screenshot entry per current artifact', (context): void => {
 		const projectDirectory: string = createProject();
 		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));

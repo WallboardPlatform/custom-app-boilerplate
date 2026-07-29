@@ -1,0 +1,32 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "officeData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"table": "Offices",
+				"sampleData": "sample-datasource.json"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Global Offices",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "name", "type": "string", "required": true },
+				{ "name": "region", "type": "string", "required": false },
+				{ "name": "timeZone", "type": "string", "required": true },
+				{ "name": "opensAtHour", "type": "number", "required": false },
+				{ "name": "closesAtHour", "type": "number", "required": false }
+			],
+			"behaviour": {
+				"unbound": "The board names itself and shows the configured empty message.",
+				"empty": "Same as unbound; no office columns are rendered.",
+				"invalidRow": "A row whose timeZone the platform cannot resolve still renders, showing UTC time and stating that the zone is unavailable rather than dropping the office or crashing the board.",
+				"missingHours": "Defaults to 09:00-17:00 local so an operator can add a site with only a name and a zone."
+			}
+		}
+	]
+}

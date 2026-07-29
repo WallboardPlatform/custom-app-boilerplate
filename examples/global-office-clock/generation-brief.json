@@ -1,0 +1,264 @@
+{
+	"briefVersion": 4,
+	"request": {
+		"summary": "Show several offices side by side, each in its own local time, so a distributed team can see at a glance who is currently within working hours.",
+		"audience": "Staff in a multi-site organisation walking past a lobby or floor screen.",
+		"primaryGoal": "Let someone walking past tell, without arithmetic, what time it is at each office and which ones are currently working."
+	},
+	"assumptions": [
+		"Offices arrive as TABLE rows so an operator can add or retire a site without a new build.",
+		"Working hours are per office and expressed in that office's own local time.",
+		"Between two and six offices is the realistic range; the composition adapts across it."
+	],
+	"app": {
+		"mode": "new",
+		"name": "Global Office Clock",
+		"version": 1
+	},
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The same office set has to read on a wide lobby screen and a portrait lift panel, so the column count adapts rather than the type shrinking."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Lobby wall showing every office as a column with time, date and open state.",
+			"minimumContentCoverage": {
+				"width": 88,
+				"height": 78
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Lift-lobby panel stacking the same offices vertically.",
+			"minimumContentCoverage": {
+				"width": 86,
+				"height": 82
+			}
+		},
+		{
+			"id": "compact",
+			"width": 960,
+			"height": 540,
+			"role": "fallback",
+			"purpose": "Smaller floor screen where the office count has to reduce per-column detail rather than clip it.",
+			"minimumContentCoverage": {
+				"width": 84,
+				"height": 74
+			}
+		},
+		{
+			"id": "square",
+			"width": 768,
+			"height": 768,
+			"role": "fallback",
+			"purpose": "Square floor panel where the offices tile two-up rather than forming a single wide row.",
+			"minimumContentCoverage": {
+				"width": 84,
+				"height": 84
+			}
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{
+				"property": "officeData",
+				"source": "generated",
+				"contract": "TABLE",
+				"access": "read"
+			}
+		]
+	},
+	"presentation": {
+		"themes": [
+			"dark",
+			"light",
+			"custom"
+		],
+		"density": "balanced",
+		"viewingDistance": "room"
+	},
+	"settings": [
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom colour scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "boardTitle",
+			"purpose": "Names the board above the office columns."
+		},
+		{
+			"property": "timeFormat",
+			"purpose": "Chooses 12- or 24-hour local time for every office."
+		},
+		{
+			"property": "showSeconds",
+			"purpose": "Shows or hides the seconds field."
+		},
+		{
+			"property": "showOpenState",
+			"purpose": "Shows or hides the open and closed labelling.",
+			"effect": "open-state-visibility"
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when no offices are configured."
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Board background in the Custom scheme."
+		},
+		{
+			"property": "surfaceColor",
+			"purpose": "Office column background in the Custom scheme."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Office name and time colour in the Custom scheme."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Region and date colour in the Custom scheme."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Open-state emphasis in the Custom scheme."
+		},
+		{
+			"property": "dividerColor",
+			"purpose": "Rule and column edge colour in the Custom scheme."
+		}
+	],
+	"dynamicText": [
+		{
+			"id": "office-label",
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"officeData"
+				]
+			},
+			"selectors": [
+				".wb-global-office-clock-office-name"
+			],
+			"strategy": "wrap",
+			"limits": {
+				"maximumLines": 2
+			},
+			"fallback": "Wrap a long office name onto a second line and reduce its size before the time is affected.",
+			"rationale": "The local time is the value people are reading from across the room; a long site name must not displace it.",
+			"evidenceScenario": "long-labels"
+		}
+	],
+	"states": [
+		{
+			"scenario": "dark-theme",
+			"expectation": "The dark preset keeps open and closed states distinguishable and the time legible."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "With no offices configured the board still names itself and explains the absence."
+		},
+		{
+			"scenario": "two-offices",
+			"expectation": "Two offices fill the surface without stretching into empty columns."
+		},
+		{
+			"scenario": "six-offices",
+			"expectation": "Six offices stay legible at room distance rather than shrinking below the floor."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long office names wrap without displacing the time or the open state."
+		},
+		{
+			"scenario": "all-closed",
+			"expectation": "Every office outside working hours reads as closed without relying on colour alone."
+		},
+		{
+			"scenario": "invalid-timezone",
+			"expectation": "An unrecognised timezone degrades to a stated fallback rather than a crash or a blank column."
+		},
+		{
+			"scenario": "portrait",
+			"expectation": "Offices stack into one column with the time larger, not smaller, than in landscape."
+		},
+		{
+			"scenario": "compact",
+			"expectation": "The smaller floor screen keeps every office legible by reducing per-column detail rather than clipping it."
+		},
+		{
+			"scenario": "square",
+			"expectation": "A square panel tiles the offices two-up instead of forming one wide row."
+		}
+	],
+	"behaviors": [
+		{
+			"id": "per-office-local-time",
+			"expectation": "Each office shows its own local time and date, derived from its IANA zone rather than the player's clock.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "open-state-from-local-hours",
+			"expectation": "Open and closed are computed against each office's own local hours and stated in words, not only in colour.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "conformance",
+			"expectation": "The empty state and the open-state indicators satisfy the shared archetype conformance suites.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
+	],
+	"assets": [
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
+	],
+	"visualDirection": {
+		"source": "instruction-led",
+		"summary": "A quiet editorial board of parallel office columns, each owning its own time, with the open state carried by a word rather than a colour swatch.",
+		"references": [],
+		"signatureChoices": [
+			"Every office is a column of equal weight; no site is visually privileged.",
+			"Local time is the largest element in each column.",
+			"Open and closed are stated in words, with colour as reinforcement only.",
+			"Flat surfaces and hairline rules rather than cards and elevation."
+		],
+		"avoid": [
+			"Dashboard cards with elevation and rounded corners.",
+			"A single dominant clock that implies one office is the reference.",
+			"Open and closed carried by a colour swatch with no word."
+		]
+	},
+	"visualReview": {
+		"intent": "Parallel office columns that read as one composed board rather than repeated widgets, with each local time unmistakable at room distance.",
+		"focus": [
+			"Verify the column count adapts between two and six offices without leaving stretched or empty columns.",
+			"Verify the portrait surface stacks offices without reducing the time below the room floor.",
+			"Verify open and closed remain distinguishable in the light preset and without colour."
+		]
+	}
+}

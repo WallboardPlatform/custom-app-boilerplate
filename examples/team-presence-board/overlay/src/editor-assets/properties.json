@@ -1,0 +1,177 @@
+{
+	"version": "1",
+	"name": "Team Presence Board",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Data",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Presence datasource",
+					"type": "dataPicker",
+					"property": "presenceData",
+					"tooltip": "Bind the directory + Teams presence datasource. The app reads its users array."
+				}
+			]
+		},
+		{
+			"label": "Content",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Scope title",
+					"type": "text",
+					"property": "scopeTitle",
+					"default": "All Team"
+				},
+				{
+					"label": "Member filter",
+					"type": "textArea",
+					"property": "memberFilter",
+					"default": "",
+					"tooltip": "Comma or newline separated email prefixes or full addresses. Empty shows everyone passing the photo rule."
+				},
+				{
+					"label": "Only people with photos",
+					"type": "checkbox",
+					"property": "requirePhoto",
+					"default": true,
+					"tooltip": "Applies when the member filter is empty; hides service accounts without profile photos."
+				},
+				{
+					"label": "Show offline zone",
+					"type": "checkbox",
+					"property": "showOfflineZone",
+					"default": true
+				}
+			]
+		},
+		{
+			"label": "Display",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Show header",
+					"type": "checkbox",
+					"property": "showHeader",
+					"default": true
+				},
+				{
+					"label": "Show status ticker",
+					"type": "checkbox",
+					"property": "showTicker",
+					"default": true
+				},
+				{
+					"label": "Motion",
+					"type": "select",
+					"property": "motionPreset",
+					"default": "expressive",
+					"options": [
+						{ "label": "Off", "value": "off" },
+						{ "label": "Subtle", "value": "subtle" },
+						{ "label": "Expressive", "value": "expressive" }
+					]
+				}
+			]
+		},
+		{
+			"label": "Appearance",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{
+					"label": "Background color",
+					"type": "color",
+					"property": "backgroundColor",
+					"default": "#151B1B",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Zone color",
+					"type": "color",
+					"property": "panelColor",
+					"default": "#1C2424",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Header and footer color",
+					"type": "color",
+					"property": "wellColor",
+					"default": "#0E1212",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Text color",
+					"type": "color",
+					"property": "textColor",
+					"default": "#EAEAEA",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Muted text color",
+					"type": "color",
+					"property": "mutedTextColor",
+					"default": "#738084",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				},
+				{
+					"label": "Accent color",
+					"type": "color",
+					"property": "accentColor",
+					"default": "#D1202C",
+					"visibilityConditions": {
+						"conditions": [
+							{ "id": "#1", "type": "EQUALS", "value": "custom", "dependsOn": "themePreset" }
+						],
+						"rule": "#1"
+					}
+				}
+			]
+		}
+	],
+	"resourceList": [
+		"assets/app.js",
+		"assets/app-chrome-49.js"
+	]
+}

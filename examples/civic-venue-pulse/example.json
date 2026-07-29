@@ -1,6 +1,10 @@
 {
 	"title": "Civic Venue Pulse",
 	"description": "Bounded venue surface that composes independent built-in Calendar and Feed sources into one current-program-first experience.",
+	"mechanisms": [
+		"multi-source-merge",
+		"split-stage"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +17,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["full-hd-1920x1080.png", "compact-800x480.png"]
+	"referenceScreenshots": [
+		"full-hd-1920x1080.png",
+		"compact-800x480.png"
+	]
 }

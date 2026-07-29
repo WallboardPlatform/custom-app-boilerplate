@@ -146,3 +146,56 @@
 		font-size: 17px;
 	}
 }
+
+/* Placement variants: `embedded` sits the keyboard inside the layout instead of floating it
+   over the app, and `directory` is the denser arrangement a kiosk search bar needs. */
+.embedded .panel {
+	max-width: 1440px;
+	padding: 16px;
+	border: 0;
+	border-radius: 10px;
+	box-shadow: 0 4px 11px rgba(33, 65, 102, 0.08);
+}
+
+.embedded .row button {
+	min-width: 0;
+}
+
+.directory .panel {
+	max-width: none;
+	padding: var(--wb-interactive-document-viewer-keyboard-inset, 8px);
+	border-radius: 10px;
+}
+
+.directory .panel button {
+	min-width: 0;
+	min-height: 38px;
+	margin: 2px;
+	padding: 5px 6px;
+	font-size: 1em;
+}
+
+.directory .row button {
+	flex: 0 0 calc(var(--wb-keyboard-key-percent) - 6px);
+	margin: 0 3px;
+}
+
+.directory .panel > footer {
+	margin-top: 5px;
+}
+
+.directory .panel > footer button {
+	flex: 1 1 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.directory .panel > footer .space {
+	flex-grow: 1.5;
+	max-width: none;
+}
+
+.directory .panel > footer .submit {
+	flex-grow: 1.2;
+}

@@ -1,0 +1,136 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "97f4be960f5f79003bae6611080e92700e441f8d7926e4600dde217500a2eaad",
+	"reviewedAt": "2026-07-28T00:00:00.000Z",
+	"reviewer": "Claude (agent)",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Board answers \"can I reach that office now\": per-office local time, offset from home, working window and open state."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Follows the world-clock reference in structure (parallel columns, one hairline per boundary) without copying its styling."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Warm paper palette, heavy tabular clock and wide-tracked micro-labels; not the default dark dashboard look shared by other examples."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Clock dominates at every tier; small tier sheds zone, hours, transition and date rather than shrinking them under the floor."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Light and dark presets both verified; accent carries the open state against both backgrounds."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Office name is auto-fitted against a two-line budget, so a long name never forms a clipped third line (see scenario-long-labels)."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "Board wraps into rows once a column would fall under 210px, and wrapped rows carry their own hairline; verified at 600x600 and 768x768."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "No raster assets; the whole board is type, rule and colour, so nothing degrades at any surface size."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "Only example built as parallel per-entity clocks with a home-relative offset; distinct from the single-hero clock."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "compact-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-all-closed-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-compact-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-dark-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-empty-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-invalid-timezone-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-long-labels-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-portrait-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-six-offices-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "scenario-two-offices-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "square-768x768.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected; composition, legibility and column/row structure correct at this surface."
+		}
+	],
+	"unresolvedFindings": []
+}

@@ -1,0 +1,28 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "presenceData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "EXISTING",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Team Presence Feed",
+		"quickEditEligible": false
+	},
+	"acceptedValueShapes": [
+		"object containing a users array of directory/presence records",
+		"direct array of directory/presence records",
+		"JSON string of either documented shape"
+	],
+	"behavior": {
+		"unbound": "render representative synthetic roster for local evaluation",
+		"boundEmpty": "render the designed empty state",
+		"invalidPayload": "render the designed data-problem state without crashing",
+		"invalidRows": "skip records without displayName or givenName (service accounts) and duplicate keys",
+		"ordering": "preserve datasource roster order; initials disc hue is assigned by roster index"
+	}
+}

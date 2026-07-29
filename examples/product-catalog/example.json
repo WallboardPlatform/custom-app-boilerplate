@@ -1,6 +1,11 @@
 {
 	"title": "Product Catalog",
 	"description": "Retail editorial catalog with one quick-editable TABLE containing product copy and file-picker images, plus fallback, caching, and lifecycle-safe transitions.",
+	"mechanisms": [
+		"platform-media-cache",
+		"bounded-transition",
+		"table-binding"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -14,5 +19,8 @@
 		"sample-products-table-datasource.json",
 		"sample-product-images"
 	],
-	"referenceScreenshots": ["app-default-1920x1080.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"portrait-1080x1920.png"
+	]
 }

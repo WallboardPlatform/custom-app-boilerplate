@@ -1,6 +1,9 @@
 {
 	"title": "KPI Operations",
 	"description": "Responsive operations dashboard with KPI cards and a tree-shaken Chart.js trend.",
+	"mechanisms": [
+		"charting"
+	],
 	"remove": [
 		"src/components/wb-app",
 		"src/components/wb-layout-builder",
@@ -13,5 +16,8 @@
 		"datasource-contract.json",
 		"sample-datasource.json"
 	],
-	"referenceScreenshots": ["app-default-1280x720.png", "portrait-1080x1920.png"]
+	"referenceScreenshots": [
+		"app-default-1280x720.png",
+		"portrait-1080x1920.png"
+	]
 }
