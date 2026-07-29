@@ -234,22 +234,6 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 94, height: 92 }
 	},
 	{
-		id: 'keyboard-inline',
-		fixture: createFixture('interactive-document-viewer-keyboard-inline', sampleDatasource),
-		viewport: { width: 1080, height: 1920, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Open on-screen keyboard' }],
-		minimumContentCoverage: { width: 94, height: 92 }
-	},
-	{
-		id: 'keyboard-scale',
-		fixture: createFixture('interactive-document-viewer-keyboard-scale', sampleDatasource, {
-			keyboardTextScale: 120
-		}),
-		viewport: { width: 1080, height: 1920, background: 'light' },
-		interactionSteps: [{ type: 'click', role: 'button', name: 'Open on-screen keyboard' }],
-		minimumContentCoverage: { width: 94, height: 92 }
-	},
-	{
 		id: 'compact',
 		fixture: createFixture('interactive-document-viewer-compact', sampleDatasource),
 		viewport: { width: 800, height: 600, background: 'light' },

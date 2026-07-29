@@ -16,7 +16,7 @@
 				"Name": "Budget Report: Fiscal Year 2027 Proposal",
 				"Date": "2027-03-02",
 				"PDF": {
-					"id": "sample-pdf-budget-report",
+					"id": "sample-pdf-budget",
 					"name": "budget-report.pdf",
 					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
 				},
@@ -30,7 +30,7 @@
 				"Name": "Meeting Minutes: Community Services Session",
 				"Date": "2027-04-18",
 				"PDF": {
-					"id": "sample-pdf-meeting-minutes",
+					"id": "sample-pdf-minutes",
 					"name": "meeting-minutes.pdf",
 					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
 				},
@@ -41,17 +41,17 @@
 				"Updated": "2027-04-19"
 			},
 			{
-				"Name": "Zoning Amendment: Riverside Mixed-Use Overlay",
+				"Name": "Public Notice: Harbor Avenue Lane Closure",
 				"Date": "2027-05-06",
 				"PDF": {
-					"id": "sample-pdf-zoning-amendment",
-					"name": "zoning-amendment.pdf",
+					"id": "sample-pdf-public-notice",
+					"name": "public-notice.pdf",
 					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
 				},
-				"Category": "Zoning & Land Use",
-				"Department": "Community Development",
-				"Status": "Published for public review",
-				"Audience": "Applicants and property owners",
+				"Category": "Public Notices",
+				"Department": "Public Works",
+				"Status": "Published",
+				"Audience": "All residents",
 				"Updated": "2027-05-07"
 			},
 			{
@@ -69,30 +69,30 @@
 				"Updated": "2027-05-22"
 			},
 			{
-				"Name": "Service Notice: Winter Utility Maintenance",
+				"Name": "Greenway Access Study",
 				"Date": "2027-06-11",
 				"PDF": {
-					"id": "sample-pdf-service-notice",
-					"name": "service-notice.pdf",
+					"id": "sample-pdf-greenway-study",
+					"name": "greenway-study.pdf",
 					"location": "/preview/pdf-assets/northline-operations-handbook.pdf"
 				},
-				"Category": "Public Works & Utilities",
-				"Department": "Public Works",
-				"Status": "Published",
+				"Category": "Plans & Projects",
+				"Department": "Community Development",
+				"Status": "Published for public review",
 				"Audience": "All residents",
 				"Updated": "2027-06-12"
 			},
 			{
-				"Name": "Accessibility Plan: Parks and Recreation Routes",
+				"Name": "Application Form: Community Grant Request",
 				"Date": "2027-06-29",
 				"PDF": {
-					"id": "sample-pdf-accessibility-plan",
-					"name": "accessibility-plan.pdf",
+					"id": "sample-pdf-grant-form",
+					"name": "grant-form.pdf",
 					"location": "/preview/pdf-assets/northline-shift-brief.pdf"
 				},
-				"Category": "Parks, Recreation & Community",
-				"Department": "Public Works",
-				"Status": "Draft",
+				"Category": "Forms & Applications",
+				"Department": "City Clerk",
+				"Status": "Final",
 				"Audience": "All residents",
 				"Updated": "2027-06-30"
 			}
