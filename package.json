@@ -36,7 +36,7 @@
 		"typecheck:wayfinding-studio": "tsc -p scripts/wayfinding/workbench/tsconfig.json",
 		"test:wayfinding-studio": "npm run typecheck:wayfinding-studio && playwright test --config scripts/wayfinding/workbench/playwright.config.ts",
 		"typecheck:wayfinding-studio-v2": "tsc -p scripts/wayfinding/workbench/tsconfig.v2.json",
-		"test:wayfinding-studio-v2": "npm run typecheck:wayfinding-studio-v2 && tsx --test scripts/wayfinding/editor-core/*.test.mts && playwright test --config scripts/wayfinding/workbench/playwright.v2.config.ts",
+		"test:wayfinding-studio-v2": "npm run typecheck:wayfinding-studio-v2 && tsx --test scripts/wayfinding/editor-core/*.test.mts scripts/wayfinding/workbench/v2/*.test.mts scripts/wayfinding/workbench/v2/canvas/*.test.mts && playwright test --config scripts/wayfinding/workbench/playwright.v2.config.ts",
 		"custom-editor:preview": "vite --host 127.0.0.1 --config scripts/custom-settings-editor/vite.config.mts",
 		"test:custom-settings-editor": "node scripts/custom-settings-editor/run-tests.mjs",
 		"wayfinding:audit-source": "tsx scripts/wayfinding/source-audit-cli.mts",

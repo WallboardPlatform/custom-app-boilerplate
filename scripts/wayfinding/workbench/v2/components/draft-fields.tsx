@@ -11,8 +11,12 @@ export const DraftInput = (props: {
 	value: string;
 }): JSX.Element => {
 	let input!: HTMLInputElement;
+	let committedValue = '';
 	createEffect(() => {
-		if (document.activeElement !== input) input.value = props.value;
+		const nextValue = props.value;
+		committedValue = nextValue;
+
+		if (document.activeElement !== input) input.value = nextValue;
 	});
 
 	return (
@@ -24,7 +28,7 @@ export const DraftInput = (props: {
 			value={props.value}
 			onChange={(event): void => props.onCommit(event.currentTarget.value)}
 			onBlur={(event): void => {
-				if (event.currentTarget.value !== props.value) props.onCommit(event.currentTarget.value);
+				if (event.currentTarget.value !== committedValue) props.onCommit(event.currentTarget.value);
 			}}
 		/>
 	);
@@ -37,8 +41,12 @@ export const DraftTextarea = (props: {
 	value: string;
 }): JSX.Element => {
 	let input!: HTMLTextAreaElement;
+	let committedValue = '';
 	createEffect(() => {
-		if (document.activeElement !== input) input.value = props.value;
+		const nextValue = props.value;
+		committedValue = nextValue;
+
+		if (document.activeElement !== input) input.value = nextValue;
 	});
 
 	return (
@@ -49,7 +57,7 @@ export const DraftTextarea = (props: {
 			value={props.value}
 			onChange={(event): void => props.onCommit(event.currentTarget.value)}
 			onBlur={(event): void => {
-				if (event.currentTarget.value !== props.value) props.onCommit(event.currentTarget.value);
+				if (event.currentTarget.value !== committedValue) props.onCommit(event.currentTarget.value);
 			}}
 		/>
 	);

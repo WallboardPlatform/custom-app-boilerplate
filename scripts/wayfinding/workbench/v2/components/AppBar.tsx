@@ -5,6 +5,7 @@ import {
 	Redo2,
 	Route,
 	Save,
+	Search,
 	Undo2,
 	UsersRound,
 	Waypoints
@@ -16,6 +17,8 @@ import { IconButton } from '../ui';
 
 interface AppBarProps {
 	onExportRuntime: () => void;
+	onOpenCommands: () => void;
+	onOpenProject: () => void;
 	onSave: (forceSaveAs: boolean) => void;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
@@ -36,8 +39,24 @@ export const AppBar = (props: AppBarProps): JSX.Element => (
 				<small>Wallboard</small>
 				<strong>Wayfinding Studio</strong>
 			</div>
-			<span class="version">v2 preview</span>
+			<span class="version">v2</span>
 		</div>
+		<button
+			type="button"
+			class="document-context"
+			title="Open project and floor settings"
+			onClick={() => props.onOpenProject()}
+		>
+			<span classList={{ dirty: props.snapshot().state.document.dirty }} aria-hidden="true" />
+			<div>
+				<strong>{props.snapshot().state.project.name}</strong>
+				<small>
+					{props.snapshot().state.project.floors.find(
+						(floor) => floor.id === props.snapshot().state.currentFloorId
+					)?.name ?? props.snapshot().state.currentFloorId}
+				</small>
+			</div>
+		</button>
 		<nav class="workspace-tabs" aria-label="Workspace">
 			<For each={workspaceOptions}>{(option) => {
 				const Icon = option.icon;
@@ -56,6 +75,17 @@ export const AppBar = (props: AppBarProps): JSX.Element => (
 			}}</For>
 		</nav>
 		<div class="app-actions">
+			<button
+				type="button"
+				class="command-search"
+				aria-label="Search commands (Ctrl+K)"
+				onClick={() => props.onOpenCommands()}
+			>
+				<Search size={17} />
+				<span>Commands</span>
+				<kbd>Ctrl K</kbd>
+			</button>
+			<span class="toolbar-divider" />
 			<IconButton
 				icon={Undo2}
 				label="Undo (Ctrl+Z)"
@@ -71,7 +101,7 @@ export const AppBar = (props: AppBarProps): JSX.Element => (
 			<span class="toolbar-divider" />
 			<IconButton icon={Save} label="Save (Ctrl+S)" onClick={() => props.onSave(false)} />
 			<IconButton icon={ArrowDownToLine} label="Save as" onClick={() => props.onSave(true)} />
-			<IconButton icon={FileDown} label="Export runtime bundle" onClick={props.onExportRuntime} />
+			<IconButton icon={FileDown} label="Publish map" onClick={props.onExportRuntime} />
 		</div>
 	</header>
 );

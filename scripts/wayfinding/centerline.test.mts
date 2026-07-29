@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { closeWalkableMask, extractSkeletonNetwork, nearestSkeletonIndex, retainAnchorNetworkCore, skeletonizeWalkableMask } from './centerline.mts';
+import {
+	closeWalkableMask,
+	erodeWalkableMask,
+	extractSkeletonNetwork,
+	nearestSkeletonIndex,
+	retainAnchorNetworkCore,
+	skeletonizeWalkableMask
+} from './centerline.mts';
 
 const maskFromRows = (rows: string[]): Uint8Array => Uint8Array.from(rows.join('').split('').map((value: string): number => value === '#' ? 1 : 0));
 
@@ -31,6 +38,21 @@ void describe('wayfinding centerline extraction', (): void => {
 
 		assert.ok(Array.from(skeleton).reduce((sum: number, value: number): number => sum + value, 0) < 15);
 		assert.ok(Array.from(skeleton).reduce((sum: number, value: number): number => sum + value, 0) >= 1);
+	});
+
+	void it('creates a clearance inset without inventing walkable cells', (): void => {
+		const source = maskFromRows([
+			'.......',
+			'.#####.',
+			'.#####.',
+			'.#####.',
+			'.......'
+		]);
+		const inset = erodeWalkableMask(source, 7, 5, 1);
+
+		assert.equal(inset[2 * 7 + 3], 1);
+		assert.equal(inset[1 * 7 + 3], 0);
+		assert.equal(inset[2 * 7 + 1], 0);
 	});
 
 	void it('uses destination anchors as explicit network breakpoints', (): void => {

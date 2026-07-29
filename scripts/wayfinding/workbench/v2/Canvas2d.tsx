@@ -2,159 +2,153 @@ import {
 	createEffect,
 	createMemo,
 	createSignal,
-	For,
 	onCleanup,
 	onMount,
 	Show,
+	untrack,
 	type Accessor,
 	type JSX
 } from 'solid-js';
 import {
-	renderWayfindingFloorSvg,
 	wayfindingStudioProjectDefaults,
+	type WayfindingStudioDestination,
+	type WayfindingStudioDoorElement,
 	type WayfindingStudioElement,
+	type WayfindingStudioMediaElement,
+	type WayfindingStudioOriginElement,
 	type WayfindingStudioPolygonElement
 } from '../../studio-project.mts';
-import { cameraForFloor } from '../../editor-core/commands';
 import type {
-	EditorCommand,
 	EditorDraft,
 	EditorSnapshot,
 	EditorStore,
 	EditorTool
 } from '../../editor-core/types';
-import type {
-	WayfindingNode,
-	WayfindingPoint
-} from '../../../../src/utils/wayfinding.js';
+import type { WayfindingPoint } from '../../../../src/utils/wayfinding.js';
 import {
 	floorRoutePoints,
-	routePolyline,
-	routeToDestination
+	routeToDestination,
+	type VisitorRouteProfile
 } from './route';
+import {
+	type DragInteraction,
+	isEditableTarget,
+	POINT_TOOLS,
+	POLYGON_TOOLS,
+	polygonTypeForTool,
+	toolFromShortcut
+} from './canvas/interaction';
+import {
+	appendFreehandPoint,
+	simplifyFreehandPolygon
+} from './canvas/freehand';
+import {
+	insertGeometryPoint,
+	moveGraphNodeTransaction,
+	nearestSegment,
+	pointerMoved,
+	translateGeometry,
+	translatePoint
+} from './canvas/editing';
+import { CanvasScene } from './canvas/CanvasScene';
+import {
+	edgeGeometry,
+	type FloorPresentationMode,
+	isPointElement,
+	isPolygonElement,
+	renderEditorFloorSvg
+} from './canvas/model';
+import {
+	detectFlatRegionBoundary,
+	type RegionDetectionSource
+} from './canvas/regionDetection';
+import { snapPointToSourceEdge } from './canvas/source-edge-snap';
+import {
+	buildCanvasSelectionOperation,
+	describeCanvasSelection,
+	type CanvasSelectionOperation,
+	type CanvasSelectionDescriptor
+} from './canvas/selection-controller';
+import {
+	buildPointAuthoring,
+	buildPolygonAuthoring,
+	buildRouteEdgeAuthoring,
+	createAuthoringId,
+	sampleSourceColor
+} from './canvas/authoring';
+import {
+	buildVisitorMapItems,
+	layoutVisitorMapLabels
+} from './visitor-map';
+import { useCanvasCamera } from './canvas/useCanvasCamera';
 
 interface Canvas2dProps {
+	onNotify?: (message: string, tone?: 'danger' | 'info' | 'success' | 'warning') => void;
 	onPointerCoordinate?: (point: WayfindingPoint) => void;
 	registerFit: (fit: () => void) => void;
+	registerSelectionActions?: (actions: CanvasSelectionActions) => void;
+	routeDestinationId?: Accessor<string | undefined>;
+	routeOriginId?: Accessor<string | undefined>;
+	routeProfile?: Accessor<VisitorRouteProfile>;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
+	visitorDestinations?: Accessor<WayfindingStudioDestination[]>;
+	visitorLanguage?: Accessor<string>;
 }
 
-type PointerLikeEvent = MouseEvent | PointerEvent | WheelEvent;
-type DragInteraction =
-	| {
-		cameraStart: { offsetX: number; offsetY: number; scale: number };
-		kind: 'pan';
-		pointerId: number;
-		start: WayfindingPoint;
-	}
-	| {
-		elementId: string;
-		kind: 'point';
-		moved: boolean;
-		original: WayfindingPoint;
-		point: WayfindingPoint;
-		pointerId: number;
-		start: WayfindingPoint;
-	}
-	| {
-		elementId: string;
-		geometry: WayfindingPoint[];
-		kind: 'polygon';
-		moved: boolean;
-		original: WayfindingPoint[];
-		pointerId: number;
-		start: WayfindingPoint;
-		vertexIndex?: number;
-	}
-	| {
-		geometry: WayfindingPoint[];
-		geometryIndex: number;
-		kind: 'graph-edge-point';
-		moved: boolean;
-		original: WayfindingPoint[];
-		pointerId: number;
-		routeEdgeId: string;
-		start: WayfindingPoint;
-	}
-	| {
-		kind: 'graph-node';
-		moved: boolean;
-		nodeId: string;
-		original: WayfindingPoint;
-		point: WayfindingPoint;
-		pointerId: number;
-		start: WayfindingPoint;
-	};
+export interface CanvasSelectionActions {
+	addPoint: () => boolean;
+	clear: () => void;
+	delete: () => void;
+	descriptor: () => CanvasSelectionDescriptor | undefined;
+	duplicate: () => boolean;
+	fit: () => void;
+	repair: () => boolean;
+	removePoint: () => boolean;
+	simplify: () => boolean;
+	straighten: () => boolean;
+}
 
-const visibleGroupByLayer: Record<string, string> = {
-	background: 'Background',
-	door: 'Doors',
-	icon: 'Icons',
-	label: 'Labels',
-	location: 'Locations',
-	logo: 'Logos',
-	obstacle: 'Obstacles',
-	origin: 'Origins',
-	poi: 'POIs',
-	transition: 'Transitions',
-	walkable: 'Walkable'
-};
+interface ElementInteractionPreview {
+	elementId: string;
+	patch: Partial<WayfindingStudioElement>;
+}
 
-const polygonTools = new Set<EditorTool>(['location', 'walkable', 'obstacle']);
-const pointTools = new Set<EditorTool>(['door', 'poi', 'origin', 'transition', 'label', 'icon', 'logo']);
-const escaped = (value: string): string => value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
-const pointString = (points: WayfindingPoint[]): string => points.map((point) => `${point.x},${point.y}`).join(' ');
-const isPolygonElement = (element: WayfindingStudioElement | undefined): element is WayfindingStudioPolygonElement =>
-	element?.type === 'location' || element?.type === 'walkable' || element?.type === 'obstacle';
-const isPointElement = (
-	element: WayfindingStudioElement | undefined
-): element is Exclude<WayfindingStudioElement, WayfindingStudioPolygonElement> =>
-	Boolean(element && 'point' in element);
-const distanceToSegment = (
-	point: WayfindingPoint,
-	start: WayfindingPoint,
-	end: WayfindingPoint
-): number => {
-	const dx = end.x - start.x;
-	const dy = end.y - start.y;
-	const lengthSquared = dx * dx + dy * dy;
-
-	if (lengthSquared === 0) return Math.hypot(point.x - start.x, point.y - start.y);
-	const projection = Math.max(0, Math.min(
-		1,
-		((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared
-	));
-
-	return Math.hypot(
-		point.x - (start.x + projection * dx),
-		point.y - (start.y + projection * dy)
-	);
-};
-const isEditableTarget = (target: EventTarget | null): boolean =>
-	target instanceof HTMLElement
-	&& (target.isContentEditable || ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName));
-
-let generatedId = 0;
-const nextId = (prefix: string): string => {
-	generatedId += 1;
-
-	return `${prefix}-${Date.now().toString(36)}-${generatedId}`;
-};
+const nextId = createAuthoringId;
 
 export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	let viewport!: HTMLDivElement;
 	let interaction: DragInteraction | undefined;
+	const store = untrack(() => props.store);
+	let lastRouteEdgeClick: {
+		edgeId: string;
+		point: WayfindingPoint;
+		time: number;
+	} | undefined;
 	let spaceHeld = false;
+	let traceLoadVersion = 0;
 	const [interactionGeometry, setInteractionGeometry] = createSignal<WayfindingPoint[]>();
 	const [interactionGraphGeometry, setInteractionGraphGeometry] = createSignal<WayfindingPoint[]>();
 	const [interactionGraphPoint, setInteractionGraphPoint] = createSignal<WayfindingPoint>();
+	const [interactionElementPreview, setInteractionElementPreview] = createSignal<ElementInteractionPreview>();
+	const [freehandGeometry, setFreehandGeometry] = createSignal<WayfindingPoint[]>();
+	const [traceSource, setTraceSource] = createSignal<RegionDetectionSource>();
 	const currentFloorId = createMemo(() => props.snapshot().state.currentFloorId);
 	const floor = createMemo(() => props.snapshot().state.project.floors.find(
 		(candidate) => candidate.id === currentFloorId()
 	) ?? props.snapshot().state.project.floors[0]);
-	const camera = createMemo(() => cameraForFloor(props.snapshot().state, floor().id));
+	const cameraController = useCanvasCamera({
+		floor,
+		getViewport: () => viewport,
+		registerFit: (fit): void => props.registerFit(fit),
+		snapshot: () => props.snapshot(),
+		store
+	});
+	const camera = cameraController.camera;
 	const floorElements = createMemo(() => floor().elements);
+	const backgroundAsset = createMemo(() => props.snapshot().state.project.assets.find(
+		(asset) => asset.id === floor().backgroundAssetId
+	));
 	const selectedElement = createMemo(() => {
 		const selection = props.snapshot().state.selection;
 
@@ -162,14 +156,40 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			? floorElements().find((element) => element.id === selection.id)
 			: undefined;
 	});
-	const selectedPolygon = createMemo(() => {
+	const previewProject = createMemo(() => {
+		const state = props.snapshot().state;
+		const preview = interactionElementPreview();
+
+		if (!preview) return state.project;
+
+		return {
+			...state.project,
+			floors: state.project.floors.map((candidateFloor) => candidateFloor.id === floor().id
+				? {
+					...candidateFloor,
+					elements: candidateFloor.elements.map((element) => element.id === preview.elementId
+						? { ...element, ...preview.patch } as WayfindingStudioElement
+						: element)
+				}
+				: candidateFloor)
+		};
+	});
+	const selectedElementPreview = createMemo(() => {
 		const element = selectedElement();
+		const preview = interactionElementPreview();
+
+		return element && preview?.elementId === element.id
+			? { ...element, ...preview.patch } as WayfindingStudioElement
+			: element;
+	});
+	const selectedPolygon = createMemo(() => {
+		const element = selectedElementPreview();
 
 		return isPolygonElement(element) ? element : undefined;
 	});
 	const selectedPolygonGeometry = createMemo(() => interactionGeometry() ?? selectedPolygon()?.geometry ?? []);
 	const selectedPoint = createMemo(() => {
-		const element = selectedElement();
+		const element = selectedElementPreview();
 
 		return isPointElement(element) ? element.point : undefined;
 	});
@@ -204,13 +224,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	const graphEdgePoints = (edgeId: string): WayfindingPoint[] => {
 		const edge = floorGraphEdges().find((candidate) => candidate.id === edgeId);
 
-		if (!edge) return [];
-		const from = floorGraphNodes().find((node) => node.id === edge.from);
-		const to = floorGraphNodes().find((node) => node.id === edge.to);
-
-		if (!from || !to) return [];
-
-		return edge.geometry?.length ? edge.geometry : [from, to];
+		return edgeGeometry(edge, floorGraphNodes());
 	};
 	const selectedGraphGeometry = createMemo(() => {
 		const edge = selectedGraphEdge();
@@ -230,352 +244,303 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	const route = createMemo(() => floorRoutePoints(
 		routeToDestination(
 			props.snapshot().state.project,
-			selectedDestinationId()
+			props.snapshot().state.workspace === 'visitor-preview'
+				? props.routeDestinationId?.()
+				: selectedDestinationId(),
+			props.routeProfile?.() ?? 'standard',
+			props.routeOriginId?.()
 		),
 		floor().id
 	));
 	const renderedSvg = createMemo(() => {
 		const state = props.snapshot().state;
-		const hiddenRules: string[] = [];
+		const presentationMode: FloorPresentationMode = state.workspace === 'visitor-preview'
+			? 'visitor'
+			: state.workspace === 'route-preview'
+				? 'route-preview'
+				: 'editor';
 
-		for (const [layer, group] of Object.entries(visibleGroupByLayer)) {
-			if (!state.layerVisibility[layer as keyof typeof state.layerVisibility]) hiddenRules.push(`#${group}{display:none}`);
-		}
-
-		if (state.selection?.kind === 'element') {
-			hiddenRules.push(`[id="${escaped(state.selection.id)}"]{filter:drop-shadow(0 0 5px #15927d);stroke:#15927d;stroke-width:5}`);
-
-			if (interactionGeometry()) hiddenRules.push(`[id="${escaped(state.selection.id)}"]{visibility:hidden}`);
-		}
-		const source: string = renderWayfindingFloorSvg(state.project, floor().id);
-
-		return source.replace('>', `><style>${hiddenRules.join('')}</style>`);
+		return renderEditorFloorSvg(
+			previewProject(),
+			floor().id,
+			state.layerVisibility,
+			presentationMode === 'editor' ? state.selection : undefined,
+			Boolean(interactionGeometry()),
+			presentationMode
+		);
 	});
+	const visitorMapItems = createMemo(() => buildVisitorMapItems(
+		props.snapshot().state.project,
+		floor().id,
+		props.visitorLanguage?.() ?? props.snapshot().state.project.defaultLanguage ?? 'en',
+		props.visitorDestinations?.() ?? props.snapshot().state.project.destinations
+	));
+	const visitorLabelPlacements = createMemo(() => layoutVisitorMapLabels(
+		visitorMapItems(),
+		camera().scale,
+		selectedDestinationId(),
+		{ height: floor().height, width: floor().width }
+	));
 	const draft = createMemo(() => props.snapshot().state.draft);
 	const handleRadius = createMemo(() => Math.max(4, 7 / camera().scale));
 	const defaults = createMemo(() => wayfindingStudioProjectDefaults(props.snapshot().state.project));
 
-	const fit = (): void => {
-		if (!viewport || !floor()) return;
-		const padding = 72;
-		const scale = Math.max(0.08, Math.min(
-			(viewport.clientWidth - padding * 2) / floor().width,
-			(viewport.clientHeight - padding * 2) / floor().height
-		));
-		props.store.dispatch({
-			type: 'camera/set',
-			floorId: floor().id,
-			camera: {
-				offsetX: (viewport.clientWidth - floor().width * scale) / 2,
-				offsetY: (viewport.clientHeight - floor().height * scale) / 2,
-				scale
-			}
+	createEffect(() => {
+		const asset = backgroundAsset();
+		traceLoadVersion += 1;
+		const version = traceLoadVersion;
+
+		setTraceSource(undefined);
+
+		if (!asset?.dataUrl) return;
+		const image = new Image();
+
+		image.onload = (): void => {
+			if (version !== traceLoadVersion) return;
+			const canvas = document.createElement('canvas');
+			canvas.width = image.naturalWidth;
+			canvas.height = image.naturalHeight;
+			const context = canvas.getContext('2d', { willReadFrequently: true });
+
+			if (!context) return;
+			context.drawImage(image, 0, 0);
+			setTraceSource({
+				data: context.getImageData(0, 0, canvas.width, canvas.height).data,
+				height: canvas.height,
+				width: canvas.width
+			});
+		};
+		image.onerror = (): void => {
+			if (version === traceLoadVersion) setTraceSource(undefined);
+		};
+		image.src = asset.dataUrl;
+	});
+
+	const fit = cameraController.fit;
+
+	const fitSelection = (): void => {
+		const selection = props.snapshot().state.selection;
+		let points: WayfindingPoint[] = [];
+
+		if (selection?.kind === 'element') {
+			const element = selectedElement();
+
+			if (isPolygonElement(element)) points = element.geometry;
+			else if (isPointElement(element)) points = [element.point];
+		} else if (selection?.kind === 'graph-node') {
+			const node = floorGraphNodes().find((candidate) => candidate.id === selection.id);
+
+			if (node) points = [{ x: node.x, y: node.y }];
+		} else if (selection?.kind === 'graph-edge') {
+			points = graphEdgePoints(selection.id);
+		}
+
+		if (!viewport || points.length === 0) {
+			fit();
+
+			return;
+		}
+		cameraController.fitPoints(points);
+	};
+
+	const pointInViewport = cameraController.viewportPoint;
+	const pointInMap = cameraController.mapPoint;
+	const snapFreehandPoint = (point: WayfindingPoint): WayfindingPoint => {
+		const source = traceSource();
+		const drawing = props.snapshot().state.drawing;
+
+		if (!source || !drawing.snapToSourceEdges) return point;
+
+		return snapPointToSourceEdge({
+			mapHeight: floor().height,
+			mapWidth: floor().width,
+			point,
+			radius: drawing.snapRadius,
+			source
 		});
 	};
 
-	const pointInViewport = (event: PointerLikeEvent): WayfindingPoint => {
-		const bounds = viewport.getBoundingClientRect();
+	const inheritedColorForGeometry = (geometry: WayfindingPoint[]): string | undefined => {
+		const center = geometry.reduce(
+			(sum, point) => ({
+				x: sum.x + point.x / geometry.length,
+				y: sum.y + point.y / geometry.length
+			}),
+			{ x: 0, y: 0 }
+		);
+		const source = traceSource();
+		const sourcePoint = source
+			? {
+				x: center.x * source.width / floor().width,
+				y: center.y * source.height / floor().height
+			}
+			: center;
 
-		return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+		return sampleSourceColor(source, sourcePoint);
 	};
 
-	const pointInMap = (event: PointerLikeEvent): WayfindingPoint => {
-		const point = pointInViewport(event);
-		const current = camera();
+	const addPolygon = (
+		elementType: WayfindingStudioPolygonElement['type'],
+		geometry: WayfindingPoint[],
+		detectedColor?: string,
+		label = `Create ${elementType}`
+	): void => {
+		const result = buildPolygonAuthoring({
+			defaults: defaults(),
+			detectedColor,
+			elementType,
+			floorId: floor().id,
+			geometry,
+			inheritedColor: inheritedColorForGeometry(geometry),
+			label,
+			project: props.snapshot().state.project
+		});
 
-		return {
-			x: Math.max(0, Math.min(floor().width, (point.x - current.offsetX) / current.scale)),
-			y: Math.max(0, Math.min(floor().height, (point.y - current.offsetY) / current.scale))
-		};
+		props.store.run(result.transaction);
+		props.store.dispatch({ type: 'selection/set', selection: result.selection });
+		props.store.dispatch({ type: 'tool/set', tool: 'select' });
 	};
 
 	const finishPolygonDraft = (): void => {
 		const currentDraft = draft();
 
 		if (currentDraft?.kind !== 'polygon' || currentDraft.points.length < 3) return;
-		const elementId = nextId(currentDraft.elementType);
-		const element: WayfindingStudioPolygonElement = {
-			floorId: floor().id,
-			geometry: currentDraft.points,
-			id: elementId,
-			provenance: 'reviewer-authored',
-			status: 'confirmed',
-			type: currentDraft.elementType
-		};
-
-		if (currentDraft.elementType === 'location') {
-			const destinationId = nextId('destination');
-			const locationNumber = props.snapshot().state.project.destinations.length + 1;
-			element.destinationId = destinationId;
-			props.store.run({
-				commands: [
-					{
-						type: 'destination/add',
-						destination: {
-							floor: floor().id,
-							id: destinationId,
-							name: `Location ${locationNumber}`,
-							routeable: true,
-							status: 'confirmed'
-						}
-					},
-					{ type: 'element/add', element, floorId: floor().id }
-				],
-				label: `Create Location ${locationNumber}`
-			});
-		} else {
-			props.store.dispatch({ type: 'element/add', element, floorId: floor().id });
-		}
-
+		addPolygon(currentDraft.elementType, currentDraft.points);
 		props.store.dispatch({ type: 'draft/clear' });
-		props.store.dispatch({ type: 'selection/set', selection: { id: elementId, kind: 'element' } });
-		props.store.dispatch({ type: 'tool/set', tool: 'select' });
+	};
+
+	const traceRegion = (mapPoint: WayfindingPoint): void => {
+		const source = traceSource();
+
+		if (!source) {
+			props.onNotify?.('Add a floor background image before using Smart trace.', 'warning');
+
+			return;
+		}
+		const trace = props.snapshot().state.trace;
+		const imagePoint = {
+			x: mapPoint.x * source.width / floor().width,
+			y: mapPoint.y * source.height / floor().height
+		};
+		const detected = detectFlatRegionBoundary(source, imagePoint, trace);
+
+		if (!detected) {
+			props.onNotify?.(
+				'No closed region was found here. Try a lower color range, adjust gap handling, or draw the area manually.',
+				'warning'
+			);
+
+			return;
+		}
+		const geometry = detected.geometry.map((point) => ({
+			x: point.x * floor().width / source.width,
+			y: point.y * floor().height / source.height
+		}));
+
+		addPolygon(trace.elementType, geometry, detected.color, `Smart trace ${trace.elementType}`);
+		props.onNotify?.(
+			`${trace.elementType === 'location' ? 'Room' : trace.elementType === 'walkable' ? 'Walkable area' : 'Blocked area'} traced. Review its outline before continuing.`,
+			'success'
+		);
 	};
 
 	const finishRouteDraft = (): void => {
 		const currentDraft = draft();
 
 		if (currentDraft?.kind !== 'route-edge' || currentDraft.points.length < 2) return;
-		const snapDistance = 22 / camera().scale;
-		const nearestNode = (point: WayfindingPoint): WayfindingNode | undefined => floorGraphNodes()
-			.map((node) => ({ distance: Math.hypot(node.x - point.x, node.y - point.y), node }))
-			.filter((candidate) => candidate.distance <= snapDistance)
-			.sort((left, right) => left.distance - right.distance)[0]?.node;
-		const firstCandidate = currentDraft.points[0];
-		const lastCandidate = currentDraft.points.at(-1)!;
-		const fromNode = nearestNode(firstCandidate);
-		const toNode = nearestNode(lastCandidate);
-		const fromId = fromNode?.id ?? nextId('route-node');
-		const toId = toNode?.id ?? nextId('route-node');
-		const edgeId = nextId('route-edge');
-		const first = fromNode ? { x: fromNode.x, y: fromNode.y } : firstCandidate;
-		const last = toNode ? { x: toNode.x, y: toNode.y } : lastCandidate;
-		const geometry = [first, ...currentDraft.points.slice(1, -1), last];
-		const commands = [];
-
-		if (!fromNode) {
-			commands.push({
-					type: 'graph/node-add',
-					node: { id: fromId, kind: 'route', levelId: floor().id, ...first }
-				} as const);
-		}
-
-		if (!toNode) {
-			commands.push({
-					type: 'graph/node-add',
-					node: { id: toId, kind: 'route', levelId: floor().id, ...last }
-				} as const);
-		}
-		commands.push({
-					type: 'graph/edge-add',
-					edge: {
-						accessible: true,
-						bidirectional: true,
-						from: fromId,
-						geometry,
-						id: edgeId,
-						kind: 'walk',
-						reviewStatus: 'confirmed',
-						to: toId
-					}
-				} as const);
-
-		props.store.run({
-			commands,
-			label: 'Create route segment'
+		const result = buildRouteEdgeAuthoring({
+			cameraScale: camera().scale,
+			floorId: floor().id,
+			nodes: floorGraphNodes(),
+			points: currentDraft.points
 		});
+
+		if (!result) return;
+		props.store.run(result.transaction);
 		props.store.dispatch({ type: 'draft/clear' });
-		props.store.dispatch({ type: 'selection/set', selection: { id: edgeId, kind: 'graph-edge' } });
+		props.store.dispatch({ type: 'selection/set', selection: result.selection });
 		props.store.dispatch({ type: 'tool/set', tool: 'select' });
 	};
 
 	const createPointElement = (tool: EditorTool, point: WayfindingPoint): void => {
-		const base = {
+		const snapshot = props.snapshot();
+		const selected = snapshot.state.selection;
+		const activeAsset = snapshot.state.project.assets.find(
+			(candidate) => candidate.id === snapshot.state.activeAssetId
+		);
+		const result = buildPointAuthoring({
+			activeAsset,
+			defaults: defaults(),
+			destinationCount: snapshot.state.project.destinations.length,
 			floorId: floor().id,
-			id: nextId(tool),
-			provenance: 'reviewer-authored' as const,
-			status: 'confirmed' as const
-		};
-		let element: WayfindingStudioElement | undefined;
+			point,
+			selectedDestinationId: selected?.kind === 'destination' ? selected.id : undefined,
+			tool
+		});
 
-		if (tool === 'door') element = { ...base, angle: 0, length: 42, point, type: 'door' };
-
-		if (tool === 'poi') {
-			const destinationId = nextId('destination');
-			const locationNumber = props.snapshot().state.project.destinations.length + 1;
-			element = {
-				...base,
-				destinationId,
-				label: `Point of interest ${locationNumber}`,
-				point,
-				type: 'poi'
-			};
-			props.store.run({
-				commands: [
-					{
-						type: 'destination/add',
-						destination: {
-							floor: floor().id,
-							id: destinationId,
-							name: `Point of interest ${locationNumber}`,
-							routeable: true,
-							status: 'confirmed'
-						}
-					},
-					{ type: 'element/add', element, floorId: floor().id }
-				],
-				label: `Create point of interest ${locationNumber}`
-			});
-			props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
-			props.store.dispatch({ type: 'tool/set', tool: 'select' });
-
-			return;
-		}
-
-		if (tool === 'origin') {
-			element = {
-				...base,
-				facingDegrees: 0,
-				label: 'You are here',
-				point,
-				screenId: nextId('screen'),
-				type: 'origin'
-			};
-		}
-
-		if (tool === 'transition') {
-			element = {
-				...base,
-				accessible: true,
-				connectionId: nextId('connection'),
-				kind: 'stairs',
-				label: 'Floor connection',
-				point,
-				type: 'transition'
-			};
-		}
-
-		if (tool === 'label') {
-			element = {
-				...base,
-				color: defaults().label.color,
-				fontFamily: defaults().label.fontFamily,
-				fontSize: defaults().label.fontSize,
-				fontWeight: defaults().label.fontWeight,
-				point,
-				text: 'Label',
-				textAnchor: 'middle',
-				type: 'label'
-			};
-		}
-
-		if (tool === 'icon' || tool === 'logo') {
-			const asset = props.snapshot().state.project.assets.find(
-				(candidate) => candidate.id === props.snapshot().state.activeAssetId
-			);
-
-			if (!asset || asset.kind !== tool) return;
-			const naturalWidth = Math.max(1, asset.naturalWidth ?? 64);
-			const naturalHeight = Math.max(1, asset.naturalHeight ?? 64);
-			const size = tool === 'icon' ? defaults().iconSize : defaults().logoSize;
-			const scale = size / Math.max(naturalWidth, naturalHeight);
-			const selected = props.snapshot().state.selection;
-			const destinationId = selected?.kind === 'destination'
-				? selected.id
-				: undefined;
-			element = {
-				...base,
-				assetId: asset.id,
-				destinationId,
-				height: naturalHeight * scale,
-				point,
-				type: tool,
-				width: naturalWidth * scale
-			};
-		}
-
-		if (!element) return;
-		props.store.dispatch({ type: 'element/add', element, floorId: floor().id });
-		props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
+		if (!result) return;
+		props.store.run(result.transaction);
+		props.store.dispatch({ type: 'selection/set', selection: result.selection });
 		props.store.dispatch({ type: 'tool/set', tool: 'select' });
 	};
 
+	const executeSelectionOperation = (
+		operation: CanvasSelectionOperation
+	): boolean => {
+		const operationResult = buildCanvasSelectionOperation(
+			props.snapshot().state,
+			operation
+		);
+
+		if (!operationResult) return false;
+
+		if (operationResult.transaction.commands.length > 0) {
+			props.store.run(operationResult.transaction);
+		}
+
+		if (operationResult.selection) {
+			props.store.dispatch({
+				type: 'selection/set',
+				selection: operationResult.selection
+			});
+		} else if (operation.type === 'delete') {
+			props.store.dispatch({ type: 'selection/clear' });
+		}
+
+		if (operationResult.notification) {
+			props.onNotify?.(
+				operationResult.notification.message,
+				operationResult.notification.tone
+			);
+		}
+
+		return operationResult.transaction.commands.length > 0;
+	};
+
 	const removeSelection = (): void => {
-		const selection = props.snapshot().state.selection;
-
-		if (!selection) return;
-
-		if (selection.kind === 'element') {
-			const element = selectedElement();
-
-			if (isPolygonElement(element) && selection.vertexIndex !== undefined && element.geometry.length > 3) {
-				props.store.dispatch({
-					type: 'element/patch',
-					elementId: element.id,
-					patch: { geometry: element.geometry.filter((_, index) => index !== selection.vertexIndex) }
-				});
-				props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
-
-				return;
-			}
-
-			if (element) {
-				const commands = [{ type: 'element/remove' as const, elementId: element.id }];
-				const destinationId = 'destinationId' in element ? element.destinationId : undefined;
-
-				if (destinationId) {
-					props.store.run({
-						commands: [...commands, { type: 'destination/remove', destinationId }],
-						label: `Delete ${element.type}`
-					});
-				} else {
-					props.store.dispatch(commands[0]);
-				}
-			}
-		}
-
-		if (selection.kind === 'graph-edge') {
-			const edge = props.snapshot().state.project.graph.edges.find((candidate) => candidate.id === selection.id);
-
-			if (edge?.geometry && selection.geometryIndex !== undefined && edge.geometry.length > 2) {
-				props.store.dispatch({
-					type: 'graph/edge-patch',
-					edgeId: edge.id,
-					patch: { geometry: edge.geometry.filter((_, index) => index !== selection.geometryIndex) }
-				});
-			} else {
-				props.store.dispatch({ type: 'graph/edge-remove', edgeId: selection.id });
-			}
-		}
-
-		if (selection.kind === 'graph-node') {
-			props.store.dispatch({ type: 'graph/node-remove', nodeId: selection.id });
-		}
-
-		props.store.dispatch({ type: 'selection/clear' });
+		executeSelectionOperation({ type: 'delete' });
 	};
 
-	const shortcutTool = (key: string): EditorTool | undefined => {
-		const routeWorkspace = props.snapshot().state.workspace === 'route-edit';
-		const keyMap: Record<string, EditorTool> = routeWorkspace
-			? { a: 'route-node', e: 'route-edge', h: 'pan', v: 'select' }
-			: {
-				b: 'obstacle',
-				d: 'door',
-				h: 'pan',
-				i: 'icon',
-				g: 'logo',
-				l: 'label',
-				p: 'poi',
-				r: 'location',
-				t: 'transition',
-				v: 'select',
-				w: 'walkable',
-				y: 'origin'
-			};
+	const addSelectionPoint = (): boolean =>
+		executeSelectionOperation({ type: 'add-point' });
 
-		return keyMap[key];
-	};
+	const removeSelectionPoint = (): boolean =>
+		executeSelectionOperation({ type: 'remove-point' });
+
+	const simplifySelection = (): boolean =>
+		executeSelectionOperation({ type: 'simplify' });
+
+	const repairSelection = (): boolean =>
+		executeSelectionOperation({ type: 'repair' });
+
+	const straightenSelection = (): boolean =>
+		executeSelectionOperation({ type: 'straighten' });
+
+	const nudgeSelection = (delta: WayfindingPoint): boolean =>
+		executeSelectionOperation({ delta, type: 'nudge' });
+
+	const duplicateSelection = (): boolean =>
+		executeSelectionOperation({ createId: nextId, type: 'duplicate' });
 
 	const keyDown = (event: KeyboardEvent): void => {
 		if (isEditableTarget(event.target)) return;
@@ -589,9 +554,11 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 		if (event.key === 'Escape') {
 			props.store.dispatch({ type: 'draft/clear' });
+			setFreehandGeometry(undefined);
 			setInteractionGeometry(undefined);
 			setInteractionGraphGeometry(undefined);
 			setInteractionGraphPoint(undefined);
+			setInteractionElementPreview(undefined);
 			interaction = undefined;
 
 			return;
@@ -607,12 +574,55 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 		if (event.key === 'Delete' || event.key === 'Backspace') {
 			event.preventDefault();
+			const selection = props.snapshot().state.selection;
+			const hasSelectedPoint = (
+				selection?.kind === 'element' && selection.vertexIndex !== undefined
+			) || (
+				selection?.kind === 'graph-edge' && selection.geometryIndex !== undefined
+			);
+
+			if (hasSelectedPoint) {
+				if (!removeSelectionPoint()) {
+					props.onNotify?.(
+						selection?.kind === 'graph-edge'
+							? 'Route endpoints belong to their route points and cannot be removed.'
+							: 'A room or area outline needs at least three points.',
+						'warning'
+					);
+				}
+
+				return;
+			}
 			removeSelection();
 
 			return;
 		}
 
-		const tool = shortcutTool(event.key.toLocaleLowerCase());
+		if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'd') {
+			if (duplicateSelection()) event.preventDefault();
+
+			return;
+		}
+
+		if (event.key.startsWith('Arrow')) {
+			const distance = event.shiftKey ? 10 : 1;
+			const delta = event.key === 'ArrowLeft'
+				? { x: -distance, y: 0 }
+				: event.key === 'ArrowRight'
+					? { x: distance, y: 0 }
+					: event.key === 'ArrowUp'
+						? { x: 0, y: -distance }
+						: { x: 0, y: distance };
+
+			if (nudgeSelection(delta)) event.preventDefault();
+
+			return;
+		}
+
+		const tool = toolFromShortcut(
+			event.key.toLocaleLowerCase(),
+			props.snapshot().state.workspace === 'route-edit'
+		);
 
 		if (tool && !event.ctrlKey && !event.metaKey && !event.altKey) {
 			props.store.dispatch({ type: 'tool/set', tool });
@@ -624,15 +634,20 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	};
 
 	onMount(() => {
-		props.registerFit(fit);
+		props.registerSelectionActions?.({
+			addPoint: addSelectionPoint,
+			clear: () => props.store.dispatch({ type: 'selection/clear' }),
+			delete: removeSelection,
+			descriptor: () => describeCanvasSelection(props.snapshot().state),
+			duplicate: duplicateSelection,
+			fit: fitSelection,
+			repair: repairSelection,
+			removePoint: removeSelectionPoint,
+			simplify: simplifySelection,
+			straighten: straightenSelection
+		});
 		window.addEventListener('keydown', keyDown);
 		window.addEventListener('keyup', keyUp);
-		queueMicrotask(fit);
-	});
-
-	createEffect(() => {
-		currentFloorId();
-		queueMicrotask(fit);
 	});
 
 	const pointerDown: JSX.EventHandler<HTMLDivElement, PointerEvent> = (event): void => {
@@ -640,6 +655,8 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		const tool = state.activeTool;
 		const target = event.target instanceof Element ? event.target : undefined;
 		const mapPoint = pointInMap(event);
+
+		viewport.focus({ preventScroll: true });
 
 		if (event.button === 1 || spaceHeld || tool === 'pan') {
 			event.preventDefault();
@@ -656,9 +673,49 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 		if (event.button !== 0) return;
 
-		if (polygonTools.has(tool) && state.workspace === 'map') {
+		if (
+			tool === 'smart-trace'
+			&& (state.workspace === 'map' || state.workspace === 'route-edit')
+		) {
+			traceRegion(mapPoint);
+
+			return;
+		}
+
+		if (
+			tool === 'freehand'
+			&& (state.workspace === 'map' || state.workspace === 'route-edit')
+		) {
+			event.preventDefault();
+			const elementType: WayfindingStudioPolygonElement['type'] = state.workspace === 'route-edit'
+				? 'walkable'
+				: 'location';
+			interaction = {
+				elementType,
+				kind: 'freehand',
+				pointerId: event.pointerId,
+				points: [snapFreehandPoint(mapPoint)]
+			};
+			setFreehandGeometry(interaction.points);
+			viewport.setPointerCapture(event.pointerId);
+
+			return;
+		}
+
+		if (
+			POLYGON_TOOLS.has(tool)
+			&& (
+				state.workspace === 'map'
+				|| (
+					state.workspace === 'route-edit'
+					&& (tool === 'walkable' || tool === 'obstacle')
+				)
+			)
+		) {
 			if (event.detail > 1) return;
-			const elementType = tool as WayfindingStudioPolygonElement['type'];
+			const elementType = polygonTypeForTool(tool);
+
+			if (!elementType) return;
 			const activeDraft = draft();
 			const currentDraft: Extract<EditorDraft, { kind: 'polygon' }> = activeDraft?.kind === 'polygon' && activeDraft.elementType === elementType
 				? activeDraft
@@ -671,7 +728,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			return;
 		}
 
-		if (pointTools.has(tool) && state.workspace === 'map') {
+		if (POINT_TOOLS.has(tool) && state.workspace === 'map') {
 			createPointElement(tool, mapPoint);
 
 			return;
@@ -762,6 +819,26 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 				const edgeId = graphEdgeTarget.getAttribute('data-route-edge-id');
 
 				if (!edgeId) return;
+				const geometry = graphEdgePoints(edgeId);
+				const nearest = nearestSegment(geometry, mapPoint, false);
+
+				const now = performance.now();
+				const isClickPair = lastRouteEdgeClick?.edgeId === edgeId
+					&& now - lastRouteEdgeClick.time <= 420
+					&& Math.hypot(
+						mapPoint.x - lastRouteEdgeClick.point.x,
+						mapPoint.y - lastRouteEdgeClick.point.y
+					) <= 14 / camera().scale;
+				lastRouteEdgeClick = { edgeId, point: mapPoint, time: now };
+
+				if (isClickPair && nearest && nearest.distance <= 14 / camera().scale) {
+					event.preventDefault();
+					event.stopPropagation();
+					lastRouteEdgeClick = undefined;
+					insertGraphPointAtPoint(mapPoint, edgeId, nearest.index);
+
+					return;
+				}
 				event.preventDefault();
 				event.stopPropagation();
 				props.store.dispatch({ type: 'selection/set', selection: { id: edgeId, kind: 'graph-edge' } });
@@ -770,11 +847,57 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			}
 		}
 
-		const elementTarget = target?.closest('[data-wayfinding-level]');
+		const polygonVertexTarget = target?.closest('[data-polygon-vertex-index]');
 
-		if (elementTarget && state.workspace === 'map' && tool === 'select') {
-			const element = floorElements().find((candidate) => candidate.id === elementTarget.id);
-			props.store.dispatch({ type: 'selection/set', selection: { id: elementTarget.id, kind: 'element' } });
+		if (
+			(state.workspace === 'map' || state.workspace === 'route-edit')
+			&& tool === 'select'
+			&& polygonVertexTarget
+		) {
+			const vertexIndex = Number(polygonVertexTarget.getAttribute('data-polygon-vertex-index'));
+
+			if (!Number.isInteger(vertexIndex)) return;
+			beginVertexDrag(event, vertexIndex);
+
+			return;
+		}
+
+		const elementTarget = target?.closest('[data-editor-element-id], [data-wayfinding-level]');
+		const visitorDestinationTarget = target?.closest('[data-visitor-destination-id]');
+
+		if (state.workspace === 'visitor-preview') {
+			const destinationId = visitorDestinationTarget?.getAttribute('data-visitor-destination-id');
+
+			if (destinationId) {
+				event.preventDefault();
+				event.stopPropagation();
+				props.store.dispatch({
+					type: 'selection/set',
+					selection: { id: destinationId, kind: 'destination' }
+				});
+			} else if (!spaceHeld) {
+				props.store.dispatch({ type: 'selection/clear' });
+			}
+
+			return;
+		}
+
+		if (
+			elementTarget
+			&& tool === 'select'
+			&& (state.workspace === 'map' || state.workspace === 'route-edit')
+		) {
+			const elementId = elementTarget.getAttribute('data-editor-element-id') || elementTarget.id;
+			const element = floorElements().find((candidate) => candidate.id === elementId);
+
+			if (!element) return;
+
+			if (
+				state.workspace === 'route-edit'
+				&& element.type !== 'walkable'
+				&& element.type !== 'obstacle'
+			) return;
+			props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
 
 			if (isPolygonElement(element)) {
 				interaction = {
@@ -832,23 +955,91 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			return;
 		}
 
-		const delta = { x: mapPoint.x - interaction.start.x, y: mapPoint.y - interaction.start.y };
+		if (interaction.kind === 'freehand') {
+			const snappedPoint = snapFreehandPoint(mapPoint);
+			interaction.points = appendFreehandPoint(
+				interaction.points,
+				snappedPoint,
+				Math.max(1.5, 4 / camera().scale)
+			);
+			setFreehandGeometry(interaction.points);
+
+			return;
+		}
 
 		if (interaction.kind === 'point') {
-			interaction.point = {
-				x: Math.max(0, Math.min(floor().width, interaction.original.x + delta.x)),
-				y: Math.max(0, Math.min(floor().height, interaction.original.y + delta.y))
-			};
+			if (!interaction.moved && !pointerMoved(interaction.start, mapPoint, camera().scale)) return;
+			interaction.point = translatePoint(
+				interaction.original,
+				interaction.start,
+				mapPoint,
+				floor().width,
+				floor().height
+			);
 			interaction.moved = true;
+			setInteractionElementPreview({
+				elementId: interaction.elementId,
+				patch: { point: interaction.point }
+			});
+
+			return;
+		}
+
+		if (interaction.kind === 'direction') {
+			const deltaX = mapPoint.x - interaction.origin.x;
+			const deltaY = mapPoint.y - interaction.origin.y;
+			interaction.angle = interaction.property === 'angle'
+				? Math.atan2(deltaY, deltaX) * 180 / Math.PI
+				: Math.atan2(deltaX, -deltaY) * 180 / Math.PI;
+			interaction.moved = true;
+			setInteractionElementPreview({
+				elementId: interaction.elementId,
+				patch: { [interaction.property]: interaction.angle }
+			});
+
+			return;
+		}
+
+		if (interaction.kind === 'media-resize') {
+			const rawWidth = Math.max(1, mapPoint.x - interaction.origin.x);
+			const rawHeight = Math.max(1, mapPoint.y - interaction.origin.y);
+			const currentWidth = interaction.originalWidth;
+			const currentHeight = interaction.originalHeight;
+			const scale = Math.max(
+				rawWidth / Math.max(1, currentWidth),
+				rawHeight / Math.max(1, currentHeight),
+				12 / Math.max(1, Math.min(currentWidth, currentHeight))
+			);
+			const maxWidth = Math.max(12, floor().width - interaction.origin.x);
+			const maxHeight = Math.max(12, floor().height - interaction.origin.y);
+			const boundedScale = Math.min(
+				scale,
+				maxWidth / Math.max(1, currentWidth),
+				maxHeight / Math.max(1, currentHeight)
+			);
+			interaction.width = currentWidth * boundedScale;
+			interaction.height = interaction.width / interaction.aspectRatio;
+			interaction.moved = true;
+			setInteractionElementPreview({
+				elementId: interaction.elementId,
+				patch: {
+					height: interaction.height,
+					width: interaction.width
+				}
+			});
 
 			return;
 		}
 
 		if (interaction.kind === 'graph-node') {
-			interaction.point = {
-				x: Math.max(0, Math.min(floor().width, interaction.original.x + delta.x)),
-				y: Math.max(0, Math.min(floor().height, interaction.original.y + delta.y))
-			};
+			if (!interaction.moved && !pointerMoved(interaction.start, mapPoint, camera().scale)) return;
+			interaction.point = translatePoint(
+				interaction.original,
+				interaction.start,
+				mapPoint,
+				floor().width,
+				floor().height
+			);
 			interaction.moved = true;
 			setInteractionGraphPoint(interaction.point);
 
@@ -858,34 +1049,50 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		if (interaction.kind === 'graph-edge-point') {
 			const currentInteraction = interaction;
 
-			currentInteraction.geometry = currentInteraction.original.map((candidate, index) => index === currentInteraction.geometryIndex
-				? {
-					x: Math.max(0, Math.min(floor().width, candidate.x + delta.x)),
-					y: Math.max(0, Math.min(floor().height, candidate.y + delta.y))
-				}
-				: candidate);
+			if (!currentInteraction.moved && !pointerMoved(currentInteraction.start, mapPoint, camera().scale)) return;
+			currentInteraction.geometry = translateGeometry(
+				currentInteraction.original,
+				currentInteraction.start,
+				mapPoint,
+				floor().width,
+				floor().height,
+				currentInteraction.geometryIndex
+			);
 			currentInteraction.moved = true;
 			setInteractionGraphGeometry(currentInteraction.geometry);
 
 			return;
 		}
-		const geometry = interaction.original.map((candidate, index): WayfindingPoint => {
-			if (interaction?.kind !== 'polygon') return candidate;
 
-			if (interaction.vertexIndex !== undefined && index !== interaction.vertexIndex) return candidate;
-
-			return {
-				x: Math.max(0, Math.min(floor().width, candidate.x + delta.x)),
-				y: Math.max(0, Math.min(floor().height, candidate.y + delta.y))
-			};
-		});
+		if (!interaction.moved && !pointerMoved(interaction.start, mapPoint, camera().scale)) return;
+		const geometry = translateGeometry(
+			interaction.original,
+			interaction.start,
+			mapPoint,
+			floor().width,
+			floor().height,
+			interaction.vertexIndex
+		);
 		interaction.geometry = geometry;
 		interaction.moved = true;
 		setInteractionGeometry(geometry);
 	};
 
 	const pointerUp = (): void => {
-		if (interaction?.kind === 'polygon' && interaction.moved) {
+		if (interaction?.kind === 'freehand') {
+			const geometry = simplifyFreehandPolygon(
+				interaction.points,
+				Math.max(1, 3 / camera().scale)
+			);
+
+			if (geometry.length >= 3) {
+				addPolygon(interaction.elementType, geometry, undefined, `Freehand ${interaction.elementType}`);
+			} else {
+				props.onNotify?.('Draw a larger closed area before releasing the pointer.', 'warning');
+			}
+		}
+
+		if (interaction?.kind === 'polygon' && (interaction.moved || interaction.inserted)) {
 			props.store.dispatch({
 				type: 'element/patch',
 				elementId: interaction.elementId,
@@ -901,59 +1108,63 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			});
 		}
 
-		if (interaction?.kind === 'graph-edge-point' && interaction.moved) {
+		if (interaction?.kind === 'direction' && interaction.moved) {
+			props.store.dispatch({
+				type: 'element/patch',
+				elementId: interaction.elementId,
+				patch: { [interaction.property]: interaction.angle }
+			});
+		}
+
+		if (interaction?.kind === 'media-resize' && interaction.moved) {
+			props.store.dispatch({
+				type: 'element/patch',
+				elementId: interaction.elementId,
+				patch: {
+					height: interaction.height,
+					width: interaction.width
+				}
+			});
+		}
+
+		if (interaction?.kind === 'graph-edge-point' && (interaction.moved || interaction.inserted)) {
+			const currentInteraction = interaction;
+
 			props.store.dispatch({
 				type: 'graph/edge-patch',
-				edgeId: interaction.routeEdgeId,
-				patch: { geometry: interaction.geometry }
+				edgeId: currentInteraction.routeEdgeId,
+				patch: { geometry: currentInteraction.geometry }
+			});
+			props.store.dispatch({
+				type: 'selection/set',
+				selection: {
+					geometryIndex: currentInteraction.geometryIndex,
+					id: currentInteraction.routeEdgeId,
+					kind: 'graph-edge'
+				}
 			});
 		}
 
 		if (interaction?.kind === 'graph-node' && interaction.moved) {
 			const currentInteraction = interaction;
-			const commands: EditorCommand[] = [{
-				type: 'graph/node-patch' as const,
-				nodeId: currentInteraction.nodeId,
-				patch: currentInteraction.point
-			}];
-
-			for (const edge of floorGraphEdges()) {
-				if (edge.from !== currentInteraction.nodeId && edge.to !== currentInteraction.nodeId) continue;
-				const geometry = graphEdgePoints(edge.id);
-
-				if (edge.from === currentInteraction.nodeId) geometry[0] = currentInteraction.point;
-
-				if (edge.to === currentInteraction.nodeId) geometry[geometry.length - 1] = currentInteraction.point;
-				commands.push({
-					type: 'graph/edge-patch',
-					edgeId: edge.id,
-					patch: { geometry }
-				});
-			}
-			props.store.run({ commands, label: 'Move route node' });
+			props.store.run(moveGraphNodeTransaction(
+				currentInteraction.nodeId,
+				currentInteraction.point,
+				floorGraphNodes(),
+				floorGraphEdges()
+			));
 		}
 		interaction = undefined;
+		setFreehandGeometry(undefined);
 		setInteractionGeometry(undefined);
 		setInteractionGraphGeometry(undefined);
 		setInteractionGraphPoint(undefined);
+		setInteractionElementPreview(undefined);
 	};
 
 	const wheel: JSX.EventHandler<HTMLDivElement, WheelEvent> = (event): void => {
 		event.preventDefault();
-		const before = pointInViewport(event);
-		const current = camera();
-		const scale = Math.max(0.08, Math.min(8, current.scale * (event.deltaY > 0 ? 0.9 : 1.1)));
-		const mapX = (before.x - current.offsetX) / current.scale;
-		const mapY = (before.y - current.offsetY) / current.scale;
-		props.store.dispatch({
-			type: 'camera/set',
-			floorId: floor().id,
-			camera: {
-				offsetX: before.x - mapX * scale,
-				offsetY: before.y - mapY * scale,
-				scale
-			}
-		});
+		cameraController.zoomAt(event);
 	};
 
 	const finishDraft: JSX.EventHandler<HTMLDivElement, MouseEvent> = (event): void => {
@@ -963,25 +1174,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		else if (draft()?.kind === 'route-edge') finishRouteDraft();
 		else if (props.snapshot().state.activeTool === 'select' && selectedPolygon()) {
 			const point = pointInMap(event);
-			const geometry = selectedPolygon()!.geometry;
-			let nearestIndex = -1;
-			let nearestDistance = Number.POSITIVE_INFINITY;
+			const nearest = nearestSegment(selectedPolygon()!.geometry, point, true);
 
-			for (let index = 0; index < geometry.length; index += 1) {
-				const distance = distanceToSegment(
-					point,
-					geometry[index],
-					geometry[(index + 1) % geometry.length]
-				);
-
-				if (distance < nearestDistance) {
-					nearestDistance = distance;
-					nearestIndex = index;
-				}
-			}
-
-			if (nearestIndex >= 0 && nearestDistance <= 14 / camera().scale) {
-				insertVertexAtPoint(point, nearestIndex);
+			if (nearest && nearest.distance <= 14 / camera().scale) {
+				insertVertexAtPoint(point, nearest.index);
 			}
 		}
 	};
@@ -1010,12 +1206,198 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		viewport.setPointerCapture(event.pointerId);
 	};
 
+	const beginElementDrag = (event: PointerEvent, element: WayfindingStudioElement): void => {
+		if (props.snapshot().state.activeTool !== 'select') return;
+		event.preventDefault();
+		event.stopPropagation();
+		viewport.focus({ preventScroll: true });
+		props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
+
+		if (isPolygonElement(element)) {
+			interaction = {
+				elementId: element.id,
+				geometry: structuredClone(element.geometry),
+				kind: 'polygon',
+				moved: false,
+				original: structuredClone(element.geometry),
+				pointerId: event.pointerId,
+				start: pointInMap(event)
+			};
+			setInteractionGeometry(structuredClone(element.geometry));
+			viewport.setPointerCapture(event.pointerId);
+		} else if (isPointElement(element)) {
+			interaction = {
+				elementId: element.id,
+				kind: 'point',
+				moved: false,
+				original: { ...element.point },
+				point: { ...element.point },
+				pointerId: event.pointerId,
+				start: pointInMap(event)
+			};
+			viewport.setPointerCapture(event.pointerId);
+		}
+	};
+
+	const selectElement = (element: WayfindingStudioElement): void => {
+		if (props.snapshot().state.activeTool !== 'select') return;
+		viewport.focus({ preventScroll: true });
+		props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
+	};
+
+	const beginDirectionDrag = (
+		event: PointerEvent,
+		element: WayfindingStudioDoorElement | WayfindingStudioOriginElement
+	): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		const property = element.type === 'door' ? 'angle' : 'facingDegrees';
+		const angle = element.type === 'door' ? element.angle : element.facingDegrees;
+		interaction = {
+			angle,
+			elementId: element.id,
+			kind: 'direction',
+			moved: false,
+			origin: { ...element.point },
+			pointerId: event.pointerId,
+			property
+		};
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginMediaResize = (event: PointerEvent, element: WayfindingStudioMediaElement): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		interaction = {
+			aspectRatio: element.width / Math.max(1, element.height),
+			elementId: element.id,
+			height: element.height,
+			kind: 'media-resize',
+			moved: false,
+			origin: { ...element.point },
+			originalHeight: element.height,
+			originalWidth: element.width,
+			pointerId: event.pointerId,
+			width: element.width
+		};
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginGraphNodeDrag = (event: PointerEvent, nodeId: string): void => {
+		const node = floorGraphNodes().find((candidate) => candidate.id === nodeId);
+
+		if (!node) return;
+		event.preventDefault();
+		event.stopPropagation();
+		props.store.dispatch({ type: 'selection/set', selection: { id: node.id, kind: 'graph-node' } });
+		interaction = {
+			kind: 'graph-node',
+			moved: false,
+			nodeId: node.id,
+			original: { x: node.x, y: node.y },
+			point: { x: node.x, y: node.y },
+			pointerId: event.pointerId,
+			start: pointInMap(event)
+		};
+		setInteractionGraphPoint({ x: node.x, y: node.y });
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginGraphEdgePointDrag = (
+		event: PointerEvent,
+		edgeId: string,
+		geometryIndex: number
+	): void => {
+		const geometry = graphEdgePoints(edgeId);
+
+		if (!Number.isInteger(geometryIndex) || !geometry[geometryIndex]) return;
+		event.preventDefault();
+		event.stopPropagation();
+		props.store.dispatch({
+			type: 'selection/set',
+			selection: { geometryIndex, id: edgeId, kind: 'graph-edge' }
+		});
+		interaction = {
+			geometry: structuredClone(geometry),
+			geometryIndex,
+			kind: 'graph-edge-point',
+			moved: false,
+			original: structuredClone(geometry),
+			pointerId: event.pointerId,
+			routeEdgeId: edgeId,
+			start: pointInMap(event)
+		};
+		setInteractionGraphGeometry(structuredClone(geometry));
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginInsertedPolygonVertexDrag = (
+		event: PointerEvent,
+		point: WayfindingPoint,
+		afterIndex: number
+	): void => {
+		const polygon = selectedPolygon();
+
+		if (!polygon) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const vertexIndex = afterIndex + 1;
+		const geometry = insertGeometryPoint(polygon.geometry, afterIndex, point);
+		props.store.dispatch({
+			type: 'selection/set',
+			selection: { id: polygon.id, kind: 'element', vertexIndex }
+		});
+		interaction = {
+			elementId: polygon.id,
+			geometry: structuredClone(geometry),
+			inserted: true,
+			kind: 'polygon',
+			moved: false,
+			original: structuredClone(geometry),
+			pointerId: event.pointerId,
+			start: pointInMap(event),
+			vertexIndex
+		};
+		setInteractionGeometry(structuredClone(geometry));
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginInsertedGraphPointDrag = (
+		event: PointerEvent,
+		point: WayfindingPoint,
+		edgeId: string,
+		afterIndex: number
+	): void => {
+		const geometryIndex = afterIndex + 1;
+		const geometry = insertGeometryPoint(graphEdgePoints(edgeId), afterIndex, point);
+
+		if (geometry.length < 3) return;
+		event.preventDefault();
+		event.stopPropagation();
+		props.store.dispatch({
+			type: 'selection/set',
+			selection: { geometryIndex, id: edgeId, kind: 'graph-edge' }
+		});
+		interaction = {
+			geometry: structuredClone(geometry),
+			geometryIndex,
+			inserted: true,
+			kind: 'graph-edge-point',
+			moved: false,
+			original: structuredClone(geometry),
+			pointerId: event.pointerId,
+			routeEdgeId: edgeId,
+			start: pointInMap(event)
+		};
+		setInteractionGraphGeometry(structuredClone(geometry));
+		viewport.setPointerCapture(event.pointerId);
+	};
+
 	const insertVertexAtPoint = (point: WayfindingPoint, afterIndex: number): void => {
 		const polygon = selectedPolygon();
 
 		if (!polygon) return;
-		const geometry = [...polygon.geometry];
-		geometry.splice(afterIndex + 1, 0, point);
+		const geometry = insertGeometryPoint(polygon.geometry, afterIndex, point);
 		props.store.dispatch({
 			type: 'element/patch',
 			elementId: polygon.id,
@@ -1031,17 +1413,16 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		event.stopPropagation();
 		insertVertexAtPoint(pointInMap(event), afterIndex);
 	};
-	const insertGraphPoint = (event: MouseEvent, edgeId: string, afterIndex: number): void => {
-		event.preventDefault();
-		event.stopPropagation();
+	const insertGraphPointAtPoint = (point: WayfindingPoint, edgeId: string, afterIndex: number): void => {
 		const geometry = graphEdgePoints(edgeId);
 
 		if (geometry.length < 2) return;
-		geometry.splice(afterIndex + 1, 0, pointInMap(event));
+		const nextGeometry = insertGeometryPoint(geometry, afterIndex, point);
+		setInteractionGraphGeometry(undefined);
 		props.store.dispatch({
 			type: 'graph/edge-patch',
 			edgeId,
-			patch: { geometry }
+			patch: { geometry: nextGeometry }
 		});
 		props.store.dispatch({
 			type: 'selection/set',
@@ -1074,12 +1455,20 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		<div
 			class="canvas-viewport"
 			classList={{
-				'is-authoring': polygonTools.has(props.snapshot().state.activeTool) || pointTools.has(props.snapshot().state.activeTool),
+				'is-authoring': props.snapshot().state.activeTool === 'smart-trace'
+					|| props.snapshot().state.activeTool === 'freehand'
+					|| POLYGON_TOOLS.has(props.snapshot().state.activeTool)
+					|| POINT_TOOLS.has(props.snapshot().state.activeTool),
 				'is-panning': interaction?.kind === 'pan',
 				'is-selecting': props.snapshot().state.activeTool === 'select'
 			}}
 			data-active-tool={props.snapshot().state.activeTool}
+			data-selection-geometry-index={selectedGraphGeometryIndex()}
+			data-selected-edge-geometry-length={selectedGraphEdge()?.geometry?.length ?? 0}
+			data-selection-id={props.snapshot().state.selection?.id}
+			data-selection-kind={props.snapshot().state.selection?.kind}
 			ref={viewport}
+			tabIndex={0}
 			onDblClick={finishDraft}
 			onPointerDown={pointerDown}
 			onPointerMove={pointerMove}
@@ -1087,164 +1476,45 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			onPointerCancel={pointerUp}
 			onWheel={wheel}
 		>
-			<div
-				class="map-transform"
-				style={{
-					height: `${floor().height}px`,
-					transform: `translate(${camera().offsetX}px, ${camera().offsetY}px) scale(${camera().scale})`,
-					width: `${floor().width}px`
-				}}
-			>
-				<div class="map-svg" innerHTML={renderedSvg()} />
-				<svg
-					class="route-overlay"
-					viewBox={`0 0 ${floor().width} ${floor().height}`}
-					aria-hidden="true"
-				>
-					{props.snapshot().state.layerVisibility['route-network']
-						&& (props.snapshot().state.workspace === 'route-edit' || props.snapshot().state.workspace === 'route-preview')
-						&& props.snapshot().state.project.graph.edges.map((edge) => {
-							const from = props.snapshot().state.project.graph.nodes.find((node) => node.id === edge.from);
-							const to = props.snapshot().state.project.graph.nodes.find((node) => node.id === edge.to);
-
-							if (!from || !to || from.levelId !== floor().id) return null;
-							const points = edge.geometry?.length ? edge.geometry : [from, to];
-
-							return <polyline class="route-network-line" points={routePolyline(points)} />;
-						})}
-					{route().length > 1 && (
-						<polyline
-							class="simulated-route"
-							classList={{ animated: props.snapshot().state.project.defaults?.route.animation !== 'none' }}
-							points={routePolyline(route())}
-						/>
-					)}
-				</svg>
-				<svg
-					class="authoring-overlay"
-					viewBox={`0 0 ${floor().width} ${floor().height}`}
-					aria-label="Map authoring overlay"
-				>
-					<Show when={selectedPolygon()}>
-						<polygon
-							class="selected-polygon"
-							points={pointString(selectedPolygonGeometry())}
-							fill={selectedPolygon()?.presentation?.fillColor ?? 'transparent'}
-							fill-opacity={interactionGeometry() ? 0.24 : 0.06}
-						/>
-						<For each={selectedPolygonGeometry()}>{(point, index) => {
-							const next = createMemo(() => selectedPolygonGeometry()[(index() + 1) % selectedPolygonGeometry().length]);
-
-							return (
-								<>
-									<line
-										class="polygon-edge-hit interactive"
-										x1={point.x}
-										y1={point.y}
-										x2={next().x}
-										y2={next().y}
-										onDblClick={(event) => insertVertex(event, index())}
-									/>
-									<circle
-										class="polygon-vertex interactive"
-										classList={{ active: selectedVertexIndex() === index() }}
-										cx={point.x}
-										cy={point.y}
-										r={handleRadius()}
-										onPointerDown={(event) => beginVertexDrag(event, index())}
-									/>
-								</>
-							);
-						}}</For>
-					</Show>
-					<Show when={selectedPoint()}>
-						<circle
-							class="selected-point-handle"
-							cx={selectedPoint()!.x}
-							cy={selectedPoint()!.y}
-							r={handleRadius() * 1.25}
-						/>
-					</Show>
-					<Show when={props.snapshot().state.workspace === 'route-edit'}>
-						<For each={floorGraphEdges()}>{(edge) => {
-							const points = createMemo(() => edge.id === selectedGraphEdge()?.id
-								? selectedGraphGeometry()
-								: graphEdgePoints(edge.id));
-
-							return (
-								<polyline
-									class="graph-edge-hit interactive"
-									classList={{ active: selectedGraphEdge()?.id === edge.id }}
-									data-route-edge-id={edge.id}
-									points={pointString(points())}
-								/>
-							);
-						}}</For>
-						<For each={floorGraphNodes()}>{(node) => {
-							const point = createMemo(() => node.id === selectedGraphNode()?.id
-								? interactionGraphPoint() ?? node
-								: node);
-
-							return (
-								<circle
-									class="graph-node-handle interactive"
-									classList={{ active: selectedGraphNode()?.id === node.id }}
-									cx={point().x}
-									cy={point().y}
-									data-route-node-id={node.id}
-									r={handleRadius() * 0.8}
-								/>
-							);
-						}}</For>
-						<Show when={selectedGraphEdge()}>
-							<For each={selectedGraphGeometry()}>{(point, index) => {
-								const next = createMemo(() => selectedGraphGeometry()[index() + 1]);
-
-								return (
-									<>
-										<Show when={next()}>
-											{(nextPoint) => (
-												<line
-													class="graph-segment-hit interactive"
-													data-route-edge-id={selectedGraphEdge()!.id}
-													x1={point.x}
-													y1={point.y}
-													x2={nextPoint().x}
-													y2={nextPoint().y}
-													onDblClick={(event) => insertGraphPoint(event, selectedGraphEdge()!.id, index())}
-												/>
-											)}
-										</Show>
-										<circle
-											class="graph-edge-point interactive"
-											classList={{
-												active: selectedGraphGeometryIndex() === index()
-											}}
-											cx={point.x}
-											cy={point.y}
-											data-geometry-index={index()}
-											data-route-edge-point={selectedGraphEdge()!.id}
-											r={handleRadius() * 0.72}
-										/>
-									</>
-								);
-							}}</For>
-						</Show>
-					</Show>
-					<Show when={polygonDraft()}>
-						<polyline class="draft-line" points={pointString(polygonDraft()!.points)} />
-						<For each={polygonDraft()!.points}>{(point) => (
-							<circle class="draft-point" cx={point.x} cy={point.y} r={handleRadius()} />
-						)}</For>
-					</Show>
-					<Show when={routeDraft()}>
-						<polyline class="draft-route-line" points={pointString(routeDraft()!.points)} />
-						<For each={routeDraft()!.points}>{(point) => (
-							<circle class="draft-point route" cx={point.x} cy={point.y} r={handleRadius()} />
-						)}</For>
-					</Show>
-				</svg>
-			</div>
+			<CanvasScene
+				beginDirectionDrag={beginDirectionDrag}
+				beginElementDrag={beginElementDrag}
+				beginGraphEdgePointDrag={beginGraphEdgePointDrag}
+				beginGraphNodeDrag={beginGraphNodeDrag}
+				beginInsertedGraphPointDrag={beginInsertedGraphPointDrag}
+				beginInsertedPolygonVertexDrag={beginInsertedPolygonVertexDrag}
+				beginMediaResize={beginMediaResize}
+				beginVertexDrag={beginVertexDrag}
+				camera={camera}
+				draft={draft}
+				elements={floorElements}
+				floor={floor}
+				floorGraphEdges={floorGraphEdges}
+				floorGraphNodes={floorGraphNodes}
+				graphEdgePoints={graphEdgePoints}
+				handleRadius={handleRadius}
+				insertVertex={insertVertex}
+				interactionGeometry={interactionGeometry}
+				interactionGraphPoint={interactionGraphPoint}
+				freehandGeometry={freehandGeometry}
+				polygonDraft={polygonDraft}
+				renderedSvg={renderedSvg}
+				route={route}
+				routeDraft={routeDraft}
+				selectedGraphEdge={selectedGraphEdge}
+				selectedGraphGeometry={selectedGraphGeometry}
+				selectedGraphGeometryIndex={selectedGraphGeometryIndex}
+				selectedGraphNode={selectedGraphNode}
+				selectedElement={selectedElementPreview}
+				selectedPoint={selectedPoint}
+				selectedPolygon={selectedPolygon}
+				selectedPolygonGeometry={selectedPolygonGeometry}
+				selectedVertexIndex={selectedVertexIndex}
+				selectElement={selectElement}
+				snapshot={props.snapshot}
+				visitorLabelPlacements={visitorLabelPlacements}
+				visitorMapItems={visitorMapItems}
+			/>
 			<Show when={draft()}>
 				<div class="draft-hint">
 					<strong>{draft()?.kind === 'polygon' ? 'Drawing area' : 'Drawing route'}</strong>

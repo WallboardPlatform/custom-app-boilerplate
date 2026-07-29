@@ -12,6 +12,7 @@ import type {
 	EditorCommand,
 	EditorState
 } from './types';
+import { stateForWorkspace, toolAllowedInWorkspace } from './workspaces';
 
 const markProjectChanged = (state: EditorState): EditorState => ({
 	...state,
@@ -46,6 +47,7 @@ export const isProjectCommand = (command: EditorCommand): boolean =>
 	|| command.type === 'element/remove'
 	|| command.type === 'floor/add'
 	|| command.type === 'floor/remove'
+	|| command.type === 'floor/reorder'
 	|| command.type === 'floor/update'
 	|| command.type === 'graph/edge-add'
 	|| command.type === 'graph/edge-patch'
@@ -146,6 +148,15 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'document/saving':
 			return { ...state, document: { ...state.document, saveState: 'saving' } };
 
+		case 'drawing/patch':
+			return {
+				...state,
+				drawing: {
+					...state.drawing,
+					...command.patch
+				}
+			};
+
 		case 'draft/clear':
 			return { ...state, draft: undefined };
 
@@ -158,6 +169,10 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 
 				if (!floor || floor.elements.some((element): boolean => element.id === command.element.id)) return;
 				floor.elements.push(structuredClone(command.element));
+
+				if (command.element.type === 'walkable' || command.element.type === 'obstacle') {
+					floor.pedestrianSpaceSource = 'polygons';
+				}
 			});
 
 		case 'element/patch':
@@ -197,14 +212,52 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'floor/remove': {
 			if (state.project.floors.length <= 1) return state;
 			const next: EditorState = mutateProject(state, (project): void => {
+				const removedFloor: WayfindingStudioFloor | undefined = project.floors.find(
+					(floor): boolean => floor.id === command.floorId
+				);
+				const removedDestinationIds = new Set<string>(
+					removedFloor?.elements.flatMap((element): string[] =>
+						(element.type === 'location' || element.type === 'poi') && element.destinationId
+							? [element.destinationId]
+							: []
+					) ?? []
+				);
+
 				project.floors = project.floors.filter((floor): boolean => floor.id !== command.floorId)
 					.map((floor, order): WayfindingStudioFloor => ({ ...floor, order }));
+				project.destinations = project.destinations.filter((destination): boolean =>
+					destination.floor !== command.floorId && !removedDestinationIds.has(destination.id)
+				);
+				const retainedNodeIds = new Set(
+					project.graph.nodes
+						.filter((node): boolean => node.levelId !== command.floorId)
+						.map((node): string => node.id)
+				);
+				project.graph.nodes = project.graph.nodes.filter((node): boolean => retainedNodeIds.has(node.id));
+				project.graph.edges = project.graph.edges.filter((edge): boolean =>
+					retainedNodeIds.has(edge.from) && retainedNodeIds.has(edge.to)
+				);
 			});
 			const selectedFloorId: string = next.project.floors.some((floor): boolean => floor.id === state.currentFloorId)
 				? state.currentFloorId
 				: next.project.floors[0].id;
 
 			return { ...next, currentFloorId: selectedFloorId, selection: undefined };
+		}
+
+		case 'floor/reorder': {
+			const orderedFloors: WayfindingStudioFloor[] = [...state.project.floors]
+				.sort((left, right): number => left.order - right.order);
+			const currentIndex: number = orderedFloors.findIndex((floor): boolean => floor.id === command.floorId);
+			const targetIndex: number = currentIndex + command.direction;
+
+			if (currentIndex < 0 || targetIndex < 0 || targetIndex >= orderedFloors.length) return state;
+
+			return mutateProject(state, (project): void => {
+				const floors: WayfindingStudioFloor[] = [...orderedFloors];
+				[floors[currentIndex], floors[targetIndex]] = [floors[targetIndex], floors[currentIndex]];
+				project.floors = floors.map((floor, order): WayfindingStudioFloor => ({ ...floor, order }));
+			});
 		}
 
 		case 'floor/select':
@@ -217,6 +270,8 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 				const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate): boolean => candidate.id === command.floorId);
 
 				if (!floor) return;
+
+				if (command.patch.camera3d !== undefined) floor.camera3d = structuredClone(command.patch.camera3d);
 
 				if (command.patch.name !== undefined) floor.name = command.patch.name;
 
@@ -308,7 +363,9 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 				},
 				activeTool: 'select',
 				activeAssetId: undefined,
-				panels: state.panels
+				drawing: state.drawing,
+				panels: state.panels,
+				trace: state.trace
 			};
 		}
 
@@ -332,7 +389,18 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'selection/set':
 			return { ...state, selection: command.selection };
 
+		case 'trace/patch':
+			return {
+				...state,
+				trace: {
+					...state.trace,
+					...command.patch
+				}
+			};
+
 		case 'tool/set':
+			if (!toolAllowedInWorkspace(state.workspace, command.tool)) return state;
+
 			return {
 				...state,
 				activeTool: command.tool,
@@ -346,14 +414,7 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 		case 'workspace/set':
 			return {
 				...state,
-				activeTool: command.workspace === 'route-edit'
-					? 'select'
-					: command.workspace === 'map'
-						? state.activeTool === 'route-node' || state.activeTool === 'route-edge' ? 'select' : state.activeTool
-						: 'pan',
-				draft: undefined,
-				selection: command.workspace === 'visitor-preview' ? undefined : state.selection,
-				workspace: command.workspace
+				...stateForWorkspace(state, command.workspace)
 			};
 		default:
 			return state;

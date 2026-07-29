@@ -12,11 +12,18 @@ import type {
 	EditorSnapshot,
 	EditorStore
 } from '../../../editor-core/types';
+import {
+	addProjectCategory,
+	addProjectLanguage,
+	projectLanguages,
+	removeProjectCategory,
+	removeProjectLanguage,
+	renameProjectCategory,
+	setDefaultProjectLanguage
+} from '../../../editor-core/directory';
+import type { WayfindingStudioProject } from '../../../studio-project.mts';
 import { Field } from '../ui';
 import { updateProject } from './project-edit';
-
-const normalizedCode = (value: string): string =>
-	value.trim().toLocaleLowerCase().replaceAll(/[^a-z0-9-]/g, '').slice(0, 12);
 
 export const DirectorySettings = (props: {
 	snapshot: Accessor<EditorSnapshot>;
@@ -25,45 +32,62 @@ export const DirectorySettings = (props: {
 	const [languageCode, setLanguageCode] = createSignal('');
 	const [languageLabel, setLanguageLabel] = createSignal('');
 	const [category, setCategory] = createSignal('');
+	const [editingCategory, setEditingCategory] = createSignal<string>();
+	const [categoryDraft, setCategoryDraft] = createSignal('');
 	const project = createMemo(() => props.snapshot().state.project);
-	const languages = createMemo(() => project().languages ?? [{ code: 'en', label: 'English' }]);
+	const languages = createMemo(() => projectLanguages(project()));
 	const categories = createMemo(() => project().categories ?? []);
 	const edit = (label: string, update: Parameters<typeof updateProject>[3]): void =>
 		updateProject(props.store, props.snapshot(), label, update);
-	const addLanguage = (): void => {
-		const code = normalizedCode(languageCode());
-		const label = languageLabel().trim();
+	const editWhenChanged = (
+		label: string,
+		update: (project: WayfindingStudioProject) => boolean
+	): boolean => {
+		const next = structuredClone(project());
 
-		if (!code || !label || languages().some((item) => item.code === code)) return;
-		edit('Add project language', (next): void => {
-			next.languages = [...(next.languages ?? []), { code, label }];
-		});
+		if (!update(next)) return false;
+
+		props.store.dispatch({ type: 'project/replace', project: next, label });
+
+		return true;
+	};
+	const addLanguage = (): void => {
+		const code = languageCode();
+		const label = languageLabel();
+
+		if (!editWhenChanged('Add project language', (next) =>
+			addProjectLanguage(next, code, label)
+		)) return;
 		setLanguageCode('');
 		setLanguageLabel('');
 	};
 	const removeLanguage = (code: string): void => {
-		if (languages().length <= 1) return;
-		edit('Remove project language', (next): void => {
-			next.languages = (next.languages ?? []).filter((item) => item.code !== code);
-
-			if (next.defaultLanguage === code) next.defaultLanguage = next.languages[0]?.code ?? 'en';
-
-			for (const destination of next.destinations) {
-				if (!destination.translations) continue;
-				const translations = { ...destination.translations };
-				delete translations[code];
-				destination.translations = translations;
-			}
-		});
+		editWhenChanged('Remove project language', (next) => removeProjectLanguage(next, code));
 	};
 	const addCategory = (): void => {
-		const nextCategory = category().trim();
+		const nextCategory = category();
 
-		if (!nextCategory || categories().some((item) => item.toLocaleLowerCase() === nextCategory.toLocaleLowerCase())) return;
-		edit('Add destination category', (next): void => {
-			next.categories = [...(next.categories ?? []), nextCategory].sort((a, b) => a.localeCompare(b));
-		});
+		if (!editWhenChanged('Add destination category', (next) =>
+			addProjectCategory(next, nextCategory)
+		)) return;
 		setCategory('');
+	};
+	const startCategoryRename = (item: string): void => {
+		setEditingCategory(item);
+		setCategoryDraft(item);
+	};
+	const commitCategoryRename = (): void => {
+		const current = editingCategory();
+		const draft = categoryDraft();
+
+		if (!current) return;
+
+		if (!editWhenChanged('Rename destination category', (next) =>
+			renameProjectCategory(next, current, draft)
+		)) return;
+
+		setEditingCategory(undefined);
+		setCategoryDraft('');
 	};
 
 	return (
@@ -84,11 +108,11 @@ export const DirectorySettings = (props: {
 							>
 								<button
 									type="button"
-									class="text-button"
-									onClick={() => edit('Change default language', (next): void => {
-										next.defaultLanguage = language.code;
-									})}
-								>Make default</button>
+								class="text-button"
+								onClick={() => edit('Change default language', (next): void => {
+									setDefaultProjectLanguage(next, language.code);
+								})}
+							>Make default</button>
 							</Show>
 							<button
 								type="button"
@@ -128,16 +152,41 @@ export const DirectorySettings = (props: {
 				</div>
 				<div class="category-list">
 					<For each={categories()}>{(item) => (
-						<span class="category-chip">
-							{item}
-							<button
-								type="button"
-								aria-label={`Remove ${item}`}
-								onClick={() => edit('Remove destination category', (next): void => {
-									next.categories = (next.categories ?? []).filter((candidate) => candidate !== item);
-								})}
-							><X size={13} /></button>
-						</span>
+						<Show
+							when={editingCategory() === item}
+							fallback={(
+								<span class="category-chip">
+									<button
+										type="button"
+										class="category-chip-label"
+										aria-label={`Rename ${item}`}
+										onClick={() => startCategoryRename(item)}
+									>{item}</button>
+									<button
+										type="button"
+										aria-label={`Remove ${item}`}
+										onClick={() => editWhenChanged(
+											'Remove destination category',
+											(next) => removeProjectCategory(next, item)
+										)}
+									><X size={13} /></button>
+								</span>
+							)}
+						>
+							<div class="category-edit-row">
+								<input
+									aria-label={`Rename ${item}`}
+									value={categoryDraft()}
+									onInput={(event) => setCategoryDraft(event.currentTarget.value)}
+									onKeyDown={(event) => {
+										if (event.key === 'Enter') commitCategoryRename();
+
+										if (event.key === 'Escape') setEditingCategory(undefined);
+									}}
+								/>
+								<button type="button" class="button compact" onClick={commitCategoryRename}>Save</button>
+							</div>
+						</Show>
 					)}</For>
 				</div>
 				<div class="inline-form category-form">

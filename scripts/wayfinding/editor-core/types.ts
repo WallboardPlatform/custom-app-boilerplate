@@ -1,8 +1,10 @@
 import type {
+	WayfindingStudioCamera3d,
 	WayfindingStudioAsset,
 	WayfindingStudioElement,
 	WayfindingStudioPolygonElement,
-	WayfindingStudioProject
+	WayfindingStudioProject,
+	WayfindingStudioRepair
 } from '../studio-project.mts';
 import type {
 	WayfindingEdge,
@@ -16,9 +18,11 @@ export type EditorPanelId = 'left' | 'right';
 export type EditorTool =
 	| 'select'
 	| 'pan'
+	| 'freehand'
 	| 'location'
 	| 'walkable'
 	| 'obstacle'
+	| 'smart-trace'
 	| 'door'
 	| 'poi'
 	| 'origin'
@@ -71,17 +75,32 @@ export interface EditorDocumentState {
 	saveState: 'error' | 'idle' | 'saving' | 'saved';
 }
 
+export interface EditorTraceSettings {
+	closeGap: number;
+	colorTolerance: number;
+	detail: number;
+	elementType: WayfindingStudioPolygonElement['type'];
+	minimumOpening: number;
+}
+
+export interface EditorDrawingSettings {
+	snapRadius: number;
+	snapToSourceEdges: boolean;
+}
+
 export interface EditorState {
 	activeAssetId?: string;
 	activeTool: EditorTool;
 	camera2dByFloor: Record<string, EditorCamera2d>;
 	currentFloorId: string;
 	document: EditorDocumentState;
+	drawing: EditorDrawingSettings;
 	draft?: EditorDraft;
 	layerVisibility: Record<EditorLayerId, boolean>;
 	panels: Record<EditorPanelId, EditorPanelState>;
 	project: WayfindingStudioProject;
 	selection?: EditorSelection;
+	trace: EditorTraceSettings;
 	viewMode: EditorViewMode;
 	workspace: EditorWorkspace;
 }
@@ -102,6 +121,7 @@ export type EditorCommand =
 	| { type: 'document/error' }
 	| { type: 'document/mark-saved'; fileName?: string; savedAt: string }
 	| { type: 'document/saving' }
+	| { type: 'drawing/patch'; patch: Partial<EditorDrawingSettings> }
 	| { type: 'draft/clear' }
 	| { type: 'draft/set'; draft: EditorDraft }
 	| { type: 'element/add'; element: WayfindingStudioElement; floorId: string }
@@ -109,8 +129,9 @@ export type EditorCommand =
 	| { type: 'element/remove'; elementId: string }
 	| { type: 'floor/add'; floorId: string; name: string }
 	| { type: 'floor/remove'; floorId: string }
+	| { type: 'floor/reorder'; floorId: string; direction: -1 | 1 }
 	| { type: 'floor/select'; floorId: string }
-	| { type: 'floor/update'; floorId: string; patch: { name?: string; unitsPerMeter?: number } }
+	| { type: 'floor/update'; floorId: string; patch: { camera3d?: WayfindingStudioCamera3d; name?: string; unitsPerMeter?: number } }
 	| { type: 'layer/set'; layerId: EditorLayerId; visible: boolean }
 	| { type: 'graph/edge-add'; edge: WayfindingEdge }
 	| { type: 'graph/edge-patch'; edgeId: string; patch: Partial<WayfindingEdge> }
@@ -125,6 +146,7 @@ export type EditorCommand =
 	| { type: 'project/replace'; project: WayfindingStudioProject; label?: string }
 	| { type: 'selection/clear' }
 	| { type: 'selection/set'; selection: EditorSelection }
+	| { type: 'trace/patch'; patch: Partial<EditorTraceSettings> }
 	| { type: 'tool/set'; tool: EditorTool }
 	| { type: 'view/set'; viewMode: EditorViewMode }
 	| { type: 'workspace/set'; workspace: EditorWorkspace };
@@ -164,7 +186,8 @@ export interface EditorCapabilities {
 export interface PersistenceAdapter {
 	clearRecovery(): Promise<void>;
 	loadRecovery(): Promise<WayfindingStudioProject | undefined>;
-	openProject(): Promise<{ fileName: string; project: WayfindingStudioProject } | undefined>;
+	openProject(): Promise<{ fileName: string; project: WayfindingStudioProject; repairs: WayfindingStudioRepair[] } | undefined>;
+	openProjectFile(file: File): Promise<{ fileName: string; project: WayfindingStudioProject; repairs: WayfindingStudioRepair[] }>;
 	saveProject(project: WayfindingStudioProject, options?: { forceSaveAs?: boolean; suggestedName?: string }): Promise<{ fileName: string }>;
 	saveRecovery(project: WayfindingStudioProject): Promise<void>;
 }

@@ -375,7 +375,7 @@ const assertWayfindingStudioProjectShape: (value: unknown) => asserts value is W
 export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioProject => {
 	assertWayfindingStudioProjectShape(value);
 
-	const project: WayfindingStudioProject = value;
+	const project: WayfindingStudioProject = JSON.parse(JSON.stringify(value)) as WayfindingStudioProject;
 	project.categories = Array.from(new Set([
 		...(Array.isArray(project.categories) ? project.categories.filter((category): category is string => typeof category === 'string') : []),
 		...project.destinations.map((destination): string | undefined => destination.category).filter((category): category is string => Boolean(category))

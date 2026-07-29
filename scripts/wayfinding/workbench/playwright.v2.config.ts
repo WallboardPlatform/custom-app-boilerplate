@@ -1,4 +1,13 @@
-import { defineConfig } from '@playwright/test';
+import { chromium, defineConfig } from '@playwright/test';
+
+import {
+	resolvePlaywrightBrowser,
+	type PlaywrightBrowserResolution
+} from '../../../preview/browser-resolution';
+
+const browserResolution: PlaywrightBrowserResolution = resolvePlaywrightBrowser({
+	bundledExecutablePath: chromium.executablePath()
+});
 
 export default defineConfig({
 	preserveOutput: 'always',
@@ -8,7 +17,11 @@ export default defineConfig({
 		headless: true,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
-		viewport: { width: 1440, height: 960 }
+		viewport: { width: 1440, height: 960 },
+		...(browserResolution.channel ? { channel: browserResolution.channel } : {}),
+		...(browserResolution.executablePath
+			? { launchOptions: { executablePath: browserResolution.executablePath } }
+			: {})
 	},
 	webServer: {
 		command: 'npm run wayfinding:studio -- --port 5182 --strictPort',

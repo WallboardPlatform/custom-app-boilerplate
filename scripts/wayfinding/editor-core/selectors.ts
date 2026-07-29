@@ -1,6 +1,7 @@
 import type {
 	WayfindingStudioElement,
-	WayfindingStudioFloor
+	WayfindingStudioFloor,
+	WayfindingStudioProject
 } from '../studio-project.mts';
 import type { EditorState } from './types';
 
@@ -15,8 +16,11 @@ export const selectedElement = (state: EditorState): WayfindingStudioElement | u
 export const selectedFloor = (state: EditorState): WayfindingStudioFloor =>
 	state.project.floors.find((floor): boolean => floor.id === state.currentFloorId) ?? state.project.floors[0];
 
-export const elementDisplayName = (element: WayfindingStudioElement): string => {
-	if ('label' in element && element.label) return element.label;
+export const elementDisplayName = (
+	element: WayfindingStudioElement,
+	project?: WayfindingStudioProject
+): string => {
+	if ('label' in element && element.label?.trim()) return element.label.trim();
 
 	if (element.type === 'label') return element.text || 'Text label';
 
@@ -24,7 +28,47 @@ export const elementDisplayName = (element: WayfindingStudioElement): string => 
 
 	if (element.type === 'transition') return element.label || element.kind;
 
-	return element.id;
+	const destinationId = 'destinationId' in element ? element.destinationId : undefined;
+	const linkedLocation = element.type === 'door' && element.locationId
+		? project?.floors
+			.flatMap((floor) => floor.elements)
+			.find((candidate) => candidate.id === element.locationId)
+		: undefined;
+	const linkedDestinationId = destinationId
+		?? (
+			linkedLocation && 'destinationId' in linkedLocation
+				? linkedLocation.destinationId
+				: undefined
+		);
+	const destinationName = linkedDestinationId
+		? project?.destinations.find((destination) => destination.id === linkedDestinationId)?.name.trim()
+		: undefined;
+
+	if (destinationName) {
+		return element.type === 'door' ? `Entrance — ${destinationName}` : destinationName;
+	}
+
+	if ((element.type === 'icon' || element.type === 'logo') && project) {
+		const assetName = project.assets.find((asset) => asset.id === element.assetId)?.name.trim();
+
+		if (assetName) return assetName;
+	}
+
+	switch (element.type) {
+		case 'door': return 'Entrance';
+
+		case 'icon': return 'Map symbol';
+
+		case 'location': return 'Room or area';
+
+		case 'logo': return 'Brand mark';
+
+		case 'obstacle': return 'Blocked area';
+
+		case 'poi': return 'Point of interest';
+
+		case 'walkable': return 'Walkable area';
+	}
 };
 
 export const projectCounts = (state: EditorState): {

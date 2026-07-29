@@ -36,13 +36,93 @@ void test('loading a legacy-compatible project resets document history and keeps
 void test('floor removal keeps at least one floor and selects a valid remaining floor', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'floor/add', floorId: 'level-1', name: 'Level 1' });
+	store.dispatch({
+		type: 'destination/add',
+		destination: {
+			floor: 'level-1',
+			id: 'gallery',
+			name: 'Gallery',
+			routeable: true
+		}
+	});
+	store.dispatch({
+		type: 'element/add',
+		floorId: 'level-1',
+		element: {
+			destinationId: 'gallery',
+			floorId: 'level-1',
+			geometry: [{ x: 10, y: 10 }, { x: 110, y: 10 }, { x: 110, y: 110 }],
+			id: 'gallery-location',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		}
+	});
+	store.dispatch({
+		type: 'graph/node-add',
+		node: { id: 'ground-node', kind: 'route', levelId: 'level-0', x: 10, y: 10 }
+	});
+	store.dispatch({
+		type: 'graph/node-add',
+		node: {
+			id: 'gallery-node',
+			kind: 'location',
+			levelId: 'level-1',
+			locationId: 'gallery',
+			x: 20,
+			y: 20
+		}
+	});
+	store.dispatch({
+		type: 'graph/edge-add',
+		edge: {
+			accessible: true,
+			bidirectional: true,
+			from: 'ground-node',
+			id: 'floor-connection',
+			kind: 'elevator',
+			to: 'gallery-node'
+		}
+	});
 	store.dispatch({ type: 'floor/select', floorId: 'level-1' });
 	store.dispatch({ type: 'floor/remove', floorId: 'level-1' });
 
-	assert.equal(store.getSnapshot().state.currentFloorId, 'level-0');
-	assert.equal(store.getSnapshot().state.project.floors.length, 1);
+	const snapshot = store.getSnapshot();
+	assert.equal(snapshot.state.currentFloorId, 'level-0');
+	assert.equal(snapshot.state.project.floors.length, 1);
+	assert.equal(snapshot.state.project.destinations.length, 0);
+	assert.deepEqual(snapshot.state.project.graph.nodes.map((node) => node.id), ['ground-node']);
+	assert.equal(snapshot.state.project.graph.edges.length, 0);
 	store.dispatch({ type: 'floor/remove', floorId: 'level-0' });
 	assert.equal(store.getSnapshot().state.project.floors.length, 1);
+});
+
+void test('floor reordering is transactional, bounded, and undoable', (): void => {
+	const store = createEditorStore();
+	store.dispatch({ type: 'floor/add', floorId: 'level-1', name: 'Level 1' });
+	store.dispatch({ type: 'floor/add', floorId: 'level-2', name: 'Level 2' });
+	store.dispatch({ type: 'floor/reorder', floorId: 'level-2', direction: -1 });
+
+	assert.deepEqual(
+		[...store.getSnapshot().state.project.floors]
+			.sort((left, right): number => left.order - right.order)
+			.map((floor): string => floor.id),
+		['level-0', 'level-2', 'level-1']
+	);
+
+	store.dispatch({ type: 'floor/reorder', floorId: 'level-0', direction: -1 });
+	assert.equal(
+		store.getSnapshot().state.project.floors.find((floor): boolean => floor.id === 'level-0')?.order,
+		0
+	);
+
+	store.undo();
+	assert.deepEqual(
+		[...store.getSnapshot().state.project.floors]
+			.sort((left, right): number => left.order - right.order)
+			.map((floor): string => floor.id),
+		['level-0', 'level-1', 'level-2']
+	);
 });
 
 void test('visitor preview clears authoring selection without changing the selected view', (): void => {
@@ -53,6 +133,23 @@ void test('visitor preview clears authoring selection without changing the selec
 
 	assert.equal(store.getSnapshot().state.workspace, 'visitor-preview');
 	assert.equal(store.getSnapshot().state.viewMode, '3d');
+	assert.equal(store.getSnapshot().state.selection, undefined);
+});
+
+void test('workspace transitions reject tools and selections that do not belong to the active workflow', (): void => {
+	const store = createEditorStore();
+	store.dispatch({ type: 'tool/set', tool: 'location' });
+	store.dispatch({ type: 'selection/set', selection: { id: 'location-1', kind: 'element' } });
+	store.dispatch({ type: 'workspace/set', workspace: 'route-edit' });
+
+	assert.equal(store.getSnapshot().state.activeTool, 'select');
+	assert.equal(store.getSnapshot().state.selection, undefined);
+
+	store.dispatch({ type: 'tool/set', tool: 'location' });
+	assert.equal(store.getSnapshot().state.activeTool, 'select');
+	store.dispatch({ type: 'selection/set', selection: { id: 'edge-1', kind: 'graph-edge' } });
+	store.dispatch({ type: 'workspace/set', workspace: 'route-preview' });
+	assert.equal(store.getSnapshot().state.activeTool, 'pan');
 	assert.equal(store.getSnapshot().state.selection, undefined);
 });
 

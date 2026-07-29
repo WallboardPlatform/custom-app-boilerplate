@@ -31,8 +31,15 @@ export const EDITOR_LAYER_IDS: EditorLayerId[] = [
 	'simulated-route'
 ];
 
-export const createLayerVisibility = (): Record<EditorLayerId, boolean> =>
-	Object.fromEntries(EDITOR_LAYER_IDS.map((layerId): [EditorLayerId, boolean] => [layerId, true])) as Record<EditorLayerId, boolean>;
+export const createLayerVisibility = (): Record<EditorLayerId, boolean> => {
+	const visibility = Object.fromEntries(
+		EDITOR_LAYER_IDS.map((layerId): [EditorLayerId, boolean] => [layerId, true])
+	) as Record<EditorLayerId, boolean>;
+
+	visibility['route-network'] = false;
+
+	return visibility;
+};
 
 export const createEditorState = (project: WayfindingStudioProject = createWayfindingStudioProject()): EditorState => {
 	const currentFloorId: string = project.floors[0]?.id ?? 'level-0';
@@ -47,12 +54,23 @@ export const createEditorState = (project: WayfindingStudioProject = createWayfi
 			openedFrom: 'new',
 			saveState: 'idle'
 		},
+		drawing: {
+			snapRadius: 12,
+			snapToSourceEdges: true
+		},
 		layerVisibility: createLayerVisibility(),
 		panels: {
 			left: { collapsed: false, width: 304 },
 			right: { collapsed: false, width: 336 }
 		},
 		project,
+		trace: {
+			closeGap: 2,
+			colorTolerance: 28,
+			detail: 4,
+			elementType: 'location',
+			minimumOpening: 5
+		},
 		viewMode: '2d',
 		workspace: 'map'
 	};

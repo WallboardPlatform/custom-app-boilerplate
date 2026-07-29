@@ -1,7 +1,8 @@
 import {
 	parseWayfindingStudioProject,
 	repairWayfindingStudioProject,
-	type WayfindingStudioProject
+	type WayfindingStudioProject,
+	type WayfindingStudioRepair
 } from '../studio-project.mts';
 import type { PersistenceAdapter } from './types';
 
@@ -45,11 +46,17 @@ const safeFileName = (name: string): string => {
 	return base.endsWith('.wbwayfinding') ? base : `${base}.wbwayfinding`;
 };
 
-const parseText = (text: string): WayfindingStudioProject => {
+const parseText = (text: string): {
+	project: WayfindingStudioProject;
+	repairs: WayfindingStudioRepair[];
+} => {
 	const raw: unknown = JSON.parse(text);
 	const repaired = repairWayfindingStudioProject(raw);
 
-	return parseWayfindingStudioProject(repaired.project);
+	return {
+		project: parseWayfindingStudioProject(repaired.project),
+		repairs: repaired.repairs
+	};
 };
 
 const downloadText = (text: string, fileName: string): void => {
@@ -64,6 +71,21 @@ const downloadText = (text: string, fileName: string): void => {
 export class BrowserPersistenceAdapter implements PersistenceAdapter {
 	private fileHandle?: WritableProjectFileHandle;
 
+	public resetProjectTarget(): void {
+		this.fileHandle = undefined;
+	}
+
+	public async openProjectFile(file: File): Promise<{
+		fileName: string;
+		project: WayfindingStudioProject;
+		repairs: WayfindingStudioRepair[];
+	}> {
+		this.fileHandle = undefined;
+		const parsed = parseText(await file.text());
+
+		return { fileName: file.name, ...parsed };
+	}
+
 	public clearRecovery(): Promise<void> {
 		localStorage.removeItem(RECOVERY_KEY);
 
@@ -76,13 +98,17 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 		if (!stored) return Promise.resolve(undefined);
 
 		try {
-			return Promise.resolve(parseText(stored));
+			return Promise.resolve(parseText(stored).project);
 		} catch {
 			return Promise.resolve(undefined);
 		}
 	}
 
-	public async openProject(): Promise<{ fileName: string; project: WayfindingStudioProject } | undefined> {
+	public async openProject(): Promise<{
+		fileName: string;
+		project: WayfindingStudioProject;
+		repairs: WayfindingStudioRepair[];
+	} | undefined> {
 		const browser: FileSystemWindow = window;
 
 		if (browser.showOpenFilePicker) {
@@ -92,7 +118,7 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 			this.fileHandle = handle;
 			const file: File = await handle.getFile();
 
-			return { fileName: file.name, project: parseText(await file.text()) };
+			return { fileName: file.name, ...parseText(await file.text()) };
 		}
 
 		return await new Promise((resolve, reject): void => {
@@ -107,8 +133,8 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 
 					return;
 				}
-				file.text()
-					.then((text): void => resolve({ fileName: file.name, project: parseText(text) }))
+				this.openProjectFile(file)
+					.then(resolve)
 					.catch(reject);
 			}, { once: true });
 			input.click();

@@ -1,23 +1,12 @@
 import {
-	AlertTriangle,
-	Box,
-	ChevronRight,
-	CircleHelp,
-	Clock3,
-	Frame,
 	ImagePlus,
 	PanelLeftOpen,
-	PanelRightClose,
-	PanelRightOpen,
-	ShieldAlert,
-	SquareDashedMousePointer,
-	X
+	PanelRightOpen
 } from 'lucide-solid';
 import {
 	createEffect,
 	createMemo,
 	createSignal,
-	For,
 	lazy,
 	onCleanup,
 	onMount,
@@ -26,16 +15,20 @@ import {
 	type JSX
 } from 'solid-js';
 import {
-	createWayfindingRuntimeBundle,
-	createWayfindingStudioProject,
 	validateWayfindingStudioDelivery,
 	validateWayfindingStudioProject,
 	type WayfindingStudioDestination,
-	type WayfindingStudioIssue,
-	type WayfindingStudioProject
+	type WayfindingStudioIssue
 } from '../../studio-project.mts';
-import { BrowserPersistenceAdapter } from '../../editor-core/persistence';
-import { buildFloorRouteNetwork } from '../../editor-core/route-builder.mts';
+import {
+	createWayfindingMapPackage,
+	WAYFINDING_MAP_PACKAGE_EXTENSION,
+	WAYFINDING_MAP_PACKAGE_MIME_TYPE
+} from '../../runtime-package.mts';
+import {
+	buildFloorRouteNetwork,
+	type RouteBuildResult
+} from '../../editor-core/route-builder.mts';
 import {
 	elementDisplayName,
 	selectedElement
@@ -43,21 +36,36 @@ import {
 import { createEditorStore } from '../../editor-core/store';
 import type { EditorStore } from '../../editor-core/types';
 import { Canvas2d } from './Canvas2d';
+import type { CanvasSelectionActions } from './Canvas2d';
 import { AppBar } from './components/AppBar';
-import {
-	DestinationInspector,
-	ElementInspector,
-	Problems,
-	ProjectOverview
-} from './components/InspectorContent';
-import { ProjectPanel } from './components/ProjectPanel';
+import type { StudioCommand } from './components/CommandPalette';
+import { InspectorPanel } from './components/InspectorPanel';
+import { ProjectPanel, type ProjectView } from './components/ProjectPanel';
 import { RoutePanel } from './components/RoutePanel';
-import { ShortcutsDialog } from './components/ShortcutsDialog';
+import { SelectionToolbar } from './components/SelectionToolbar';
+import { StageToolbar } from './components/StageToolbar';
 import { StatusBar } from './components/StatusBar';
 import { ToolRail } from './components/ToolRail';
 import { updateProject } from './components/project-edit';
 import { VisitorPanel } from './components/VisitorPanel';
-import { IconButton } from './ui';
+import {
+	type ConfirmState,
+	type RepairReportState,
+	type ToastState,
+	WorkbenchOverlays
+} from './components/WorkbenchOverlays';
+import {
+	routeJourneyToDestination,
+	type VisitorRouteProfile
+} from './route';
+import {
+	filterVisitorDestinations,
+	visitorCategoryOptions,
+	visitorFloorOptions
+} from './visitor';
+import { issueSelection } from './issues';
+import { useResponsiveWorkspace } from './useResponsiveWorkspace';
+import { useProjectLifecycle } from './useProjectLifecycle';
 import './styles/app.scss';
 
 const Scene3dView = lazy(async () => {
@@ -66,22 +74,14 @@ const Scene3dView = lazy(async () => {
 	return { default: module.Scene3dView };
 });
 
-interface ToastState {
-	message: string;
-	tone: 'danger' | 'info' | 'success' | 'warning';
-}
-
-interface ConfirmState {
-	body: string;
-	confirmLabel: string;
-	title: string;
-}
-
-const downloadJson = (value: unknown, fileName: string): void => {
-	const url: string = URL.createObjectURL(new Blob(
-		[`${JSON.stringify(value, undefined, 2)}\n`],
-		{ type: 'application/json' }
-	));
+const downloadBytes = (
+	value: Uint8Array,
+	fileName: string,
+	mimeType: string
+): void => {
+	const buffer = new ArrayBuffer(value.byteLength);
+	new Uint8Array(buffer).set(value);
+	const url: string = URL.createObjectURL(new Blob([buffer], { type: mimeType }));
 	const anchor: HTMLAnchorElement = document.createElement('a');
 	anchor.href = url;
 	anchor.download = fileName;
@@ -94,21 +94,28 @@ const safeFileStem = (value: string): string =>
 
 const App = (): JSX.Element => {
 	const store: EditorStore = createEditorStore();
-	const persistence = new BrowserPersistenceAdapter();
+	const workspaceDensity = useResponsiveWorkspace(store);
 	const [snapshot, setSnapshot] = createSignal(store.getSnapshot());
 	const [toast, setToast] = createSignal<ToastState>();
 	const [confirmState, setConfirmState] = createSignal<ConfirmState>();
 	const [confirmResolver, setConfirmResolver] = createSignal<(value: boolean) => void>();
+	const [repairReport, setRepairReport] = createSignal<RepairReportState>();
 	const [pointer, setPointer] = createSignal<{ x: number; y: number }>();
 	const [visitorQuery, setVisitorQuery] = createSignal('');
+	const [visitorCategory, setVisitorCategory] = createSignal('');
+	const [visitorFloorFilter, setVisitorFloorFilter] = createSignal('');
+	const [visitorRouteDestinationId, setVisitorRouteDestinationId] = createSignal<string>();
+	const [visitorRouteOriginId, setVisitorRouteOriginId] = createSignal<string>();
+	const [visitorRouteProfile, setVisitorRouteProfile] = createSignal<VisitorRouteProfile>('standard');
 	const [shortcutsOpen, setShortcutsOpen] = createSignal(false);
-	const [recoveryProject, setRecoveryProject] = createSignal<WayfindingStudioProject>();
+	const [commandPaletteOpen, setCommandPaletteOpen] = createSignal(false);
+	const [projectView, setProjectView] = createSignal<ProjectView>('content');
 	const [exportIssues, setExportIssues] = createSignal<WayfindingStudioIssue[]>([]);
+	const [routeBuildReport, setRouteBuildReport] = createSignal<RouteBuildResult>();
 	const [visitorLanguage, setVisitorLanguage] = createSignal(
 		store.getSnapshot().state.project.defaultLanguage ?? 'en'
 	);
 	let fitCanvas = (): void => undefined;
-	let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const state = createMemo(() => snapshot().state);
@@ -117,6 +124,21 @@ const App = (): JSX.Element => {
 		state().project.floors.find((floor) => floor.id === state().currentFloorId)
 		?? state().project.floors[0]
 	);
+	const [selectionActions, setSelectionActions] = createSignal<CanvasSelectionActions>();
+	const openProjectSetup = (): void => {
+		store.dispatch({ type: 'workspace/set', workspace: 'map' });
+
+		if (store.getSnapshot().state.panels.left.collapsed) {
+			store.dispatch({ type: 'panel/toggle', panelId: 'left' });
+		}
+		setProjectView('setup');
+	};
+	const startFloorPlanUpload = (): void => {
+		openProjectSetup();
+		queueMicrotask(() =>
+			document.querySelector<HTMLInputElement>('[data-floor-background-input]')?.click()
+		);
+	};
 	const canvasIsEmpty = createMemo(() =>
 		!currentFloor().backgroundAssetId && currentFloor().elements.length === 0
 	);
@@ -133,28 +155,246 @@ const App = (): JSX.Element => {
 			? state().project.destinations.find((candidate) => candidate.id === destinationId)
 			: undefined;
 	});
+	const selectedGraphNode = createMemo(() => {
+		const selection = state().selection;
+
+		return selection?.kind === 'graph-node'
+			? state().project.graph.nodes.find((candidate) => candidate.id === selection.id)
+			: undefined;
+	});
+	const selectedGraphEdge = createMemo(() => {
+		const selection = state().selection;
+
+		return selection?.kind === 'graph-edge'
+			? state().project.graph.edges.find((candidate) => candidate.id === selection.id)
+			: undefined;
+	});
+	const selectedGraphEdgeGeometryIndex = createMemo(() => {
+		const selection = state().selection;
+
+		return selection?.kind === 'graph-edge' ? selection.geometryIndex : undefined;
+	});
+	const selectedRouteDestinationId = createMemo(() =>
+		state().workspace === 'visitor-preview'
+			? visitorRouteDestinationId()
+			: state().workspace === 'route-preview'
+				? selectedDestination()?.id
+				: undefined
+	);
+	const inspectorTitle = createMemo(() =>
+		element()
+			? elementDisplayName(element()!, state().project)
+			: selectedDestination()?.name
+				?? selectedGraphNode()?.id
+				?? selectedGraphEdge()?.id
+				?? (
+					state().workspace === 'route-edit'
+						? 'Route network'
+						: state().workspace === 'route-preview'
+							? 'Journey preview'
+							: 'Project overview'
+				)
+	);
 	const projectIssues = createMemo(() => validateWayfindingStudioProject(state().project));
 	const deliveryIssues = createMemo(() => validateWayfindingStudioDelivery(state().project));
-	const visibleDestinations = createMemo(() => {
-		const query = visitorQuery().trim().toLocaleLowerCase();
-		const destinations = state().project.destinations;
-
-		if (!query) return destinations;
-
-		return destinations.filter((destination) =>
-			[
-				destination.translations?.[visitorLanguage()]?.name ?? destination.name,
-				destination.translations?.[visitorLanguage()]?.description ?? destination.description,
-				destination.category,
-				destination.mapNumber
-			].some((value) => value?.toLocaleLowerCase().includes(query))
-		);
-	});
+	const visitorFloors = createMemo(() =>
+		visitorFloorOptions(state().project.floors, state().project.destinations)
+	);
+	const visitorOrigins = createMemo(() => state().project.floors.flatMap((floor) =>
+		floor.elements
+			.filter((element) => element.type === 'origin')
+			.map((origin) => ({
+				floorId: floor.id,
+				floorName: floor.name,
+				id: origin.id,
+				label: origin.label || origin.screenId || origin.id
+			}))
+	));
+	const visitorCategories = createMemo(() =>
+		visitorCategoryOptions(state().project.destinations)
+	);
+	const visibleDestinations = createMemo(() => filterVisitorDestinations(
+		state().project.destinations,
+		{
+			category: visitorCategory() || undefined,
+			floorId: visitorFloorFilter() || undefined,
+			language: visitorLanguage(),
+			query: visitorQuery()
+		}
+	));
+	const visitorRouteJourney = createMemo(() => routeJourneyToDestination(
+		state().project,
+		visitorRouteDestinationId(),
+		visitorRouteProfile(),
+		visitorRouteOriginId()
+	));
+	const studioCommands = createMemo<StudioCommand[]>(() => [
+		{
+			group: 'File',
+			id: 'new-project',
+			keywords: ['create', 'blank'],
+			label: 'Create a new project',
+			run: (): void => void lifecycle.newProject()
+		},
+		{
+			group: 'File',
+			id: 'open-project',
+			keywords: ['import', 'file'],
+			label: 'Open a project file',
+			run: (): void => {
+				openProjectSetup();
+				void lifecycle.open();
+			},
+			shortcut: 'Ctrl O'
+		},
+		{
+			group: 'Project',
+			id: 'project-settings',
+			keywords: ['name', 'file', 'background'],
+			label: 'Open project settings',
+			run: openProjectSetup
+		},
+		{
+			group: 'Project',
+			id: 'manage-floors',
+			keywords: ['level', 'background', 'add floor'],
+			label: 'Manage floors',
+			run: openProjectSetup
+		},
+		{
+			group: 'Workspace',
+			id: 'workspace-map',
+			keywords: ['objects', 'rooms', 'destinations'],
+			label: 'Open map workspace',
+			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'map' }),
+			shortcut: '1'
+		},
+		{
+			group: 'Workspace',
+			id: 'workspace-route-edit',
+			keywords: ['network', 'nodes', 'edges'],
+			label: 'Open route editor',
+			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'route-edit' }),
+			shortcut: '2'
+		},
+		{
+			group: 'Workspace',
+			id: 'workspace-route-preview',
+			keywords: ['simulate', 'directions'],
+			label: 'Open route preview',
+			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'route-preview' }),
+			shortcut: '3'
+		},
+		{
+			group: 'Workspace',
+			id: 'workspace-visitor-preview',
+			keywords: ['directory', 'runtime', 'public'],
+			label: 'Open visitor preview',
+			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'visitor-preview' }),
+			shortcut: '4'
+		},
+		{
+			group: 'View',
+			id: 'fit-map',
+			label: 'Fit map to canvas',
+			run: (): void => fitCanvas(),
+			shortcut: 'F'
+		},
+		{
+			group: 'View',
+			id: 'view-2d',
+			label: 'Switch to 2D editor',
+			run: (): void => store.dispatch({ type: 'view/set', viewMode: '2d' })
+		},
+		{
+			group: 'View',
+			id: 'view-3d',
+			label: 'Switch to 3D preview',
+			run: (): void => store.dispatch({ type: 'view/set', viewMode: '3d' })
+		},
+		{
+			group: 'View',
+			id: 'toggle-left-panel',
+			label: state().panels.left.collapsed ? 'Show left panel' : 'Hide left panel',
+			run: (): void => store.dispatch({ type: 'panel/toggle', panelId: 'left' })
+		},
+		{
+			group: 'View',
+			id: 'toggle-right-panel',
+			label: state().panels.right.collapsed ? 'Show inspector' : 'Hide inspector',
+			run: (): void => store.dispatch({ type: 'panel/toggle', panelId: 'right' })
+		},
+		{
+			disabled: !snapshot().canUndo,
+			group: 'Edit',
+			id: 'undo',
+			label: 'Undo last edit',
+			run: (): void => store.undo(),
+			shortcut: 'Ctrl Z'
+		},
+		{
+			disabled: !snapshot().canRedo,
+			group: 'Edit',
+			id: 'redo',
+			label: 'Redo last edit',
+			run: (): void => store.redo(),
+			shortcut: 'Ctrl Shift Z'
+		},
+		{
+			group: 'File',
+			id: 'save',
+			label: 'Save project',
+			run: (): void => void lifecycle.save(false),
+			shortcut: 'Ctrl S'
+		},
+		{
+			group: 'File',
+			id: 'save-as',
+			label: 'Save project as',
+			run: (): void => void lifecycle.save(true),
+			shortcut: 'Ctrl Shift S'
+		},
+		{
+			group: 'File',
+			id: 'export-runtime',
+			label: 'Publish map',
+			run: (): void => exportRuntime()
+		},
+		{
+			group: 'Help',
+			id: 'shortcuts',
+			label: 'Show keyboard shortcuts',
+			run: (): void => {
+				setShortcutsOpen(true);
+			},
+			shortcut: '?'
+		}
+	]);
 	createEffect(() => {
 		const available = state().project.languages ?? [];
 
 		if (available.some((language) => language.code === visitorLanguage())) return;
 		setVisitorLanguage(state().project.defaultLanguage ?? available[0]?.code ?? 'en');
+	});
+	createEffect(() => {
+		if (visitorCategory() && !visitorCategories().includes(visitorCategory())) {
+			setVisitorCategory('');
+		}
+
+		if (visitorFloorFilter() && !visitorFloors().some((floor) => floor.id === visitorFloorFilter())) {
+			setVisitorFloorFilter('');
+		}
+
+		if (
+			visitorRouteDestinationId()
+			&& !state().project.destinations.some((destination) => destination.id === visitorRouteDestinationId())
+		) {
+			setVisitorRouteDestinationId(undefined);
+		}
+
+		if (!visitorOrigins().some((origin) => origin.id === visitorRouteOriginId())) {
+			setVisitorRouteOriginId(visitorOrigins()[0]?.id);
+		}
 	});
 
 	const notify = (message: string, tone: ToastState['tone'] = 'info'): void => {
@@ -171,102 +411,21 @@ const App = (): JSX.Element => {
 		setConfirmResolver(undefined);
 		setConfirmState(undefined);
 	};
-
-	const save = async (forceSaveAs = false): Promise<void> => {
-		store.dispatch({ type: 'document/saving' });
-
-		try {
-			const result = await persistence.saveProject(state().project, {
-				forceSaveAs,
-				suggestedName: state().project.name
-			});
-			store.dispatch({
-				type: 'document/mark-saved',
-				fileName: result.fileName,
-				savedAt: new Date().toISOString()
-			});
-			await persistence.clearRecovery();
-			notify(`Saved ${result.fileName}`, 'success');
-		} catch (error) {
-			store.dispatch({ type: 'document/error' });
-			notify(error instanceof Error ? error.message : 'The project could not be saved.', 'danger');
-		}
-	};
-
-	const open = async (): Promise<void> => {
-		if (state().document.dirty && !await confirm({
-			body: 'Opening another project will replace the unsaved project currently in the editor.',
-			confirmLabel: 'Open project',
-			title: 'Replace unsaved work?'
-		})) return;
-
-		try {
-			const opened = await persistence.openProject();
-
-			if (!opened) return;
-			store.dispatch({
-				type: 'project/load',
-				project: opened.project,
-				fileName: opened.fileName,
-				openedFrom: 'file'
-			});
-			notify(`Opened ${opened.fileName}`, 'success');
-			queueMicrotask(fitCanvas);
-		} catch (error) {
-			notify(error instanceof Error ? error.message : 'This project file could not be opened.', 'danger');
-		}
-	};
-
-	const newProject = async (): Promise<void> => {
-		if (state().document.dirty && !await confirm({
-			body: 'Creating a new project will replace the unsaved project currently in the editor.',
-			confirmLabel: 'Create project',
-			title: 'Replace unsaved work?'
-		})) return;
-		store.dispatch({
-			type: 'project/load',
-			project: createWayfindingStudioProject(`wayfinding-${Date.now()}`),
-			openedFrom: 'new'
-		});
-		queueMicrotask(fitCanvas);
-	};
-	const restoreRecovery = (): void => {
-		const project = recoveryProject();
-
-		if (!project) return;
-		store.dispatch({ type: 'project/load', project, openedFrom: 'browser-recovery' });
-		setRecoveryProject(undefined);
-		notify('Restored your local editing session.', 'success');
-		queueMicrotask(fitCanvas);
-	};
-	const discardRecovery = (): void => {
-		void persistence.clearRecovery();
-		setRecoveryProject(undefined);
-		notify('Local recovery discarded.', 'info');
-	};
+	const lifecycle = useProjectLifecycle({
+		confirm,
+		notify,
+		onFit: () => fitCanvas(),
+		onRepairs: (fileName, repairs) => setRepairReport({ fileName, repairs }),
+		snapshot,
+		store
+	});
 	const revealIssue = (issue: WayfindingStudioIssue): void => {
-		const id = issue.elementIds[0];
-
 		setExportIssues([]);
 		store.dispatch({ type: 'workspace/set', workspace: 'map' });
 		store.dispatch({ type: 'panel/toggle', panelId: 'right', collapsed: false });
+		const selection = issueSelection(issue, state().project);
 
-		if (!id) return;
-		const destination = state().project.destinations.some((candidate) => candidate.id === id);
-		store.dispatch({
-			type: 'selection/set',
-			selection: { id, kind: destination ? 'destination' : 'element' }
-		});
-	};
-	const deleteFloor = async (floorId: string, floorName: string): Promise<void> => {
-		if (!await confirm({
-			body: `${floorName} and every object authored on it will be removed. This can be undone until the project is closed.`,
-			confirmLabel: 'Delete floor',
-			title: `Delete ${floorName}?`
-		})) return;
-		store.dispatch({ type: 'floor/remove', floorId });
-		notify(`${floorName} deleted.`, 'info');
-		queueMicrotask(fitCanvas);
+		if (selection) store.dispatch({ type: 'selection/set', selection });
 	};
 	const buildRoutes = async (): Promise<void> => {
 		const currentFloorId = state().currentFloorId;
@@ -292,7 +451,14 @@ const App = (): JSX.Element => {
 			});
 			store.dispatch({ type: 'selection/clear' });
 			store.dispatch({ type: 'tool/set', tool: 'select' });
-			notify(`Built ${result.edges} route segments from ${result.nodes} network nodes.`, 'success');
+			setRouteBuildReport(result);
+			const blocked = result.totalSemanticNodes - result.connectedSemanticNodes;
+			notify(
+				blocked > 0
+					? `Built ${result.edges} segments, but ${blocked} destination anchor${blocked === 1 ? '' : 's'} still need attention.`
+					: `Built ${result.edges} route segments and connected all ${result.connectedSemanticNodes} destination anchors.`,
+				blocked > 0 ? 'warning' : 'success'
+			);
 		} catch (error) {
 			notify(error instanceof Error ? error.message : 'The route network could not be built.', 'danger');
 		}
@@ -300,15 +466,19 @@ const App = (): JSX.Element => {
 
 	const exportRuntime = (): void => {
 		try {
-			const bundle = createWayfindingRuntimeBundle(state().project);
-			downloadJson(bundle, `${safeFileStem(state().project.name)}.runtime.json`);
-			notify('Runtime bundle exported.', 'success');
+			const mapPackage = createWayfindingMapPackage(state().project);
+			downloadBytes(
+				mapPackage,
+				`${safeFileStem(state().project.name)}${WAYFINDING_MAP_PACKAGE_EXTENSION}`,
+				WAYFINDING_MAP_PACKAGE_MIME_TYPE
+			);
+			notify('Published map downloaded.', 'success');
 		} catch {
 			const issues = deliveryIssues().filter((issue) => issue.severity === 'error');
 			setExportIssues(issues);
 			notify(issues.length
-				? `Runtime export needs ${issues.length} correction${issues.length === 1 ? '' : 's'}.`
-				: 'Runtime export failed.', 'danger');
+				? `Publishing needs ${issues.length} correction${issues.length === 1 ? '' : 's'}.`
+				: 'The map could not be published.', 'danger');
 			store.dispatch({ type: 'panel/toggle', panelId: 'right', collapsed: false });
 		}
 	};
@@ -318,7 +488,12 @@ const App = (): JSX.Element => {
 		const keydown = (event: KeyboardEvent): void => {
 			if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 's') {
 				event.preventDefault();
-				void save(event.shiftKey);
+				void lifecycle.save(event.shiftKey);
+			}
+
+			if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
+				event.preventDefault();
+				setCommandPaletteOpen(true);
 			}
 
 			if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'z') {
@@ -339,29 +514,9 @@ const App = (): JSX.Element => {
 			window.removeEventListener('keydown', keydown);
 			window.removeEventListener('beforeunload', beforeUnload);
 		});
-		void persistence.loadRecovery().then((project) => {
-			const currentState = store.getSnapshot().state;
-
-			if (!project || currentState.document.openedFrom !== 'new' || currentState.document.dirty) return;
-			setRecoveryProject(project);
-		});
-	});
-
-	createEffect(() => {
-		const project = state().project;
-		const dirty = state().document.dirty;
-
-		if (autosaveTimer) clearTimeout(autosaveTimer);
-
-		if (!dirty) return;
-		autosaveTimer = setTimeout(() => {
-			void persistence.saveRecovery(project);
-		}, 750);
 	});
 
 	onCleanup(() => {
-		if (autosaveTimer) clearTimeout(autosaveTimer);
-
 		if (toastTimer) clearTimeout(toastTimer);
 	});
 
@@ -377,13 +532,18 @@ const App = (): JSX.Element => {
 		<div
 			class="workbench"
 			classList={{
+				'compact-layout': workspaceDensity() === 'compact',
 				'left-collapsed': state().panels.left.collapsed,
-				'right-collapsed': state().panels.right.collapsed
+				'narrow-layout': workspaceDensity() === 'narrow',
+				'right-collapsed': state().panels.right.collapsed,
+				'visitor-workspace': state().workspace === 'visitor-preview'
 			}}
 		>
 			<AppBar
 				onExportRuntime={exportRuntime}
-				onSave={(forceSaveAs) => void save(forceSaveAs)}
+				onOpenCommands={() => setCommandPaletteOpen(true)}
+				onOpenProject={openProjectSetup}
+				onSave={(forceSaveAs) => void lifecycle.save(forceSaveAs)}
 				snapshot={snapshot}
 				store={store}
 			/>
@@ -395,18 +555,28 @@ const App = (): JSX.Element => {
 						fallback={
 							<RoutePanel
 								onBuildRoutes={() => void buildRoutes()}
+								routeBuildReport={routeBuildReport}
+								routeOriginId={visitorRouteOriginId}
+								routeProfile={visitorRouteProfile}
+								setRouteOriginId={setVisitorRouteOriginId}
+								setRouteProfile={setVisitorRouteProfile}
+								selectionActions={selectionActions}
 								snapshot={snapshot}
 								store={store}
 							/>
 						}
 					>
 						<ProjectPanel
-							onDeleteFloor={(floorId, floorName) => void deleteFloor(floorId, floorName)}
-							onNew={() => void newProject()}
+							onDeleteFloor={(floorId, floorName) => void lifecycle.deleteFloor(floorId, floorName)}
+							onNew={() => void lifecycle.newProject()}
 							onNotify={notify}
-							onOpen={() => void open()}
+							onOpen={() => void lifecycle.open()}
+							onOpenFile={(file) => void lifecycle.openFile(file)}
+							selectionActions={selectionActions}
 							snapshot={snapshot}
 							store={store}
+							view={projectView}
+							setView={setProjectView}
 						/>
 					</Show>
 
@@ -422,53 +592,49 @@ const App = (): JSX.Element => {
 
 				<main class="stage">
 					<ToolRail snapshot={snapshot} store={store} />
-					<div class="stage-toolbar">
-						<div class="view-switcher" role="group" aria-label="Map view">
-							<button
-								type="button"
-								aria-pressed={state().viewMode === '2d'}
-								classList={{ active: state().viewMode === '2d' }}
-								onClick={() => store.dispatch({ type: 'view/set', viewMode: '2d' })}
-							><SquareDashedMousePointer size={16} /> 2D</button>
-							<button
-								type="button"
-								aria-pressed={state().viewMode === '3d'}
-								classList={{ active: state().viewMode === '3d' }}
-								onClick={() => store.dispatch({ type: 'view/set', viewMode: '3d' })}
-							><Box size={16} /> 3D</button>
-						</div>
-						<button type="button" class="button compact" onClick={() => fitCanvas()}>
-							<Frame size={16} /> Fit
-						</button>
-						<Show when={state().workspace === 'route-preview'}>
-							<label class="inline-toggle">
-								<input
-									type="checkbox"
-									checked={state().layerVisibility['route-network']}
-									onChange={(event) => store.dispatch({
-										type: 'layer/set',
-										layerId: 'route-network',
-										visible: event.currentTarget.checked
-									})}
-								/>
-								Show route network
-							</label>
-						</Show>
-					</div>
+					<StageToolbar
+						onFit={() => fitCanvas()}
+						snapshot={snapshot}
+						store={store}
+					/>
+					<Show when={state().workspace !== 'visitor-preview' && state().viewMode === '2d'}>
+						<SelectionToolbar
+							actions={selectionActions}
+							label={inspectorTitle}
+							snapshot={snapshot}
+						/>
+					</Show>
 					<Show
 						when={state().viewMode === '2d'}
 						fallback={(
 							<Suspense fallback={<div class="scene-loading">Loading 3D view...</div>}>
-								<Scene3dView snapshot={snapshot} store={store} />
+								<Scene3dView
+									registerFit={(fit) => {
+										fitCanvas = fit;
+									}}
+									routeDestinationId={selectedRouteDestinationId}
+									routeOriginId={visitorRouteOriginId}
+									routeProfile={visitorRouteProfile}
+									snapshot={snapshot}
+									store={store}
+									visitorLanguage={visitorLanguage}
+								/>
 							</Suspense>
 						)}
 					>
 						<Canvas2d
+							onNotify={notify}
 							registerFit={(fit) => {
 								fitCanvas = fit;
 							}}
+							registerSelectionActions={setSelectionActions}
+							routeDestinationId={selectedRouteDestinationId}
+							routeOriginId={visitorRouteOriginId}
+							routeProfile={visitorRouteProfile}
 							snapshot={snapshot}
 							store={store}
+							visitorDestinations={visibleDestinations}
+							visitorLanguage={visitorLanguage}
 							onPointerCoordinate={setPointer}
 						/>
 						<Show when={canvasIsEmpty() && state().workspace === 'map'}>
@@ -479,7 +645,7 @@ const App = (): JSX.Element => {
 								<button
 									type="button"
 									class="button primary"
-									onClick={() => document.querySelector<HTMLInputElement>('[data-floor-background-input]')?.click()}
+									onClick={startFloorPlanUpload}
 								>
 									<ImagePlus size={16} /> Choose image
 								</button>
@@ -489,21 +655,40 @@ const App = (): JSX.Element => {
 					<Show when={state().workspace === 'visitor-preview'}>
 						<VisitorPanel
 							assets={() => state().project.assets}
+							categories={visitorCategories}
+							category={visitorCategory}
 							destinations={visibleDestinations}
-							floors={() => state().project.floors}
+							floorFilter={visitorFloorFilter}
+							floors={visitorFloors}
 							language={visitorLanguage}
 							languages={() => state().project.languages ?? []}
 							layerVisible={(layerId) => state().layerVisibility[layerId]}
 							query={visitorQuery}
+							routeDestinationId={visitorRouteDestinationId}
+							routeJourney={visitorRouteJourney}
+							routeOriginId={visitorRouteOriginId}
+							routeOrigins={visitorOrigins}
+							routeProfile={visitorRouteProfile}
 							selected={selectedDestination}
+							setCategory={setVisitorCategory}
+							setFloorFilter={(floorId) => {
+								setVisitorFloorFilter(floorId);
+
+								if (floorId) store.dispatch({ type: 'floor/select', floorId });
+							}}
 							setLanguage={setVisitorLanguage}
 							setQuery={setVisitorQuery}
+							setRouteDestinationId={setVisitorRouteDestinationId}
+							setRouteOriginId={setVisitorRouteOriginId}
+							setRouteProfile={setVisitorRouteProfile}
 							store={store}
 						/>
 					</Show>
-					<div class="coordinate-readout">
-						{pointer() ? `x ${Math.round(pointer()!.x)}  y ${Math.round(pointer()!.y)}` : 'x --  y --'}
-					</div>
+					<Show when={state().workspace !== 'visitor-preview'}>
+						<div class="coordinate-readout">
+							{pointer() ? `x ${Math.round(pointer()!.x)}  y ${Math.round(pointer()!.y)}` : 'x --  y --'}
+						</div>
+					</Show>
 				</main>
 
 				<Show when={state().workspace !== 'visitor-preview'}>
@@ -516,119 +701,43 @@ const App = (): JSX.Element => {
 						><PanelRightOpen size={18} /></button>
 					</Show>
 
-					<aside class="right-panel panel-shell">
-						<div class="panel-title">
-							<span>
-								<small>Inspector</small>
-								<strong>{element() ? elementDisplayName(element()!) : selectedDestination()?.name ?? 'Project overview'}</strong>
-							</span>
-							<IconButton icon={PanelRightClose} label="Close inspector panel" onClick={() => store.dispatch({ type: 'panel/toggle', panelId: 'right' })} />
-						</div>
-						<div class="panel-scroll">
-							<Show
-								when={element()}
-								fallback={
-									<Show
-										when={selectedDestination()}
-										fallback={<ProjectOverview issues={deliveryIssues} snapshot={snapshot} />}
-									>
-										<DestinationInspector
-											assets={state().project.assets}
-											categories={state().project.categories ?? []}
-											defaultLanguage={state().project.defaultLanguage ?? 'en'}
-											destination={selectedDestination()!}
-											floors={state().project.floors}
-											languages={state().project.languages ?? []}
-											patch={patchDestination}
-										/>
-									</Show>
-								}
-							>
-								<>
-								<ElementInspector element={element()!} projectAssets={state().project.assets} store={store} />
-									<Show when={selectedDestination()}>
-										<DestinationInspector
-											assets={state().project.assets}
-											categories={state().project.categories ?? []}
-											defaultLanguage={state().project.defaultLanguage ?? 'en'}
-											destination={selectedDestination()!}
-											floors={state().project.floors}
-											languages={state().project.languages ?? []}
-											patch={patchDestination}
-										/>
-									</Show>
-								</>
-							</Show>
-							<Problems issues={projectIssues} store={store} />
-						</div>
-					</aside>
+					<InspectorPanel
+						deliveryIssues={deliveryIssues}
+						element={element}
+						elementName={inspectorTitle}
+						graphEdge={selectedGraphEdge}
+						graphEdgeGeometryIndex={selectedGraphEdgeGeometryIndex}
+						graphNode={selectedGraphNode}
+						onPatchDestination={patchDestination}
+						projectIssues={projectIssues}
+						selectedDestination={selectedDestination}
+						snapshot={snapshot}
+						store={store}
+					/>
 				</Show>
 			</div>
 
 			<StatusBar snapshot={snapshot} onShowShortcuts={() => setShortcutsOpen(true)} />
 
-			<Show when={toast()}>
-				<div class="toast" role="status" aria-live="polite" classList={{ [toast()!.tone]: true }}>
-					<span>{toast()!.message}</span>
-					<button type="button" aria-label="Dismiss message" onClick={() => setToast(undefined)}><X size={16} /></button>
-				</div>
-			</Show>
-
-			<Show when={confirmState()}>
-				<div class="modal-backdrop" role="presentation">
-					<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-						<div class="dialog-icon"><CircleHelp size={20} /></div>
-						<h2 id="confirm-title">{confirmState()!.title}</h2>
-						<p>{confirmState()!.body}</p>
-						<div class="dialog-actions">
-							<button type="button" class="button" onClick={() => resolveConfirm(false)}>Cancel</button>
-							<button type="button" class="button primary" onClick={() => resolveConfirm(true)}>
-								{confirmState()!.confirmLabel}
-							</button>
-						</div>
-					</div>
-				</div>
-			</Show>
-			<Show when={recoveryProject()}>
-				<div class="modal-backdrop" role="presentation">
-					<div class="dialog recovery-dialog" role="dialog" aria-modal="true" aria-labelledby="recovery-title">
-						<div class="dialog-icon"><Clock3 size={20} /></div>
-						<h2 id="recovery-title">Restore unsaved local work?</h2>
-						<p>
-							The browser has a recovery copy of <strong>{recoveryProject()!.name}</strong>.
-							Restore it before starting a new project, or discard it permanently.
-						</p>
-						<div class="dialog-actions">
-							<button type="button" class="button danger-ghost" onClick={discardRecovery}>Discard recovery</button>
-							<button type="button" class="button primary" onClick={restoreRecovery}>Restore work</button>
-						</div>
-					</div>
-				</div>
-			</Show>
-			<Show when={exportIssues().length > 0}>
-				<div class="modal-backdrop" role="presentation">
-					<div class="dialog export-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title">
-						<div class="dialog-icon danger"><ShieldAlert size={20} /></div>
-						<h2 id="export-title">Runtime bundle needs attention</h2>
-						<p>Correct these project issues, then export again. Select an issue to open the relevant map object.</p>
-						<div class="export-issue-list">
-							<For each={exportIssues()}>{(issue) => (
-								<button type="button" onClick={() => revealIssue(issue)}>
-									<AlertTriangle size={16} />
-									<span><strong>{issue.message}</strong><small>{issue.elementIds.length ? 'Open affected item' : 'Open project settings'}</small></span>
-									<ChevronRight size={16} />
-								</button>
-							)}</For>
-						</div>
-						<div class="dialog-actions">
-							<button type="button" class="button" onClick={() => setExportIssues([])}>Close</button>
-						</div>
-					</div>
-				</div>
-			</Show>
-			<Show when={shortcutsOpen()}>
-				<ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
-			</Show>
+			<WorkbenchOverlays
+				commandPaletteOpen={commandPaletteOpen}
+				commands={studioCommands}
+				confirmState={confirmState}
+				exportIssues={exportIssues}
+				onCloseCommandPalette={() => setCommandPaletteOpen(false)}
+				onCloseExportIssues={() => setExportIssues([])}
+				onCloseRepairReport={() => setRepairReport(undefined)}
+				onCloseShortcuts={() => setShortcutsOpen(false)}
+				onDiscardRecovery={lifecycle.discardRecovery}
+				onDismissToast={() => setToast(undefined)}
+				onResolveConfirm={resolveConfirm}
+				onRestoreRecovery={lifecycle.restoreRecovery}
+				onRevealIssue={revealIssue}
+				recoveryProject={lifecycle.recoveryProject}
+				repairReport={repairReport}
+				shortcutsOpen={shortcutsOpen}
+				toast={toast}
+			/>
 		</div>
 	);
 };
