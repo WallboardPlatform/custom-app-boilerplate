@@ -13,7 +13,7 @@ import {
 	WandSparkles,
 	Waypoints
 } from 'lucide-solid';
-import { createMemo, createSignal, For, Show, type Accessor, type JSX } from 'solid-js';
+import { createMemo, For, Show, type Accessor, type JSX } from 'solid-js';
 
 import { selectedFloor } from '../../../editor-core/selectors';
 import type { RouteBuildResult } from '../../../editor-core/route-builder.mts';
@@ -27,6 +27,7 @@ import {
 	type RouteReadinessAction
 } from '../route-readiness';
 import type { CanvasSelectionActions } from '../features/map';
+import type { RouteWorkspaceView } from '../route-workspace';
 import { EmptyState, IconButton, PanelNav, PanelResizeHandle, PanelSection } from '../ui';
 import { FreehandSettings } from './FreehandSettings';
 import { SmartTraceSettings } from './SmartTraceSettings';
@@ -42,6 +43,8 @@ interface RoutePanelProps {
 	setRouteProfile: (profile: VisitorRouteProfile) => void;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
+	view: Accessor<RouteWorkspaceView>;
+	setView: (view: RouteWorkspaceView) => void;
 }
 
 const ToolButton = (props: {
@@ -49,11 +52,14 @@ const ToolButton = (props: {
 	icon: typeof MousePointer2;
 	label: string;
 	onClick: () => void;
+	title?: string;
 }): JSX.Element => (
 	<button
 		type="button"
 		class="route-task"
 		classList={{ active: props.active }}
+		aria-label={props.title ?? props.label}
+		title={props.title}
 		onClick={() => props.onClick()}
 	>
 		<props.icon size={17} />
@@ -61,17 +67,15 @@ const ToolButton = (props: {
 	</button>
 );
 
-type RouteView = 'build' | 'edit' | 'space' | 'test';
-
 const routeViews = [
 	{ id: 'space', label: 'Space' },
 	{ id: 'build', label: 'Build' },
 	{ id: 'edit', label: 'Edit' },
 	{ id: 'test', label: 'Test' }
-] satisfies Array<{ id: RouteView; label: string }>;
+] satisfies Array<{ id: RouteWorkspaceView; label: string }>;
 
 export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
-	const [view, setView] = createSignal<RouteView>('space');
+	const view = (): RouteWorkspaceView => props.view();
 	const state = createMemo(() => props.snapshot().state);
 	const floor = createMemo(() => selectedFloor(state()));
 	const floorNodes = createMemo(() => state().project.graph.nodes.filter((node) => node.levelId === floor().id));
@@ -123,6 +127,22 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 		props.routeOriginId()
 	));
 	const setTool = (tool: EditorTool): void => props.store.dispatch({ type: 'tool/set', tool });
+	const setView = (nextView: RouteWorkspaceView): void => {
+		props.setView(nextView);
+		setTool(nextView === 'build' || nextView === 'test' ? 'pan' : 'select');
+
+		const selection = state().selection;
+		const isGraphSelection = selection?.kind === 'graph-edge' || selection?.kind === 'graph-node';
+		const isElementSelection = selection?.kind === 'element';
+
+		if (
+			(nextView === 'space' && isGraphSelection)
+			|| (nextView === 'edit' && isElementSelection)
+			|| ((nextView === 'build' || nextView === 'test') && (isGraphSelection || isElementSelection))
+		) {
+			props.store.dispatch({ type: 'selection/clear' });
+		}
+	};
 	const activateSmartTrace = (): void => {
 		props.store.dispatch({
 			type: 'trace/patch',
@@ -548,34 +568,39 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 						</Show>
 					</Show>
 					<Show when={view() === 'edit'}>
-						<div class="workflow-intro">
-							<small>Step 3</small>
-							<strong>Correct the network directly</strong>
-							<p>Move junctions, reshape segments, insert bends, or draw missing connections on the map.</p>
+						<div class="route-edit-intro">
+							<span>
+								<small>Network editing</small>
+								<strong>Correct paths on the map</strong>
+							</span>
+							<p>Only route geometry is selectable here. Pedestrian areas stay locked behind the network.</p>
 						</div>
 						<div class="route-task-grid route-task-grid--editing">
 							<ToolButton
 								active={state().activeTool === 'select'}
 								icon={MousePointer2}
-								label="Select and reshape"
+								label="Select"
+								title="Select and reshape route segments"
 								onClick={() => setTool('select')}
 							/>
 							<ToolButton
 								active={state().activeTool === 'route-node'}
 								icon={Waypoints}
-								label="Place junction"
+								label="Junction"
+								title="Place junction"
 								onClick={() => setTool('route-node')}
 							/>
 							<ToolButton
 								active={state().activeTool === 'route-edge'}
 								icon={PenLine}
-								label="Draw connection"
+								label="Connection"
+								title="Draw connection"
 								onClick={() => setTool('route-edge')}
 							/>
 						</div>
-						<div class="route-tip">
-							<Network size={17} />
-							<span><strong>Segment editing:</strong> double-click to add a bend. Select a bend and press Delete to remove it.</span>
+						<div class="route-edit-hint">
+							<Network size={15} />
+							<span>Double-click a segment to add a bend. Select a bend and press Delete to remove it.</span>
 						</div>
 						<PanelSection title="Network navigator" eyebrow="Inspect and correct" defaultOpen>
 							<RouteGraphNavigator

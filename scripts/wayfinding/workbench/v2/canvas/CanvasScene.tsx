@@ -31,6 +31,11 @@ import type {
 } from '../visitor-map';
 import { visitorMarkerIds } from '../visitor-map';
 import {
+	isCanvasElementInteractive,
+	isRouteGraphInteractive,
+	type RouteWorkspaceView
+} from '../route-workspace';
+import {
 	isPointElement,
 	isPolygonElement,
 	pointsAttribute
@@ -76,6 +81,7 @@ interface CanvasSceneProps {
 	renderedSvg: Accessor<string>;
 	route: Accessor<WayfindingPoint[]>;
 	routeDraft: Accessor<Extract<EditorDraft, { kind: 'route-edge' }> | undefined>;
+	routeWorkspaceView: Accessor<RouteWorkspaceView>;
 	selectedElement: Accessor<WayfindingStudioElement | undefined>;
 	selectedGraphEdge: Accessor<WayfindingEdge | undefined>;
 	selectedGraphGeometry: Accessor<WayfindingPoint[]>;
@@ -266,6 +272,10 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 	);
 	const elementVisible = (element: WayfindingStudioElement): boolean =>
 		state().layerVisibility[element.type];
+	const elementInteractive = (element: WayfindingStudioElement): boolean =>
+		isCanvasElementInteractive(workspace(), props.routeWorkspaceView(), element.type);
+	const routeGraphInteractive = (): boolean =>
+		isRouteGraphInteractive(workspace(), props.routeWorkspaceView());
 	const directionElement = (): WayfindingStudioDoorElement | WayfindingStudioOriginElement | undefined => {
 		const element = props.selectedElement();
 
@@ -284,6 +294,7 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 	return (
 		<div
 			class="map-transform"
+			data-route-workspace-view={props.routeWorkspaceView()}
 			style={{
 				height: `${props.floor().height}px`,
 				transform: `translate(${props.camera().offsetX}px, ${props.camera().offsetY}px) scale(${props.camera().scale})`,
@@ -598,7 +609,9 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 						(workspace() === 'map' || workspace() === 'route-edit')
 						&& state().activeTool === 'select'
 					}>
-						<For each={props.elements().filter(elementVisible)}>
+						<For each={props.elements().filter((element) =>
+							elementVisible(element) && elementInteractive(element)
+						)}>
 							{(element) => (
 								<Show
 									fallback={
@@ -660,6 +673,7 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 						(workspace() === 'map' || workspace() === 'route-edit')
 						&& props.selectedPolygon()
 						&& elementVisible(props.selectedPolygon()!)
+						&& elementInteractive(props.selectedPolygon()!)
 					}>
 						<polygon
 							class="selected-polygon"
@@ -805,7 +819,7 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 						}}
 					</Show>
 
-					<Show when={workspace() === 'route-edit'}>
+					<Show when={routeGraphInteractive()}>
 						<For each={props.floorGraphEdges()}>
 							{(edge): JSX.Element => {
 								const geometry = (): WayfindingPoint[] => props.selectedGraphEdge()?.id === edge.id

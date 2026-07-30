@@ -82,6 +82,12 @@ import {
 	layoutVisitorMapLabels
 } from './visitor-map';
 import { useCanvasCamera } from './canvas/useCanvasCamera';
+import {
+	isCanvasElementInteractive,
+	isRouteGraphInteractive,
+	isRouteToolAvailable,
+	type RouteWorkspaceView
+} from './route-workspace';
 
 interface Canvas2dProps {
 	onNotify?: (message: string, tone?: 'danger' | 'info' | 'success' | 'warning') => void;
@@ -92,6 +98,7 @@ interface Canvas2dProps {
 	routeDestinationId?: Accessor<string | undefined>;
 	routeOriginId?: Accessor<string | undefined>;
 	routeProfile?: Accessor<VisitorRouteProfile>;
+	routeWorkspaceView?: Accessor<RouteWorkspaceView>;
 	showRouteNetwork?: Accessor<boolean>;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
@@ -154,6 +161,11 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	const [freehandGeometry, setFreehandGeometry] = createSignal<WayfindingPoint[]>();
 	const [draftCursor, setDraftCursor] = createSignal<WayfindingPoint>();
 	const [traceSource, setTraceSource] = createSignal<RegionDetectionSource>();
+	const routeWorkspaceView = (): RouteWorkspaceView => props.routeWorkspaceView?.() ?? 'edit';
+	const routeGraphInteractive = (): boolean => isRouteGraphInteractive(
+		props.snapshot().state.workspace,
+		routeWorkspaceView()
+	);
 	const currentFloorId = createMemo(() => props.snapshot().state.currentFloorId);
 	const floor = createMemo(() => props.snapshot().state.project.floors.find(
 		(candidate) => candidate.id === currentFloorId()
@@ -647,7 +659,12 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			props.snapshot().state.workspace === 'route-edit'
 		);
 
-		if (tool && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		const toolAvailable = tool && (
+			props.snapshot().state.workspace !== 'route-edit'
+			|| isRouteToolAvailable(routeWorkspaceView(), tool)
+		);
+
+		if (tool && toolAvailable && !event.ctrlKey && !event.metaKey && !event.altKey) {
 			props.store.dispatch({ type: 'tool/set', tool });
 		}
 	};
@@ -698,7 +715,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 		if (
 			tool === 'smart-trace'
-			&& (state.workspace === 'map' || state.workspace === 'route-edit')
+			&& (
+				state.workspace === 'map'
+				|| (state.workspace === 'route-edit' && routeWorkspaceView() === 'space')
+			)
 		) {
 			traceRegion(mapPoint);
 
@@ -707,7 +727,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 		if (
 			tool === 'freehand'
-			&& (state.workspace === 'map' || state.workspace === 'route-edit')
+			&& (
+				state.workspace === 'map'
+				|| (state.workspace === 'route-edit' && routeWorkspaceView() === 'space')
+			)
 		) {
 			event.preventDefault();
 			const elementType: WayfindingStudioPolygonElement['type'] = state.workspace === 'route-edit'
@@ -731,6 +754,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 				state.workspace === 'map'
 				|| (
 					state.workspace === 'route-edit'
+					&& routeWorkspaceView() === 'space'
 					&& (tool === 'walkable' || tool === 'obstacle')
 				)
 			)
@@ -761,7 +785,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			return;
 		}
 
-		if (tool === 'route-node' && state.workspace === 'route-edit') {
+		if (tool === 'route-node' && routeGraphInteractive()) {
 			const nodeId = nextId('route-node');
 			props.store.dispatch({
 				type: 'graph/node-add',
@@ -773,7 +797,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			return;
 		}
 
-		if (tool === 'route-edge' && state.workspace === 'route-edit') {
+		if (tool === 'route-edge' && routeGraphInteractive()) {
 			if (event.detail > 1) return;
 			const currentDraft: EditorDraft = draft()?.kind === 'route-edge'
 				? draft()!
@@ -790,7 +814,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			return;
 		}
 
-		if (state.workspace === 'route-edit' && tool === 'select') {
+		if (routeGraphInteractive() && tool === 'select') {
 			const graphNodeTarget = target?.closest('[data-route-node-id]');
 			const graphEdgePointTarget = target?.closest('[data-route-edge-point]');
 			const graphEdgeTarget = target?.closest('[data-route-edge-id]');
@@ -884,6 +908,12 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			(state.workspace === 'map' || state.workspace === 'route-edit')
 			&& tool === 'select'
 			&& polygonVertexTarget
+			&& selectedPolygon()
+			&& isCanvasElementInteractive(
+				state.workspace,
+				routeWorkspaceView(),
+				selectedPolygon()!.type
+			)
 		) {
 			const vertexIndex = Number(polygonVertexTarget.getAttribute('data-polygon-vertex-index'));
 
@@ -925,11 +955,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 
 			if (!element) return;
 
-			if (
-				state.workspace === 'route-edit'
-				&& element.type !== 'walkable'
-				&& element.type !== 'obstacle'
-			) return;
+			if (!isCanvasElementInteractive(state.workspace, routeWorkspaceView(), element.type)) return;
 			props.store.dispatch({ type: 'selection/set', selection: { id: element.id, kind: 'element' } });
 
 			if (isPolygonElement(element)) {
@@ -1564,6 +1590,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 				renderedSvg={renderedSvg}
 				route={route}
 				routeDraft={routeDraft}
+				routeWorkspaceView={routeWorkspaceView}
 				selectedGraphEdge={selectedGraphEdge}
 				selectedGraphGeometry={selectedGraphGeometry}
 				selectedGraphGeometryIndex={selectedGraphGeometryIndex}

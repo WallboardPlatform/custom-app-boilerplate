@@ -168,6 +168,7 @@ export class WayfindingScene3d {
 	private currentProject?: WayfindingStudioProject;
 	private readonly controls: OrbitControls;
 	private readonly disposableObjects: THREE.Object3D[] = [];
+	private cameraResetFrame?: number;
 	private frameId?: number;
 	private lastBuildKey?: string;
 	private presentationMode: WayfindingScene3dMode = 'editor';
@@ -260,6 +261,7 @@ export class WayfindingScene3d {
 	}
 
 	public dispose(): void {
+		if (this.cameraResetFrame !== undefined) window.cancelAnimationFrame(this.cameraResetFrame);
 		if (this.frameId !== undefined) window.cancelAnimationFrame(this.frameId);
 		this.resizeObserver.disconnect();
 		this.controls.dispose();
@@ -353,7 +355,23 @@ export class WayfindingScene3d {
 
 	public resetCamera(): void {
 		if (!this.currentFloor) return;
-		this.applyCameraState(this.currentFloor.camera3d ?? this.defaultCameraState(this.currentFloor));
+		const floorId = this.currentFloor.id;
+		const state = structuredClone(
+			this.currentFloor.camera3d ?? this.defaultCameraState(this.currentFloor)
+		);
+
+		if (this.cameraResetFrame !== undefined) window.cancelAnimationFrame(this.cameraResetFrame);
+		this.applyCameraState(state);
+		// OrbitControls can receive the final drag event in the same frame as a
+		// toolbar click. Reapply once after that frame so Reset is exact instead
+		// of stopping a fraction of a degree away from the saved view.
+		this.cameraResetFrame = window.requestAnimationFrame((): void => {
+			this.cameraResetFrame = undefined;
+
+			if (this.currentFloor?.id !== floorId) return;
+			this.applyCameraState(state);
+			this.render();
+		});
 	}
 
 	public selectElement(elementId?: string): void {

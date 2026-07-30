@@ -1047,6 +1047,53 @@ test('edits project directory registries and localized destination content end t
 	await expect(page.getByText('Information und Hilfe fur Gaste.', { exact: true })).toBeVisible();
 });
 
+test('presents destination marker and imagery as clear visual choices', async ({ page }) => {
+	const project = createTestProject();
+	project.assets.push({
+		dataUrl: LOGO_DATA_URL,
+		id: 'asset-information-icon',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Information desk icon',
+		naturalHeight: 80,
+		naturalWidth: 80
+	});
+	await openEditor(page, project);
+	await page.locator('[data-editor-element-id="location-information"]').click({ force: true });
+
+	const markerHeading = page.getByText('Map marker', { exact: true });
+	const imageryHeading = page.getByText('Destination imagery', { exact: true });
+	const visitorHeading = page.getByText('Visitor content', { exact: true });
+	await expect(markerHeading).toBeVisible();
+	await expect(imageryHeading).toBeVisible();
+	await expect(visitorHeading).toBeVisible();
+
+	const markerBounds = await markerHeading.boundingBox();
+	const imageryBounds = await imageryHeading.boundingBox();
+	const visitorBounds = await visitorHeading.boundingBox();
+	expect(markerBounds!.y).toBeLessThan(imageryBounds!.y);
+	expect(imageryBounds!.y).toBeLessThan(visitorBounds!.y);
+
+	const symbolChoice = page.getByRole('button', {
+		name: 'Use Information desk icon as the location symbol'
+	});
+	await symbolChoice.click();
+	await expect(symbolChoice).toHaveAttribute('aria-pressed', 'true');
+
+	const noLogo = page.getByRole('radio', { name: 'No logo' });
+	await noLogo.click();
+	await expect(noLogo).toHaveAttribute('aria-checked', 'true');
+
+	const selectedPhoto = page.getByRole('button', {
+		name: 'Remove Visitor information interior from visitor photos'
+	});
+	await selectedPhoto.click();
+	await expect(page.getByText('Visitor photos · 0 selected', { exact: true })).toBeVisible();
+	await expect(page.getByRole('button', {
+		name: 'Add Visitor information interior to visitor photos'
+	})).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('applies project appearance defaults to newly authored rooms', async ({ page }) => {
 	await openEditor(page);
 	const projectPanel = page.locator('.left-panel');
@@ -1148,7 +1195,9 @@ test('uploads, reuses, assigns, and previews project assets end to end', async (
 
 	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
 	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
-	await page.getByRole('checkbox', { name: 'northline-atrium.svg', exact: true }).check();
+	await page.getByRole('button', {
+		name: 'Add northline-atrium.svg to visitor photos'
+	}).click();
 
 	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
@@ -1609,9 +1658,11 @@ test('renders a non-empty 3D scene and saves and restores its floor camera', asy
 	}).toBeLessThan(0.25);
 	await dragLocatorBy(page, canvas, { x: 84, y: 24 });
 	await page.waitForTimeout(1_200);
-	const savedCamera = await host.getAttribute('data-camera-state');
 	await page.getByRole('button', { name: 'Save view' }).click();
 	await expect(page.getByRole('button', { name: /Undo/ })).toBeEnabled();
+	await page.getByRole('button', { name: 'Reset view' }).click();
+	await page.waitForTimeout(100);
+	const savedCamera = await host.getAttribute('data-camera-state');
 	await dragLocatorBy(page, canvas, { x: -62, y: 36 });
 	await expect(host).not.toHaveAttribute('data-camera-state', savedCamera ?? '');
 	await page.waitForTimeout(1_200);
@@ -1827,6 +1878,7 @@ test('resizes map media proportionally with a direct manipulation handle', async
 test('authors a manual route segment in route edit mode', async ({ page }) => {
 	await openEditor(page);
 	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
 	await page.getByRole('button', { name: /Draw route segment/ }).click();
 
 	await clickMapPoint(page, { x: 520, y: 760 });
@@ -1923,6 +1975,7 @@ test('inserts, drags, and removes route bends without replacing the edge or movi
 	await openEditor(page);
 	const cameraBefore = await mapTransform(page);
 	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
 	await clickMapPoint(page, { x: 700, y: 650 });
 	await expect(page.locator('.graph-edge-point')).toHaveCount(1);
 	await expect(page.locator('.graph-node-handle.endpoint')).toHaveCount(2);
@@ -2292,8 +2345,9 @@ test('authors, calibrates, illustrates, reorders, and deletes floors without los
 test('authors and reshapes a freehand pedestrian space inside the route workspace', async ({ page }) => {
 	await openEditor(page);
 	const existingWalkableAreas = page.locator('[data-editor-element-id^="walkable-"]');
-	await expect(existingWalkableAreas).toHaveCount(1);
+	await expect(existingWalkableAreas).toHaveCount(0);
 	await page.getByRole('button', { name: 'Route edit' }).click();
+	await expect(existingWalkableAreas).toHaveCount(1);
 	await page.getByRole('button', { name: /Draw a freehand pedestrian area/ }).click();
 	await dragMapPath(page, [
 		{ x: 520, y: 620 },
@@ -2382,4 +2436,30 @@ test('route-space detection cannot inherit the destination trace target', async 
 	await expect(page.locator('[data-editor-element-id^="walkable-"]')).toHaveCount(1);
 	await expect(page.locator('[data-editor-element-id^="location-"]')).toHaveCount(0);
 	await expect(page.getByText('Walkable area', { exact: true }).first()).toBeVisible();
+});
+
+test('keeps pedestrian areas behind map objects and route graph interactions', async ({ page }) => {
+	await openEditor(page);
+
+	const authoringOverlay = page.locator('.authoring-overlay');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(0);
+	await expect(authoringOverlay.locator('[data-editor-element-id="door-information"]')).toHaveCount(1);
+	await authoringOverlay.locator('[data-editor-element-id="door-information"]').click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'door-information');
+
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await expect(page.getByRole('button', { name: 'Space', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(1);
+	await expect(authoringOverlay.locator('.graph-edge-hit')).toHaveCount(0);
+	await authoringOverlay.locator('[data-editor-element-id="walkable-main"]').click({ force: true });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'walkable-main');
+
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	await expect(page.locator('.canvas-viewport')).not.toHaveAttribute('data-selection-id', 'walkable-main');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(0);
+	await expect(authoringOverlay.locator('.graph-edge-hit')).toHaveCount(1);
+	await clickMapPoint(page, { x: 900, y: 650 });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-kind', 'graph-edge');
+	await expect(page.locator('.left-panel')).toContainText('Only route geometry is selectable here');
+	expect(await panelLayoutProblems(page)).toEqual([]);
 });

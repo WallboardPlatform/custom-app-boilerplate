@@ -649,6 +649,9 @@ export const DestinationInspector = (props: {
 }): JSX.Element => {
 	const translation = createMemo(() => props.destination.translations?.[props.language()] ?? {});
 	const isDefault = createMemo(() => props.language() === props.defaultLanguage);
+	const iconAssets = createMemo(() => props.assets?.filter((asset) => asset.kind === 'icon') ?? []);
+	const logoAssets = createMemo(() => props.assets?.filter((asset) => asset.kind === 'logo') ?? []);
+	const photoAssets = createMemo(() => props.assets?.filter((asset) => asset.kind === 'photo') ?? []);
 	const patchTranslation = (patch: { description?: string; name?: string }): void => {
 		if (isDefault()) {
 			props.patch(props.destination, patch);
@@ -672,6 +675,124 @@ export const DestinationInspector = (props: {
 				icon={MapPin}
 				title={props.destination.name || 'Unnamed destination'}
 			/>
+			<InspectorGroup
+				title="Map marker"
+				body="Choose the symbol visitors use to recognize this destination on the map."
+			>
+				<Show
+					when={iconAssets().length > 0}
+					fallback={(
+						<div class="visitor-detail__notice">
+							Add a built-in or uploaded map icon in Assets, then return here to assign it.
+						</div>
+					)}
+				>
+					<Field composite label="Location symbol" hint="This replaces the generic destination pin.">
+						<div class="destination-symbol-grid" role="group" aria-label="Location symbol">
+							<button
+								type="button"
+								classList={{ selected: !props.destination.symbolAssetId }}
+								aria-pressed={!props.destination.symbolAssetId}
+								onClick={() => props.patch(props.destination, { symbolAssetId: undefined })}
+							>
+								<span class="destination-symbol-generic"><MapPin size={18} /></span>
+								<span>Generic</span>
+							</button>
+							<For each={iconAssets()}>
+								{(asset) => (
+									<button
+										type="button"
+										classList={{ selected: props.destination.symbolAssetId === asset.id }}
+										aria-label={`Use ${asset.name} as the location symbol`}
+										aria-pressed={props.destination.symbolAssetId === asset.id}
+										onClick={() => props.patch(props.destination, { symbolAssetId: asset.id })}
+									>
+										<img src={asset.dataUrl} alt="" />
+										<span>{asset.name}</span>
+									</button>
+								)}
+							</For>
+						</div>
+					</Field>
+				</Show>
+			</InspectorGroup>
+			<Show when={logoAssets().length > 0 || photoAssets().length > 0}>
+				<InspectorGroup
+					title="Destination imagery"
+					body="Assign one brand logo and any visitor photos. These appear in destination details, never as movable map objects."
+				>
+					<Show when={logoAssets().length > 0}>
+						<Field composite label="Brand logo" hint="Choose one logo for search results and destination details.">
+							<div class="destination-media-grid destination-media-grid--logo" role="radiogroup" aria-label="Brand logo">
+								<button
+									type="button"
+									class="destination-media-choice destination-media-choice--none"
+									classList={{ selected: !props.destination.logoAssetId }}
+									role="radio"
+									aria-checked={!props.destination.logoAssetId}
+									onClick={() => props.patch(props.destination, { logoAssetId: undefined })}
+								>
+									<span>No logo</span>
+									<Show when={!props.destination.logoAssetId}><Check size={14} /></Show>
+								</button>
+								<For each={logoAssets()}>{(asset) => {
+									const selected = (): boolean => props.destination.logoAssetId === asset.id;
+
+									return (
+										<button
+											type="button"
+											class="destination-media-choice"
+											classList={{ selected: selected() }}
+											role="radio"
+											aria-checked={selected()}
+											onClick={() => props.patch(props.destination, { logoAssetId: asset.id })}
+										>
+											<img src={asset.dataUrl} alt="" />
+											<span>{asset.name}</span>
+											<Show when={selected()}><Check class="destination-media-check" size={14} /></Show>
+										</button>
+									);
+								}}</For>
+							</div>
+						</Field>
+					</Show>
+					<Show when={photoAssets().length > 0}>
+						<Field
+							composite
+							label={`Visitor photos · ${props.destination.photoAssetIds?.length ?? 0} selected`}
+							hint="Select every photo that should appear in the destination gallery."
+						>
+							<div class="destination-media-grid" role="group" aria-label="Visitor photos">
+								<For each={photoAssets()}>{(asset) => {
+									const selected = (): boolean => props.destination.photoAssetIds?.includes(asset.id) ?? false;
+
+									return (
+										<button
+											type="button"
+											class="destination-media-choice"
+											classList={{ selected: selected() }}
+											aria-label={`${selected() ? 'Remove' : 'Add'} ${asset.name} ${selected() ? 'from' : 'to'} visitor photos`}
+											aria-pressed={selected()}
+											onClick={() => {
+												const current = props.destination.photoAssetIds ?? [];
+												props.patch(props.destination, {
+													photoAssetIds: selected()
+														? current.filter((id) => id !== asset.id)
+														: [...new Set([...current, asset.id])]
+												});
+											}}
+										>
+											<img src={asset.dataUrl} alt="" />
+											<span>{asset.name}</span>
+											<Show when={selected()}><Check class="destination-media-check" size={14} /></Show>
+										</button>
+									);
+								}}</For>
+							</div>
+						</Field>
+					</Show>
+				</InspectorGroup>
+			</Show>
 			<InspectorGroup
 				title="Visitor content"
 				body="This is the information people see in search results and the destination card."
@@ -776,95 +897,6 @@ export const DestinationInspector = (props: {
 					Show directions for this destination
 				</label>
 			</InspectorGroup>
-			<InspectorGroup
-				title="Map appearance"
-				body="Choose the symbol visitors see on the map and in directory results."
-			>
-				<Show
-					when={(props.assets?.filter((asset) => asset.kind === 'icon').length ?? 0) > 0}
-					fallback={(
-						<div class="visitor-detail__notice">
-							Add a built-in or uploaded symbol in Assets, then return here to assign it.
-						</div>
-					)}
-				>
-					<Field composite label="Location symbol" hint="Replaces the generic destination dot.">
-						<div class="destination-symbol-grid" role="group" aria-label="Location symbol">
-							<button
-								type="button"
-								classList={{ selected: !props.destination.symbolAssetId }}
-								aria-pressed={!props.destination.symbolAssetId}
-								onClick={() => props.patch(props.destination, { symbolAssetId: undefined })}
-							>
-								<span class="destination-symbol-generic"><MapPin size={18} /></span>
-								<span>Generic</span>
-							</button>
-							<For each={props.assets?.filter((asset) => asset.kind === 'icon') ?? []}>
-								{(asset) => (
-									<button
-										type="button"
-										classList={{ selected: props.destination.symbolAssetId === asset.id }}
-										aria-label={`Use ${asset.name} as the location symbol`}
-										aria-pressed={props.destination.symbolAssetId === asset.id}
-										onClick={() => props.patch(props.destination, { symbolAssetId: asset.id })}
-									>
-										<img src={asset.dataUrl} alt="" />
-										<span>{asset.name}</span>
-									</button>
-								)}
-							</For>
-						</div>
-					</Field>
-				</Show>
-			</InspectorGroup>
-			<Show when={(props.assets?.filter((asset) => asset.kind === 'logo' || asset.kind === 'photo').length ?? 0) > 0}>
-				<InspectorGroup
-					title="Brand and photos"
-					body="Media appears in the directory and destination detail card, not as editable map geometry."
-				>
-					<Show when={(props.assets?.filter((asset) => asset.kind === 'logo').length ?? 0) > 0}>
-						<Field label="Destination logo" hint="Used in the directory and visitor information panel.">
-							<select
-								value={props.destination.logoAssetId ?? ''}
-								onChange={(event) => props.patch(props.destination, { logoAssetId: event.currentTarget.value || undefined })}
-							>
-								<option value="">No logo</option>
-								<For each={props.assets?.filter((asset) => asset.kind === 'logo') ?? []}>
-									{(asset) => <option value={asset.id}>{asset.name}</option>}
-								</For>
-							</select>
-						</Field>
-					</Show>
-					<Show when={(props.assets?.filter((asset) => asset.kind === 'photo').length ?? 0) > 0}>
-						<Field label="Visitor gallery" hint="Selected photos appear in destination details and visitor preview.">
-							<div class="destination-photo-grid">
-								<For each={props.assets?.filter((asset) => asset.kind === 'photo') ?? []}>{(asset) => {
-									const selected = (): boolean => props.destination.photoAssetIds?.includes(asset.id) ?? false;
-
-									return (
-										<label classList={{ selected: selected() }}>
-											<input
-												type="checkbox"
-												checked={selected()}
-												onChange={(event) => {
-													const current = props.destination.photoAssetIds ?? [];
-													props.patch(props.destination, {
-														photoAssetIds: event.currentTarget.checked
-															? [...new Set([...current, asset.id])]
-															: current.filter((id) => id !== asset.id)
-													});
-												}}
-											/>
-											<img src={asset.dataUrl} alt="" />
-											<span>{asset.name}</span>
-										</label>
-									);
-								}}</For>
-							</div>
-						</Field>
-					</Show>
-				</InspectorGroup>
-			</Show>
 		</PanelSection>
 	);
 };

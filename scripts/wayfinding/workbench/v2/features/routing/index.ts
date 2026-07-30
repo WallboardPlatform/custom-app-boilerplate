@@ -8,4 +8,4 @@ export type {
 	VisitorRouteJourney,
 	VisitorRouteProfile
 } from '../../route';
-
+export type { RouteWorkspaceView } from '../../route-workspace';

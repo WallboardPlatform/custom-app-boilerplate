@@ -25,9 +25,14 @@ import type {
 	EditorStore,
 	EditorTool
 } from '../../../editor-core/types';
+import {
+	isRouteToolAvailable,
+	type RouteWorkspaceView
+} from '../route-workspace';
 import { IconButton } from '../ui';
 
 interface ToolRailProps {
+	routeWorkspaceView: Accessor<RouteWorkspaceView>;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
 }
@@ -66,7 +71,7 @@ const routeTools: ToolDefinition[] = [
 
 export const ToolRail = (props: ToolRailProps): JSX.Element => {
 	const tools = (): ToolDefinition[] => props.snapshot().state.workspace === 'route-edit'
-		? routeTools
+		? routeTools.filter((tool) => isRouteToolAvailable(props.routeWorkspaceView(), tool.id))
 		: mapTools;
 
 	return (

@@ -55,7 +55,8 @@ import {
 import { downloadPublishedRuntime } from './features/publishing';
 import {
 	RoutePanel,
-	routeJourneyToDestination
+	routeJourneyToDestination,
+	type RouteWorkspaceView
 } from './features/routing';
 import {
 	filterVisitorDestinations,
@@ -91,6 +92,7 @@ const App = (): JSX.Element => {
 	const [projectView, setProjectView] = createSignal<ProjectView>('content');
 	const [exportIssues, setExportIssues] = createSignal<WayfindingStudioIssue[]>([]);
 	const [routeBuildReport, setRouteBuildReport] = createSignal<RouteBuildResult>();
+	const [routeWorkspaceView, setRouteWorkspaceView] = createSignal<RouteWorkspaceView>('space');
 	const preview = createPreviewSession(
 		store.getSnapshot().state.project.defaultLanguage ?? 'en'
 	);
@@ -593,6 +595,8 @@ const App = (): JSX.Element => {
 								selectionActions={selectionActions}
 								snapshot={snapshot}
 								store={store}
+								view={routeWorkspaceView}
+								setView={setRouteWorkspaceView}
 							/>
 						}
 					>
@@ -621,7 +625,11 @@ const App = (): JSX.Element => {
 				</Show>
 
 				<main class="stage">
-					<ToolRail snapshot={snapshot} store={store} />
+					<ToolRail
+						routeWorkspaceView={routeWorkspaceView}
+						snapshot={snapshot}
+						store={store}
+					/>
 					<StageToolbar
 						onFit={() => fitCanvas()}
 						snapshot={snapshot}
@@ -664,6 +672,7 @@ const App = (): JSX.Element => {
 							routeDestinationId={selectedRouteDestinationId}
 							routeOriginId={() => preview.state().originId}
 							routeProfile={() => preview.state().profile}
+							routeWorkspaceView={routeWorkspaceView}
 							snapshot={snapshot}
 							store={store}
 							visitorDestinations={visibleDestinations}
