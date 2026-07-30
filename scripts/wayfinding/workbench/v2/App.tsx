@@ -468,7 +468,7 @@ const App = (): JSX.Element => {
 						value: `${diff.manualNodesPreserved} points · ${diff.manualEdgesPreserved} segments`
 					},
 					{
-						label: 'Destination anchors connected',
+						label: 'Route anchors connected',
 						value: `${result.connectedSemanticNodes}/${result.totalSemanticNodes}`
 					}
 				],
@@ -486,8 +486,8 @@ const App = (): JSX.Element => {
 			const blocked = result.totalSemanticNodes - result.connectedSemanticNodes;
 			notify(
 				blocked > 0
-					? `Built ${result.edges} segments, but ${blocked} destination anchor${blocked === 1 ? '' : 's'} still need attention.`
-					: `Built ${result.edges} route segments and connected all ${result.connectedSemanticNodes} destination anchors.`,
+					? `Built ${result.edges} segments, but ${blocked} route anchor${blocked === 1 ? '' : 's'} still need attention.`
+					: `Built ${result.edges} route segments and connected all ${result.connectedSemanticNodes} route anchors.`,
 				blocked > 0 ? 'warning' : 'success'
 			);
 		} catch (error) {

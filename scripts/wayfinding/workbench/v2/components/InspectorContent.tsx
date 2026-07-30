@@ -24,7 +24,9 @@ import type {
 	WayfindingStudioFloor,
 	WayfindingStudioLanguage,
 	WayfindingStudioAsset,
-	WayfindingStudioIssue
+	WayfindingStudioIssue,
+	WayfindingStudioPolygonElement,
+	WayfindingStudioProject
 } from '../../../studio-project.mts';
 import type {
 	WayfindingEdge,
@@ -123,6 +125,7 @@ const elementIcon = (element: WayfindingStudioElement): typeof Shapes => {
 
 export const ElementInspector = (props: {
 	element: WayfindingStudioElement;
+	project: WayfindingStudioProject;
 	projectAssets?: WayfindingStudioAsset[];
 	store: EditorStore;
 }): JSX.Element => {
@@ -136,6 +139,29 @@ export const ElementInspector = (props: {
 		(candidate) => (props.element.type === 'icon' || props.element.type === 'logo')
 			&& candidate.id === props.element.assetId
 	));
+	const doorLocations = createMemo(() => props.project.floors
+		.find((floor) => floor.id === props.element.floorId)
+		?.elements
+		.filter((element): element is WayfindingStudioPolygonElement =>
+			element.type === 'location'
+			&& Boolean(element.destinationId)
+		) ?? []);
+	const doorLocationLabel = (location: WayfindingStudioPolygonElement): string => {
+		const destination = location.destinationId
+			? props.project.destinations.find((candidate) => candidate.id === location.destinationId)
+			: undefined;
+
+		return destination?.name ?? location.label ?? location.id;
+	};
+	const inspectorBadge = (): string | undefined => {
+		if (props.element.status !== 'confirmed') return 'Needs review';
+
+		if (props.element.type === 'door') {
+			return props.element.locationId ? 'Linked entrance' : 'Needs room';
+		}
+
+		return undefined;
+	};
 	const mediaRatio = (): number => {
 		if (props.element.type !== 'icon' && props.element.type !== 'logo') return 1;
 
@@ -163,7 +189,7 @@ export const ElementInspector = (props: {
 	return (
 		<PanelSection title="Map object" eyebrow="Selection" defaultOpen>
 			<InspectorHero
-				badge={props.element.status === 'confirmed' ? 'Ready' : 'Draft'}
+				badge={inspectorBadge()}
 				body={elementDescription(props.element)}
 				eyebrow={props.element.type}
 				icon={elementIcon(props.element)}
@@ -178,14 +204,51 @@ export const ElementInspector = (props: {
 				</Field>
 			</Show>
 			<Show when={props.element.type === 'door'}>
+				<InspectorGroup
+					title="Route entrance"
+					body="Connect this doorway to the room it serves. Route generation will approach from the corridor side of the door."
+				>
+					<Field label="Connected room">
+						<select
+							value={props.element.type === 'door' ? props.element.locationId ?? '' : ''}
+							onChange={(event) => patch({
+								locationId: event.currentTarget.value || undefined
+							})}
+						>
+							<option value="">Not connected</option>
+							<For each={doorLocations()}>
+								{(location) => (
+									<option value={location.id}>{doorLocationLabel(location)}</option>
+								)}
+							</For>
+						</select>
+					</Field>
+					<div
+						class="property-note"
+						classList={{ warning: props.element.type === 'door' && !props.element.locationId }}
+					>
+						<Show
+							when={props.element.type === 'door' && props.element.locationId}
+							fallback={(
+								<>
+									<AlertTriangle size={15} />
+									<span>This door will not be used for directions until a room is connected.</span>
+								</>
+							)}
+						>
+							<Check size={15} />
+							<span>Ready to terminate routes at this public entrance.</span>
+						</Show>
+					</div>
+				</InspectorGroup>
 				<div class="field-grid">
-					<Field label="Angle">
+					<Field label="Door angle" hint="Rotate the door line to match the wall.">
 						<DraftInput
 							value={props.element.type === 'door' ? String(props.element.angle) : '0'}
 							onCommit={(value) => commitNumber('angle', value)}
 						/>
 					</Field>
-					<Field label="Length">
+					<Field label="Opening width">
 						<DraftInput
 							value={props.element.type === 'door' ? String(props.element.length) : '42'}
 							onCommit={(value) => commitNumber('length', value)}
@@ -394,10 +457,12 @@ export const ElementInspector = (props: {
 					</div>
 				</Show>
 			</PanelSection>
-			<div class="property-note">
-				<Check size={15} />
-				<span>{props.element.status === 'confirmed' ? 'Ready for the visitor map' : 'Draft map object'}</span>
-			</div>
+			<Show when={props.element.type !== 'door'}>
+				<div class="property-note">
+					<Check size={15} />
+					<span>{props.element.status === 'confirmed' ? 'Ready for the visitor map' : 'Draft map object'}</span>
+				</div>
+			</Show>
 		</PanelSection>
 	);
 };

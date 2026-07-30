@@ -24,7 +24,7 @@ export interface RouteBuildOptions {
 }
 
 export interface RouteBuildDiagnostic {
-	code: 'connector-fallback' | 'connector-missing' | 'network-disconnected';
+	code: 'connector-missing' | 'network-disconnected';
 	elementId?: string;
 	message: string;
 	nodeId: string;
@@ -94,97 +94,176 @@ const pointInPolygon = (point: WayfindingPoint, polygon: readonly WayfindingPoin
 const activeAt = (mask: Uint8Array, columns: number, rows: number, column: number, row: number): boolean =>
 	column >= 0 && row >= 0 && column < columns && row < rows && mask[row * columns + column] === 1;
 
-const maskNeighbors = (
-	index: number,
-	mask: Uint8Array,
-	columns: number,
-	rows: number
-): number[] => {
-	const column = index % columns;
-	const row = Math.floor(index / columns);
-	const neighbors: number[] = [];
-
-	for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
-		for (let columnOffset = -1; columnOffset <= 1; columnOffset += 1) {
-			if (columnOffset === 0 && rowOffset === 0) continue;
-			const nextColumn = column + columnOffset;
-			const nextRow = row + rowOffset;
-
-			if (!activeAt(mask, columns, rows, nextColumn, nextRow)) continue;
-
-			if (columnOffset !== 0 && rowOffset !== 0) {
-				const horizontal = activeAt(mask, columns, rows, column + columnOffset, row);
-				const vertical = activeAt(mask, columns, rows, column, row + rowOffset);
-
-				// Never cut diagonally across a blocked corner.
-				if (!horizontal || !vertical) continue;
-			}
-
-			neighbors.push(nextRow * columns + nextColumn);
-		}
-	}
-
-	return neighbors;
-};
-
 const nearestActiveIndex = (
 	mask: Uint8Array,
 	columns: number,
-	point: { column: number; row: number }
+	rows: number,
+	point: { column: number; row: number },
+	maximumRadius = 3
 ): number | undefined => {
 	let nearestIndex: number | undefined;
 	let nearestDistance = Number.POSITIVE_INFINITY;
+	const minimumColumn = Math.max(0, point.column - maximumRadius);
+	const maximumColumn = Math.min(columns - 1, point.column + maximumRadius);
+	const minimumRow = Math.max(0, point.row - maximumRadius);
+	const maximumRow = Math.min(rows - 1, point.row + maximumRadius);
 
-	for (let index = 0; index < mask.length; index += 1) {
-		if (mask[index] !== 1) continue;
-		const column = index % columns;
-		const row = Math.floor(index / columns);
-		const distance = (column - point.column) ** 2 + (row - point.row) ** 2;
+	for (let row = minimumRow; row <= maximumRow; row += 1) {
+		for (let column = minimumColumn; column <= maximumColumn; column += 1) {
+			const index = row * columns + column;
 
-		if (distance >= nearestDistance) continue;
-		nearestDistance = distance;
-		nearestIndex = index;
+			if (mask[index] !== 1) continue;
+			const distance = (column - point.column) ** 2 + (row - point.row) ** 2;
+
+			if (distance >= nearestDistance) continue;
+			nearestDistance = distance;
+			nearestIndex = index;
+		}
 	}
 
 	return nearestIndex;
 };
 
-const pathToSkeleton = (
+interface MaskPathQueueItem {
+	cost: number;
+	direction: number;
+	index: number;
+}
+
+const pushMaskPathQueue = (
+	queue: MaskPathQueueItem[],
+	item: MaskPathQueueItem
+): void => {
+	let index = queue.length;
+	queue.push(item);
+
+	while (index > 0) {
+		const parent = Math.floor((index - 1) / 2);
+
+		if (queue[parent].cost <= item.cost) break;
+		queue[index] = queue[parent];
+		index = parent;
+	}
+
+	queue[index] = item;
+};
+
+const popMaskPathQueue = (queue: MaskPathQueueItem[]): MaskPathQueueItem | undefined => {
+	if (queue.length === 0) return undefined;
+	const first = queue[0];
+	const last = queue.pop()!;
+
+	if (queue.length === 0) return first;
+	let index = 0;
+
+	while (true) {
+		const left = index * 2 + 1;
+		const right = left + 1;
+
+		if (left >= queue.length) break;
+		const child = right < queue.length && queue[right].cost < queue[left].cost ? right : left;
+
+		if (queue[child].cost >= last.cost) break;
+		queue[index] = queue[child];
+		index = child;
+	}
+
+	queue[index] = last;
+
+	return first;
+};
+
+const cardinalMaskNeighbors = (
+	index: number,
+	mask: Uint8Array,
+	columns: number,
+	rows: number
+): Array<{ direction: number; index: number }> => {
+	const column = index % columns;
+	const row = Math.floor(index / columns);
+	const candidates = [
+		{ column, direction: 0, row: row - 1 },
+		{ column: column + 1, direction: 1, row },
+		{ column, direction: 2, row: row + 1 },
+		{ column: column - 1, direction: 3, row }
+	];
+
+	return candidates
+		.filter((candidate) => activeAt(mask, columns, rows, candidate.column, candidate.row))
+		.map((candidate) => ({
+			direction: candidate.direction,
+			index: candidate.row * columns + candidate.column
+		}));
+};
+
+const directionForVector = (vector: WayfindingPoint): number =>
+	Math.abs(vector.x) >= Math.abs(vector.y)
+		? (vector.x >= 0 ? 1 : 3)
+		: (vector.y >= 0 ? 2 : 0);
+
+const turnAwarePathToSkeleton = (
 	mask: Uint8Array,
 	skeleton: Uint8Array,
 	columns: number,
 	rows: number,
-	startIndex: number
+	startIndex: number,
+	initialDirection = -1
 ): number[] => {
-	const queue: number[] = [startIndex];
-	const previous = new Int32Array(mask.length);
-	previous.fill(-2);
-	previous[startIndex] = -1;
-	let targetIndex: number | undefined;
+	if (mask[startIndex] !== 1) return [];
+	const queue: MaskPathQueueItem[] = [];
+	const startKey = startIndex * 5 + initialDirection + 1;
+	const costs = new Map<number, number>([[startKey, 0]]);
+	const previous = new Map<number, number>();
+	pushMaskPathQueue(queue, { cost: 0, direction: initialDirection, index: startIndex });
+	let targetKey: number | undefined;
 
-	for (let cursor = 0; cursor < queue.length; cursor += 1) {
-		const currentIndex = queue[cursor];
+	while (queue.length > 0) {
+		const current = popMaskPathQueue(queue)!;
+		const currentKey = current.index * 5 + current.direction + 1;
 
-		if (skeleton[currentIndex] === 1) {
-			targetIndex = currentIndex;
+		if (current.cost !== costs.get(currentKey)) continue;
+
+		if (skeleton[current.index] === 1) {
+			targetKey = currentKey;
 			break;
 		}
 
-		for (const neighborIndex of maskNeighbors(currentIndex, mask, columns, rows)) {
-			if (previous[neighborIndex] !== -2) continue;
-			previous[neighborIndex] = currentIndex;
-			queue.push(neighborIndex);
+		for (const neighbor of cardinalMaskNeighbors(current.index, mask, columns, rows)) {
+			const directionDifference = current.direction < 0
+				? 0
+				: Math.abs(current.direction - neighbor.direction);
+			const turnCost = current.direction < 0 || directionDifference === 0
+				? 0
+				: directionDifference === 2
+					? 10
+					: 2.75;
+			const boundaryPenalty = (
+				4 - cardinalMaskNeighbors(neighbor.index, mask, columns, rows).length
+			) * 0.3;
+			const cost = current.cost + 1 + turnCost + boundaryPenalty;
+			const key = neighbor.index * 5 + neighbor.direction + 1;
+
+			if (cost >= (costs.get(key) ?? Number.POSITIVE_INFINITY)) continue;
+			costs.set(key, cost);
+			previous.set(key, currentKey);
+			pushMaskPathQueue(queue, {
+				cost,
+				direction: neighbor.direction,
+				index: neighbor.index
+			});
 		}
 	}
 
-	if (targetIndex === undefined) return [];
+	if (targetKey === undefined) return [];
+	const path = [Math.floor(targetKey / 5)];
+	let currentKey = targetKey;
 
-	const path = [targetIndex];
-	let currentIndex = targetIndex;
+	while (currentKey !== startKey) {
+		const previousKey = previous.get(currentKey);
 
-	while (previous[currentIndex] >= 0) {
-		currentIndex = previous[currentIndex];
-		path.push(currentIndex);
+		if (previousKey === undefined) return [];
+		currentKey = previousKey;
+		path.push(Math.floor(currentKey / 5));
 	}
 
 	return path.reverse();
@@ -283,51 +362,10 @@ const simplifyContained = (
 	return result;
 };
 
-const straightPathToSkeleton = (
-	mask: Uint8Array,
-	skeleton: Uint8Array,
-	columns: number,
-	rows: number,
-	startIndex: number,
-	cellSize: number,
-	direction?: WayfindingPoint
-): number[] => {
-	const start = pointForIndex(startIndex, columns, cellSize);
-	let bestIndex: number | undefined;
-	let bestScore = Number.POSITIVE_INFINITY;
-
-	for (let index = 0; index < skeleton.length; index += 1) {
-		if (skeleton[index] !== 1) continue;
-		const target = pointForIndex(index, columns, cellSize);
-		const dx = target.x - start.x;
-		const dy = target.y - start.y;
-		const distance = Math.hypot(dx, dy);
-
-		if (distance <= cellSize * 0.25) return [startIndex];
-
-		if (!segmentContained(start, target, mask, columns, rows, cellSize)) continue;
-		const forward = direction
-			? (dx * direction.x + dy * direction.y) / distance
-			: 1;
-
-		// A doorway must enter the corridor before it can turn along it.
-		if (direction && forward < -0.05) continue;
-		const lateralPenalty = direction ? Math.max(0, 1 - forward) * cellSize * 2 : 0;
-		const score = distance + lateralPenalty;
-
-		if (score >= bestScore) continue;
-		bestIndex = index;
-		bestScore = score;
-	}
-
-	return bestIndex === undefined ? [] : [startIndex, bestIndex];
-};
-
 interface SemanticConnector {
 	anchorIndex?: number;
 	approachDirection?: WayfindingPoint;
-	path: number[];
-	strategy: 'door-normal' | 'point-fallback';
+	geometry: WayfindingPoint[];
 }
 
 const connectorForPoint = (
@@ -338,101 +376,226 @@ const connectorForPoint = (
 	rows: number,
 	cellSize: number
 ): SemanticConnector => {
-	const startIndex = nearestActiveIndex(mask, columns, {
+	const startIndex = nearestActiveIndex(mask, columns, rows, {
 		column: Math.max(0, Math.min(columns - 1, Math.floor(point.x / cellSize))),
 		row: Math.max(0, Math.min(rows - 1, Math.floor(point.y / cellSize)))
 	});
-	const straightPath = startIndex === undefined
+	const path = startIndex === undefined
 		? []
-		: straightPathToSkeleton(mask, skeleton, columns, rows, startIndex, cellSize);
-	const path = startIndex === undefined || straightPath.length > 0
-		? straightPath
-		: pathToSkeleton(mask, skeleton, columns, rows, startIndex);
+		: turnAwarePathToSkeleton(mask, skeleton, columns, rows, startIndex);
+	const pathPoints = path.map((index) => pointForIndex(index, columns, cellSize));
+	const geometry = pathPoints.length === 0
+		? []
+		: [
+			point,
+			...pathPoints.filter((candidate, index) =>
+				index > 0
+				|| Math.hypot(candidate.x - point.x, candidate.y - point.y) > cellSize * 0.2
+			)
+		];
 
 	return {
 		anchorIndex: path[path.length - 1],
-		path,
-		strategy: 'point-fallback'
+		geometry
 	};
+};
+
+const rayPolygonBoundaryDistance = (
+	start: WayfindingPoint,
+	direction: WayfindingPoint,
+	polygon: readonly WayfindingPoint[]
+): number | undefined => {
+	let nearest: number | undefined;
+
+	for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+		const left = polygon[previous];
+		const right = polygon[index];
+		const segment = { x: right.x - left.x, y: right.y - left.y };
+		const denominator = direction.x * segment.y - direction.y * segment.x;
+
+		if (Math.abs(denominator) < 0.000001) continue;
+		const offset = { x: left.x - start.x, y: left.y - start.y };
+		const distance = (offset.x * segment.y - offset.y * segment.x) / denominator;
+		const segmentRatio = (offset.x * direction.y - offset.y * direction.x) / denominator;
+
+		if (distance < 0 || segmentRatio < 0 || segmentRatio > 1) continue;
+
+		if (nearest === undefined || distance < nearest) nearest = distance;
+	}
+
+	return nearest;
+};
+
+const pointMaskIndex = (
+	point: WayfindingPoint,
+	mask: Uint8Array,
+	columns: number,
+	rows: number,
+	cellSize: number
+): number | undefined => {
+	const column = Math.floor(point.x / cellSize);
+	const row = Math.floor(point.y / cellSize);
+
+	return activeAt(mask, columns, rows, column, row)
+		? row * columns + column
+		: undefined;
+};
+
+const doorCorridorDirection = (
+	door: WayfindingStudioDoorElement,
+	location: WayfindingStudioPolygonElement,
+	mask: Uint8Array,
+	columns: number,
+	rows: number,
+	cellSize: number
+): WayfindingPoint => {
+	const radians = door.angle * Math.PI / 180;
+	const normals: [WayfindingPoint, WayfindingPoint] = [
+		{ x: -Math.sin(radians), y: Math.cos(radians) },
+		{ x: Math.sin(radians), y: -Math.cos(radians) }
+	];
+	const probeDistance = Math.max(cellSize * 1.5, door.length * 0.75);
+	const insideLocation = normals.map((normal) => pointInPolygon({
+		x: door.point.x + normal.x * probeDistance,
+		y: door.point.y + normal.y * probeDistance
+	}, location.geometry));
+
+	if (insideLocation[0] !== insideLocation[1]) {
+		return insideLocation[0] ? normals[1] : normals[0];
+	}
+	const score = (normal: WayfindingPoint): number => {
+		let result = 0;
+
+		for (let step = 1; step <= 8; step += 1) {
+			const point = {
+				x: door.point.x + normal.x * cellSize * step / 2,
+				y: door.point.y + normal.y * cellSize * step / 2
+			};
+
+			if (pointMaskIndex(point, mask, columns, rows, cellSize) !== undefined) result += 2;
+
+			if (pointInPolygon(point, location.geometry)) result -= 3;
+		}
+
+		return result;
+	};
+
+	return score(normals[0]) >= score(normals[1]) ? normals[0] : normals[1];
+};
+
+const removeCollinearPoints = (points: WayfindingPoint[]): WayfindingPoint[] => {
+	if (points.length <= 2) return points;
+	const result: WayfindingPoint[] = [points[0]];
+
+	for (let index = 1; index < points.length - 1; index += 1) {
+		const previous = result[result.length - 1];
+		const current = points[index];
+		const next = points[index + 1];
+		const left = { x: current.x - previous.x, y: current.y - previous.y };
+		const right = { x: next.x - current.x, y: next.y - current.y };
+		const cross = left.x * right.y - left.y * right.x;
+		const dot = left.x * right.x + left.y * right.y;
+
+		if (Math.abs(cross) <= 0.001 && dot >= 0) continue;
+		result.push(current);
+	}
+
+	result.push(points[points.length - 1]);
+
+	return result.filter((candidate, index) =>
+		index === 0
+			|| Math.hypot(
+				candidate.x - result[index - 1].x,
+				candidate.y - result[index - 1].y
+			) > 0.01
+	);
 };
 
 const connectorForDoor = (
 	door: WayfindingStudioDoorElement,
+	location: WayfindingStudioPolygonElement,
 	mask: Uint8Array,
 	skeleton: Uint8Array,
 	columns: number,
 	rows: number,
 	cellSize: number
 ): SemanticConnector => {
-	const radians = door.angle * Math.PI / 180;
-	const normals = [
-		{ x: -Math.sin(radians), y: Math.cos(radians) },
-		{ x: Math.sin(radians), y: -Math.cos(radians) }
-	];
-	const candidates: Array<SemanticConnector & { direction: WayfindingPoint; startIndex: number }> = [];
-	const seen = new Set<number>();
+	const direction = doorCorridorDirection(
+		door,
+		location,
+		mask,
+		columns,
+		rows,
+		cellSize
+	);
+	const boundaryDistance = pointInPolygon(door.point, location.geometry)
+		? rayPolygonBoundaryDistance(door.point, direction, location.geometry) ?? 0
+		: 0;
+	const approachStart = {
+		x: door.point.x + direction.x * boundaryDistance,
+		y: door.point.y + direction.y * boundaryDistance
+	};
+	const approachIndices: number[] = [];
+	const approachPoints: WayfindingPoint[] = [];
+	const maximumSteps = Math.max(
+		12,
+		Math.ceil((door.length + boundaryDistance) * 2 / cellSize)
+	);
+	let enteredWalkable = false;
 
-	for (const direction of normals) {
-		for (let step = 0.6; step <= 5; step += 0.5) {
-			const point = {
-				x: door.point.x + direction.x * cellSize * step,
-				y: door.point.y + direction.y * cellSize * step
-			};
-			const column = Math.floor(point.x / cellSize);
-			const row = Math.floor(point.y / cellSize);
+	for (let step = 1; step <= maximumSteps; step += 1) {
+		const point = {
+			x: approachStart.x + direction.x * cellSize * step / 2,
+			y: approachStart.y + direction.y * cellSize * step / 2
+		};
+		const index = pointMaskIndex(point, mask, columns, rows, cellSize);
 
-			if (!activeAt(mask, columns, rows, column, row)) continue;
-			const startIndex = row * columns + column;
+		if (index === undefined) {
+			if (enteredWalkable) break;
 
-			if (seen.has(startIndex)) continue;
-			seen.add(startIndex);
-			const straightPath = straightPathToSkeleton(
-				mask,
-				skeleton,
-				columns,
-				rows,
-				startIndex,
-				cellSize,
-				direction
-			);
-			const path = straightPath.length > 0
-				? straightPath
-				: pathToSkeleton(mask, skeleton, columns, rows, startIndex);
-
-			if (path.length === 0) continue;
-			candidates.push({
-				anchorIndex: path[path.length - 1],
-				direction,
-				path,
-				startIndex,
-				strategy: 'door-normal'
-			});
-			break;
+			continue;
 		}
+		enteredWalkable = true;
+		approachPoints.push(point);
+
+		if (approachIndices[approachIndices.length - 1] !== index) {
+			approachIndices.push(index);
+		}
+
+		if (approachIndices.length >= 2 && skeleton[index] === 1) break;
 	}
 
-	if (candidates.length === 0) {
-		return connectorForPoint(door.point, mask, skeleton, columns, rows, cellSize);
+	if (approachIndices.length === 0) {
+		return {
+			approachDirection: direction,
+			geometry: []
+		};
 	}
-
-	candidates.sort((left, right) => {
-		const pathDifference = left.path.length - right.path.length;
-
-		if (pathDifference !== 0) return pathDifference;
-		const leftPoint = pointForIndex(left.startIndex, columns, cellSize);
-		const rightPoint = pointForIndex(right.startIndex, columns, cellSize);
-		const leftAlignment = (leftPoint.x - door.point.x) * left.direction.x
-			+ (leftPoint.y - door.point.y) * left.direction.y;
-		const rightAlignment = (rightPoint.x - door.point.x) * right.direction.x
-			+ (rightPoint.y - door.point.y) * right.direction.y;
-
-		return rightAlignment - leftAlignment;
-	});
+	const startIndex = approachIndices[approachIndices.length - 1];
+	const suffix = turnAwarePathToSkeleton(
+		mask,
+		skeleton,
+		columns,
+		rows,
+		startIndex,
+		directionForVector(direction)
+	);
+	const path = [
+		...approachIndices,
+		...suffix.slice(1)
+	];
+	const suffixPoints = suffix.slice(1)
+		.map((index) => pointForIndex(index, columns, cellSize));
+	const geometry = removeCollinearPoints([
+		door.point,
+		...approachPoints,
+		...suffixPoints
+	]);
 
 	return {
-		...candidates[0],
-		approachDirection: candidates[0].direction,
-		strategy: 'door-normal'
+		anchorIndex: path[path.length - 1],
+		approachDirection: direction,
+		geometry
 	};
 };
 
@@ -446,6 +609,7 @@ const polygonMask = (floor: WayfindingStudioFloor, cellSize: number): {
 	const mask = new Uint8Array(columns * rows);
 	const walkable = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'walkable');
 	const obstacles = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
+	const locations = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'location');
 
 	for (let row = 0; row < rows; row += 1) {
 		for (let column = 0; column < columns; column += 1) {
@@ -454,7 +618,8 @@ const polygonMask = (floor: WayfindingStudioFloor, cellSize: number): {
 				y: Math.min(floor.height, (row + 0.5) * cellSize)
 			};
 			const allowed = walkable.some((area) => pointInPolygon(point, area.geometry))
-				&& !obstacles.some((area) => pointInPolygon(point, area.geometry));
+				&& !obstacles.some((area) => pointInPolygon(point, area.geometry))
+				&& !locations.some((area) => pointInPolygon(point, area.geometry));
 
 			mask[row * columns + column] = allowed ? 1 : 0;
 		}
@@ -492,6 +657,9 @@ const documentMask = (floor: WayfindingStudioFloor, cellSize: number): {
 	const obstacles = floor.elements.filter(
 		(element): element is WayfindingStudioPolygonElement => element.type === 'obstacle'
 	);
+	const locations = floor.elements.filter(
+		(element): element is WayfindingStudioPolygonElement => element.type === 'location'
+	);
 
 	for (let row = 0; row < rows; row += 1) {
 		for (let column = 0; column < columns; column += 1) {
@@ -506,7 +674,8 @@ const documentMask = (floor: WayfindingStudioFloor, cellSize: number): {
 				&& sourceColumn < document.columns
 				&& sourceRow < document.rows
 				&& source[sourceRow * document.columns + sourceColumn] === 1
-				&& !obstacles.some((area) => pointInPolygon(point, area.geometry));
+				&& !obstacles.some((area) => pointInPolygon(point, area.geometry))
+				&& !locations.some((area) => pointInPolygon(point, area.geometry));
 
 			mask[row * columns + column] = allowed ? 1 : 0;
 		}
@@ -561,28 +730,67 @@ export const buildFloorRouteNetwork = (
 	const networkMask = clearanceCount > 0 ? clearanceMask : mask;
 	const rawSkeleton = skeletonizeWalkableMask(networkMask, columns, rows);
 	const centerlineCells = rawSkeleton.reduce((total, value) => total + value, 0);
-	const semanticNodes = project.graph.nodes.filter((node) => node.levelId === floorId && Boolean(node.semanticElementId));
 	const semanticElements = new Map<string, WayfindingStudioElement>(
 		floor.elements.map((element) => [element.id, element])
 	);
+	const routeableDestinationIds = new Set(project.destinations
+		.filter((destination) => destination.routeable !== false)
+		.map((destination) => destination.id));
+	const linkedDoorByLocationId = new Map<string, WayfindingStudioDoorElement>();
+
+	for (const door of floor.elements.filter(
+		(element): element is WayfindingStudioDoorElement => element.type === 'door'
+	)) {
+		if (!door.locationId || linkedDoorByLocationId.has(door.locationId)) continue;
+		linkedDoorByLocationId.set(door.locationId, door);
+	}
+	const semanticNodes = project.graph.nodes.filter((node) => {
+		if (node.levelId !== floorId || !node.semanticElementId) return false;
+		const element = semanticElements.get(node.semanticElementId);
+
+		if (!element) return false;
+
+		if (element.type === 'origin' || element.type === 'transition') return true;
+
+		if (element.type === 'poi') {
+			return Boolean(
+				element.destinationId
+				&& routeableDestinationIds.has(element.destinationId)
+			);
+		}
+
+		return element.type === 'location'
+			&& Boolean(
+				element.destinationId
+				&& routeableDestinationIds.has(element.destinationId)
+				&& linkedDoorByLocationId.has(element.id)
+			);
+	});
 	const anchorIndexByNodeId = new Map<string, number>();
 	const approachDirectionByNodeId = new Map<string, WayfindingPoint>();
-	const connectorPathByNodeId = new Map<string, number[]>();
+	const connectorGeometryByNodeId = new Map<string, WayfindingPoint[]>();
 	const diagnostics: RouteBuildDiagnostic[] = [];
 
 	for (const node of semanticNodes) {
 		const semanticElement = node.semanticElementId
 			? semanticElements.get(node.semanticElementId)
 			: undefined;
-		const associatedDoor = semanticElement?.type === 'door'
+		const associatedLocation = semanticElement?.type === 'location'
 			? semanticElement
-			: semanticElement?.type === 'location'
-				? floor.elements.find((element): element is WayfindingStudioDoorElement =>
-					element.type === 'door' && element.locationId === semanticElement.id
-				)
-				: undefined;
-		const connector = associatedDoor
-			? connectorForDoor(associatedDoor, mask, rawSkeleton, columns, rows, cellSize)
+			: undefined;
+		const associatedDoor = associatedLocation
+			? linkedDoorByLocationId.get(associatedLocation.id)
+			: undefined;
+		const connector = associatedDoor && associatedLocation
+			? connectorForDoor(
+				associatedDoor,
+				associatedLocation,
+				mask,
+				rawSkeleton,
+				columns,
+				rows,
+				cellSize
+			)
 			: connectorForPoint(node, mask, rawSkeleton, columns, rows, cellSize);
 		const anchorIndex = connector.anchorIndex;
 
@@ -597,22 +805,12 @@ export const buildFloorRouteNetwork = (
 
 			continue;
 		}
-
-		if (associatedDoor && connector.strategy === 'point-fallback') {
-			diagnostics.push({
-				code: 'connector-fallback',
-				elementId: associatedDoor.id,
-				message: `${associatedDoor.id} was connected without using its doorway direction. Review this entrance.`,
-				nodeId: node.id,
-				severity: 'warning'
-			});
-		}
 		anchorIndexByNodeId.set(node.id, anchorIndex);
+		connectorGeometryByNodeId.set(node.id, connector.geometry);
 
 		if (connector.approachDirection) {
 			approachDirectionByNodeId.set(node.id, connector.approachDirection);
 		}
-		connectorPathByNodeId.set(node.id, connector.path);
 	}
 
 	const network = extractSkeletonNetwork(networkMask, columns, rows, new Set(anchorIndexByNodeId.values()));
@@ -672,57 +870,53 @@ export const buildFloorRouteNetwork = (
 
 		if (!generatedNodeId || !generatedNode || generatedNodeId === node.id) continue;
 
-		const maskPath = (connectorPathByNodeId.get(node.id) ?? [])
-			.map((index) => pointForIndex(index, columns, cellSize));
-		const containedPath = simplifyContained(maskPath, mask, columns, rows, cellSize);
 		const nodePoint = { x: node.x, y: node.y };
 		const generatedPoint = { x: generatedNode.x, y: generatedNode.y };
+		const connectorGeometry = connectorGeometryByNodeId.get(node.id) ?? [];
+		const semanticElement = node.semanticElementId
+			? semanticElements.get(node.semanticElementId)
+			: undefined;
 		const approachDirection = approachDirectionByNodeId.get(node.id);
-		let geometry: WayfindingPoint[];
-
-		if (
-			!approachDirection
-			&& segmentContained(nodePoint, generatedPoint, mask, columns, rows, cellSize)
-		) {
-			geometry = [nodePoint, generatedPoint];
-		} else if (approachDirection) {
-			const firstWalkablePoint = containedPath[0] ?? generatedPoint;
-			const projectedDistance = (
-				(firstWalkablePoint.x - node.x) * approachDirection.x
-				+ (firstWalkablePoint.y - node.y) * approachDirection.y
-			);
-			const entryDistance = Math.max(
-				cellSize * 0.75,
-				Math.min(cellSize * 2, projectedDistance)
-			);
-			const alignedEntry = {
-				x: node.x + approachDirection.x * entryDistance,
-				y: node.y + approachDirection.y * entryDistance
-			};
-
-			if (
-				segmentContained(nodePoint, alignedEntry, mask, columns, rows, cellSize)
-				&& segmentContained(alignedEntry, generatedPoint, mask, columns, rows, cellSize)
-			) {
-				geometry = [nodePoint, alignedEntry, generatedPoint];
-			} else {
-				geometry = [
-					nodePoint,
-					...containedPath.filter((point, index) =>
-						index > 0
-							|| Math.hypot(point.x - node.x, point.y - node.y) > cellSize * 0.2
-					)
-				];
-			}
-		} else {
-			geometry = [
-				nodePoint,
-				...containedPath.filter((point, index) =>
-					index > 0
-						|| Math.hypot(point.x - node.x, point.y - node.y) > cellSize * 0.2
+		const directLength = Math.hypot(
+			generatedPoint.x - nodePoint.x,
+			generatedPoint.y - nodePoint.y
+		);
+		const directAlignment = approachDirection && directLength > 0.001
+			? (
+				(generatedPoint.x - nodePoint.x) * approachDirection.x
+				+ (generatedPoint.y - nodePoint.y) * approachDirection.y
+			) / directLength
+			: 0;
+		const firstWalkablePoint = connectorGeometry.find((point) =>
+			Math.hypot(point.x - nodePoint.x, point.y - nodePoint.y) > cellSize * 0.2
+		);
+		const doorCanConnectDirectly = semanticElement?.type === 'location'
+			&& Boolean(
+				approachDirection
+				&& firstWalkablePoint
+				&& directAlignment >= 0.94
+				&& segmentContained(
+					firstWalkablePoint,
+					generatedPoint,
+					mask,
+					columns,
+					rows,
+					cellSize
 				)
-			];
-		}
+			);
+		const geometry = (
+			semanticElement?.type !== 'location'
+				&& segmentContained(nodePoint, generatedPoint, mask, columns, rows, cellSize)
+		) || doorCanConnectDirectly
+			? [nodePoint, generatedPoint]
+			: removeCollinearPoints([
+				nodePoint,
+				...connectorGeometry.filter((point, index) =>
+					index > 0
+						|| Math.hypot(point.x - nodePoint.x, point.y - nodePoint.y) > 0.01
+				),
+				generatedPoint
+			]);
 
 		if (geometry.length === 1) geometry.push({ x: generatedNode.x, y: generatedNode.y });
 		generatedEdges.push({

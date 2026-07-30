@@ -444,6 +444,11 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 										selected: selected()
 									}}
 									data-visitor-destination-id={item.destinationId}
+									onClick={(event) => {
+										event.preventDefault();
+										event.stopPropagation();
+										props.activateVisitorDestination(item.destinationId);
+									}}
 									onPointerDown={(event) => {
 										event.preventDefault();
 										event.stopPropagation();

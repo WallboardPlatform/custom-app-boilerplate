@@ -36,7 +36,7 @@ void test('route projects explain every missing prerequisite', () => {
 	assert.equal(readiness.destinationAnchors, 0);
 });
 
-void test('mapped destinations enable generation before graph anchors exist', () => {
+void test('mapped rooms require a linked public entrance before generation', () => {
 	const project = createWayfindingStudioProject('Pre-generation map');
 	const floor = project.floors[0];
 	project.delivery.guidance.targetMode = 'route';
@@ -87,9 +87,12 @@ void test('mapped destinations enable generation before graph anchors exist', ()
 
 	const readiness = getRouteReadiness(project, floor.id);
 
-	assert.deepEqual(readiness.buildBlockers, []);
+	assert.equal(readiness.buildBlockers.length, 1);
+	assert.equal(readiness.buildBlockers[0].action, 'add-entrances');
 	assert.equal(readiness.destinationAnchors, 1);
 	assert.equal(readiness.mappedDestinationsOnFloor, 1);
+	assert.equal(readiness.routeReadyDestinationsOnFloor, 0);
+	assert.equal(readiness.unlinkedDestinationsOnFloor, 1);
 	assert.equal(readiness.unpositionedDestinations, 1);
 	assert.equal(readiness.warnings.some((warning) => warning.title === 'Some destinations are directory-only'), true);
 });

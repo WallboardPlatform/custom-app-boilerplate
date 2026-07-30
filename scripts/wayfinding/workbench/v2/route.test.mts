@@ -40,6 +40,21 @@ void test('route cleanup never simplifies across floor transitions', (): void =>
 	]);
 });
 
+void test('route cleanup suppresses a microscopic generated lead-in before a long corridor', (): void => {
+	const cleaned = cleanRoutePath([
+		{ levelId: 'ground', x: 600, y: 380 },
+		{ levelId: 'ground', x: 602.5, y: 377.5 },
+		{ levelId: 'ground', x: 220, y: 377.5 },
+		{ levelId: 'ground', x: 220, y: 330 }
+	]);
+
+	assert.deepEqual(cleaned, [
+		{ levelId: 'ground', x: 600, y: 380 },
+		{ levelId: 'ground', x: 220, y: 377.5 },
+		{ levelId: 'ground', x: 220, y: 330 }
+	]);
+});
+
 void test('route journey preserves ordered floors and explicit transitions', (): void => {
 	const project = createWayfindingStudioProject('journey');
 	const confirmed = { provenance: 'reviewer-authored' as const, status: 'confirmed' as const };

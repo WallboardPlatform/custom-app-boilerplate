@@ -969,6 +969,18 @@ input:disabled {
 	border-radius: 4px;
 }
 
+.property-note.warning {
+	align-items: flex-start;
+	color: #7a4b00;
+	background: #fff7df;
+	border-color: #e4c46e;
+}
+
+.property-note svg {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
 .problem-list {
 	display: grid;
 	gap: 6px;

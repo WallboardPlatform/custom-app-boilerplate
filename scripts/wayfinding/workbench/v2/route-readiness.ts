@@ -30,8 +30,11 @@ export interface RouteReadiness {
 	mode: 'directory' | 'directional' | 'highlight' | 'route';
 	origins: number;
 	routeableDestinations: number;
+	routeReadyDestinationsOnFloor: number;
 	segments: number;
+	skippedDestinationsOnFloor: number;
 	status: 'highlight-ready' | 'needs-work' | 'ready';
+	unlinkedDestinationsOnFloor: number;
 	unpositionedDestinations: number;
 	walkableAreas: number;
 	warnings: RouteReadinessItem[];
@@ -92,6 +95,29 @@ export const getRouteReadiness = (
 
 			return Boolean(destinationId && routeableDestinationIds.has(destinationId));
 		});
+	const linkedRoomDestinationIdsOnFloor = new Set(linkedEntrances
+		.filter((door) => door.floorId === floorId)
+		.map((door) => door.locationId
+			? locationDestinationByElementId.get(door.locationId)
+			: undefined
+		)
+		.filter((destinationId): destinationId is string => Boolean(destinationId)));
+	const routeablePoiDestinationIdsOnFloor = new Set((floor?.elements ?? [])
+		.filter((element): element is WayfindingStudioPointElement =>
+			element.type === 'poi'
+			&& Boolean(element.destinationId)
+		)
+		.map((element) => element.destinationId as string)
+		.filter((destinationId) => routeableDestinationIds.has(destinationId)));
+	const routeReadyDestinationIdsOnFloor = new Set([
+		...linkedRoomDestinationIdsOnFloor,
+		...routeablePoiDestinationIdsOnFloor
+	]);
+	const routeReadyDestinationsOnFloor = routeReadyDestinationIdsOnFloor.size;
+	const unlinkedDestinationsOnFloor = mappedDestinationsOnFloor
+		.filter((destinationId) => !routeReadyDestinationIdsOnFloor.has(destinationId))
+		.length;
+	const skippedDestinationsOnFloor = unlinkedDestinationsOnFloor + unpositionedDestinations;
 	const connectedDestinations = new Set<string>();
 
 	if (origins.length > 0 && project.graph.edges.length > 0) {
@@ -153,12 +179,21 @@ export const getRouteReadiness = (
 			body: 'Click Fix, then draw or detect the area for an existing directory destination on this floor.',
 			title: 'Place a destination on this floor'
 		});
+	} else if (routeReadyDestinationsOnFloor === 0) {
+		buildBlockers.push({
+			action: 'add-entrances',
+			body: 'Place a door on a room boundary and connect it to that destination. Point-of-interest destinations can route directly.',
+			title: 'Connect a public entrance'
+		});
 	}
 
 	if (mode === 'route') {
 		blockers.push(...buildBlockers);
 		const linkedRoomDestinationIds = new Set(linkedEntrances
-			.map((door) => door.locationId ? locationDestinationByElementId.get(door.locationId) : undefined)
+			.map((door) => door.locationId
+				? locationDestinationByElementId.get(door.locationId)
+				: undefined
+			)
 			.filter((destinationId): destinationId is string => Boolean(destinationId)));
 		const roomsWithoutEntrances = [...roomDestinationIds]
 			.filter((destinationId) => !linkedRoomDestinationIds.has(destinationId))
@@ -207,12 +242,15 @@ export const getRouteReadiness = (
 		mode,
 		origins: origins.length,
 		routeableDestinations: routeableDestinations.length,
+		routeReadyDestinationsOnFloor,
 		segments: floorEdges.length,
+		skippedDestinationsOnFloor,
 		status: mode === 'highlight'
 			? 'highlight-ready'
 			: blockers.length > 0 || warnings.length > 0
 				? 'needs-work'
 				: 'ready',
+		unlinkedDestinationsOnFloor,
 		unpositionedDestinations,
 		walkableAreas,
 		warnings

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -7,6 +8,10 @@ import {
 	type WayfindingStudioFloor,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
+import {
+	inspectRouteGeometry,
+	measureRouteNetwork
+} from '../workbench/v2/route-geometry.ts';
 import { buildFloorRouteNetwork } from './route-builder.mts';
 
 const createRebuildFixture = (): {
@@ -44,7 +49,22 @@ const createRebuildFixture = (): {
 			type: 'origin'
 		},
 		{
-			angle: 0,
+			destinationId: 'destination-room-a',
+			floorId: floor.id,
+			geometry: [
+				{ x: 280, y: 60 },
+				{ x: 318, y: 60 },
+				{ x: 318, y: 120 },
+				{ x: 280, y: 120 }
+			],
+			id: 'room-a',
+			label: 'Room A',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			angle: 90,
 			floorId: floor.id,
 			id: 'door-room-a',
 			length: 42,
@@ -55,6 +75,12 @@ const createRebuildFixture = (): {
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-a',
+		name: 'Room A',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	return { floor, project };
@@ -92,7 +118,22 @@ void test('builds a contained route graph and connects semantic anchors', () => 
 			type: 'origin'
 		},
 		{
-			angle: 0,
+			destinationId: 'destination-room-a',
+			floorId: floor.id,
+			geometry: [
+				{ x: 280, y: 60 },
+				{ x: 318, y: 60 },
+				{ x: 318, y: 120 },
+				{ x: 280, y: 120 }
+			],
+			id: 'room-a',
+			label: 'Room A',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			angle: 90,
 			floorId: floor.id,
 			id: 'door-room-a',
 			length: 42,
@@ -103,11 +144,17 @@ void test('builds a contained route graph and connects semantic anchors', () => 
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-a',
+		name: 'Room A',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6 });
 	const originNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'origin-main');
-	const doorNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'door-room-a');
+	const doorNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'room-a');
 
 	assert.ok(result.nodes > 0);
 	assert.ok(result.edges > 0);
@@ -171,7 +218,22 @@ void test('builds routes from an imported painted pedestrian mask', () => {
 			type: 'origin'
 		},
 		{
-			angle: 0,
+			destinationId: 'destination-room-a',
+			floorId: floor.id,
+			geometry: [
+				{ x: 280, y: 60 },
+				{ x: 318, y: 60 },
+				{ x: 318, y: 120 },
+				{ x: 280, y: 120 }
+			],
+			id: 'room-a',
+			label: 'Room A',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			angle: 90,
 			floorId: floor.id,
 			id: 'door-room-a',
 			length: 42,
@@ -182,6 +244,12 @@ void test('builds routes from an imported painted pedestrian mask', () => {
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-a',
+		name: 'Room A',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id);
@@ -192,7 +260,7 @@ void test('builds routes from an imported painted pedestrian mask', () => {
 	assert.deepEqual(result.diagnostics, []);
 });
 
-void test('reports doorway connectors that require a generic point fallback', () => {
+void test('ignores a detached door instead of inventing a route connector', () => {
 	const project = createWayfindingStudioProject('Route diagnostics test');
 	const floor = project.floors[0];
 	floor.width = 320;
@@ -237,16 +305,17 @@ void test('reports doorway connectors that require a generic point fallback', ()
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 5 });
+	const detachedDoorNode = result.project.graph.nodes.find(
+		(node) => node.semanticElementId === 'door-detached'
+	);
 
 	assert.equal(result.connectedSemanticNodes, result.totalSemanticNodes);
-	assert.equal(result.diagnostics.length, 1);
-	assert.deepEqual(result.diagnostics[0], {
-		code: 'connector-fallback',
-		elementId: 'door-detached',
-		message: 'door-detached was connected without using its doorway direction. Review this entrance.',
-		nodeId: result.project.graph.nodes.find((node) => node.semanticElementId === 'door-detached')?.id,
-		severity: 'warning'
-	});
+	assert.equal(result.totalSemanticNodes, 1);
+	assert.deepEqual(result.diagnostics, []);
+	assert.ok(detachedDoorNode);
+	assert.equal(result.project.graph.edges.some(
+		(edge) => edge.from === detachedDoorNode.id || edge.to === detachedDoorNode.id
+	), false);
 });
 
 void test('connects entrances through walkable space instead of cutting across obstacles', () => {
@@ -294,7 +363,22 @@ void test('connects entrances through walkable space instead of cutting across o
 			type: 'origin'
 		},
 		{
-			angle: 0,
+			destinationId: 'destination-room-a',
+			floorId: floor.id,
+			geometry: [
+				{ x: 320, y: 70 },
+				{ x: 358, y: 70 },
+				{ x: 358, y: 150 },
+				{ x: 320, y: 150 }
+			],
+			id: 'room-a',
+			label: 'Room A',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			angle: 90,
 			floorId: floor.id,
 			id: 'door-room-a',
 			length: 42,
@@ -305,6 +389,12 @@ void test('connects entrances through walkable space instead of cutting across o
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-a',
+		name: 'Room A',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 5 });
@@ -366,6 +456,21 @@ void test('projects a door connector through the walkable side of the doorway', 
 			type: 'origin'
 		},
 		{
+			destinationId: 'destination-room-north',
+			floorId: floor.id,
+			geometry: [
+				{ x: 120, y: 0 },
+				{ x: 200, y: 0 },
+				{ x: 200, y: 60 },
+				{ x: 120, y: 60 }
+			],
+			id: 'room-north',
+			label: 'North room',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
 			angle: 0,
 			floorId: floor.id,
 			id: 'door-north',
@@ -377,10 +482,16 @@ void test('projects a door connector through the walkable side of the doorway', 
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-north',
+		name: 'North room',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6, clearanceCells: 1 });
-	const doorNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'door-north');
+	const doorNode = result.project.graph.nodes.find((node) => node.semanticElementId === 'room-north');
 	const connector = result.project.graph.edges.find((edge) =>
 		doorNode && edge.id === `generated:${floor.id}:connector:${doorNode.id}`
 	);
@@ -429,6 +540,21 @@ void test('connects point anchors directly without a cell-center backtracking ki
 			type: 'origin'
 		},
 		{
+			destinationId: 'destination-room-north',
+			floorId: floor.id,
+			geometry: [
+				{ x: 220, y: 0 },
+				{ x: 300, y: 0 },
+				{ x: 300, y: 60 },
+				{ x: 220, y: 60 }
+			],
+			id: 'room-north',
+			label: 'North room',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
 			angle: 0,
 			floorId: floor.id,
 			id: 'door-north',
@@ -440,6 +566,12 @@ void test('connects point anchors directly without a cell-center backtracking ki
 			type: 'door'
 		}
 	);
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room-north',
+		name: 'North room',
+		routeable: true
+	});
 	synchronizeWayfindingStudioGraph(project);
 
 	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6, clearanceCells: 1 });
@@ -785,4 +917,25 @@ void test('rebuilding one floor leaves every other floor route unchanged', () =>
 
 	assert.deepEqual(result.project.graph.nodes.filter((node) => node.levelId === upperFloor.id), expectedUpperNodes);
 	assert.deepEqual(result.project.graph.edges.filter((edge) => edge.id.startsWith('generated:level-1:')), expectedUpperEdges);
+});
+
+void test('keeps the maintained campus fixture clean and fully connected', () => {
+	const project = JSON.parse(fs.readFileSync(
+		new URL('../../../examples/spatial-wayfinding/source/campus.wbwayfinding', import.meta.url),
+		'utf8'
+	)) as WayfindingStudioProject;
+	const result = buildFloorRouteNetwork(project, 'ground');
+	const geometryIssues = result.project.graph.edges.flatMap((edge) =>
+		inspectRouteGeometry(edge, result.project.graph.nodes)
+	);
+	const quality = measureRouteNetwork(
+		result.project.graph.edges,
+		result.project.graph.nodes
+	);
+
+	assert.equal(result.connectedSemanticNodes, 7);
+	assert.equal(result.totalSemanticNodes, 7);
+	assert.deepEqual(result.diagnostics, []);
+	assert.deepEqual(geometryIssues, []);
+	assert.equal(quality.score, 100);
 });

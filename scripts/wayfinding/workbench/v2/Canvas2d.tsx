@@ -509,7 +509,9 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			destinationCount: snapshot.state.project.destinations.length,
 			floorId: floor().id,
 			point,
+			project: snapshot.state.project,
 			selectedDestinationId: selected?.kind === 'destination' ? selected.id : undefined,
+			selectedElementId: selected?.kind === 'element' ? selected.id : undefined,
 			tool
 		});
 
@@ -517,6 +519,23 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		props.store.run(result.transaction);
 		props.store.dispatch({ type: 'selection/set', selection: result.selection });
 		props.store.dispatch({ type: 'tool/set', tool: 'select' });
+
+		if (result.element.type === 'door') {
+			const door = result.element;
+			const linkedLocation = door.locationId
+				? floor().elements.find((element) =>
+					element.type === 'location'
+					&& element.id === door.locationId
+				)
+				: undefined;
+
+			props.onNotify?.(
+				linkedLocation
+					? `Entrance snapped to ${'label' in linkedLocation ? linkedLocation.label ?? 'the room' : 'the room'} and linked for routing.`
+					: 'Entrance placed. Choose its connected room in the inspector before building routes.',
+				linkedLocation ? 'success' : 'warning'
+			);
+		}
 	};
 
 	const executeSelectionOperation = (

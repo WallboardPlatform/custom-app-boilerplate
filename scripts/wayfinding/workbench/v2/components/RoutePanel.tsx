@@ -507,14 +507,19 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 							</div>
 						</Show>
 						<Show when={
-							readiness().mappedDestinationsOnFloor > 0
-							&& readiness().unpositionedDestinations > 0
+							readiness().routeReadyDestinationsOnFloor > 0
+							&& readiness().skippedDestinationsOnFloor > 0
 						}>
 							<div class="route-build-note">
 								<Info size={17} />
 								<span>
-									<strong>{readiness().mappedDestinationsOnFloor} mapped destination{readiness().mappedDestinationsOnFloor === 1 ? '' : 's'} will be connected.</strong>
-									{` ${readiness().unpositionedDestinations} directory-only ${readiness().unpositionedDestinations === 1 ? 'entry will' : 'entries will'} be skipped until placed on the map.`}
+									<strong>{readiness().routeReadyDestinationsOnFloor} entrance-ready destination{readiness().routeReadyDestinationsOnFloor === 1 ? '' : 's'} will be connected.</strong>
+									<Show when={readiness().unlinkedDestinationsOnFloor > 0}>
+										{` ${readiness().unlinkedDestinationsOnFloor} mapped room ${readiness().unlinkedDestinationsOnFloor === 1 ? 'needs' : 'need'} a linked public entrance.`}
+									</Show>
+									<Show when={readiness().unpositionedDestinations > 0}>
+										{` ${readiness().unpositionedDestinations} directory-only ${readiness().unpositionedDestinations === 1 ? 'entry will' : 'entries will'} be skipped until placed on the map.`}
+									</Show>
 								</span>
 							</div>
 						</Show>
@@ -538,7 +543,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 								<div class="route-build-report" classList={{ warning: report().diagnostics.length > 0 }}>
 									<div class="route-build-report__summary">
 										<strong>{report().connectedSemanticNodes}/{report().totalSemanticNodes}</strong>
-										<span>destination anchors connected</span>
+										<span>route anchors connected</span>
 									</div>
 									<dl class="route-build-report__diff">
 										<div>

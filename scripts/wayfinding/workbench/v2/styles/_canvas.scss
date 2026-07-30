@@ -23,6 +23,10 @@
 	right: 0;
 }
 
+.preview-workspace .stage {
+	transition: none;
+}
+
 .preview-workspace .canvas-viewport,
 .preview-workspace .scene3d-host {
 	right: var(--visitor-panel-reserve);

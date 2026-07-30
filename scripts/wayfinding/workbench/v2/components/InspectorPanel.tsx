@@ -153,6 +153,7 @@ export const InspectorPanel = (props: InspectorPanelProps): JSX.Element => {
 							</Show>
 							<ElementInspector
 								element={element}
+								project={props.snapshot().state.project}
 								projectAssets={props.snapshot().state.project.assets}
 								store={props.store}
 							/>

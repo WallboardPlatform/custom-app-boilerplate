@@ -177,6 +177,82 @@ const destinationForPoint = (
 	status: 'confirmed'
 });
 
+interface DoorPlacement {
+	angle: number;
+	location?: WayfindingStudioPolygonElement;
+	point: WayfindingPoint;
+}
+
+const projectPointToSegment = (
+	point: WayfindingPoint,
+	start: WayfindingPoint,
+	end: WayfindingPoint
+): { distance: number; point: WayfindingPoint } => {
+	const dx = end.x - start.x;
+	const dy = end.y - start.y;
+	const lengthSquared = dx * dx + dy * dy;
+	const ratio = lengthSquared <= 0.000001
+		? 0
+		: Math.max(0, Math.min(1, (
+			(point.x - start.x) * dx + (point.y - start.y) * dy
+		) / lengthSquared));
+	const projected = {
+		x: start.x + dx * ratio,
+		y: start.y + dy * ratio
+	};
+
+	return {
+		distance: Math.hypot(point.x - projected.x, point.y - projected.y),
+		point: projected
+	};
+};
+
+const resolveDoorPlacement = (
+	project: WayfindingStudioProject,
+	floorId: string,
+	point: WayfindingPoint,
+	selectedElementId?: string
+): DoorPlacement => {
+	const floor = project.floors.find((candidate) => candidate.id === floorId);
+	const locations = (floor?.elements ?? [])
+		.filter((element): element is WayfindingStudioPolygonElement => element.type === 'location');
+	const preferredLocation = locations.find((location) => location.id === selectedElementId);
+	const ranked = locations.flatMap((location) =>
+		location.geometry.map((start, index) => {
+			const end = location.geometry[(index + 1) % location.geometry.length];
+			const projection = projectPointToSegment(point, start, end);
+
+			return {
+				angle: Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI,
+				distance: projection.distance,
+				location,
+				point: projection.point,
+				preferred: location.id === preferredLocation?.id
+			};
+		})
+	).sort((left, right) => {
+		if (left.preferred !== right.preferred) return left.preferred ? -1 : 1;
+
+		return left.distance - right.distance;
+	});
+	const candidate = ranked[0];
+	const snapDistance = Math.max(
+		24,
+		Math.min(64, Math.min(floor?.width ?? 0, floor?.height ?? 0) * 0.045)
+	);
+
+	return candidate && candidate.distance <= snapDistance
+		? {
+			angle: candidate.angle,
+			location: candidate.location,
+			point: candidate.point
+		}
+		: {
+			angle: 0,
+			point
+		};
+};
+
 export const buildPointAuthoring = (options: {
 	activeAsset?: WayfindingStudioAsset;
 	createId?: AuthoringIdFactory;
@@ -184,7 +260,9 @@ export const buildPointAuthoring = (options: {
 	destinationCount: number;
 	floorId: string;
 	point: WayfindingPoint;
+	project: WayfindingStudioProject;
 	selectedDestinationId?: string;
+	selectedElementId?: string;
 	tool: EditorTool;
 }): PointAuthoringResult | undefined => {
 	const createId: AuthoringIdFactory = options.createId ?? createAuthoringId;
@@ -199,7 +277,23 @@ export const buildPointAuthoring = (options: {
 	let label: string = `Create ${options.tool}`;
 
 	if (options.tool === 'door') {
-		element = { ...base, angle: 0, length: 42, point: options.point, type: 'door' };
+		const placement = resolveDoorPlacement(
+			options.project,
+			options.floorId,
+			options.point,
+			options.selectedElementId
+		);
+		element = {
+			...base,
+			angle: placement.angle,
+			length: 42,
+			...(placement.location ? { locationId: placement.location.id } : {}),
+			point: placement.point,
+			type: 'door'
+		};
+		label = placement.location
+			? `Create entrance for ${placement.location.label ?? placement.location.id}`
+			: 'Create unassigned entrance';
 	}
 
 	if (options.tool === 'poi') {

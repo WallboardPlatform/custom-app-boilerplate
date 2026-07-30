@@ -53,6 +53,7 @@ void test('location authoring creates its destination and geometry in one transa
 });
 
 void test('media authoring keeps the source aspect ratio and links the selected destination', (): void => {
+	const project = createWayfindingStudioProject('media-authoring');
 	const result = buildPointAuthoring({
 		activeAsset: {
 			dataUrl: 'data:image/png;base64,AA==',
@@ -64,10 +65,11 @@ void test('media authoring keeps the source aspect ratio and links the selected 
 			naturalWidth: 400
 		},
 		createId: deterministicIds(),
-		defaults: wayfindingStudioProjectDefaults(createWayfindingStudioProject('media-authoring')),
+		defaults: wayfindingStudioProjectDefaults(project),
 		destinationCount: 2,
 		floorId: 'level-0',
 		point: { x: 240, y: 180 },
+		project,
 		selectedDestinationId: 'destination-2',
 		tool: 'logo'
 	});
@@ -79,6 +81,52 @@ void test('media authoring keeps the source aspect ratio and links the selected 
 	assert.equal(result.element.width / result.element.height, 2);
 	assert.equal(result.element.destinationId, 'destination-2');
 	assert.equal(result.transaction.commands.length, 1);
+});
+
+void test('door authoring snaps to the nearest room boundary and links the room', (): void => {
+	const project = createWayfindingStudioProject('door-authoring');
+	const floor = project.floors[0];
+	floor.width = 500;
+	floor.height = 300;
+	floor.elements.push({
+		destinationId: 'destination-room',
+		floorId: floor.id,
+		geometry: [
+			{ x: 260, y: 60 },
+			{ x: 440, y: 60 },
+			{ x: 440, y: 240 },
+			{ x: 260, y: 240 }
+		],
+		id: 'room',
+		label: 'Meeting room',
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'location'
+	});
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-room',
+		name: 'Meeting room',
+		routeable: true
+	});
+	const result = buildPointAuthoring({
+		createId: deterministicIds(),
+		defaults: wayfindingStudioProjectDefaults(project),
+		destinationCount: project.destinations.length,
+		floorId: floor.id,
+		point: { x: 252, y: 152 },
+		project,
+		tool: 'door'
+	});
+
+	assert.ok(result);
+	assert.equal(result.element.type, 'door');
+
+	if (result.element.type !== 'door') return;
+	assert.equal(result.element.locationId, 'room');
+	assert.deepEqual(result.element.point, { x: 260, y: 152 });
+	assert.equal(Math.abs(result.element.angle), 90);
+	assert.equal(result.transaction.label, 'Create entrance for Meeting room');
 });
 
 void test('route authoring snaps endpoints and only creates missing nodes', (): void => {

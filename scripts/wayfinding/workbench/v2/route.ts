@@ -53,6 +53,8 @@ export interface VisitorRouteJourney {
 }
 
 const ROUTE_POINT_EPSILON = 0.25;
+const ROUTE_MICRO_SEGMENT_MAXIMUM = 8;
+const ROUTE_MICRO_SEGMENT_RATIO = 0.08;
 
 const squaredDistance = (a: WayfindingRoutePoint, b: WayfindingRoutePoint): number => {
 	const dx = a.x - b.x;
@@ -109,6 +111,17 @@ const cleanFloorRoute = (points: WayfindingRoutePoint[]): WayfindingRoutePoint[]
 			simplified.pop();
 		}
 		simplified.push(point);
+	}
+
+	while (simplified.length >= 3) {
+		const leadInLength = Math.sqrt(squaredDistance(simplified[0], simplified[1]));
+		const followingLength = Math.sqrt(squaredDistance(simplified[1], simplified[2]));
+
+		if (
+			leadInLength > ROUTE_MICRO_SEGMENT_MAXIMUM
+			|| leadInLength > followingLength * ROUTE_MICRO_SEGMENT_RATIO
+		) break;
+		simplified.splice(1, 1);
 	}
 
 	return simplified;

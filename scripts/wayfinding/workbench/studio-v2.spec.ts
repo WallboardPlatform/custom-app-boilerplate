@@ -957,7 +957,7 @@ test('opens into a map-first object workspace with direct selection actions', as
 
 	await expect(projectPanel.getByRole('button', { name: 'Objects', exact: true })).toHaveAttribute('aria-pressed', 'true');
 	await expect(projectPanel.getByPlaceholder('Search objects')).toBeVisible();
-	await expect(projectPanel.locator('.object-browser')).not.toContainText('CONFIRMED');
+	await expect(projectPanel.locator('.object-browser')).not.toContainText(/confirmed/iu);
 	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
 	await expect(page.getByLabel('Selection actions')).toBeVisible();
 	await expect(page.getByLabel('Selection actions')).toContainText('Visitor information');
@@ -1775,7 +1775,7 @@ test('nudges and duplicates selected map objects without moving the camera', asy
 	expect(await mapTransform(page)).toBe(cameraBefore);
 });
 
-test('rotates doors and origins directly on the canvas', async ({ page }) => {
+test('rotates doors and origins directly on the canvas', async ({ page }, testInfo) => {
 	await openEditor(page);
 	await page.getByRole('button', { name: 'Close project panel' }).click();
 	await page.waitForTimeout(220);
@@ -1783,6 +1783,18 @@ test('rotates doors and origins directly on the canvas', async ({ page }) => {
 
 	await page.locator('[data-editor-element-id="door-information"]').click();
 	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'door-information');
+	const connectedRoom = page.getByLabel('Connected room');
+	await expect(connectedRoom).toHaveValue('location-information');
+	await connectedRoom.selectOption('');
+	await expect(page.getByText('This door will not be used for directions until a room is connected.')).toBeVisible();
+	await connectedRoom.selectOption('location-information');
+	await expect(page.getByText('Ready to terminate routes at this public entrance.')).toBeVisible();
+	const doorInspectorScreenshot = testInfo.outputPath('door-inspector.png');
+	await page.screenshot({ path: doorInspectorScreenshot });
+	await testInfo.attach('door-inspector', {
+		contentType: 'image/png',
+		path: doorInspectorScreenshot
+	});
 	const doorHandle = page.locator('[data-transform-handle="direction"]');
 	await expect(doorHandle).toBeVisible();
 	const doorX2 = await page.locator('#door-information').getAttribute('x2');
@@ -1798,6 +1810,27 @@ test('rotates doors and origins directly on the canvas', async ({ page }) => {
 	await dragLocatorBy(page, originHandle, { x: 52, y: 18 });
 	await expect(page.locator('#origin-main')).not.toHaveAttribute('data-facing-degrees', facingBefore ?? '');
 	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('places an entrance on a room boundary and links it for routing', async ({ page }) => {
+	await openEditor(page, createAutomaticRouteTestProject());
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const room = page.locator('[data-editor-element-id="location-storage"]');
+	const roomBounds = await room.boundingBox();
+
+	expect(roomBounds).not.toBeNull();
+	await room.click({ force: true });
+	await page.keyboard.press('d');
+	await page.mouse.click(
+		roomBounds!.x + 2,
+		roomBounds!.y + roomBounds!.height / 2
+	);
+
+	await expect(page.locator('#Doors > *')).toHaveCount(2);
+	await expect(page.getByLabel('Connected room')).toHaveValue('location-storage');
+	await expect(page.getByText('Entrance snapped to Storage room and linked for routing.')).toBeVisible();
+	await expect(page.getByText('Ready to terminate routes at this public entrance.')).toBeVisible();
 });
 
 test('authors and edits POIs, floor connections, and labels with discoverable keyboard tools', async ({ page }) => {
@@ -1933,7 +1966,8 @@ test('builds a route network from authored pedestrian space and linked doors', a
 	await page.getByRole('button', { name: 'Route edit' }).click();
 	await page.getByRole('button', { name: 'Build', exact: true }).click();
 	await expect(page.getByRole('button', { name: 'Build route network' })).toBeEnabled();
-	await expect(page.getByText(/2 mapped destinations will be connected/u)).toBeVisible();
+	await expect(page.getByText(/1 entrance-ready destination will be connected/u)).toBeVisible();
+	await expect(page.getByText(/1 mapped room needs a linked public entrance/u)).toBeVisible();
 	await expect(page.getByText(/1 directory-only entry will be skipped/u)).toBeVisible();
 	const readinessScreenshot = testInfo.outputPath('route-build-ready.png');
 	await page.screenshot({ path: readinessScreenshot });
@@ -1944,10 +1978,22 @@ test('builds a route network from authored pedestrian space and linked doors', a
 	await page.getByRole('button', { name: 'Build route network' }).click();
 
 	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
+	const builtNetworkScreenshot = testInfo.outputPath('route-network-built.png');
+	await page.screenshot({ path: builtNetworkScreenshot });
+	await testInfo.attach('route-network-built', {
+		contentType: 'image/png',
+		path: builtNetworkScreenshot
+	});
 	const edgeCount = await page.locator('.route-network-line').count();
 	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Meeting room in the directory' }).click();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	const routePreviewScreenshot = testInfo.outputPath('route-preview-built.png');
+	await page.screenshot({ path: routePreviewScreenshot });
+	await testInfo.attach('route-preview-built', {
+		contentType: 'image/png',
+		path: routePreviewScreenshot
+	});
 	const routePathCommands = (await page.locator('.route-overlay .simulated-route').getAttribute('d'))
 		?.match(/[MLQ]/gu) ?? [];
 	expect(routePathCommands.length).toBeGreaterThan(2);
@@ -1956,6 +2002,44 @@ test('builds a route network from authored pedestrian space and linked doors', a
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
 	await page.getByRole('button', { name: 'Route edit' }).click();
 	await expect(page.locator('.route-network-line')).toHaveCount(edgeCount);
+});
+
+test('rebuilds the maintained campus map without route artifacts', async ({ page }, testInfo) => {
+	const project = JSON.parse(await readFile(
+		'examples/spatial-wayfinding/source/campus.wbwayfinding',
+		'utf8'
+	)) as WayfindingStudioProject;
+	project.graph = {
+		...project.graph,
+		edges: [],
+		nodes: []
+	};
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+	await page.getByRole('button', { name: 'Build route network' }).click();
+
+	await expect(page.locator('.route-build-report')).toContainText('7/7');
+	await expect(page.locator('.route-build-report')).toContainText('route anchors connected');
+	await expect(page.locator('.route-network-line')).toHaveCount(10);
+	const networkScreenshot = testInfo.outputPath('campus-route-network.png');
+	await page.screenshot({ path: networkScreenshot });
+	await testInfo.attach('campus-route-network', {
+		contentType: 'image/png',
+		path: networkScreenshot
+	});
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Welcome Center in the directory' }).click();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	await expect(page.locator('.visitor-journey__instructions li')).toHaveCount(3);
+	await expect(page.locator('.visitor-journey__instructions')).not.toContainText('In 1 m');
+	const previewScreenshot = testInfo.outputPath('campus-route-preview.png');
+	await page.screenshot({ path: previewScreenshot });
+	await testInfo.attach('campus-route-preview', {
+		contentType: 'image/png',
+		path: previewScreenshot
+	});
 });
 
 test('preserves and rebuilds routes from an imported painted pedestrian mask', async ({ page }) => {
@@ -1967,7 +2051,7 @@ test('preserves and rebuilds routes from an imported painted pedestrian mask', a
 	await page.getByRole('button', { name: /Rebuild route network/ }).click();
 	await expect(page.getByRole('dialog')).toHaveCount(0);
 
-	await expect(page.locator('.route-build-report')).toContainText('destination anchors connected');
+	await expect(page.locator('.route-build-report')).toContainText('route anchors connected');
 	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
 });
 
