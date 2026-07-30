@@ -7,6 +7,7 @@ import {
 	synchronizeWayfindingStudioGraph,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
+import { PANEL_WIDTH_STORAGE_KEY } from './v2/panel-preferences';
 
 const RECOVERY_KEY = 'wallboard-wayfinding-studio-v2-recovery';
 const LOGO_DATA_URL = 'data:image/svg+xml;base64,'
@@ -956,6 +957,7 @@ test('opens into a map-first object workspace with direct selection actions', as
 
 	await expect(projectPanel.getByRole('button', { name: 'Objects', exact: true })).toHaveAttribute('aria-pressed', 'true');
 	await expect(projectPanel.getByPlaceholder('Search objects')).toBeVisible();
+	await expect(projectPanel.locator('.object-browser')).not.toContainText('CONFIRMED');
 	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
 	await expect(page.getByLabel('Selection actions')).toBeVisible();
 	await expect(page.getByLabel('Selection actions')).toContainText('Visitor information');
@@ -1117,6 +1119,9 @@ test('uploads, reuses, assigns, and previews project assets end to end', async (
 	const projectPanel = page.locator('.left-panel');
 
 	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	await expect(projectPanel.locator('.wb-studio-upload')).toHaveCount(1);
+	await expect(projectPanel.getByRole('radiogroup', { name: 'Image purpose' }).getByRole('radio')).toHaveCount(3);
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
 	await projectPanel.getByLabel('Upload photo').setInputFiles({
 		buffer: Buffer.from(
 			'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">'
@@ -1382,6 +1387,43 @@ test('keeps the workbench contained at a compact desktop viewport', async ({ pag
 	});
 });
 
+test('persists both desktop panel widths across reloads', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await openEditor(page);
+	const leftPanel = page.locator('.left-panel');
+	const rightPanel = page.locator('.right-panel');
+	const leftBefore = await leftPanel.boundingBox();
+	const rightBefore = await rightPanel.boundingBox();
+
+	expect(leftBefore).not.toBeNull();
+	expect(rightBefore).not.toBeNull();
+	await page.getByRole('separator', { name: 'Resize left panel' }).focus();
+	await page.keyboard.press('ArrowRight');
+	await page.keyboard.press('ArrowRight');
+	await page.getByRole('separator', { name: 'Resize right panel' }).focus();
+	await page.keyboard.press('ArrowLeft');
+	await page.keyboard.press('ArrowLeft');
+	await expect.poll(async () => page.evaluate((key) => {
+		const value = JSON.parse(localStorage.getItem(key) ?? 'null') as { left?: number } | null;
+
+		return value?.left ?? 0;
+	}, PANEL_WIDTH_STORAGE_KEY)).toBeGreaterThan(leftBefore!.width);
+	const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null') as {
+		left: number;
+		right: number;
+	}, PANEL_WIDTH_STORAGE_KEY);
+
+	expect(stored.left).toBeGreaterThan(leftBefore!.width);
+	expect(stored.right).toBeGreaterThan(rightBefore!.width);
+	await page.reload();
+	await expect(page.locator('.workbench')).toBeVisible();
+	const restore = page.getByRole('dialog', { name: 'Restore unsaved local work?' });
+
+	if (await restore.isVisible()) await restore.getByRole('button', { name: 'Restore work' }).click();
+	await expect.poll(async () => (await leftPanel.boundingBox())?.width).toBeCloseTo(stored.left, 0);
+	await expect.poll(async () => (await rightPanel.boundingBox())?.width).toBeCloseTo(stored.right, 0);
+});
+
 test('keeps dense editor and visitor panels collision-free', async ({ page }) => {
 	await openEditor(page);
 	await page.getByRole('button', { name: 'Route edit' }).click();
@@ -1485,6 +1527,7 @@ test('shows inline loading-safe validation for unsupported uploads', async ({ pa
 	await openEditor(page);
 	const projectPanel = page.locator('.left-panel');
 	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
 	const input = projectPanel.getByLabel('Upload photo');
 	await input.setInputFiles({
 		buffer: Buffer.from('not an image'),
@@ -1512,7 +1555,8 @@ test('keeps upload controls coherent while an image is loading', async ({ page }
 	await openEditor(page);
 	const projectPanel = page.locator('.left-panel');
 	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
-	const upload = projectPanel.locator('.wb-studio-upload').filter({ hasText: 'Photo' });
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
+	const upload = projectPanel.locator('.wb-studio-upload');
 	await projectPanel.getByLabel('Upload photo').setInputFiles({
 		buffer: Buffer.from(
 			'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">'
@@ -1823,10 +1867,28 @@ test('route Build explains every missing prerequisite and opens the required too
 	await expect(page.getByRole('button', { name: 'Draw polygon' })).toHaveClass(/active/u);
 });
 
-test('builds a route network from authored pedestrian space and linked doors', async ({ page }) => {
-	await openEditor(page, createAutomaticRouteTestProject());
+test('builds a route network from authored pedestrian space and linked doors', async ({ page }, testInfo) => {
+	const project = createAutomaticRouteTestProject();
+	project.graph.nodes = [];
+	project.graph.edges = [];
+	project.destinations.push({
+		floor: project.floors[0].id,
+		id: 'destination-directory-only',
+		name: 'Directory-only destination',
+		routeable: true
+	});
+	await openEditor(page, project);
 	await page.getByRole('button', { name: 'Route edit' }).click();
 	await page.getByRole('button', { name: 'Build', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Build route network' })).toBeEnabled();
+	await expect(page.getByText(/2 mapped destinations will be connected/u)).toBeVisible();
+	await expect(page.getByText(/1 directory-only entry will be skipped/u)).toBeVisible();
+	const readinessScreenshot = testInfo.outputPath('route-build-ready.png');
+	await page.screenshot({ path: readinessScreenshot });
+	await testInfo.attach('route-build-ready', {
+		contentType: 'image/png',
+		path: readinessScreenshot
+	});
 	await page.getByRole('button', { name: 'Build route network' }).click();
 
 	await expect(page.locator('.route-network-line')).not.toHaveCount(0);

@@ -159,7 +159,9 @@ export const ObjectTree = (props: ObjectTreeProps): JSX.Element => {
 									>
 										<span class="object-item-copy">
 											<strong>{displayName(element)}</strong>
-											<small>{element.status}</small>
+											<Show when={element.status !== 'confirmed'}>
+												<small class="needs-review">Needs review</small>
+											</Show>
 										</span>
 										<span class="object-item-actions">
 											<button

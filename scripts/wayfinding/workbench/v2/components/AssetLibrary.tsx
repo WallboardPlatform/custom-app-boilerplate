@@ -1,11 +1,10 @@
 import {
 	ImagePlus,
-	Images,
-	PackagePlus,
 	Trash2
 } from 'lucide-solid';
 import {
 	createMemo,
+	createSignal,
 	For,
 	Show,
 	type Accessor,
@@ -29,6 +28,34 @@ interface AssetLibraryProps {
 	store: EditorStore;
 }
 
+type AssetUploadKind = 'icon' | 'logo' | 'photo';
+
+const ASSET_UPLOAD_OPTIONS = [
+	{
+		actionLabel: 'Upload map icon',
+		description: 'A compact marker shown on the map.',
+		kind: 'icon',
+		label: 'Map icon'
+	},
+	{
+		actionLabel: 'Upload logo',
+		description: 'Brand identity shown with a destination.',
+		kind: 'logo',
+		label: 'Logo'
+	},
+	{
+		actionLabel: 'Upload photo',
+		description: 'A large image shown in visitor details.',
+		kind: 'photo',
+		label: 'Gallery photo'
+	}
+] satisfies Array<{
+	actionLabel: string;
+	description: string;
+	kind: AssetUploadKind;
+	label: string;
+}>;
+
 const assetUseCount = (snapshot: EditorSnapshot, assetId: string): number => {
 	const project = snapshot.state.project;
 	let uses = project.floors.filter((floor) => floor.backgroundAssetId === assetId).length;
@@ -48,10 +75,14 @@ const assetUseCount = (snapshot: EditorSnapshot, assetId: string): number => {
 };
 
 export const AssetLibrary = (props: AssetLibraryProps): JSX.Element => {
+	const [uploadKind, setUploadKind] = createSignal<AssetUploadKind>('icon');
 	const assets = createMemo(() => props.snapshot().state.project.assets.filter(
 		(asset) => asset.kind !== 'background'
 	));
 	const activeAssetId = createMemo(() => props.snapshot().state.activeAssetId);
+	const uploadOption = createMemo(() =>
+		ASSET_UPLOAD_OPTIONS.find((option) => option.kind === uploadKind()) ?? ASSET_UPLOAD_OPTIONS[0]
+	);
 	const addBuiltin = (icon: typeof BUILTIN_MAP_ICONS[number]): void => {
 		const assetId = `builtin-${icon.id}`;
 		const existing = props.snapshot().state.project.assets.find((asset) => asset.id === assetId);
@@ -109,35 +140,35 @@ export const AssetLibrary = (props: AssetLibraryProps): JSX.Element => {
 
 	return (
 		<div class="asset-library">
-			<div class="asset-upload-grid">
+			<Field
+				composite
+				label="Upload image"
+				hint="Choose its purpose once; the same asset can then be reused throughout the project."
+			>
+				<div class="asset-kind-picker" role="radiogroup" aria-label="Image purpose">
+					<For each={ASSET_UPLOAD_OPTIONS}>{(option) => (
+						<button
+							type="button"
+							role="radio"
+							aria-checked={uploadKind() === option.kind}
+							classList={{ active: uploadKind() === option.kind }}
+							title={option.description}
+							onClick={() => setUploadKind(option.kind)}
+						>
+							<strong>{option.label}</strong>
+						</button>
+					)}</For>
+				</div>
 				<UploadField
 					accept="image/*"
-					actionLabel="Upload symbol"
-					description="Theme-aware map marker"
+					actionLabel={uploadOption().actionLabel}
+					description={uploadOption().description}
 					icon={ImagePlus}
-					onSelect={(file) => upload(file, 'icon')}
-					title="Symbol"
+					onSelect={(file) => upload(file, uploadKind())}
+					title={uploadOption().label}
 					variant="compact"
 				/>
-				<UploadField
-					accept="image/*"
-					actionLabel="Upload logo"
-					description="Preserved brand artwork"
-					icon={PackagePlus}
-					onSelect={(file) => upload(file, 'logo')}
-					title="Logo"
-					variant="compact"
-				/>
-				<UploadField
-					accept="image/*"
-					actionLabel="Upload photo"
-					description="Destination gallery image"
-					icon={Images}
-					onSelect={(file) => upload(file, 'photo')}
-					title="Photo"
-					variant="compact"
-				/>
-			</div>
+			</Field>
 
 			<Field composite label="Built-in map symbols" hint="Select a symbol, then click the map to place it.">
 				<div class="builtin-icon-grid">

@@ -404,6 +404,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		detectedColor?: string,
 		label = `Create ${elementType}`
 	): void => {
+		const authoringSnapshot = props.snapshot();
 		const result = buildPolygonAuthoring({
 			defaults: defaults(),
 			detectedColor,
@@ -412,7 +413,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			geometry,
 			inheritedColor: inheritedColorForGeometry(geometry),
 			label,
-			project: props.snapshot().state.project
+			project: authoringSnapshot.state.project,
+			selectedDestinationId: authoringSnapshot.state.selection?.kind === 'destination'
+				? authoringSnapshot.state.selection.id
+				: undefined
 		});
 
 		props.store.run(result.transaction);

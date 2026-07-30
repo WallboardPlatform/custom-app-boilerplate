@@ -100,6 +100,7 @@ export const buildPolygonAuthoring = (options: {
 	inheritedColor?: string;
 	label?: string;
 	project: WayfindingStudioProject;
+	selectedDestinationId?: string;
 }): AuthoringResult => {
 	const createId: AuthoringIdFactory = options.createId ?? createAuthoringId;
 	const elementId: string = createId(options.elementType);
@@ -127,20 +128,34 @@ export const buildPolygonAuthoring = (options: {
 	let label: string = options.label ?? `Create ${options.elementType}`;
 
 	if (options.elementType === 'location') {
-		const destinationId: string = createId('destination');
+		const selectedDestination = options.selectedDestinationId
+			? options.project.destinations.find((destination) => destination.id === options.selectedDestinationId)
+			: undefined;
+		const destinationId: string = selectedDestination?.id ?? createId('destination');
 		const locationNumber: number = options.project.destinations.length + 1;
 		element.destinationId = destinationId;
-		label = `Create Location ${locationNumber}`;
-		commands.push({
-			type: 'destination/add',
-			destination: {
-				floor: options.floorId,
-				id: destinationId,
-				name: `Location ${locationNumber}`,
-				routeable: true,
-				status: 'confirmed'
-			}
-		});
+		label = selectedDestination
+			? `Place ${selectedDestination.name}`
+			: `Create Location ${locationNumber}`;
+
+		if (selectedDestination) {
+			commands.push({
+				type: 'destination/patch',
+				destinationId,
+				patch: { floor: options.floorId }
+			});
+		} else {
+			commands.push({
+				type: 'destination/add',
+				destination: {
+					floor: options.floorId,
+					id: destinationId,
+					name: `Location ${locationNumber}`,
+					routeable: true,
+					status: 'confirmed'
+				}
+			});
+		}
 	}
 	commands.push({ type: 'element/add', element, floorId: options.floorId });
 

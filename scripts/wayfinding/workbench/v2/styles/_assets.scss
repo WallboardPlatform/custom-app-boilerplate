@@ -7,17 +7,51 @@
 	margin: 0;
 }
 
-.asset-upload-grid {
+.asset-kind-picker {
 	display: grid;
-	grid-template-columns: 1fr;
-	gap: 10px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 5px;
+	margin-bottom: 8px;
 }
 
-.asset-upload-grid .wb-studio-upload--compact {
+.asset-kind-picker button {
+	display: flex;
+	min-width: 0;
+	min-height: 36px;
+	align-items: center;
+	justify-content: center;
+	padding: 6px 5px;
+	text-align: center;
+	color: var(--text-muted);
+	background: #f6f8f7;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+}
+
+.asset-kind-picker button:hover {
+	color: var(--text);
+	border-color: #91aca5;
+}
+
+.asset-kind-picker button.active {
+	color: var(--accent-dark);
+	background: var(--accent-soft);
+	border-color: var(--accent);
+	box-shadow: inset 0 0 0 1px rgb(15 128 109 / 10%);
+}
+
+.asset-kind-picker strong {
+	overflow: hidden;
+	font-size: 10px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.asset-library .wb-studio-upload--compact {
 	padding: 10px;
 }
 
-.asset-upload-grid .wb-studio-upload--compact .wb-studio-upload__actions {
+.asset-library .wb-studio-upload--compact .wb-studio-upload__actions {
 	grid-column: 1 / -1;
 }
 

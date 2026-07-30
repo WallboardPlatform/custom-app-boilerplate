@@ -30,10 +30,68 @@ void test('route projects explain every missing prerequisite', () => {
 
 	assert.deepEqual(
 		readiness.blockers.map((item) => item.action),
-		['define-space', 'add-origin', 'add-entrances']
+		['define-space', 'add-origin', 'add-destinations']
 	);
 	assert.equal(readiness.routeableDestinations, 1);
 	assert.equal(readiness.destinationAnchors, 0);
+});
+
+void test('mapped destinations enable generation before graph anchors exist', () => {
+	const project = createWayfindingStudioProject('Pre-generation map');
+	const floor = project.floors[0];
+	project.delivery.guidance.targetMode = 'route';
+	project.destinations.push(
+		{
+			floor: floor.id,
+			id: 'mapped-library',
+			name: 'Library',
+			routeable: true
+		},
+		{
+			floor: floor.id,
+			id: 'directory-only-cafe',
+			name: 'Cafe',
+			routeable: true
+		}
+	);
+	floor.elements.push(
+		{
+			destinationId: 'mapped-library',
+			floorId: floor.id,
+			geometry: [{ x: 40, y: 20 }, { x: 80, y: 20 }, { x: 80, y: 60 }, { x: 40, y: 60 }],
+			id: 'library-room',
+			provenance: 'customer-source',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'Main entrance screen',
+			point: { x: 10, y: 40 },
+			provenance: 'customer-source',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		},
+		{
+			floorId: floor.id,
+			geometry: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }],
+			id: 'walkable-main',
+			provenance: 'customer-source',
+			status: 'confirmed',
+			type: 'walkable'
+		}
+	);
+
+	const readiness = getRouteReadiness(project, floor.id);
+
+	assert.deepEqual(readiness.buildBlockers, []);
+	assert.equal(readiness.destinationAnchors, 1);
+	assert.equal(readiness.mappedDestinationsOnFloor, 1);
+	assert.equal(readiness.unpositionedDestinations, 1);
+	assert.equal(readiness.warnings.some((warning) => warning.title === 'Some destinations are directory-only'), true);
 });
 
 void test('route projects expose generated coverage without hiding missing entrances', () => {

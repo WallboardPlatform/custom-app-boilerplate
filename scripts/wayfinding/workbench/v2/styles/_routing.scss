@@ -391,6 +391,33 @@
 	color: var(--accent-dark);
 }
 
+.route-build-note {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: start;
+	gap: 8px;
+	padding: 9px;
+	font-size: 10px;
+	line-height: 1.4;
+	color: #40524d;
+	background: #f3f7f6;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+}
+
+.route-build-note svg {
+	margin-top: 1px;
+	color: var(--accent);
+}
+
+.route-build-note span {
+	min-width: 0;
+}
+
+.route-build-note strong {
+	color: var(--text);
+}
+
 .route-build-cta {
 	position: sticky;
 	z-index: 2;

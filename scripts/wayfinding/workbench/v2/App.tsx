@@ -63,6 +63,10 @@ import {
 	visitorFloorOptions
 } from './visitor';
 import { issueSelection } from './issues';
+import {
+	createEditorStateWithPanelPreferences,
+	persistPanelWidthPreferences
+} from './panel-preferences';
 import { useResponsiveWorkspace } from './useResponsiveWorkspace';
 import { useProjectLifecycle } from './useProjectLifecycle';
 import './styles/app.scss';
@@ -74,7 +78,7 @@ const Scene3dView = lazy(async () => {
 });
 
 const App = (): JSX.Element => {
-	const store: EditorStore = createEditorStore();
+	const store: EditorStore = createEditorStore(createEditorStateWithPanelPreferences());
 	const workspaceDensity = useResponsiveWorkspace(store);
 	const [snapshot, setSnapshot] = createSignal(store.getSnapshot());
 	const [toast, setToast] = createSignal<ToastState>();
@@ -505,6 +509,7 @@ const App = (): JSX.Element => {
 
 	onMount(() => {
 		const unsubscribe = store.subscribe(setSnapshot);
+		const stopPanelPreferencePersistence = persistPanelWidthPreferences(store);
 		const keydown = (event: KeyboardEvent): void => {
 			if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 's') {
 				event.preventDefault();
@@ -531,6 +536,7 @@ const App = (): JSX.Element => {
 		window.addEventListener('beforeunload', beforeUnload);
 		onCleanup(() => {
 			unsubscribe();
+			stopPanelPreferencePersistence();
 			window.removeEventListener('keydown', keydown);
 			window.removeEventListener('beforeunload', beforeUnload);
 		});

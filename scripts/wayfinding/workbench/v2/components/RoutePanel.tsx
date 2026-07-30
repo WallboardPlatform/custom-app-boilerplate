@@ -155,10 +155,34 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 				setView('test');
 				break;
 
-			case 'add-destinations':
+			case 'add-destinations': {
+				const positionedDestinationIds = new Set(state().project.floors
+					.flatMap((candidateFloor) => candidateFloor.elements)
+					.filter((element) =>
+						(element.type === 'location' || element.type === 'poi')
+						&& Boolean(element.destinationId)
+					)
+					.map((element) => 'destinationId' in element ? element.destinationId : undefined)
+					.filter((destinationId): destinationId is string => Boolean(destinationId)));
+				const destination = state().project.destinations.find((candidate) =>
+					candidate.routeable !== false
+					&& candidate.floor === floor().id
+					&& !positionedDestinationIds.has(candidate.id)
+				) ?? state().project.destinations.find((candidate) =>
+					candidate.routeable !== false && !positionedDestinationIds.has(candidate.id)
+				);
+
 				props.store.dispatch({ type: 'workspace/set', workspace: 'map' });
+
+				if (destination) {
+					props.store.dispatch({
+						type: 'selection/set',
+						selection: { id: destination.id, kind: 'destination' }
+					});
+				}
 				setTool('location');
 				break;
+			}
 		}
 	};
 	const selectDestination = (destinationId: string): void => {
@@ -240,7 +264,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 						<div class="route-readiness__metrics">
 							<span><strong>{readiness().walkableAreas}</strong> spaces</span>
 							<span><strong>{readiness().origins}</strong> starts</span>
-							<span><strong>{readiness().destinationAnchors}</strong> positions</span>
+							<span><strong>{readiness().destinationAnchors}</strong> mapped</span>
 							<span><strong>{readiness().connectedDestinations}/{readiness().routeableDestinations}</strong> reachable</span>
 						</div>
 					</Show>
@@ -460,6 +484,18 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 										</button>
 									)}
 								</For>
+							</div>
+						</Show>
+						<Show when={
+							readiness().mappedDestinationsOnFloor > 0
+							&& readiness().unpositionedDestinations > 0
+						}>
+							<div class="route-build-note">
+								<Info size={17} />
+								<span>
+									<strong>{readiness().mappedDestinationsOnFloor} mapped destination{readiness().mappedDestinationsOnFloor === 1 ? '' : 's'} will be connected.</strong>
+									{` ${readiness().unpositionedDestinations} directory-only ${readiness().unpositionedDestinations === 1 ? 'entry will' : 'entries will'} be skipped until placed on the map.`}
+								</span>
 							</div>
 						</Show>
 						<div class="route-build-cta">
