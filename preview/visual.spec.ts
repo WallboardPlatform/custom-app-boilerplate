@@ -534,7 +534,7 @@ for (const preset of [...presets, ...scenarioPresets]) {
 				});
 			});
 			await page.waitForTimeout(500);
-			captureCandidates.push(await page.locator('#wallboard-preview-root').screenshot({ animations: 'disabled' }));
+			captureCandidates.push(await page.screenshot({ animations: 'disabled' }));
 		}
 		const stableCapture: Buffer = captureCandidates.reduce((largest, candidate): Buffer => {
 			return candidate.byteLength > largest.byteLength ? candidate : largest;
