@@ -126,9 +126,10 @@ export const ElementInspector = (props: {
 	projectAssets?: WayfindingStudioAsset[];
 	store: EditorStore;
 }): JSX.Element => {
-	const patch = (value: Record<string, unknown>): void => props.store.dispatch({
+	const patch = (value: Record<string, unknown>, historyGroup?: string): void => props.store.dispatch({
 		type: 'element/patch',
 		elementId: props.element.id,
+		...(historyGroup ? { historyGroup } : {}),
 		patch: value
 	});
 	const mediaAsset = createMemo(() => props.projectAssets?.find(
@@ -139,6 +140,19 @@ export const ElementInspector = (props: {
 		if (props.element.type !== 'icon' && props.element.type !== 'logo') return 1;
 
 		return props.element.height > 0 ? props.element.width / props.element.height : 1;
+	};
+	const mediaLongEdge = (): number => {
+		if (props.element.type !== 'icon' && props.element.type !== 'logo') return 0;
+
+		return Math.max(props.element.width, props.element.height);
+	};
+	const resizeMedia = (longEdge: number): void => {
+		if (props.element.type !== 'icon' && props.element.type !== 'logo') return;
+		const ratio = mediaRatio();
+
+		patch(ratio >= 1
+			? { height: longEdge / ratio, width: longEdge }
+			: { height: longEdge, width: longEdge * ratio }, 'media-scale');
 	};
 	const commitNumber = (key: string, value: string): void => {
 		const parsed = Number(value);
@@ -278,6 +292,22 @@ export const ElementInspector = (props: {
 						/>
 					</Field>
 				</div>
+				<Field
+					label="Scale"
+					hint="Resize from the image center while keeping its original proportions."
+				>
+					<div class="range-control">
+						<input
+							type="range"
+							aria-label="Image scale"
+							min={16}
+							max={Math.max(512, Math.ceil(mediaLongEdge()))}
+							value={Math.round(mediaLongEdge())}
+							onInput={(event) => resizeMedia(Number(event.currentTarget.value))}
+						/>
+						<output>{Math.round(mediaLongEdge())} px</output>
+					</div>
+				</Field>
 			</Show>
 			<Show when={props.element.type === 'location' || props.element.type === 'walkable' || props.element.type === 'obstacle'}>
 				<div class="field-grid">

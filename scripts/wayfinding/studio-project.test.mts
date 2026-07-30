@@ -270,6 +270,32 @@ void test('generates stable semantic SVG layers and a runtime bundle', () => {
 	assert.equal(bundle.manifest.deliveryMode, 'route');
 });
 
+void test('renders map media around its authored center point', () => {
+	const project = createWayfindingStudioProject('centered-media');
+	const floor = project.floors[0];
+	project.assets.push({
+		dataUrl: 'data:image/png;base64,iVBORw0KGgo=',
+		id: 'centered-logo',
+		kind: 'logo',
+		mimeType: 'image/png',
+		name: 'Centered logo'
+	});
+	floor.elements.push({
+		...confirmed,
+		assetId: 'centered-logo',
+		floorId: floor.id,
+		height: 60,
+		id: 'centered-logo-element',
+		point: { x: 240, y: 180 },
+		type: 'logo',
+		width: 120
+	});
+
+	const svg = renderWayfindingFloorSvg(project, floor.id);
+
+	assert.match(svg, /id="centered-logo-element"[^>]+x="180" y="150" width="120" height="60"/u);
+});
+
 void test('preserves project languages, categories, and translated destination metadata in runtime output', () => {
 	const project = createWayfindingStudioProject('multilingual-directory');
 	project.categories = ['Dining', 'Services'];

@@ -125,7 +125,12 @@ export type EditorCommand =
 	| { type: 'draft/clear' }
 	| { type: 'draft/set'; draft: EditorDraft }
 	| { type: 'element/add'; element: WayfindingStudioElement; floorId: string }
-	| { type: 'element/patch'; elementId: string; patch: Partial<WayfindingStudioElement> }
+	| {
+		type: 'element/patch';
+		elementId: string;
+		patch: Partial<WayfindingStudioElement>;
+		historyGroup?: string;
+	}
 	| { type: 'element/remove'; elementId: string }
 	| { type: 'floor/add'; floorId: string; name: string }
 	| { type: 'floor/remove'; floorId: string }

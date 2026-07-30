@@ -123,6 +123,13 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 		props.routeOriginId()
 	));
 	const setTool = (tool: EditorTool): void => props.store.dispatch({ type: 'tool/set', tool });
+	const activateSmartTrace = (): void => {
+		props.store.dispatch({
+			type: 'trace/patch',
+			patch: { elementType: 'walkable' }
+		});
+		setTool('smart-trace');
+	};
 	const goToReadinessAction = (action: RouteReadinessAction): void => {
 		switch (action) {
 			case 'define-space':
@@ -379,7 +386,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 								active={state().activeTool === 'smart-trace'}
 								icon={WandSparkles}
 								label="Detect from image"
-								onClick={() => setTool('smart-trace')}
+								onClick={activateSmartTrace}
 							/>
 							<ToolButton
 								active={state().activeTool === 'freehand'}

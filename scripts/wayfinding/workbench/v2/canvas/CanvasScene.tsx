@@ -218,6 +218,11 @@ const mediaBounds = (element: WayfindingStudioMediaElement): {
 	y: element.point.y - element.height / 2
 });
 
+const isMediaElement = (
+	element: WayfindingStudioElement
+): element is WayfindingStudioMediaElement =>
+	element.type === 'icon' || element.type === 'logo';
+
 const graphNodePoint = (
 	node: WayfindingNode,
 	interactionPoint: WayfindingPoint | undefined,
@@ -576,14 +581,35 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 								<Show
 									fallback={
 										<Show when={workspace() === 'map' && isPointElement(element)}>
-											<circle
-												class="element-selection-hit"
-												cx={isPointElement(element) ? element.point.x : 0}
-												cy={isPointElement(element) ? element.point.y : 0}
-												data-editor-element-id={element.id}
-												onPointerDown={(event) => props.beginElementDrag(event, element)}
-												r={Math.max(18, props.handleRadius() * 2.5)}
-											/>
+											<Show
+												fallback={(
+													<circle
+														class="element-selection-hit"
+														cx={isPointElement(element) ? element.point.x : 0}
+														cy={isPointElement(element) ? element.point.y : 0}
+														data-editor-element-id={element.id}
+														onPointerDown={(event) => props.beginElementDrag(event, element)}
+														r={Math.max(18, props.handleRadius() * 2.5)}
+													/>
+												)}
+												when={isMediaElement(element) ? element : undefined}
+											>
+												{(media): JSX.Element => {
+													const bounds = mediaBounds(media());
+
+													return (
+														<rect
+															class="element-selection-hit media-selection-hit"
+															height={bounds.height}
+															width={bounds.width}
+															x={bounds.x}
+															y={bounds.y}
+															data-editor-element-id={media().id}
+															onPointerDown={(event) => props.beginElementDrag(event, media())}
+														/>
+													);
+												}}
+											</Show>
 										</Show>
 									}
 									when={
@@ -675,6 +701,8 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 						workspace() === 'map'
 							&& props.selectedPoint()
 							&& (!props.selectedElement() || elementVisible(props.selectedElement()!))
+							&& props.selectedElement()?.type !== 'label'
+							&& !mediaElement()
 					}>
 						<circle
 							class="selected-point-handle"

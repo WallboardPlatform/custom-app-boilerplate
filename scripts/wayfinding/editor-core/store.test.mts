@@ -19,6 +19,48 @@ void test('project commands are undoable without rewinding viewport state', (): 
 	assert.equal(snapshot.canRedo, true);
 });
 
+void test('continuous element controls merge into one undo step', (): void => {
+	const project = createWayfindingStudioProject('continuous-control-history');
+	const floor = project.floors[0];
+	floor.elements.push({
+		assetId: 'logo',
+		floorId: floor.id,
+		height: 60,
+		id: 'logo-on-map',
+		point: { x: 120, y: 80 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'logo',
+		width: 120
+	});
+	const store = createEditorStore(createEditorState(project));
+
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 70, width: 140 }
+	});
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 80, width: 160 }
+	});
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 90, width: 180 }
+	});
+	store.undo();
+
+	const element = store.getSnapshot().state.project.floors[0].elements[0];
+	assert.equal(element.type, 'logo');
+	assert.equal(element.type === 'logo' ? element.width : undefined, 120);
+	assert.equal(element.type === 'logo' ? element.height : undefined, 60);
+});
+
 void test('loading a legacy-compatible project resets document history and keeps panel preferences', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'panel/toggle', panelId: 'left', collapsed: true });

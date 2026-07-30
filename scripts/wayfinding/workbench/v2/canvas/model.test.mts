@@ -41,3 +41,28 @@ void test('preview presentation retains styled map geometry and readable doors',
 	assert.match(rendered, /#Labels\{display:none\}/);
 	assert.match(rendered, /#Doors line\{stroke:#17473f/);
 });
+
+void test('selection emphasis never paints over authored text glyphs', () => {
+	const project = createWayfindingStudioProject('selected-label');
+	const floor = project.floors[0];
+	floor.elements.push({
+		floorId: floor.id,
+		id: 'label-selected',
+		point: { x: 120, y: 80 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		text: 'Welcome',
+		type: 'label'
+	});
+	const rendered = renderEditorFloorSvg(
+		project,
+		floor.id,
+		visibility,
+		{ id: 'label-selected', kind: 'element' },
+		false
+	);
+
+	assert.match(rendered, /\[id="label-selected"\]\{filter:drop-shadow/u);
+	assert.doesNotMatch(rendered, /\[id="label-selected"\]\{filter:[^}]+;stroke:/u);
+	assert.match(rendered, /polygon\[id="label-selected"\],line\[id="label-selected"\]/u);
+});

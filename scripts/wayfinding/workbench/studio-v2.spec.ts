@@ -1041,7 +1041,7 @@ test('edits project directory registries and localized destination content end t
 	await openPreviewSimulation(page);
 	await page.getByLabel('Preview language').selectOption('de');
 	await page.getByRole('button', { name: 'Open Gasteinformation in the directory' }).click();
-	await expect(page.getByText('Gasteinformation', { exact: true }).first()).toBeVisible();
+	await expect(page.locator('.visitor-detail').getByText('Gasteinformation', { exact: true })).toBeVisible();
 	await expect(page.getByText('Information und Hilfe fur Gaste.', { exact: true })).toBeVisible();
 });
 
@@ -1133,6 +1133,13 @@ test('uploads, reuses, assigns, and previews project assets end to end', async (
 	await projectPanel.getByRole('button', { name: 'Wi-Fi', exact: true }).click();
 	await clickMapPoint(page, { x: 1040, y: 500 });
 	await expect(page.locator('#Icons image')).toHaveCount(iconsBefore + 1);
+	const placedIcon = page.locator('#Icons image').last();
+	const placedIconCenter = {
+		x: Number(await placedIcon.getAttribute('x')) + Number(await placedIcon.getAttribute('width')) / 2,
+		y: Number(await placedIcon.getAttribute('y')) + Number(await placedIcon.getAttribute('height')) / 2
+	};
+	expect(placedIconCenter.x).toBeCloseTo(1040, 1);
+	expect(placedIconCenter.y).toBeCloseTo(500, 1);
 
 	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
 	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
@@ -1225,6 +1232,10 @@ test('visitor preview provides a clean localized directory and route experience'
 	await expect(page.locator('.visitor-detail__identity img')).toBeVisible();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
 	await expect(page.locator('.simulated-route-casing')).toHaveCSS('fill', 'none');
+	const detailBounds = await page.locator('.visitor-detail').boundingBox();
+	expect(detailBounds).not.toBeNull();
+	expect(detailBounds!.height).toBeGreaterThanOrEqual(220);
+	await expect(page.locator('.visitor-results')).toBeHidden();
 	const mapBounds = await page.locator('.canvas-viewport').boundingBox();
 	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
 	expect(mapBounds).not.toBeNull();
@@ -1546,6 +1557,17 @@ test('renders a non-empty 3D scene and saves and restores its floor camera', asy
 	await expect(canvas).toBeVisible();
 });
 
+test('keeps the 3D entry point discoverable while explaining an unmet quality gate', async ({ page }) => {
+	const project = createWayfindingStudioProject('empty-3d-quality-gate');
+	project.name = 'Empty 3D quality gate';
+	await openEditor(page, project);
+
+	const threeDimensional = page.getByRole('button', { name: '3D', exact: true });
+	await expect(threeDimensional).toBeVisible();
+	await expect(threeDimensional).toHaveAttribute('aria-disabled', 'true');
+	await expect(threeDimensional).toHaveAttribute('title', /Add at least one room or destination area/u);
+});
+
 test('authors, reshapes, inserts, and removes room vertices without moving the camera', async ({ page }) => {
 	await openEditor(page);
 	await page.getByRole('button', { name: 'Close project panel' }).click();
@@ -1702,9 +1724,15 @@ test('resizes map media proportionally with a direct manipulation handle', async
 	const media = page.locator('#logo-information');
 	const initialWidth = Number(await media.getAttribute('width'));
 	const initialHeight = Number(await media.getAttribute('height'));
+	expect(Number(await media.getAttribute('x')) + initialWidth / 2).toBeCloseTo(980, 1);
+	expect(Number(await media.getAttribute('y')) + initialHeight / 2).toBeCloseTo(260, 1);
 
 	await page.locator('[data-editor-element-id="logo-information"]').click({ force: true });
 	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'logo-information');
+	await expect(page.getByLabel('Image scale')).toHaveValue('120');
+	await page.getByLabel('Image scale').fill('180');
+	await expect(media).toHaveAttribute('width', '180');
+	await expect(media).toHaveAttribute('height', '180');
 	const resizeHandle = page.locator('[data-transform-handle="media-resize"]');
 	await expect(resizeHandle).toBeVisible();
 	await dragLocatorBy(page, resizeHandle, { x: 80, y: 34 });
@@ -2230,4 +2258,16 @@ test('smart trace converts a real floor-plan region into editable project geomet
 	await tracedArea.click({ force: true });
 	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
 	await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(/Location/);
+});
+
+test('route-space detection cannot inherit the destination trace target', async ({ page }) => {
+	await openEditor(page, createTraceTestProject());
+	await page.getByRole('button', { name: /Detect an area from the floor plan/ }).click();
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Detect from image', exact: true }).click();
+	await clickMapPoint(page, { x: 520, y: 420 });
+
+	await expect(page.locator('[data-editor-element-id^="walkable-"]')).toHaveCount(1);
+	await expect(page.locator('[data-editor-element-id^="location-"]')).toHaveCount(0);
+	await expect(page.getByText('Walkable area', { exact: true }).first()).toBeVisible();
 });

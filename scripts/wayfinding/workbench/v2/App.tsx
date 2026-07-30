@@ -589,6 +589,7 @@ const App = (): JSX.Element => {
 						onFit={() => fitCanvas()}
 						snapshot={snapshot}
 						store={store}
+						threeDimensionalReason={() => threeDimensionalReadiness().reasons[0]}
 						threeDimensionalReady={() => threeDimensionalReadiness().ready}
 					/>
 					<Show when={state().workspace !== 'preview' && state().viewMode === '2d'}>

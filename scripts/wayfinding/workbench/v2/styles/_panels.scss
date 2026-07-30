@@ -9,6 +9,7 @@
 	background: var(--panel);
 	box-shadow: 0 14px 32px rgba(8, 20, 18, 0.2);
 	transition: transform 160ms ease;
+	container-type: inline-size;
 }
 
 .left-panel {
@@ -152,7 +153,7 @@
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 7px;
-	margin-bottom: 12px;
+	margin-bottom: 10px;
 }
 
 .floor-actions {
@@ -436,7 +437,39 @@ input:disabled {
 	gap: 8px;
 }
 
-.input-with-unit {
+.range-control {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 64px;
+	align-items: center;
+	gap: 10px;
+}
+
+.range-control input[type='range'] {
+	height: 28px;
+	padding: 0;
+	accent-color: var(--accent);
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+.range-control output {
+	min-width: 0;
+	padding: 6px 7px;
+	overflow: hidden;
+	font-size: 10px;
+	font-weight: 750;
+	text-align: center;
+	text-overflow: ellipsis;
+	color: #40504c;
+	background: var(--panel-soft);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	white-space: nowrap;
+}
+
+.input-with-unit,
+.input-with-suffix {
 	position: relative;
 }
 
@@ -444,7 +477,12 @@ input:disabled {
 	padding-right: 32px;
 }
 
-.input-with-unit span {
+.input-with-suffix input {
+	padding-right: 56px;
+}
+
+.input-with-unit span,
+.input-with-suffix span {
 	position: absolute;
 	top: 50%;
 	right: 10px;
@@ -485,6 +523,9 @@ input:disabled {
 	gap: 1px;
 	background: var(--border);
 	border: 1px solid var(--border);
+	border-radius: 4px;
+	overflow: hidden;
+	margin-bottom: 10px;
 }
 
 .metrics-row span {
@@ -957,3 +998,16 @@ input:disabled {
 
 .problem.error span { color: var(--danger); }
 .problem.warning span { color: #9a6500; }
+
+@container (max-width: 340px) {
+	.field-grid {
+		grid-template-columns: 1fr;
+		gap: 0;
+	}
+
+	.floor-actions,
+	.inspector-action-grid,
+	.language-form {
+		grid-template-columns: 1fr;
+	}
+}

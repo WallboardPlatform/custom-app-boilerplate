@@ -121,6 +121,13 @@ export const VisitorPanel = (props: {
 			});
 		});
 	};
+	const searchDestinations = (query: string): void => {
+		props.setQuery(query);
+
+		if (!props.selected()) return;
+		props.setRouteDestinationId(undefined);
+		props.store.dispatch({ type: 'selection/clear' });
+	};
 	const journeyMinutes = (): number => Math.max(
 		1,
 		Math.ceil((props.routeJourney()?.metrics.walkingSeconds ?? 0) / 60)
@@ -129,7 +136,10 @@ export const VisitorPanel = (props: {
 	return (
 	<div
 		class="visitor-panel"
-		classList={{ 'has-selection': Boolean(props.selected()) }}
+		classList={{
+			'has-selection': Boolean(props.selected()),
+			'simulation-open': props.simulationOpen()
+		}}
 		aria-label="Visitor map directory"
 	>
 		<header class="visitor-panel__header">
@@ -157,7 +167,7 @@ export const VisitorPanel = (props: {
 				aria-label="Search destinations"
 				placeholder="Search destinations"
 				value={props.query()}
-				onInput={(event) => props.setQuery(event.currentTarget.value)}
+				onInput={(event) => searchDestinations(event.currentTarget.value)}
 			/>
 		</div>
 		<Show when={props.simulationOpen()}>

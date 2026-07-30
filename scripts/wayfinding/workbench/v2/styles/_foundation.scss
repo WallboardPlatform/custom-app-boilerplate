@@ -225,6 +225,17 @@ button:disabled {
 	background: #1e3531;
 }
 
+.view-switcher button[aria-disabled='true'] {
+	cursor: help;
+	color: #82918e;
+	background: rgba(255, 255, 255, 0.025);
+}
+
+.view-switcher button[aria-disabled='true']:hover {
+	color: #b5c2bf;
+	background: #172a27;
+}
+
 .workspace-tabs button.active,
 .view-switcher button.active {
 	color: white;

@@ -19,8 +19,14 @@ interface HistoryEntry {
 	project: EditorState['project'];
 }
 
+interface HistoryMerge {
+	key: string;
+	updatedAt: number;
+}
+
 export const createEditorStore = (initialState: EditorState = createEditorState()): EditorStore => {
 	let state: EditorState = initialState;
+	let historyMerge: HistoryMerge | undefined;
 	const undoStack: HistoryEntry[] = [];
 	const redoStack: HistoryEntry[] = [];
 	const listeners = new Set<(snapshot: EditorSnapshot) => void>();
@@ -35,32 +41,53 @@ export const createEditorStore = (initialState: EditorState = createEditorState(
 
 		for (const listener of listeners) listener(next);
 	};
-	const commit = (commands: EditorCommand[], label: string): void => {
+	const commit = (commands: EditorCommand[], label: string, mergeKey?: string): void => {
 		if (commands.length === 0) return;
 		const tracksProject: boolean = commands.some(isProjectCommand);
+		const now = Date.now();
+		const mergesWithPrevious = Boolean(
+			tracksProject
+			&& mergeKey
+			&& historyMerge?.key === mergeKey
+			&& now - historyMerge.updatedAt <= 750
+		);
 
-		if (tracksProject) undoStack.push({ label, project: cloneProject(state.project) });
+		if (tracksProject && !mergesWithPrevious) {
+			undoStack.push({ label, project: cloneProject(state.project) });
+		}
 		let next: EditorState = state;
 
 		for (const command of commands) next = applyEditorCommand(next, command);
 
 		if (next === state) {
-			if (tracksProject) undoStack.pop();
+			if (tracksProject && !mergesWithPrevious) undoStack.pop();
 
 			return;
 		}
 		state = next;
 
-		if (tracksProject) redoStack.length = 0;
+		if (tracksProject) {
+			redoStack.length = 0;
+			historyMerge = mergeKey ? { key: mergeKey, updatedAt: now } : undefined;
+		} else {
+			historyMerge = undefined;
+		}
 		emit();
 	};
 
 	return {
 		dispatch(command: EditorCommand): void {
-			commit([command], command.type);
+			commit(
+				[command],
+				command.type,
+				command.type === 'element/patch' && command.historyGroup
+					? `${command.type}:${command.elementId}:${command.historyGroup}`
+					: undefined
+			);
 		},
 		getSnapshot: snapshot,
 		redo(): void {
+			historyMerge = undefined;
 			const entry: HistoryEntry | undefined = redoStack.pop();
 
 			if (!entry) return;
@@ -69,6 +96,7 @@ export const createEditorStore = (initialState: EditorState = createEditorState(
 			emit();
 		},
 		run(transaction: EditorTransaction): void {
+			historyMerge = undefined;
 			commit(transaction.commands, transaction.label);
 		},
 		subscribe(listener: (snapshot: EditorSnapshot) => void): () => void {
@@ -80,6 +108,7 @@ export const createEditorStore = (initialState: EditorState = createEditorState(
 			};
 		},
 		undo(): void {
+			historyMerge = undefined;
 			const entry: HistoryEntry | undefined = undoStack.pop();
 
 			if (!entry) return;

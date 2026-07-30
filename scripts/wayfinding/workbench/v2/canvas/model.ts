@@ -91,7 +91,8 @@ export const renderEditorFloorSvg = (
 
 	if (presentationMode === 'editor' && selection?.kind === 'element') {
 		const selector = `[id="${escaped(selection.id)}"]`;
-		hiddenRules.push(`${selector}{filter:drop-shadow(0 0 5px #15927d);stroke:#15927d;stroke-width:5}`);
+		hiddenRules.push(`${selector}{filter:drop-shadow(0 0 5px rgba(21,146,125,.8))}`);
+		hiddenRules.push(`polygon${selector},line${selector},circle${selector},path${selector}{stroke:#15927d;stroke-width:5}`);
 
 		if (hideSelectedElement) hiddenRules.push(`${selector}{visibility:hidden}`);
 	}

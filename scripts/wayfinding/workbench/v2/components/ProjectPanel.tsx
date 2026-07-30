@@ -78,8 +78,8 @@ const panelLayerIds: EditorLayerId[] = [
 export type ProjectView = 'appearance' | 'assets' | 'content' | 'directory' | 'setup';
 
 const projectViews = [
-	{ id: 'content', label: 'Objects' },
 	{ id: 'setup', label: 'Project' },
+	{ id: 'content', label: 'Objects' },
 	{ id: 'directory', label: 'Directory' },
 	{ id: 'assets', label: 'Assets' },
 	{ id: 'appearance', label: 'Style' }
