@@ -1,0 +1,6 @@
+{
+	"excluded": {
+		"donor-directory:pagination": "The pagination suite models a rotating board: it advances page-count times and requires the index to return to where it started. This directory is paged by hand and its Next control is disabled on the last page, so the cycle can never close. Registering it would test the suite's assumption rather than the app. The mechanism vocabulary conflates timed rotation with manual paging; splitting it, or teaching the suite to walk back with Previous, is the real fix and is not attempted here.",
+		"call-center-agent-status:pagination": "Rotation is timer-driven with no test hook to step it, unlike recognition-mosaic which exposes its interval. Registering the suite would need that hook added to the app first. Worth doing, and deliberately not bundled with the registrations that needed no app change."
+	}
+}

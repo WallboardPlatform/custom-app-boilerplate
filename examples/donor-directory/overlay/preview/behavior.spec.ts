@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+
+import { registerKeyboardConformance } from './conformance/keyboard';
 
 import {
 	categoryRows,
@@ -1418,3 +1420,23 @@ test('instance-cleanup releases pagination, clock, observer, and command resourc
 
 	expect(afterCompletedCommand).toBe(0);
 });
+
+/*
+ * The donor wall carries its own letter keyboard rather than the shared component, so without this
+ * registration the conformance suite never reaches it. Two of the three keyboards in the portfolio
+ * were unchecked for exactly that reason: the suite protects wherever it is registered, and nothing
+ * required it to be.
+ */
+registerKeyboardConformance({
+	name: 'Donor directory search',
+	open: async (page: Page): Promise<void> => {
+		await openScenario(page);
+		await page.getByRole('button', { name: 'Open touch keyboard' }).click();
+		await expect(page.locator('[data-preview-id="donor-keyboard"]')).toBeVisible();
+	},
+	keyboard: (page: Page): Locator => page.locator('[data-preview-id="donor-keyboard"]'),
+	letterKeyName: 'Key V',
+	spaceKeyName: 'SPACE',
+	focusTarget: (page: Page): Locator => page.getByRole('searchbox').first()
+});
+

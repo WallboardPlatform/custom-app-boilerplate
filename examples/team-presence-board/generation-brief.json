@@ -14,7 +14,11 @@
 		"The Wallboard logo is intentionally omitted because screens carry branding elsewhere.",
 		"When a zone holds more people than physically fit its measured area, the zone shows the cards that fit plus a +N overflow chip; the zone count always reports the true total."
 	],
-	"app": { "mode": "new", "name": "Team Presence Board", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Team Presence Board",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "One app serves full-company lobby walls, department screens, small team zones, and portrait door-card displays of unknown zone sizes, so the root must fill any surface without viewport assumptions."
@@ -26,7 +30,10 @@
 			"height": 1080,
 			"role": "primary",
 			"purpose": "Quadrant board with four presence zones for department and team screens.",
-			"minimumContentCoverage": { "width": 93, "height": 93 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 93
+			}
 		},
 		{
 			"id": "wide-low",
@@ -34,7 +41,10 @@
 			"height": 432,
 			"role": "required",
 			"purpose": "Wide band placement keeping zones side by side with compact cards.",
-			"minimumContentCoverage": { "width": 93, "height": 90 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 90
+			}
 		},
 		{
 			"id": "portrait",
@@ -42,7 +52,10 @@
 			"height": 1920,
 			"role": "required",
 			"purpose": "Portrait wall or door-side placement with stacked presence zones.",
-			"minimumContentCoverage": { "width": 91, "height": 94 }
+			"minimumContentCoverage": {
+				"width": 91,
+				"height": 94
+			}
 		},
 		{
 			"id": "square",
@@ -50,13 +63,21 @@
 			"height": 600,
 			"role": "fallback",
 			"purpose": "Compact square zone preserving zone identity with smaller cards.",
-			"minimumContentCoverage": { "width": 91, "height": 91 }
+			"minimumContentCoverage": {
+				"width": 91,
+				"height": 91
+			}
 		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "presenceData", "source": "existing", "contract": "EXISTING", "access": "read" }
+			{
+				"property": "presenceData",
+				"source": "existing",
+				"contract": "EXISTING",
+				"access": "read"
+			}
 		]
 	},
 	"ownership": [
@@ -64,63 +85,109 @@
 			"id": "presence-composition",
 			"area": "presentation",
 			"owner": "locked",
-			"targets": ["adaptive-layout-selection", "presence-group-mapping", "status-motion-mechanics", "initials-avatar-fallback"],
+			"targets": [
+				"adaptive-layout-selection",
+				"presence-group-mapping",
+				"status-motion-mechanics",
+				"initials-avatar-fallback"
+			],
 			"rationale": "The count-driven layout modes, availability normalization, and status-change motion are the validated product core and stay code-owned."
 		},
 		{
 			"id": "board-content-settings",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["scopeTitle"],
+			"targets": [
+				"scopeTitle"
+			],
 			"rationale": "Operators name the scope shown under the board title per placement."
 		},
 		{
 			"id": "roster-settings",
 			"area": "behavior",
 			"owner": "setting",
-			"targets": ["memberFilter", "requirePhoto", "showOfflineZone"],
+			"targets": [
+				"memberFilter",
+				"requirePhoto",
+				"showOfflineZone"
+			],
 			"rationale": "Operators choose exactly who appears on each placed instance."
 		},
 		{
 			"id": "chrome-settings",
 			"area": "presentation",
 			"owner": "setting",
-			"targets": ["showHeader", "showTicker"],
+			"targets": [
+				"showHeader",
+				"showTicker"
+			],
 			"rationale": "Header and ticker are toggleable per physical scenario."
 		},
 		{
 			"id": "theme-settings",
 			"area": "presentation",
 			"owner": "setting",
-			"targets": ["themePreset", "backgroundColor", "panelColor", "wellColor", "textColor", "mutedTextColor", "accentColor", "motionPreset"],
+			"targets": [
+				"themePreset",
+				"backgroundColor",
+				"panelColor",
+				"wellColor",
+				"textColor",
+				"mutedTextColor",
+				"accentColor",
+				"motionPreset"
+			],
 			"rationale": "Coordinated Dark and Light presets resolve the palette; Custom exposes manual swatches; motion is optional."
 		},
 		{
 			"id": "people-records",
 			"area": "content",
 			"owner": "datasource",
-			"targets": ["presenceData"],
+			"targets": [
+				"presenceData"
+			],
 			"rationale": "The directory and Teams presence feed are pushed by the displayer from the bound existing datasource."
 		},
 		{
 			"id": "status-history",
 			"area": "state",
 			"owner": "locked",
-			"targets": ["status-change-timestamps", "ticker-last-change"],
+			"targets": [
+				"status-change-timestamps",
+				"ticker-last-change"
+			],
 			"rationale": "Since-timestamps and the last observed change are derived locally per instance by diffing datasource updates."
 		}
 	],
 	"experience": {
 		"mode": "passive",
 		"views": [
-			{ "id": "dense-wall-view", "purpose": "Dense quadrant wall for 21 or more people on full-company lobby screens." },
-			{ "id": "quadrant-view", "purpose": "Four presence zones (Available, Busy, Away, Offline) for 4 to 20 people." },
-			{ "id": "compact-view", "purpose": "Full-height per-person panels for 2 to 3 people." },
-			{ "id": "hero-view", "purpose": "Single huge door-card avatar answering whether one person can be interrupted." },
-			{ "id": "empty-view", "purpose": "Designed empty state when no valid people match the configuration." }
+			{
+				"id": "dense-wall-view",
+				"purpose": "Dense quadrant wall for 21 or more people on full-company lobby screens."
+			},
+			{
+				"id": "quadrant-view",
+				"purpose": "Four presence zones (Available, Busy, Away, Offline) for 4 to 20 people."
+			},
+			{
+				"id": "compact-view",
+				"purpose": "Full-height per-person panels for 2 to 3 people."
+			},
+			{
+				"id": "hero-view",
+				"purpose": "Single huge door-card avatar answering whether one person can be interrupted."
+			},
+			{
+				"id": "empty-view",
+				"purpose": "Designed empty state when no valid people match the configuration."
+			}
 		],
 		"inputs": [],
-		"session": { "reset": "none", "expectation": "The passive board continuously reflects the latest pushed presence data." }
+		"session": {
+			"reset": "none",
+			"expectation": "The passive board continuously reflects the latest pushed presence data."
+		}
 	},
 	"outputs": [],
 	"rendering": {
@@ -132,7 +199,11 @@
 		"default": "expressive",
 		"presetProperty": "motionPreset",
 		"transition": "custom",
-		"techniques": ["custom", "fade", "scale"],
+		"techniques": [
+			"custom",
+			"fade",
+			"scale"
+		],
 		"rationale": "The stakeholder-endorsed FLIP-style glide moves a card between zones on status change with a landing pulse; Subtle crossfades in place; Off and prefers-reduced-motion update instantly while every timer cleans up."
 	},
 	"media": [
@@ -142,7 +213,9 @@
 			"source": "datasource",
 			"fit": "cover",
 			"binding": "presenceData",
-			"fields": ["profilePicture"],
+			"fields": [
+				"profilePicture"
+			],
 			"cache": "platform",
 			"preview": "data-uri",
 			"fallback": "Render a colored initials disc from a fixed 12-hue palette assigned by roster index; broken photo URLs fall back the same way.",
@@ -156,40 +229,130 @@
 		"fallback": "Coordinated Dark preset palette with torch red accent."
 	},
 	"presentation": {
-		"themes": ["dark", "light", "custom"],
+		"themes": [
+			"dark",
+			"light",
+			"custom"
+		],
 		"density": "dense",
 		"viewingDistance": "room",
 		"textRoles": [
-			{ "role": "primary", "selectors": [".wb-presence-hero-name", ".wb-presence-compact-name"] },
-			{ "role": "secondary", "selectors": [".wb-presence-board-title", ".wb-presence-card-name", ".wb-presence-hero-status", ".wb-presence-compact-status", ".wb-presence-empty-title"] },
-			{ "role": "metadata", "selectors": [".wb-presence-scope", ".wb-presence-zone-title", ".wb-presence-card-status", ".wb-presence-clock-time", ".wb-presence-ticker-text", ".wb-presence-more-label"] }
+			{
+				"role": "primary",
+				"selectors": [
+					".wb-presence-hero-name",
+					".wb-presence-compact-name"
+				]
+			},
+			{
+				"role": "secondary",
+				"selectors": [
+					".wb-presence-board-title",
+					".wb-presence-card-name",
+					".wb-presence-hero-status",
+					".wb-presence-compact-status",
+					".wb-presence-empty-title"
+				]
+			},
+			{
+				"role": "metadata",
+				"selectors": [
+					".wb-presence-scope",
+					".wb-presence-zone-title",
+					".wb-presence-card-status",
+					".wb-presence-clock-time",
+					".wb-presence-ticker-text",
+					".wb-presence-more-label"
+				]
+			}
 		]
 	},
-	"cadence": { "mode": "static" },
+	"cadence": {
+		"mode": "static"
+	},
 	"settings": [
-		{ "property": "scopeTitle", "purpose": "Scope subtitle shown after the board title in the header.", "effect": "scope-title" },
-		{ "property": "memberFilter", "purpose": "Comma or newline separated email prefixes or full addresses selecting exactly who is shown; empty shows everyone passing the photo rule.", "effect": "member-filter" },
-		{ "property": "requirePhoto", "purpose": "When the member filter is empty, only people with a profile photo are shown to exclude service accounts.", "effect": "require-photo" },
-		{ "property": "showHeader", "purpose": "Toggles the header bar with title, scope, clock, and live pill.", "effect": "show-header" },
-		{ "property": "showTicker", "purpose": "Toggles the footer ticker showing the last observed status change.", "effect": "show-ticker" },
-		{ "property": "showOfflineZone", "purpose": "When off, offline people are hidden and the board becomes a three-zone layout.", "effect": "show-offline-zone" },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "backgroundColor", "purpose": "Custom canvas color." },
-		{ "property": "panelColor", "purpose": "Custom zone and panel color." },
-		{ "property": "wellColor", "purpose": "Custom header and footer well color." },
-		{ "property": "textColor", "purpose": "Custom primary text color." },
-		{ "property": "mutedTextColor", "purpose": "Custom muted text color." },
-		{ "property": "accentColor", "purpose": "Custom accent color for the live pill, header rule, and highlights." },
-		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive status-change motion.", "effect": "motion-preset" }
+		{
+			"property": "scopeTitle",
+			"purpose": "Scope subtitle shown after the board title in the header.",
+			"effect": "scope-title"
+		},
+		{
+			"property": "memberFilter",
+			"purpose": "Comma or newline separated email prefixes or full addresses selecting exactly who is shown; empty shows everyone passing the photo rule.",
+			"effect": "member-filter"
+		},
+		{
+			"property": "requirePhoto",
+			"purpose": "When the member filter is empty, only people with a profile photo are shown to exclude service accounts.",
+			"effect": "require-photo"
+		},
+		{
+			"property": "showHeader",
+			"purpose": "Toggles the header bar with title, scope, clock, and live pill.",
+			"effect": "show-header"
+		},
+		{
+			"property": "showTicker",
+			"purpose": "Toggles the footer ticker showing the last observed status change.",
+			"effect": "show-ticker"
+		},
+		{
+			"property": "showOfflineZone",
+			"purpose": "When off, offline people are hidden and the board becomes a three-zone layout.",
+			"effect": "show-offline-zone"
+		},
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Custom canvas color."
+		},
+		{
+			"property": "panelColor",
+			"purpose": "Custom zone and panel color."
+		},
+		{
+			"property": "wellColor",
+			"purpose": "Custom header and footer well color."
+		},
+		{
+			"property": "textColor",
+			"purpose": "Custom primary text color."
+		},
+		{
+			"property": "mutedTextColor",
+			"purpose": "Custom muted text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Custom accent color for the live pill, header rule, and highlights."
+		},
+		{
+			"property": "motionPreset",
+			"purpose": "Selects Off, Subtle, or Expressive status-change motion.",
+			"effect": "motion-preset"
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "scope-title",
 			"role": "metadata",
-			"source": { "type": "setting", "properties": ["scopeTitle"] },
-			"selectors": [".wb-presence-scope"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"scopeTitle"
+				]
+			},
+			"selectors": [
+				".wb-presence-scope"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the scope tail while the fixed board title stays complete.",
 			"rationale": "The configurable scope must never displace the clock or live pill.",
 			"evidenceScenario": "long-names"
@@ -197,10 +360,19 @@
 		{
 			"id": "card-name",
 			"role": "secondary",
-			"source": { "type": "datasource", "properties": ["presenceData"] },
-			"selectors": [".wb-presence-card-name"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"presenceData"
+				]
+			},
+			"selectors": [
+				".wb-presence-card-name"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize long names on one line; the status badge, ring, and zone identity are never lost.",
 			"rationale": "Names vary widely; identity is preserved by avatar, ring color, and badge even when the tail is ellipsized.",
 			"evidenceScenario": "long-names"
@@ -208,10 +380,19 @@
 		{
 			"id": "compact-name",
 			"role": "primary",
-			"source": { "type": "datasource", "properties": ["presenceData"] },
-			"selectors": [".wb-presence-compact-name"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"presenceData"
+				]
+			},
+			"selectors": [
+				".wb-presence-compact-name"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize long names on one line at the compact scale; ring and badge keep identity readable.",
 			"rationale": "Compact panels carry one large name that must stay on a single line.",
 			"evidenceScenario": "compact-trio"
@@ -219,10 +400,19 @@
 		{
 			"id": "hero-name",
 			"role": "primary",
-			"source": { "type": "datasource", "properties": ["presenceData"] },
-			"selectors": [".wb-presence-hero-name"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"presenceData"
+				]
+			},
+			"selectors": [
+				".wb-presence-hero-name"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize long names on one line at the door-card scale; ring and badge keep identity readable.",
 			"rationale": "The door card carries one huge name that must stay on a single line.",
 			"evidenceScenario": "hero-door-card"
@@ -230,10 +420,20 @@
 		{
 			"id": "card-status",
 			"role": "metadata",
-			"source": { "type": "computed", "properties": ["availability", "activity"] },
-			"selectors": [".wb-presence-card-status"],
+			"source": {
+				"type": "computed",
+				"properties": [
+					"availability",
+					"activity"
+				]
+			},
+			"selectors": [
+				".wb-presence-card-status"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "The humanized status stays on one line so card cells keep a deterministic height for zone capacity; the rare overlong tail ellipsizes.",
 			"rationale": "Grid cards need stable geometry so each zone can cap itself at the cards that fit and never clip content.",
 			"evidenceScenario": "long-names"
@@ -241,10 +441,20 @@
 		{
 			"id": "compact-status",
 			"role": "secondary",
-			"source": { "type": "computed", "properties": ["availability", "activity"] },
-			"selectors": [".wb-presence-compact-status"],
+			"source": {
+				"type": "computed",
+				"properties": [
+					"availability",
+					"activity"
+				]
+			},
+			"selectors": [
+				".wb-presence-compact-status"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Uppercase status wraps to a bounded second line before the separate duration line is omitted.",
 			"rationale": "The compact status is a large uppercase statement in the status color.",
 			"evidenceScenario": "compact-trio"
@@ -252,10 +462,20 @@
 		{
 			"id": "hero-status",
 			"role": "secondary",
-			"source": { "type": "computed", "properties": ["availability", "activity"] },
-			"selectors": [".wb-presence-hero-status"],
+			"source": {
+				"type": "computed",
+				"properties": [
+					"availability",
+					"activity"
+				]
+			},
+			"selectors": [
+				".wb-presence-hero-status"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Uppercase status wraps to a bounded second line before the separate duration line is omitted.",
 			"rationale": "The hero status is a large uppercase statement in the status color.",
 			"evidenceScenario": "hero-door-card"
@@ -263,70 +483,151 @@
 		{
 			"id": "ticker-line",
 			"role": "metadata",
-			"source": { "type": "computed", "properties": ["ticker-last-change"] },
-			"selectors": [".wb-presence-ticker-text"],
+			"source": {
+				"type": "computed",
+				"properties": [
+					"ticker-last-change"
+				]
+			},
+			"selectors": [
+				".wb-presence-ticker-text"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the tail of the last-change line inside the fixed-height ticker well.",
 			"rationale": "The ticker is one quiet line and must never wrap or resize the board.",
 			"evidenceScenario": "long-names"
 		}
 	],
 	"states": [
-		{ "scenario": "dense-wall", "expectation": "Twenty-five or more people render the dense quadrant wall with smaller cards and every zone scannable." },
-		{ "scenario": "compact-trio", "expectation": "Three people render full-height compact panels with status-tinted radial glows and uppercase status labels." },
-		{ "scenario": "hero-door-card", "expectation": "A single person renders the huge door-card avatar with ring, badge, glow, and uppercase status." },
-		{ "scenario": "light-theme", "expectation": "The coordinated Light preset resolves the full palette while presence colors and contrast hold." },
-		{ "scenario": "empty", "expectation": "An empty or unmatched roster renders the designed empty state, never a blank widget." },
-		{ "scenario": "malformed-data", "expectation": "A payload without a valid users array renders the designed data-problem state without crashing." },
-		{ "scenario": "all-offline", "expectation": "All-offline rosters show grayscale dimmed avatars and the non-offline zones show faint empty-zone labels." },
-		{ "scenario": "broken-photos", "expectation": "Missing and broken photo URLs fall back to colored initials discs from the fixed palette." },
-		{ "scenario": "long-names", "expectation": "Very long names, scope, and status labels ellipsize or wrap without displacing card geometry." },
-		{ "scenario": "hidden-offline", "expectation": "With the offline zone hidden, offline people disappear and the remaining three zones fill the board sensibly." },
-		{ "scenario": "chrome-hidden", "expectation": "With header and ticker off, the zones fill the full surface cleanly." },
-		{ "scenario": "live-datasource-update", "expectation": "A pushed datasource update changes a person's zone, stamps the since time, and updates the ticker without rebuilding the app." }
+		{
+			"scenario": "dense-wall",
+			"expectation": "Twenty-five or more people render the dense quadrant wall with smaller cards and every zone scannable."
+		},
+		{
+			"scenario": "compact-trio",
+			"expectation": "Three people render full-height compact panels with status-tinted radial glows and uppercase status labels."
+		},
+		{
+			"scenario": "hero-door-card",
+			"expectation": "A single person renders the huge door-card avatar with ring, badge, glow, and uppercase status."
+		},
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated Light preset resolves the full palette while presence colors and contrast hold."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An empty or unmatched roster renders the designed empty state, never a blank widget."
+		},
+		{
+			"scenario": "malformed-data",
+			"expectation": "A payload without a valid users array renders the designed data-problem state without crashing."
+		},
+		{
+			"scenario": "all-offline",
+			"expectation": "All-offline rosters show grayscale dimmed avatars and the non-offline zones show faint empty-zone labels."
+		},
+		{
+			"scenario": "broken-photos",
+			"expectation": "Missing and broken photo URLs fall back to colored initials discs from the fixed palette."
+		},
+		{
+			"scenario": "long-names",
+			"expectation": "Very long names, scope, and status labels ellipsize or wrap without displacing card geometry."
+		},
+		{
+			"scenario": "hidden-offline",
+			"expectation": "With the offline zone hidden, offline people disappear and the remaining three zones fill the board sensibly."
+		},
+		{
+			"scenario": "chrome-hidden",
+			"expectation": "With header and ticker off, the zones fill the full surface cleanly."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "A pushed datasource update changes a person's zone, stamps the since time, and updates the ticker without rebuilding the app."
+		}
 	],
 	"behaviors": [
 		{
 			"id": "adaptive-layout-selection",
 			"expectation": "Layout mode follows visible people count: 1 hero, 2-3 compact, 4-20 quadrant, 21+ dense quadrant.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "presence-normalization",
 			"expectation": "Availability values map to the four presence groups, activity-preferring humanized labels, and duplicate or service-account records are skipped.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "status-change-motion",
 			"expectation": "A status change glides the card between zones with a landing pulse when motion is Expressive, crossfades in place when Subtle, updates instantly when Off, and all animations and timers clean up on destroy.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "duration-ticking",
 			"expectation": "Observed status durations format as just now, minutes, then hours and refresh on an instance-local tick that is destroyed on cleanup.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "member-filtering",
 			"expectation": "The member filter matches email prefixes or full addresses case-insensitively; empty filter applies the photo rule.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "live-update",
 			"expectation": "Pushed datasource updates re-render presence in place and update the ticker.",
-			"evidence": { "scenario": "live-datasource-update" }
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
 		},
 		{
 			"id": "zone-overflow-chip",
 			"expectation": "Each zone renders only the cards that fit its measured area and summarizes the remainder as a +N chip instead of clipping content.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "status-indicator-conformance",
+			"expectation": "Every presence card states availability in words as well as by the coloured ring, and that text stays legible against the card.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "profile-photos", "source": "datasource", "binding": "presenceData", "required": false }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "profile-photos",
+			"source": "datasource",
+			"binding": "presenceData",
+			"required": false
+		}
 	],
 	"visualDirection": {
 		"source": "reference-led",
