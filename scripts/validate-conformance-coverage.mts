@@ -35,7 +35,7 @@ const REQUIREMENTS: SuiteRequirement[] = [
 	{
 		suite: 'pagination',
 		register: 'registerPaginationConformance',
-		mechanisms: ['content-paging'],
+		mechanisms: ['content-paging', 'manual-paging'],
 		capabilities: [],
 		because: 'a pager that drops a record shows a board that looks entirely correct and is wrong'
 	},

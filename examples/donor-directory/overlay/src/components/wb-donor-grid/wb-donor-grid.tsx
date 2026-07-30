@@ -60,7 +60,7 @@ const AutoFitEntryField = (props: AutoFitEntryFieldProps): JSX.Element => {
 	});
 
 	return (
-		<div class={`${style.field} ${style[`field${props.index}`]}`}>
+		<div class={`${style.field} ${style[`field${props.index}`]}`} data-entry-field={props.index}>
 			<span ref={fitText} class={`${style['field-text']} ${fieldClassName(props.index)}`} title={props.text}>
 				{props.text}
 			</span>
