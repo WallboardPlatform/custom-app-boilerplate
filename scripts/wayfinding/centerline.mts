@@ -93,6 +93,17 @@ export const closeWalkableMask = (source: Uint8Array, columns: number, rows: num
 	return morph(morph(source, columns, rows, radius, 'dilate'), columns, rows, radius, 'erode');
 };
 
+export const erodeWalkableMask = (
+	source: Uint8Array,
+	columns: number,
+	rows: number,
+	radius: number
+): Uint8Array => {
+	if (radius <= 0) return new Uint8Array(source);
+
+	return morph(source, columns, rows, radius, 'erode');
+};
+
 const transitionCount = (values: readonly number[]): number => values.reduce((count: number, value: number, index: number): number => {
 	return count + (value === 0 && values[(index + 1) % values.length] === 1 ? 1 : 0);
 }, 0);

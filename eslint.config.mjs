@@ -17,12 +17,22 @@ export default tseslint.config(
 
 	// ✅ Typed TypeScript files (with full type information)
 	{
-		files: ['**/src/**/*.{ts,tsx}', 'scripts/**/*.mts'],
+		files: [
+			'**/src/**/*.{ts,tsx}',
+			'scripts/**/*.mts',
+			'scripts/wayfinding/editor-core/**/*.ts',
+			'scripts/wayfinding/workbench/v2/**/*.{ts,tsx}',
+			'scripts/wayfinding/workbench/{playwright.v2.config,studio-v2.spec}.ts'
+		],
 
 		languageOptions: {
 			parserOptions: {
 				parser: '@typescript-eslint/parser',
-				project: ['./tsconfig.json', './tsconfig.scripts.json'],
+				project: [
+					'./tsconfig.json',
+					'./tsconfig.scripts.json',
+					'./scripts/wayfinding/workbench/tsconfig.v2.json'
+				],
 				tsconfigRootDir: process.cwd(),
 				ecmaVersion: 2020,
 				sourceType: 'module',

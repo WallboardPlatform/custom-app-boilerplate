@@ -1,85 +1,85 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "7031210ed8f8b500a22af5fffd80e76a81b3510836edd80081bc586647d5a071",
-	"reviewedAt": "2026-07-27T15:47:45.483Z",
-	"reviewer": "Claude visual QA",
+	"sourceHash": "3f3aff110b5caad5074d92f524bf6b5b284410b1bbc8fb6e8c05a0c42f0ce444",
+	"reviewedAt": "2026-07-29T20:45:52.821Z",
+	"reviewer": "Codex visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Published .wbmap drives the visitor directory, floor and category filters, language selector, layer toggles, and 2D/3D switch; scope matches the approved runtime."
+			"notes": "The published map package drives the 2D and 3D maps, directory, localized filters, selected destination, reviewed route, and turn-by-turn visitor guidance."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "Northline campus geometry, destination hierarchy, directory numbering, and brand mark are preserved from the authored project rather than restyled."
+			"notes": "Northline geometry, destinations, graph topology, calibrated distances, media, labels, and camera framing remain sourced from the authored Studio project."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "Map-first composition with a restrained directory rail reads as a purpose-built spatial product, not a dashboard template."
+			"notes": "The architectural map, persistent spatial labels, route flow, arrival treatment, and compact directory read as a purpose-built wayfinding product."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Destination names on the extrusions and the directory rows stay legible at 1920x1080 and 1366x768; room-distance floors are met."
+			"notes": "Primary headings, map labels, directory rows, route steps, and distance summary remain legible at Full HD and 1366x768 without clipped text ink."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Dark preset inverts the chrome with adequate contrast. The floor plate stays light by design because it is authored artwork, not a themed surface."
+			"notes": "Both the light and dark kiosk chrome retain clear hierarchy and readable controls; the authored floor plate remains intentionally light for map contrast."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Directory rows clamp category and status text; the compact list scrolls with a deliberately clipped final row instead of overflowing."
+			"notes": "Destination and status text clamp safely, the directory uses bounded scrolling, and the selected detail hierarchy fits without control or text overlap."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Map holds the dominant area and controls stay bounded. The 2D idle state is intentionally sparse: fills are hidden until selection, leaving labels on the plate."
+			"notes": "The map stays dominant. In the selected 2D state the destination list compresses cleanly so photo, metadata, route steps, and distance remain visible without panel overflow."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "The published map package is now a static import rather than a runtime-built URL, so the bundler emits and rewrites it and the review fingerprint tracks it. Brand, symbol and photo assets render from the packaged artifact in both views."
+			"notes": "The bundled wbmap supplies coordinated map colors, media, labels, and graph data; branded symbol and photo assets render correctly in both presentation modes."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "The spatial canvas, dual 2D/3D presentation, and semantic map layers remain distinct from the repository dashboard and editorial examples."
+			"notes": "The semantic 2D and extruded 3D map surfaces, graph-derived directions, and spatial controls are materially distinct from dashboard and editorial examples."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD 3D idle view renders nonblank and correctly framed. No destination is selected, so no route or detail panel is expected here."
+			"notes": "Full-HD 3D view is nonblank, correctly framed, and preserves a balanced map-to-directory composition."
 		},
 		{
 			"file": "compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact 3D keeps the map usable; the directory scrolls with a partially visible final row as the intended scroll affordance."
+			"notes": "Compact 3D keeps the complete control structure readable while the bounded destination list communicates scroll availability."
 		},
 		{
 			"file": "scenario-app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Matches the default scenario framing; only the origin-marker pulse phase differs between runs."
+			"notes": "Default scenario matches the primary Full-HD composition with stable authored camera framing."
 		},
 		{
 			"file": "scenario-compact-1366x768.png",
 			"status": "pass",
-			"notes": "Compact scenario preserves the rail structure and readable controls with no overlap or clipped control."
+			"notes": "Compact scenario has no clipped controls, panel collisions, or horizontal overflow."
 		},
 		{
 			"file": "scenario-dark-theme-1366x768.png",
 			"status": "pass",
-			"notes": "Dark chrome keeps headings, directory rows, status text, and the active view toggle readable against the dark panel."
+			"notes": "Dark theme retains strong contrast for headings, filters, directory rows, status labels, and the active view toggle."
 		},
 		{
 			"file": "scenario-flat-map-1920x1080.png",
 			"status": "pass",
-			"notes": "Flat-map scenario hides extrusions and keeps labels, brand mark, symbol, and origin marker; byte-identical to the previously accepted reference."
+			"notes": "Selected 2D state clearly shows all authored spaces, the highlighted destination, cased directional route flow, arrival marker, photo, deterministic turn steps, and calibrated distance without overflow."
 		}
 	],
 	"unresolvedFindings": []

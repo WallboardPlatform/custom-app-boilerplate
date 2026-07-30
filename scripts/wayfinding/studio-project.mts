@@ -191,6 +191,7 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 	floor?: string;
 	hours?: string;
 	id: string;
+	logoAssetId?: string;
 	mapNumber?: string;
 	name: string;
 	phone?: string;
@@ -286,9 +287,9 @@ export const createWayfindingStudioProjectDefaults = (): WayfindingStudioProject
 	route: {
 		animation: 'flow',
 		animationSpeed: 48,
-		color: '#f04438',
+		color: '#246bfd',
 		cornerRadius: 18,
-		lineWidth: 7
+		lineWidth: 9
 	},
 	walkable: { extrusionHeight: 0, fillColor: '#55bfa7', fillOpacity: 0.28 }
 });
@@ -374,7 +375,7 @@ const assertWayfindingStudioProjectShape: (value: unknown) => asserts value is W
 export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioProject => {
 	assertWayfindingStudioProjectShape(value);
 
-	const project: WayfindingStudioProject = value;
+	const project: WayfindingStudioProject = JSON.parse(JSON.stringify(value)) as WayfindingStudioProject;
 	project.categories = Array.from(new Set([
 		...(Array.isArray(project.categories) ? project.categories.filter((category): category is string => typeof category === 'string') : []),
 		...project.destinations.map((destination): string | undefined => destination.category).filter((category): category is string => Boolean(category))
@@ -721,6 +722,13 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 	for (const destination of project.destinations) {
 		if (destination.floor && !floorIds.includes(destination.floor)) issues.push({ code: 'destination-floor-missing', elementIds: [destination.id], message: `Destination '${destination.id}' references missing floor '${destination.floor}'.`, severity: 'error' });
 
+		if (destination.logoAssetId) {
+			const asset: WayfindingStudioAsset | undefined = assetsById.get(destination.logoAssetId);
+
+			if (!asset) issues.push({ code: 'missing-destination-logo', elementIds: [destination.id, destination.logoAssetId], message: `Destination '${destination.id}' references missing logo '${destination.logoAssetId}'.`, severity: 'error' });
+			else if (asset.kind !== 'logo') issues.push({ code: 'destination-logo-kind-mismatch', elementIds: [destination.id, destination.logoAssetId], message: `Destination '${destination.id}' logo '${destination.logoAssetId}' must use a logo asset.`, severity: 'error' });
+		}
+
 		for (const assetId of destination.photoAssetIds ?? []) {
 			const asset: WayfindingStudioAsset | undefined = assetsById.get(assetId);
 
@@ -1059,6 +1067,18 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 	const previousManagedIds: Set<string> = new Set(project.graph.nodes.filter((node: WayfindingNode): boolean => Boolean(node.semanticElementId)).map((node: WayfindingNode): string => node.id));
 	const manualNodes: WayfindingNode[] = project.graph.nodes.filter((node: WayfindingNode): boolean => !node.semanticElementId);
 	const managedNodes: WayfindingNode[] = [];
+	const locationById = new Map(elements
+		.filter((element): element is WayfindingStudioPolygonElement => element.type === 'location')
+		.map((element): [string, WayfindingStudioPolygonElement] => [element.id, element]));
+	const primaryDoorByLocationId = new Map<string, WayfindingStudioDoorElement>();
+	const canonicalNodeIdByManagedNodeId = new Map<string, string>();
+
+	for (const door of elements.filter((element): element is WayfindingStudioDoorElement => element.type === 'door')) {
+		if (!door.locationId || primaryDoorByLocationId.has(door.locationId)) continue;
+		const location = locationById.get(door.locationId);
+
+		if (location?.destinationId) primaryDoorByLocationId.set(location.id, door);
+	}
 
 	for (const element of elements) {
 		if (element.type === 'origin') {
@@ -1068,15 +1088,37 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 		} else if (element.type === 'poi' && element.destinationId) {
 			managedNodes.push({ id: managedNodeId(element.id), kind: 'location', levelId: element.floorId, locationId: element.destinationId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
 		} else if (element.type === 'door') {
+			const primaryDoor = element.locationId
+				? primaryDoorByLocationId.get(element.locationId)
+				: undefined;
+
+			if (primaryDoor?.id === element.id) {
+				canonicalNodeIdByManagedNodeId.set(
+					managedNodeId(element.id),
+					managedNodeId(primaryDoor.locationId!)
+				);
+
+				continue;
+			}
 			managedNodes.push({ id: managedNodeId(element.id), kind: 'route', levelId: element.floorId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
 		} else if (element.type === 'location' && element.destinationId) {
-			const door: WayfindingStudioDoorElement | undefined = elements.find((candidate: WayfindingStudioElement): candidate is WayfindingStudioDoorElement => candidate.type === 'door' && candidate.locationId === element.id);
+			const door: WayfindingStudioDoorElement | undefined = primaryDoorByLocationId.get(element.id);
 			const anchor: WayfindingPoint = door?.point ?? element.geometry[0] ?? { x: 0, y: 0 };
 			managedNodes.push({ id: managedNodeId(element.id), kind: 'location', levelId: element.floorId, locationId: element.destinationId, semanticElementId: element.id, x: anchor.x, y: anchor.y });
 		}
 	}
 
-	const retainedEdges: WayfindingEdge[] = project.graph.edges.filter((edge: WayfindingEdge): boolean => !edge.id.startsWith('semantic-transition:'));
+	const retainedEdges: WayfindingEdge[] = project.graph.edges
+		.filter((edge: WayfindingEdge): boolean => !edge.id.startsWith('semantic-transition:'))
+		.map((edge: WayfindingEdge): WayfindingEdge => {
+			const from: string = canonicalNodeIdByManagedNodeId.get(edge.from) ?? edge.from;
+			const to: string = canonicalNodeIdByManagedNodeId.get(edge.to) ?? edge.to;
+
+			return from === edge.from && to === edge.to
+				? edge
+				: { ...edge, from, to };
+		})
+		.filter((edge: WayfindingEdge): boolean => edge.from !== edge.to);
 	const transitionEdges: WayfindingEdge[] = [];
 	const transitionGroups = new Map<string, WayfindingStudioTransitionElement[]>();
 
