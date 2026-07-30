@@ -162,11 +162,13 @@ void test('preserves door route anchors and their connected segments during sync
 		to: 'semantic:meeting-room-door',
 		traversal: 'indoor-corridor'
 	});
+	const connectedSegment = project.graph.edges[0];
 
 	synchronizeWayfindingStudioGraph(project);
 
 	assert.ok(project.graph.nodes.some((node): boolean => node.id === 'semantic:meeting-room-door'));
 	assert.ok(project.graph.edges.some((edge): boolean => edge.id === 'corridor-to-door'));
+	assert.strictEqual(project.graph.edges[0], connectedSegment);
 });
 
 void test('uses one canonical route anchor for a destination and its primary linked door', () => {

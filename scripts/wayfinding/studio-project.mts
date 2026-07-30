@@ -1110,11 +1110,14 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 
 	const retainedEdges: WayfindingEdge[] = project.graph.edges
 		.filter((edge: WayfindingEdge): boolean => !edge.id.startsWith('semantic-transition:'))
-		.map((edge: WayfindingEdge): WayfindingEdge => ({
-			...edge,
-			from: canonicalNodeIdByManagedNodeId.get(edge.from) ?? edge.from,
-			to: canonicalNodeIdByManagedNodeId.get(edge.to) ?? edge.to
-		}))
+		.map((edge: WayfindingEdge): WayfindingEdge => {
+			const from: string = canonicalNodeIdByManagedNodeId.get(edge.from) ?? edge.from;
+			const to: string = canonicalNodeIdByManagedNodeId.get(edge.to) ?? edge.to;
+
+			return from === edge.from && to === edge.to
+				? edge
+				: { ...edge, from, to };
+		})
 		.filter((edge: WayfindingEdge): boolean => edge.from !== edge.to);
 	const transitionEdges: WayfindingEdge[] = [];
 	const transitionGroups = new Map<string, WayfindingStudioTransitionElement[]>();
