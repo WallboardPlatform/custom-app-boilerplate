@@ -22,8 +22,8 @@ const testUser = (
 	displayName: name,
 	givenName: name.split(' ')[0],
 	surname: name.split(' ')[1],
-	mail: `${localPart}@example.com`,
-	userPrincipalName: `${localPart}@example.com`,
+	mail: `${localPart}@example.invalid`,
+	userPrincipalName: `${localPart}@example.invalid`,
 	jobTitle: 'Team Member',
 	department: 'Company',
 	profilePicture: PHOTO,
@@ -97,7 +97,7 @@ test('normalization skips service accounts and duplicates and humanizes labels',
 test('member filter matches prefixes and full addresses case-insensitively', async ({ page }): Promise<void> => {
 	await openScenario(page);
 
-	await pushConfiguration(page, { memberFilter: 'AVA.WINTER, Theo.Marsh@Example.com' });
+	await pushConfiguration(page, { memberFilter: 'AVA.WINTER, Theo.Marsh@Example.invalid' });
 	await expect(page.locator('.wb-presence-app')).toHaveAttribute('data-people-count', '2');
 	await expect(page.locator('[data-person="ava.winter"]')).toHaveCount(1);
 	await expect(page.locator('[data-person="theo.marsh"]')).toHaveCount(1);

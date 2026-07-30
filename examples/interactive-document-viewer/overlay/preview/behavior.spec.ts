@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+
+import { registerKeyboardConformance } from './conformance/keyboard';
 
 interface PreviewWindow extends Window {
 	__wallboardPreview?: {
@@ -907,4 +909,22 @@ test('teardown releases the mounted app cleanly', async ({ page }): Promise<void
 		await (window as PreviewWindow).__wallboardPreview?.destroy();
 	});
 	await expect(page.locator('[data-preview-id="interactive-document-viewer-root"]')).toHaveCount(0);
+});
+
+/*
+ * The viewer uses the shared on-screen keyboard, which is exactly why this registration matters:
+ * the shared component is where a keyboard defect costs the most, and it was only being
+ * conformance-checked through one example.
+ */
+registerKeyboardConformance({
+	name: 'Document directory search',
+	open: async (page: Page): Promise<void> => {
+		await openScenario(page, 'landscape', false);
+		await page.getByRole('button', { name: 'Open on-screen keyboard' }).click();
+		await expect(page.getByRole('dialog', { name: 'On-screen keyboard' })).toBeVisible();
+	},
+	keyboard: (page: Page): Locator => page.getByRole('dialog', { name: 'On-screen keyboard' }),
+	letterKeyName: 'Key V',
+	spaceKeyName: 'Space',
+	focusTarget: (page: Page): Locator => page.getByRole('searchbox').first()
 });
