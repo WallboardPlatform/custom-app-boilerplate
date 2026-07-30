@@ -203,6 +203,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 				<div
 					class="route-readiness"
 					classList={{
+						'route-readiness--compact': state().workspace === 'route-edit' && view() !== 'build',
 						'route-readiness--highlight': readiness().status === 'highlight-ready',
 						'route-readiness--ready': readiness().status === 'ready',
 						'route-readiness--warning': readiness().status === 'needs-work'
@@ -235,18 +236,23 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 							}</strong>
 						</span>
 					</div>
-					<div class="route-readiness__metrics">
-						<span><strong>{readiness().walkableAreas}</strong> spaces</span>
-						<span><strong>{readiness().origins}</strong> starts</span>
-						<span><strong>{readiness().destinationAnchors}</strong> positions</span>
-						<span><strong>{readiness().connectedDestinations}/{readiness().routeableDestinations}</strong> reachable</span>
-					</div>
-					<Show when={readiness().status === 'highlight-ready'}>
+					<Show when={state().workspace !== 'route-edit' || view() === 'build'}>
+						<div class="route-readiness__metrics">
+							<span><strong>{readiness().walkableAreas}</strong> spaces</span>
+							<span><strong>{readiness().origins}</strong> starts</span>
+							<span><strong>{readiness().destinationAnchors}</strong> positions</span>
+							<span><strong>{readiness().connectedDestinations}/{readiness().routeableDestinations}</strong> reachable</span>
+						</div>
+					</Show>
+					<Show when={readiness().status === 'highlight-ready' && view() === 'build'}>
 						<p class="route-readiness__note">
 							This project can publish its selected guidance without a route graph. Build routes only when the customer needs turn-by-turn guidance.
 						</p>
 					</Show>
-					<Show when={readiness().blockers.length || readiness().warnings.length}>
+					<Show when={
+						(state().workspace !== 'route-edit' || view() === 'build')
+						&& (readiness().blockers.length || readiness().warnings.length)
+					}>
 						<div class="route-readiness__issues">
 							<For each={[...readiness().blockers, ...readiness().warnings]}>
 								{(item) => (
@@ -432,28 +438,41 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 							<span><strong>{floorNodes().length}</strong> nodes</span>
 							<span><strong>{floorEdges().length}</strong> segments</span>
 						</div>
-						<button
-							type="button"
-							class="wb-studio-action primary full"
-							disabled={
-								readiness().walkableAreas === 0
-								|| readiness().origins === 0
-								|| readiness().destinationAnchors === 0
-							}
-							onClick={() => props.onBuildRoutes()}
-						>
-							<RefreshCw size={16} />
-							{floorEdges().length ? 'Rebuild route network' : 'Build route network'}
-						</button>
-						<Show when={
-							readiness().walkableAreas === 0
-							|| readiness().origins === 0
-							|| readiness().destinationAnchors === 0
-						}>
-							<p class="field-hint">
-								Complete the missing prerequisites above before generating routes.
-							</p>
+						<Show when={readiness().buildBlockers.length > 0}>
+							<div class="route-build-requirements" aria-label="Route build requirements">
+								<div class="route-build-requirements__heading">
+									<strong>Complete {readiness().buildBlockers.length} requirement{readiness().buildBlockers.length === 1 ? '' : 's'}</strong>
+									<span>Each item opens the exact tool you need.</span>
+								</div>
+								<For each={readiness().buildBlockers}>
+									{(item, index) => (
+										<button
+											type="button"
+											class="route-build-requirement"
+											onClick={() => goToReadinessAction(item.action)}
+										>
+											<span>{index() + 1}</span>
+											<span>
+												<strong>{item.title}</strong>
+												<small>{item.body}</small>
+											</span>
+											<span aria-hidden="true">Fix</span>
+										</button>
+									)}
+								</For>
+							</div>
 						</Show>
+						<div class="route-build-cta">
+							<button
+								type="button"
+								class="wb-studio-action primary full"
+								disabled={readiness().buildBlockers.length > 0}
+								onClick={() => props.onBuildRoutes()}
+							>
+								<RefreshCw size={16} />
+								{floorEdges().length ? 'Rebuild route network' : 'Build route network'}
+							</button>
+						</div>
 						<div class="route-tip">
 							<Network size={17} />
 							<span>Generation is a starting point. Review every destination route in Test before publishing.</span>
@@ -498,7 +517,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 							<strong>Correct the network directly</strong>
 							<p>Move junctions, reshape segments, insert bends, or draw missing connections on the map.</p>
 						</div>
-						<div class="route-task-grid">
+						<div class="route-task-grid route-task-grid--editing">
 							<ToolButton
 								active={state().activeTool === 'select'}
 								icon={MousePointer2}

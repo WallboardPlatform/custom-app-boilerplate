@@ -31,7 +31,7 @@ export type DragInteraction =
 		moved: boolean;
 		origin: WayfindingPoint;
 		pointerId: number;
-		property: 'angle' | 'facingDegrees';
+		property: 'angle' | 'facingDegrees' | 'rotationDegrees';
 	}
 	| {
 		aspectRatio: number;
@@ -43,6 +43,7 @@ export type DragInteraction =
 		originalHeight: number;
 		originalWidth: number;
 		pointerId: number;
+		rotationDegrees: number;
 		width: number;
 	}
 	| {

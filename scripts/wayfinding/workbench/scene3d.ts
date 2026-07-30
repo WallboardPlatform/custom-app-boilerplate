@@ -318,6 +318,7 @@ export class WayfindingScene3d {
 		this.disposeSceneContent();
 		this.host.dataset.renderedMediaCount = '0';
 		this.host.dataset.readyMediaCount = '0';
+		this.host.dataset.cameraFacingMediaCount = '0';
 		this.host.dataset.labelCount = '0';
 		this.host.dataset.destinationLabelCount = '0';
 		this.host.dataset.destinationLabelTexts = '[]';
@@ -561,17 +562,45 @@ export class WayfindingScene3d {
 		});
 		image.src = asset.dataUrl;
 		texture.colorSpace = THREE.SRGBColorSpace;
-		const material = new THREE.MeshBasicMaterial({
+		const materialOptions = {
 			depthTest: false,
 			map: texture,
-			side: THREE.DoubleSide,
 			transparent: true
+		};
+		const center = media.point;
+		const position = centeredPoint(
+			floor,
+			center,
+			labelElevation(floor, floor.elements, center, wayfindingStudioProjectDefaults(project))
+		);
+
+		if (media.destinationId) {
+			const sprite = new THREE.Sprite(new THREE.SpriteMaterial(materialOptions));
+			sprite.position.copy(position);
+			sprite.scale.set(media.width, media.height, 1);
+			sprite.userData.elementId = media.id;
+			sprite.userData.selectionPulse = true;
+			sprite.userData.cameraFacing = true;
+			sprite.renderOrder = 19;
+			this.selectableObjects.push(sprite);
+			this.addDisposable(sprite);
+			this.scene.add(sprite);
+			this.host.dataset.renderedMediaCount = String(Number(this.host.dataset.renderedMediaCount ?? 0) + 1);
+			this.host.dataset.cameraFacingMediaCount = String(
+				Number(this.host.dataset.cameraFacingMediaCount ?? 0) + 1
+			);
+
+			return;
+		}
+		const material = new THREE.MeshBasicMaterial({
+			...materialOptions,
+			side: THREE.DoubleSide
 		});
 		const geometry = new THREE.PlaneGeometry(media.width, media.height);
 		const plane = new THREE.Mesh(geometry, material);
-		const center = media.point;
-		plane.position.copy(centeredPoint(floor, center, labelElevation(floor, floor.elements, center, wayfindingStudioProjectDefaults(project))));
+		plane.position.copy(position);
 		plane.rotation.x = -Math.PI / 2;
+		plane.rotation.z = THREE.MathUtils.degToRad(-(media.rotationDegrees ?? 0));
 		plane.userData.elementId = media.id;
 		plane.userData.selectionPulse = true;
 		plane.renderOrder = 19;

@@ -11,6 +11,10 @@ void test('highlight projects do not invent routing blockers', () => {
 	assert.equal(readiness.mode, 'highlight');
 	assert.equal(readiness.status, 'highlight-ready');
 	assert.deepEqual(readiness.blockers, []);
+	assert.deepEqual(
+		readiness.buildBlockers.map((item) => item.action),
+		['define-space', 'add-origin', 'add-destinations']
+	);
 });
 
 void test('route projects explain every missing prerequisite', () => {

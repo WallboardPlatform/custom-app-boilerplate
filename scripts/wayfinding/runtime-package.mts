@@ -179,7 +179,10 @@ const publishedDestinations = (project: WayfindingStudioProject): WayfindingPubl
 				floorId: element.floorId,
 				representation: element.type === 'poi' ? 'point' : 'area'
 			})),
-			symbolAssetIds: media.filter((element): boolean => element.type === 'icon' && element.destinationId === destination.id).map((element): string => element.assetId)
+			symbolAssetIds: [
+				...(destination.symbolAssetId ? [destination.symbolAssetId] : []),
+				...media.filter((element): boolean => element.type === 'icon' && element.destinationId === destination.id).map((element): string => element.assetId)
+			].filter((assetId, index, values) => values.indexOf(assetId) === index)
 		};
 	});
 };

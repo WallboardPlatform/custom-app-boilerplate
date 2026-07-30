@@ -308,6 +308,29 @@ export const ElementInspector = (props: {
 						<output>{Math.round(mediaLongEdge())} px</output>
 					</div>
 				</Field>
+				<Field label="Rotation" hint="Rotate around the image center. Hold Shift on the canvas handle to snap to 15° increments.">
+					<div class="range-control">
+						<input
+							type="range"
+							aria-label="Image rotation"
+							min={-180}
+							max={180}
+							step={1}
+							value={props.element.type === 'icon' || props.element.type === 'logo'
+								? Math.round(props.element.rotationDegrees ?? 0)
+								: 0}
+							onInput={(event) => patch(
+								{ rotationDegrees: Number(event.currentTarget.value) },
+								'media-rotation'
+							)}
+						/>
+						<output>{Math.round(
+							props.element.type === 'icon' || props.element.type === 'logo'
+								? props.element.rotationDegrees ?? 0
+								: 0
+						)}°</output>
+					</div>
+				</Field>
 			</Show>
 			<Show when={props.element.type === 'location' || props.element.type === 'walkable' || props.element.type === 'obstacle'}>
 				<div class="field-grid">
@@ -752,6 +775,47 @@ export const DestinationInspector = (props: {
 					/>
 					Show directions for this destination
 				</label>
+			</InspectorGroup>
+			<InspectorGroup
+				title="Map appearance"
+				body="Choose the symbol visitors see on the map and in directory results."
+			>
+				<Show
+					when={(props.assets?.filter((asset) => asset.kind === 'icon').length ?? 0) > 0}
+					fallback={(
+						<div class="visitor-detail__notice">
+							Add a built-in or uploaded symbol in Assets, then return here to assign it.
+						</div>
+					)}
+				>
+					<Field composite label="Location symbol" hint="Replaces the generic destination dot.">
+						<div class="destination-symbol-grid" role="group" aria-label="Location symbol">
+							<button
+								type="button"
+								classList={{ selected: !props.destination.symbolAssetId }}
+								aria-pressed={!props.destination.symbolAssetId}
+								onClick={() => props.patch(props.destination, { symbolAssetId: undefined })}
+							>
+								<span class="destination-symbol-generic"><MapPin size={18} /></span>
+								<span>Generic</span>
+							</button>
+							<For each={props.assets?.filter((asset) => asset.kind === 'icon') ?? []}>
+								{(asset) => (
+									<button
+										type="button"
+										classList={{ selected: props.destination.symbolAssetId === asset.id }}
+										aria-label={`Use ${asset.name} as the location symbol`}
+										aria-pressed={props.destination.symbolAssetId === asset.id}
+										onClick={() => props.patch(props.destination, { symbolAssetId: asset.id })}
+									>
+										<img src={asset.dataUrl} alt="" />
+										<span>{asset.name}</span>
+									</button>
+								)}
+							</For>
+						</div>
+					</Field>
+				</Show>
 			</InspectorGroup>
 			<Show when={(props.assets?.filter((asset) => asset.kind === 'logo' || asset.kind === 'photo').length ?? 0) > 0}>
 				<InspectorGroup

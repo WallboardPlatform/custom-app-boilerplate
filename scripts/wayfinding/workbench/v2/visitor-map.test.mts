@@ -55,6 +55,27 @@ void test('visitor map items use translated names and the authored location cent
 	assert.equal(item.geometry?.length, 4);
 });
 
+void test('visitor map items prefer a destination-owned symbol over generic markers', (): void => {
+	const symbolProject = structuredClone(project);
+	symbolProject.assets.push({
+		dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+',
+		id: 'symbol-information',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Information'
+	});
+	symbolProject.destinations[0].symbolAssetId = 'symbol-information';
+	const [item] = buildVisitorMapItems(
+		symbolProject,
+		'level-0',
+		'en',
+		symbolProject.destinations
+	);
+
+	assert.equal(item.symbolDataUrl, 'data:image/svg+xml;base64,PHN2Zy8+');
+	assert.equal(visitorMarkerIds([item], 1).has('destination-a'), true);
+});
+
 void test('semantic zoom exposes compact, standard, and detailed tiers', (): void => {
 	assert.equal(visitorMapDetail(0.4), 'compact');
 	assert.equal(visitorMapDetail(1), 'standard');
@@ -83,6 +104,20 @@ void test('marker density follows semantic zoom and always preserves the selecti
 	assert.equal(visitorMarkerIds(items, 1.8).size, 24);
 	assert.ok(visitorMarkerIds(items, 0.4, 'destination-29').has('destination-29'));
 	assert.ok(visitorMarkerIds(items, 1).has('destination-0'));
+});
+
+void test('compact zoom preserves authored symbols without introducing generic marker clutter', (): void => {
+	const items = Array.from({ length: 12 }, (_, index) => ({
+		anchor: { x: index * 10, y: 20 },
+		description: '',
+		destinationId: `destination-${index}`,
+		name: `Destination ${index}`,
+		presentation: 'ready' as const,
+		symbolDataUrl: index < 3 ? `data:image/svg+xml;base64,${index}` : undefined
+	}));
+	const visible = visitorMarkerIds(items, 0.4);
+
+	assert.deepEqual([...visible], ['destination-0', 'destination-1', 'destination-2']);
 });
 
 void test('label placement stays inside the map and limits standard-density clutter', (): void => {

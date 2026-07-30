@@ -1,6 +1,7 @@
 import type {
 	WayfindingStudioElement,
 	WayfindingStudioLabelElement,
+	WayfindingStudioMediaElement,
 	WayfindingStudioProject
 } from '../../../../studio-project.mts';
 import type { EditorLayerId } from '../../../../editor-core/types';
@@ -41,6 +42,32 @@ export const presentationSceneProject = (
 			projectId: project.projectId
 		}, { floorId: floor.id, language });
 		const supersededLabelIds = new Set(scene.supersededLabelIds);
+		const mapItems = buildVisitorMapItems(project, floor.id, language, project.destinations);
+		const destinationSymbols = visibility.icon
+			? mapItems.flatMap((item): WayfindingStudioMediaElement[] => {
+				const destination = project.destinations.find((candidate) => candidate.id === item.destinationId);
+				const asset = project.assets.find((candidate) =>
+					candidate.kind === 'icon' && candidate.id === destination?.symbolAssetId
+				);
+
+				if (!asset) return [];
+				const longEdge = Math.max(28, Math.min(floor.width, floor.height) * 0.035);
+				const ratio = Math.max(0.1, (asset.naturalWidth ?? 1) / Math.max(1, asset.naturalHeight ?? 1));
+
+				return [{
+					assetId: asset.id,
+					destinationId: item.destinationId,
+					floorId: floor.id,
+					height: ratio >= 1 ? longEdge / ratio : longEdge,
+					id: `presentation-destination-symbol:${item.destinationId}`,
+					point: item.anchor,
+					provenance: 'reviewer-authored',
+					status: item.presentation === 'ready' ? 'confirmed' : 'proposed',
+					type: 'icon',
+					width: ratio >= 1 ? longEdge : longEdge * ratio
+				}];
+			})
+			: [];
 
 		return {
 			...floor,
@@ -50,7 +77,7 @@ export const presentationSceneProject = (
 					&& !supersededLabelIds.has(element.id)
 				),
 				...(visibility.label
-					? buildVisitorMapItems(project, floor.id, language, project.destinations).map((item) => ({
+					? mapItems.map((item) => ({
 						destinationId: item.destinationId,
 						floorId: floor.id,
 						fontWeight: 600,
@@ -61,7 +88,8 @@ export const presentationSceneProject = (
 						text: item.mapNumber ? `${item.mapNumber}  ${item.name}` : item.name,
 						type: 'label'
 					} satisfies WayfindingStudioLabelElement & { destinationId: string }))
-					: [])
+					: []),
+				...destinationSymbols
 			]
 		};
 	})

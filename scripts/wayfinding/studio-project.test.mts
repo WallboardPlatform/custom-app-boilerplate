@@ -287,6 +287,7 @@ void test('renders map media around its authored center point', () => {
 		height: 60,
 		id: 'centered-logo-element',
 		point: { x: 240, y: 180 },
+		rotationDegrees: 30,
 		type: 'logo',
 		width: 120
 	});
@@ -294,6 +295,7 @@ void test('renders map media around its authored center point', () => {
 	const svg = renderWayfindingFloorSvg(project, floor.id);
 
 	assert.match(svg, /id="centered-logo-element"[^>]+x="180" y="150" width="120" height="60"/u);
+	assert.match(svg, /transform="rotate\(30 240 180\)"/u);
 });
 
 void test('preserves project languages, categories, and translated destination metadata in runtime output', () => {

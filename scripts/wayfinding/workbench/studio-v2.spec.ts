@@ -645,7 +645,7 @@ const panelLayoutProblems = (page: Page): Promise<string[]> => page.evaluate(() 
 		return new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
 	};
 	const problems: string[] = [];
-	const roots = [...document.querySelectorAll('.panel-shell, .visitor-panel')].filter(visible);
+	const roots = [...document.querySelectorAll('.panel-shell, .visitor-panel, .visitor-detail-card')].filter(visible);
 
 	for (const root of roots) {
 		const rootBounds = root.getBoundingClientRect();
@@ -1235,13 +1235,16 @@ test('visitor preview provides a clean localized directory and route experience'
 	const detailBounds = await page.locator('.visitor-detail').boundingBox();
 	expect(detailBounds).not.toBeNull();
 	expect(detailBounds!.height).toBeGreaterThanOrEqual(220);
-	await expect(page.locator('.visitor-results')).toBeHidden();
+	await expect(page.locator('.visitor-results')).toBeVisible();
 	const mapBounds = await page.locator('.canvas-viewport').boundingBox();
 	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+	const detailCardBounds = await page.locator('.visitor-detail-card').boundingBox();
 	expect(mapBounds).not.toBeNull();
 	expect(directoryBounds).not.toBeNull();
+	expect(detailCardBounds).not.toBeNull();
 	expect(mapBounds!.width).toBeGreaterThan((page.viewportSize()?.width ?? 0) * 0.65);
 	expect(directoryBounds!.width).toBeLessThanOrEqual(420);
+	expect(detailCardBounds!.x + detailCardBounds!.width).toBeLessThan(directoryBounds!.x);
 	const screenshotPath = testInfo.outputPath('visitor-route-2d.png');
 	await page.screenshot({ path: screenshotPath });
 	await testInfo.attach('visitor-route-2d', {
@@ -1251,6 +1254,32 @@ test('visitor preview provides a clean localized directory and route experience'
 
 	await page.getByPlaceholder('Search destinations').fill('not present');
 	await expect(page.getByText('No matches')).toBeVisible();
+});
+
+test('assigns a destination symbol and opens the same destination directly from the map', async ({ page }) => {
+	const project = createTestProject();
+	project.assets.push({
+		dataUrl: LOGO_DATA_URL,
+		id: 'asset-information-symbol',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Information symbol',
+		naturalHeight: 80,
+		naturalWidth: 80
+	});
+	await openEditor(page, project);
+	await page.locator('[data-editor-element-id="location-information"]').click({ force: true });
+	await page.getByRole('button', { name: 'Use Information symbol as the location symbol' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
+
+	const mapDestination = page.getByLabel('Open Visitor information on the map');
+	await expect(mapDestination).toBeVisible();
+	await expect(mapDestination.locator('.visitor-marker-logo')).toHaveAttribute('href', LOGO_DATA_URL);
+	await mapDestination.click({ force: true });
+	await expect(page.locator('.visitor-detail-card')).toContainText('Visitor information');
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	await expect(page.locator('.scene3d-host')).toHaveAttribute('data-camera-facing-media-count', '1');
 });
 
 test('reports route metrics only after calibration and clears guidance without editing the project', async ({ page }) => {
@@ -1743,6 +1772,12 @@ test('resizes map media proportionally with a direct manipulation handle', async
 	expect(resizedHeight).toBeGreaterThan(initialHeight);
 	expect(resizedWidth / resizedHeight).toBeCloseTo(initialWidth / initialHeight, 2);
 	expect(await mapTransform(page)).toBe(cameraBefore);
+	await page.getByLabel('Image rotation').fill('35');
+	await expect(media).toHaveAttribute('transform', /rotate\(35 980 260\)/u);
+	const rotateHandle = page.locator('[data-transform-handle="media-rotate"]');
+	await expect(rotateHandle).toBeVisible();
+	await dragLocatorBy(page, rotateHandle, { x: 48, y: 22 });
+	await expect(media).toHaveAttribute('transform', /rotate\(/u);
 });
 
 test('authors a manual route segment in route edit mode', async ({ page }) => {
@@ -1771,6 +1806,21 @@ test('authors a manual route segment in route edit mode', async ({ page }) => {
 	await expect(page.locator('.route-network-line')).toHaveCount(2);
 	await page.getByRole('button', { name: /Undo/ }).click();
 	await expect(page.locator('.route-network-line')).toHaveCount(1);
+});
+
+test('route Build explains every missing prerequisite and opens the required tool', async ({ page }) => {
+	const project = createWayfindingStudioProject('route-build-requirements');
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+
+	await expect(page.getByRole('button', { name: 'Build route network' })).toBeDisabled();
+	await expect(page.getByRole('button', { name: /Define pedestrian space/ })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Add a starting point/ })).toBeVisible();
+	await expect(page.getByRole('button', { name: /Add a routeable destination/ })).toBeVisible();
+	await page.getByRole('button', { name: /Define pedestrian space/ }).click();
+	await expect(page.getByRole('button', { name: 'Space', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByRole('button', { name: 'Draw polygon' })).toHaveClass(/active/u);
 });
 
 test('builds a route network from authored pedestrian space and linked doors', async ({ page }) => {

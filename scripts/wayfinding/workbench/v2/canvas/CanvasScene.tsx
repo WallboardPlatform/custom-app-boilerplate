@@ -37,6 +37,7 @@ import {
 } from './model';
 
 interface CanvasSceneProps {
+	activateVisitorDestination: (destinationId: string) => void;
 	beginDirectionDrag: (
 		event: PointerEvent,
 		element: WayfindingStudioDoorElement | WayfindingStudioOriginElement
@@ -56,6 +57,7 @@ interface CanvasSceneProps {
 		afterIndex: number
 	) => void;
 	beginMediaResize: (event: PointerEvent, element: WayfindingStudioMediaElement) => void;
+	beginMediaRotate: (event: PointerEvent, element: WayfindingStudioMediaElement) => void;
 	beginVertexDrag: (event: PointerEvent, vertexIndex: number) => void;
 	camera: Accessor<EditorCamera2d>;
 	draft: Accessor<EditorDraft | undefined>;
@@ -431,6 +433,16 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 										selected: selected()
 									}}
 									data-visitor-destination-id={item.destinationId}
+									onPointerDown={(event) => {
+										event.preventDefault();
+										event.stopPropagation();
+										props.activateVisitorDestination(item.destinationId);
+									}}
+									onKeyDown={(event) => {
+										if (event.key !== 'Enter' && event.key !== ' ') return;
+										event.preventDefault();
+										props.activateVisitorDestination(item.destinationId);
+									}}
 									role="button"
 									tabindex="0"
 								>
@@ -466,12 +478,12 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 													r={markerRadius() * 0.72}
 												/>
 											}
-											when={item.logoDataUrl}
+											when={item.symbolDataUrl ?? item.logoDataUrl}
 										>
 											<image
 												class="visitor-marker-logo"
 												height={markerRadius() * 1.7}
-												href={item.logoDataUrl}
+												href={item.symbolDataUrl ?? item.logoDataUrl}
 												preserveAspectRatio="xMidYMid meet"
 												width={markerRadius() * 1.7}
 												x={item.anchor.x - markerRadius() * 0.85}
@@ -540,6 +552,16 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 									class="visitor-map-label"
 									classList={{ selected: selected() }}
 									data-visitor-destination-id={placement.item.destinationId}
+									onPointerDown={(event) => {
+										event.preventDefault();
+										event.stopPropagation();
+										props.activateVisitorDestination(placement.item.destinationId);
+									}}
+									onKeyDown={(event) => {
+										if (event.key !== 'Enter' && event.key !== ' ') return;
+										event.preventDefault();
+										props.activateVisitorDestination(placement.item.destinationId);
+									}}
 									role="button"
 									tabindex="0"
 								>
@@ -597,16 +619,18 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 												{(media): JSX.Element => {
 													const bounds = mediaBounds(media());
 
-													return (
-														<rect
-															class="element-selection-hit media-selection-hit"
-															height={bounds.height}
-															width={bounds.width}
-															x={bounds.x}
-															y={bounds.y}
-															data-editor-element-id={media().id}
-															onPointerDown={(event) => props.beginElementDrag(event, media())}
-														/>
+												return (
+														<g transform={`rotate(${media().rotationDegrees ?? 0} ${media().point.x} ${media().point.y})`}>
+															<rect
+																class="element-selection-hit media-selection-hit"
+																height={bounds.height}
+																width={bounds.width}
+																x={bounds.x}
+																y={bounds.y}
+																data-editor-element-id={media().id}
+																onPointerDown={(event) => props.beginElementDrag(event, media())}
+															/>
+														</g>
 													);
 												}}
 											</Show>
@@ -741,9 +765,11 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 					<Show when={workspace() === 'map' && mediaElement()}>
 						{(element): JSX.Element => {
 							const bounds = (): ReturnType<typeof mediaBounds> => mediaBounds(element());
+							const rotationHandleY = (): number =>
+								bounds().y - Math.max(22, props.handleRadius() * 3.2);
 
 							return (
-								<>
+								<g transform={`rotate(${element().rotationDegrees ?? 0} ${element().point.x} ${element().point.y})`}>
 									<rect
 										class="media-selection-frame"
 										height={bounds().height}
@@ -759,7 +785,22 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 										onPointerDown={(event) => props.beginMediaResize(event, element())}
 										r={props.handleRadius()}
 									/>
-								</>
+									<line
+										class="media-rotation-guide"
+										x1={element().point.x}
+										x2={element().point.x}
+										y1={bounds().y}
+										y2={rotationHandleY()}
+									/>
+									<circle
+										class="transform-handle rotate"
+										cx={element().point.x}
+										cy={rotationHandleY()}
+										data-transform-handle="media-rotate"
+										onPointerDown={(event) => props.beginMediaRotate(event, element())}
+										r={props.handleRadius()}
+									/>
+								</g>
 							);
 						}}
 					</Show>

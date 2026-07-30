@@ -21,6 +21,7 @@ export interface RouteReadinessItem {
 
 export interface RouteReadiness {
 	blockers: RouteReadinessItem[];
+	buildBlockers: RouteReadinessItem[];
 	connectedDestinations: number;
 	destinationAnchors: number;
 	linkedEntrances: number;
@@ -102,38 +103,71 @@ export const getRouteReadiness = (
 		&& Boolean(floor.walkableMask?.walkableRuns.length);
 	const walkableAreas = polygonWalkableAreas || (usesPaintedMask ? 1 : 0);
 	const blockers: RouteReadinessItem[] = [];
+	const buildBlockers: RouteReadinessItem[] = [];
 	const warnings: RouteReadinessItem[] = [];
 
+	if (walkableAreas === 0 && !floor?.walkableMask) {
+		buildBlockers.push({
+			action: 'define-space',
+			body: 'Draw or detect the pedestrian area for this floor before generating a network.',
+			title: 'Define pedestrian space'
+		});
+	}
+
+	if (origins.length === 0) {
+		buildBlockers.push({
+			action: 'add-origin',
+			body: 'Place at least one You are here point so generated journeys have a start.',
+			title: 'Add a starting point'
+		});
+	}
+
+	if (routeableDestinations.length === 0) {
+		buildBlockers.push({
+			action: 'add-destinations',
+			body: 'Add a destination and keep Show directions enabled.',
+			title: 'Add a routeable destination'
+		});
+	} else if (destinationAnchors.length < routeableDestinations.length) {
+		buildBlockers.push({
+			action: 'add-entrances',
+			body: `${routeableDestinations.length - destinationAnchors.length} routeable destination${routeableDestinations.length - destinationAnchors.length === 1 ? '' : 's'} still need a map position.`,
+			title: 'Position every destination'
+		});
+	}
+
 	if (mode === 'route') {
-		if (walkableAreas === 0 && !floor?.walkableMask) {
-			blockers.push({
+		blockers.push(...buildBlockers.map((item): RouteReadinessItem => {
+			switch (item.action) {
+				case 'define-space':
+					return {
 				action: 'define-space',
 				body: 'Draw or detect the pedestrian area for this floor before generating a network.',
 				title: 'Pedestrian space is missing'
-			});
-		}
+					};
 
-		if (origins.length === 0) {
-			blockers.push({
+				case 'add-origin':
+					return {
 				action: 'add-origin',
 				body: 'Place at least one You are here point so visitor journeys have a start.',
 				title: 'No installed-screen origin'
-			});
-		}
+					};
 
-		if (routeableDestinations.length === 0) {
-			blockers.push({
+				case 'add-destinations':
+					return {
 				action: 'add-destinations',
 				body: 'Mark at least one destination as routeable.',
 				title: 'No routeable destinations'
-			});
-		} else if (destinationAnchors.length < routeableDestinations.length) {
-			blockers.push({
+					};
+
+				default:
+					return {
 				action: 'add-entrances',
 				body: `${routeableDestinations.length - destinationAnchors.length} routeable destination${routeableDestinations.length - destinationAnchors.length === 1 ? '' : 's'} still need a map position.`,
 				title: 'Destination positions are incomplete'
-			});
-		}
+					};
+			}
+		}));
 		const linkedRoomDestinationIds = new Set(linkedEntrances
 			.map((door) => door.locationId ? locationDestinationByElementId.get(door.locationId) : undefined)
 			.filter((destinationId): destinationId is string => Boolean(destinationId)));
@@ -168,6 +202,7 @@ export const getRouteReadiness = (
 
 	return {
 		blockers,
+		buildBlockers,
 		connectedDestinations: connectedDestinations.size,
 		destinationAnchors: destinationAnchors.length,
 		linkedEntrances: linkedEntrances.length,

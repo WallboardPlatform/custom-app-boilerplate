@@ -15,6 +15,21 @@
 	backdrop-filter: blur(14px);
 }
 
+.visitor-detail-card {
+	position: absolute;
+	z-index: 17;
+	top: 16px;
+	left: 16px;
+	width: min(400px, calc(100% - 468px));
+	max-height: calc(100% - 32px);
+	overflow: hidden;
+	background: rgba(251, 252, 251, 0.985);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	box-shadow: 0 20px 54px rgba(4, 15, 13, 0.24);
+	backdrop-filter: blur(14px);
+}
+
 .visitor-panel__header {
 	display: flex;
 	min-height: 64px;
@@ -394,40 +409,10 @@
 }
 
 .visitor-detail {
-	flex: 1 1 280px;
-	min-height: 0;
+	max-height: calc(100vh - 134px);
 	padding: 0 16px 16px;
 	overflow-y: auto;
 	background: white;
-	border-top: 1px solid #9dccbf;
-}
-
-.visitor-panel.has-selection .visitor-results {
-	flex-basis: 162px;
-	max-height: 162px;
-}
-
-.visitor-panel.has-selection .visitor-detail {
-	min-height: min(190px, 32vh);
-}
-
-.visitor-panel.has-selection.simulation-open .visitor-filter-sheet {
-	flex: 0 1 260px;
-	max-height: min(280px, 44vh);
-}
-
-.visitor-panel.has-selection.simulation-open .visitor-results__summary,
-.visitor-panel.has-selection.simulation-open .visitor-results {
-	display: none;
-}
-
-.visitor-panel.has-selection.simulation-open .visitor-detail {
-	flex: 1 1 220px;
-	min-height: min(180px, 32vh);
-}
-
-.visitor-panel.has-selection.simulation-open .visitor-detail__hero {
-	height: 96px;
 }
 
 .visitor-detail__hero {
@@ -549,6 +534,18 @@
 	box-shadow: inset 0 0 0 1px rgba(99, 189, 168, 0.16);
 }
 
+@media (min-width: 761px) and (max-width: 1180px) {
+	.visitor-panel {
+		right: 10px;
+		width: min(370px, calc(100% - 20px));
+	}
+
+	.visitor-detail-card {
+		left: 10px;
+		width: min(350px, calc(100% - 410px));
+	}
+}
+
 @media (max-width: 980px) {
 	.preview-workspace .canvas-viewport,
 	.preview-workspace .scene3d-host {
@@ -562,7 +559,15 @@
 	.visitor-panel {
 		top: 10px;
 		right: 10px;
-		width: min(390px, calc(100% - 20px));
+		width: min(360px, calc(100% - 20px));
+		max-height: calc(100% - 20px);
+	}
+
+	.visitor-detail-card {
+		top: auto;
+		bottom: 10px;
+		left: 10px;
+		width: min(340px, calc(100% - 390px));
 		max-height: calc(100% - 20px);
 	}
 
@@ -577,6 +582,22 @@
 	.visitor-option-group,
 	.visitor-origin-picker {
 		grid-column: 1;
+	}
+}
+
+@media (max-width: 760px) {
+	.visitor-panel {
+		max-height: 46%;
+	}
+
+	.visitor-detail-card {
+		right: 10px;
+		width: auto;
+		max-height: 48%;
+	}
+
+	.visitor-detail {
+		max-height: 48vh;
 	}
 }
 

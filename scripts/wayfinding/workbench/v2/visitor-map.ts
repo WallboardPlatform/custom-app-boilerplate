@@ -1,5 +1,6 @@
 import type {
 	WayfindingStudioDestination,
+	WayfindingStudioMediaElement,
 	WayfindingStudioProject
 } from '../../studio-project.mts';
 import type { WayfindingPoint } from '../../../../src/utils/wayfinding.js';
@@ -24,6 +25,7 @@ export interface VisitorMapItem {
 	mapNumber?: string;
 	name: string;
 	presentation: 'draft' | 'ready';
+	symbolDataUrl?: string;
 }
 
 export type VisitorMapLabelPlacement = PresentationLabelPlacement;
@@ -37,11 +39,13 @@ export const visitorMarkerIds = (
 	const detail = visitorMapDetail(scale);
 	const ready = items.filter((item) => item.presentation === 'ready');
 	const prioritized = [
-		...ready.filter((item) => Boolean(item.logoDataUrl)),
-		...ready.filter((item) => !item.logoDataUrl)
+		...ready.filter((item) => Boolean(item.symbolDataUrl || item.logoDataUrl)),
+		...ready.filter((item) => !item.symbolDataUrl && !item.logoDataUrl)
 	];
-	const limit = detail === 'compact' ? 0 : detail === 'standard' ? 10 : 24;
-	const ids = new Set(prioritized.slice(0, limit).map((item) => item.destinationId));
+	const visible = detail === 'compact'
+		? prioritized.filter((item) => Boolean(item.symbolDataUrl)).slice(0, 6)
+		: prioritized.slice(0, detail === 'standard' ? 10 : 24);
+	const ids = new Set(visible.map((item) => item.destinationId));
 
 	if (selectedDestinationId) ids.add(selectedDestinationId);
 
@@ -60,6 +64,7 @@ export const isVisitorReadyDestination = (
 	destination: WayfindingStudioDestination,
 	name = destination.name
 ): boolean => isPresentationReadyDestination(destination, name)
+	|| Boolean(destination.symbolAssetId)
 	|| Boolean(destination.logoAssetId)
 	|| Boolean(destination.photoAssetIds?.length);
 
@@ -81,13 +86,24 @@ export const buildVisitorMapItems = (
 		const logo = project.assets.find((asset) =>
 			asset.id === destination?.logoAssetId && (asset.kind === 'logo' || asset.kind === 'icon')
 		);
+		const linkedSymbolAssetId = project.floors
+			.flatMap((floor) => floor.elements)
+			.find((element): element is WayfindingStudioMediaElement =>
+				element.type === 'icon'
+				&& element.destinationId === destination?.id
+			)?.assetId;
+		const symbol = project.assets.find((asset) =>
+			asset.kind === 'icon'
+				&& asset.id === (destination?.symbolAssetId ?? linkedSymbolAssetId)
+		);
 
 		return {
 			...item,
 			logoDataUrl: logo?.dataUrl,
 			presentation: destination && isVisitorReadyDestination(destination, item.name)
 				? 'ready'
-				: 'draft'
+				: 'draft',
+			symbolDataUrl: symbol?.dataUrl
 		};
 	});
 };

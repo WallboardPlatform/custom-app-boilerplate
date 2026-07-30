@@ -39,6 +39,8 @@ const assetUseCount = (snapshot: EditorSnapshot, assetId: string): number => {
 
 	for (const destination of project.destinations) {
 		if (destination.logoAssetId === assetId) uses += 1;
+
+		if (destination.symbolAssetId === assetId) uses += 1;
 		uses += destination.photoAssetIds?.filter((id) => id === assetId).length ?? 0;
 	}
 

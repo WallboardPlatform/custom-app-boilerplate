@@ -1,14 +1,6 @@
 import {
-	ArrowUpDown,
-	BadgeCheck,
 	ChevronRight,
-	Clock3,
-	ExternalLink,
-	Footprints,
-	Globe2,
 	MapPin,
-	Phone,
-	Route,
 	Search,
 	ShieldCheck,
 	SlidersHorizontal,
@@ -31,14 +23,10 @@ import type {
 	EditorStore
 } from '../../../editor-core/types';
 import type {
-	VisitorRouteJourney,
 	VisitorRouteProfile
 } from '../route';
 import { EmptyState } from '../ui';
-import {
-	translatedDestinationDescription,
-	translatedDestinationName
-} from '../visitor';
+import { translatedDestinationName } from '../visitor';
 
 export const VisitorPanel = (props: {
 	assets: Accessor<WayfindingStudioAsset[]>;
@@ -50,9 +38,9 @@ export const VisitorPanel = (props: {
 	language: Accessor<string>;
 	languages: Accessor<WayfindingStudioLanguage[]>;
 	layerVisible: (layerId: 'icon' | 'label') => boolean;
+	onClearDestination: () => void;
+	onSelectDestination: (destination: WayfindingStudioDestination) => void;
 	query: Accessor<string>;
-	routeDestinationId: Accessor<string | undefined>;
-	routeJourney: Accessor<VisitorRouteJourney | undefined>;
 	routeOriginId: Accessor<string | undefined>;
 	routeOrigins: Accessor<Array<{
 		floorId: string;
@@ -68,7 +56,6 @@ export const VisitorPanel = (props: {
 	setFloorFilter: (value: string) => void;
 	setLanguage: (value: string) => void;
 	setQuery: (value: string) => void;
-	setRouteDestinationId: (value: string | undefined) => void;
 	setRouteOriginId: (value: string | undefined) => void;
 	setRouteProfile: (value: VisitorRouteProfile) => void;
 	showRouteNetwork: Accessor<boolean>;
@@ -81,63 +68,17 @@ export const VisitorPanel = (props: {
 		?? 'Floor not assigned';
 	const asset = (id: string | undefined): WayfindingStudioAsset | undefined =>
 		id ? props.assets().find((candidate) => candidate.id === id) : undefined;
-	const selectedPhotos = (): WayfindingStudioAsset[] =>
-		(props.selected()?.photoAssetIds ?? [])
-			.map((id) => asset(id))
-			.filter((candidate): candidate is WayfindingStudioAsset => candidate?.kind === 'photo');
-	const selectedLogo = (): WayfindingStudioAsset | undefined => asset(props.selected()?.logoAssetId);
-	const visitorStatus = (destination: WayfindingStudioDestination): string => {
-		switch (destination.status) {
-			case 'closed': return 'Closed';
-
-			case 'temporarily-closed': return 'Temporarily closed';
-
-			case 'coming-soon': return 'Coming soon';
-		default: return 'Open';
-		}
-	};
-	const inspectDestination = (destination: WayfindingStudioDestination): void => {
-		props.setRouteDestinationId(destination.routeable === false ? undefined : destination.id);
-
-		if (destination.floor) {
-			props.store.dispatch({ type: 'floor/select', floorId: destination.floor });
-		}
-		props.store.dispatch({
-			type: 'selection/set',
-			selection: { id: destination.id, kind: 'destination' }
-		});
-	};
-	const showDirections = (destination: WayfindingStudioDestination): void => {
-		const store = props.store;
-		inspectDestination(destination);
-		props.setRouteDestinationId(destination.id);
-		const firstFloorId = props.routeJourney()?.segments[0]?.floorId;
-
-		queueMicrotask(() => {
-			if (firstFloorId) store.dispatch({ type: 'floor/select', floorId: firstFloorId });
-			store.dispatch({
-				type: 'selection/set',
-				selection: { id: destination.id, kind: 'destination' }
-			});
-		});
-	};
 	const searchDestinations = (query: string): void => {
 		props.setQuery(query);
 
 		if (!props.selected()) return;
-		props.setRouteDestinationId(undefined);
-		props.store.dispatch({ type: 'selection/clear' });
+		props.onClearDestination();
 	};
-	const journeyMinutes = (): number => Math.max(
-		1,
-		Math.ceil((props.routeJourney()?.metrics.walkingSeconds ?? 0) / 60)
-	);
 
 	return (
 	<div
 		class="visitor-panel"
 		classList={{
-			'has-selection': Boolean(props.selected()),
 			'simulation-open': props.simulationOpen()
 		}}
 		aria-label="Visitor map directory"
@@ -304,14 +245,18 @@ export const VisitorPanel = (props: {
 					type="button"
 					aria-label={`Open ${translatedDestinationName(destination, props.language())} in the directory`}
 					classList={{ active: props.selected()?.id === destination.id }}
-					onClick={() => inspectDestination(destination)}
+					onClick={() => props.onSelectDestination(destination)}
 				>
 					<span class="visitor-result__mark">
 						<Show
-							when={asset(destination.logoAssetId)}
+							when={asset(destination.symbolAssetId) ?? asset(destination.logoAssetId)}
 							fallback={<MapPin size={16} />}
 						>
-							<img class="visitor-result__logo" src={asset(destination.logoAssetId)!.dataUrl} alt="" />
+							<img
+								class="visitor-result__logo"
+								src={(asset(destination.symbolAssetId) ?? asset(destination.logoAssetId))!.dataUrl}
+								alt=""
+							/>
 						</Show>
 					</span>
 					<span class="visitor-result__copy">
@@ -325,148 +270,6 @@ export const VisitorPanel = (props: {
 				<EmptyState title="No matches" body="Try another name, category, or detail." />
 			</Show>
 		</div>
-		<Show when={props.selected()}>
-			<div class="visitor-detail">
-				<Show when={selectedPhotos()[0]}>
-					<img class="visitor-detail__hero" src={selectedPhotos()[0].dataUrl} alt="" />
-				</Show>
-				<div class="visitor-detail__header">
-					<div>
-						<div class="visitor-detail__identity">
-							<Show when={selectedLogo()}>
-								<img src={selectedLogo()!.dataUrl} alt="" />
-							</Show>
-							<div>
-								<small>{props.selected()!.category ?? 'Destination'}</small>
-								<h2>{translatedDestinationName(props.selected()!, props.language())}</h2>
-							</div>
-						</div>
-					</div>
-					<button
-						type="button"
-						aria-label="Close destination details"
-						onClick={() => props.store.dispatch({ type: 'selection/clear' })}
-					>
-						<X size={17} />
-					</button>
-				</div>
-				<div class="visitor-detail__badges">
-					<span class={`status ${props.selected()!.status ?? 'open'}`}><BadgeCheck size={14} /> {visitorStatus(props.selected()!)}</span>
-					<span><MapPin size={14} /> {floorName(props.selected()!)}</span>
-					<Show when={props.selected()!.mapNumber}><span>#{props.selected()!.mapNumber}</span></Show>
-					<Show when={props.selected()!.accessible}><span><ShieldCheck size={14} /> Step-free</span></Show>
-				</div>
-				<p>{translatedDestinationDescription(props.selected()!, props.language())}</p>
-				<div class="visitor-detail__facts">
-					<Show when={props.selected()!.hours}><div><Clock3 size={15} /><span><small>Hours</small>{props.selected()!.hours}</span></div></Show>
-					<Show when={props.selected()!.phone}><a href={`tel:${props.selected()!.phone}`}><Phone size={15} /><span><small>Phone</small>{props.selected()!.phone}</span></a></Show>
-					<Show when={props.selected()!.website}><a href={props.selected()!.website} target="_blank" rel="noreferrer"><Globe2 size={15} /><span><small>Website</small>Open website</span><ExternalLink size={13} /></a></Show>
-				</div>
-				<Show when={selectedPhotos().length > 1}>
-					<div class="visitor-detail__gallery">
-						<For each={selectedPhotos().slice(1)}>{(photo) => <img src={photo.dataUrl} alt="" />}</For>
-					</div>
-				</Show>
-				<Show when={props.selected()!.routeable === false}>
-					<div class="visitor-detail__notice">Directions are not available for this destination.</div>
-				</Show>
-				<Show
-					when={props.routeDestinationId() === props.selected()!.id}
-					fallback={(
-						<button
-							type="button"
-							class="wb-studio-action primary full"
-							disabled={props.selected()!.routeable === false}
-							onClick={() => showDirections(props.selected()!)}
-						>
-							<Route size={16} /> Show directions
-						</button>
-					)}
-				>
-					<div class="visitor-journey">
-						<Show
-							when={props.routeJourney()}
-							fallback={<div class="visitor-detail__notice">No connected route is available from the current location.</div>}
-						>
-							<Show
-								when={props.routeJourney()!.metrics.calibrated}
-								fallback={(
-									<div class="visitor-detail__notice">
-										Distance unavailable - calibrate the map scale for every floor on this route.
-									</div>
-								)}
-							>
-								<div class="visitor-journey__summary">
-									<span><Footprints size={16} /><strong>{props.routeJourney()!.metrics.distanceMeters} m</strong></span>
-									<span><Clock3 size={16} /><strong>{journeyMinutes()} min</strong></span>
-								</div>
-							</Show>
-							<div class="visitor-journey__floors">
-								<For each={props.routeJourney()!.segments}>{(segment, index) => {
-									const transition = (): VisitorRouteJourney['transitions'][number] | undefined =>
-										props.routeJourney()!.transitions.find((candidate) =>
-											candidate.fromFloorId === segment.floorId
-										);
-
-									return (
-										<>
-											<button
-												type="button"
-												class="visitor-journey__floor"
-												onClick={() => {
-													props.setFloorFilter(segment.floorId);
-													props.store.dispatch({ type: 'floor/select', floorId: segment.floorId });
-												}}
-											>
-												<span>{index() + 1}</span>
-												<strong>{props.floors().find((floor) => floor.id === segment.floorId)?.name ?? segment.floorId}</strong>
-												<ChevronRight size={15} />
-											</button>
-											<Show when={transition()}>
-												<div class="visitor-journey__transition">
-													<ArrowUpDown size={15} />
-													<span>Take the {transition()!.kind} to {
-														props.floors().find((floor) => floor.id === transition()!.toFloorId)?.name
-														?? transition()!.toFloorId
-													}</span>
-												</div>
-											</Show>
-										</>
-									);
-								}}</For>
-							</div>
-							<div class="visitor-journey__instructions" aria-label="Turn-by-turn directions">
-								<div class="visitor-journey__instructions-heading">
-									<strong>Step-by-step</strong>
-									<span>{props.routeJourney()!.instructions.length} steps</span>
-								</div>
-								<ol>
-									<For each={props.routeJourney()!.instructions}>{(instruction, index) => (
-										<li class={`instruction-${instruction.kind}`}>
-											<span>{index() + 1}</span>
-											<div>
-												<small>{
-													props.floors().find((floor) => floor.id === instruction.floorId)?.name
-													?? instruction.floorId
-												}</small>
-												<strong>{instruction.text}</strong>
-											</div>
-										</li>
-									)}</For>
-								</ol>
-							</div>
-						</Show>
-						<button
-							type="button"
-							class="wb-studio-action full"
-							onClick={() => props.setRouteDestinationId(undefined)}
-						>
-							<X size={16} /> Clear directions
-						</button>
-					</div>
-				</Show>
-			</div>
-		</Show>
 	</div>
 	);
 };

@@ -84,6 +84,8 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 
 				for (const destination of project.destinations) {
 					if (destination.logoAssetId === command.assetId) delete destination.logoAssetId;
+
+					if (destination.symbolAssetId === command.assetId) delete destination.symbolAssetId;
 					destination.photoAssetIds = destination.photoAssetIds?.filter((assetId): boolean => assetId !== command.assetId);
 				}
 			});

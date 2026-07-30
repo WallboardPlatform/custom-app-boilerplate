@@ -168,3 +168,41 @@ void test('visitor scene honors label and media visibility without hiding locati
 		['location-1', 'poi-1', 'transition-1']
 	);
 });
+
+void test('visitor 3D scene projects destination symbols as camera-facing media', () => {
+	const project = createWayfindingStudioProject('visitor-symbol-scene');
+	const floor = project.floors[0];
+	project.assets.push({
+		dataUrl: 'data:image/svg+xml;base64,PHN2Zy8+',
+		id: 'symbol-cafe',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Cafe',
+		naturalHeight: 64,
+		naturalWidth: 64
+	});
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-cafe',
+		name: 'Cafe',
+		symbolAssetId: 'symbol-cafe'
+	});
+	floor.elements.push({
+		destinationId: 'destination-cafe',
+		floorId: floor.id,
+		id: 'poi-cafe',
+		point: { x: 100, y: 80 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'poi'
+	});
+
+	const projected = presentationSceneProject(project, visibility());
+	const symbol = projected.floors[0].elements.find(
+		(element) => element.id === 'presentation-destination-symbol:destination-cafe'
+	);
+
+	assert.equal(symbol?.type, 'icon');
+	assert.equal(symbol && 'assetId' in symbol ? symbol.assetId : undefined, 'symbol-cafe');
+	assert.equal(symbol && 'destinationId' in symbol ? symbol.destinationId : undefined, 'destination-cafe');
+});

@@ -208,7 +208,7 @@
 	border-radius: 4px;
 }
 
-.wb-studio-action:hover {
+.wb-studio-action:hover:not(:disabled) {
 	background: #f3f7f5;
 	border-color: #738781;
 }
@@ -219,8 +219,15 @@
 	border-color: var(--accent);
 }
 
-.wb-studio-action.primary:hover {
+.wb-studio-action.primary:hover:not(:disabled) {
 	background: var(--accent-dark);
+}
+
+.wb-studio-action:disabled {
+	color: #7d8986;
+	background: #e9eeec;
+	border-color: #cbd5d2;
+	box-shadow: none;
 }
 
 .wb-studio-action.full {
@@ -730,6 +737,13 @@ input[type='checkbox'] {
 	vector-effect: non-scaling-stroke;
 }
 
+.media-rotation-guide {
+	stroke: #0f6759;
+	stroke-dasharray: 3 3;
+	stroke-width: 1.5;
+	vector-effect: non-scaling-stroke;
+}
+
 .transform-handle {
 	fill: #fff;
 	stroke: #0f6759;
@@ -744,6 +758,14 @@ input[type='checkbox'] {
 
 .transform-handle.resize {
 	cursor: nwse-resize;
+}
+
+.transform-handle.rotate {
+	cursor: grab;
+}
+
+.transform-handle.rotate:active {
+	cursor: grabbing;
 }
 
 .transform-handle:hover {

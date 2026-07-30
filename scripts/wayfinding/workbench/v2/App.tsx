@@ -48,6 +48,7 @@ import {
 } from './components/WorkbenchOverlays';
 import {
 	getThreeDimensionalReadiness,
+	VisitorDestinationCard,
 	VisitorPanel,
 	createPreviewSession
 } from './features/preview';
@@ -91,6 +92,7 @@ const App = (): JSX.Element => {
 	);
 	let fitCanvas = (): void => undefined;
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
+	let previousWorkspace = store.getSnapshot().state.workspace;
 
 	const state = createMemo(() => snapshot().state);
 	const element = createMemo(() => selectedElement(state()));
@@ -201,6 +203,27 @@ const App = (): JSX.Element => {
 		preview.state().profile,
 		preview.state().originId
 	));
+	const clearPreviewDestination = (): void => {
+		preview.setDestinationId(undefined);
+		store.dispatch({ type: 'selection/clear' });
+	};
+	const selectPreviewDestination = (destination: WayfindingStudioDestination): void => {
+		preview.setDestinationId(destination.routeable === false ? undefined : destination.id);
+
+		if (destination.floor) {
+			store.dispatch({ type: 'floor/select', floorId: destination.floor });
+		}
+		store.dispatch({
+			type: 'selection/set',
+			selection: { id: destination.id, kind: 'destination' }
+		});
+	};
+	const selectPreviewDestinationById = (destinationId: string | undefined): void => {
+		const destination = state().project.destinations.find((candidate) => candidate.id === destinationId);
+
+		if (destination) selectPreviewDestination(destination);
+		else clearPreviewDestination();
+	};
 	const studioCommands = createMemo<StudioCommand[]>(() => [
 		{
 			group: 'File',
@@ -340,6 +363,14 @@ const App = (): JSX.Element => {
 
 		if (available.some((language) => language.code === preview.state().language)) return;
 		preview.setLanguage(state().project.defaultLanguage ?? available[0]?.code ?? 'en');
+	});
+	createEffect(() => {
+		const workspace = state().workspace;
+
+		if (workspace === 'preview' && previousWorkspace !== 'preview') {
+			setToast(undefined);
+		}
+		previousWorkspace = workspace;
 	});
 	createEffect(() => {
 		if (preview.state().category && !visitorCategories().includes(preview.state().category)) {
@@ -619,6 +650,7 @@ const App = (): JSX.Element => {
 					>
 						<Canvas2d
 							onNotify={notify}
+							onPreviewDestinationSelect={selectPreviewDestinationById}
 							registerFit={(fit) => {
 								fitCanvas = fit;
 							}}
@@ -659,9 +691,9 @@ const App = (): JSX.Element => {
 							language={() => preview.state().language}
 							languages={() => state().project.languages ?? []}
 							layerVisible={(layerId) => state().layerVisibility[layerId]}
+							onClearDestination={clearPreviewDestination}
+							onSelectDestination={selectPreviewDestination}
 							query={() => preview.state().query}
-							routeDestinationId={() => preview.state().destinationId}
-							routeJourney={visitorRouteJourney}
 							routeOriginId={() => preview.state().originId}
 							routeOrigins={visitorOrigins}
 							routeProfile={() => preview.state().profile}
@@ -674,13 +706,26 @@ const App = (): JSX.Element => {
 							}}
 							setLanguage={preview.setLanguage}
 							setQuery={preview.setQuery}
-							setRouteDestinationId={preview.setDestinationId}
 							setRouteOriginId={preview.setOriginId}
 							setRouteProfile={preview.setProfile}
 							simulationOpen={() => preview.state().simulationOpen}
 							setSimulationOpen={preview.setSimulationOpen}
 							showRouteNetwork={() => preview.state().diagnosticLayers.routeNetwork}
 							setShowRouteNetwork={(visible) => preview.setDiagnosticLayer('routeNetwork', visible)}
+							store={store}
+						/>
+						<VisitorDestinationCard
+							assets={() => state().project.assets}
+							floors={visitorFloors}
+							language={() => preview.state().language}
+							routeDestinationId={() => preview.state().destinationId}
+							routeJourney={visitorRouteJourney}
+							selected={selectedDestination}
+							setFloorFilter={(floorId) => {
+								preview.setFloorId(floorId);
+								store.dispatch({ type: 'floor/select', floorId });
+							}}
+							setRouteDestinationId={preview.setDestinationId}
 							store={store}
 						/>
 					</Show>

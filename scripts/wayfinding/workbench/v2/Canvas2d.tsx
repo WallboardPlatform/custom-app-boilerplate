@@ -86,6 +86,7 @@ import { useCanvasCamera } from './canvas/useCanvasCamera';
 interface Canvas2dProps {
 	onNotify?: (message: string, tone?: 'danger' | 'info' | 'success' | 'warning') => void;
 	onPointerCoordinate?: (point: WayfindingPoint) => void;
+	onPreviewDestinationSelect?: (destinationId: string | undefined) => void;
 	registerFit: (fit: () => void) => void;
 	registerSelectionActions?: (actions: CanvasSelectionActions) => void;
 	routeDestinationId?: Accessor<string | undefined>;
@@ -117,6 +118,23 @@ interface ElementInteractionPreview {
 }
 
 const nextId = createAuthoringId;
+
+const rotateAround = (
+	point: WayfindingPoint,
+	origin: WayfindingPoint,
+	degrees: number
+): WayfindingPoint => {
+	const radians = degrees * Math.PI / 180;
+	const cosine = Math.cos(radians);
+	const sine = Math.sin(radians);
+	const deltaX = point.x - origin.x;
+	const deltaY = point.y - origin.y;
+
+	return {
+		x: origin.x + deltaX * cosine - deltaY * sine,
+		y: origin.y + deltaX * sine + deltaY * cosine
+	};
+};
 
 export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	let viewport!: HTMLDivElement;
@@ -884,8 +902,10 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 					type: 'selection/set',
 					selection: { id: destinationId, kind: 'destination' }
 				});
+				props.onPreviewDestinationSelect?.(destinationId);
 			} else if (!spaceHeld) {
 				props.store.dispatch({ type: 'selection/clear' });
+				props.onPreviewDestinationSelect?.(undefined);
 			}
 
 			return;
@@ -1019,17 +1039,18 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		}
 
 		if (interaction.kind === 'media-resize') {
-			const rawWidth = Math.max(1, mapPoint.x - interaction.origin.x);
-			const rawHeight = Math.max(1, mapPoint.y - interaction.origin.y);
+			const localPoint = rotateAround(mapPoint, interaction.origin, -interaction.rotationDegrees);
+			const rawHalfWidth = Math.max(1, Math.abs(localPoint.x - interaction.origin.x));
+			const rawHalfHeight = Math.max(1, Math.abs(localPoint.y - interaction.origin.y));
 			const currentWidth = interaction.originalWidth;
 			const currentHeight = interaction.originalHeight;
 			const scale = Math.max(
-				rawWidth / Math.max(1, currentWidth),
-				rawHeight / Math.max(1, currentHeight),
+				rawHalfWidth / Math.max(1, currentWidth / 2),
+				rawHalfHeight / Math.max(1, currentHeight / 2),
 				12 / Math.max(1, Math.min(currentWidth, currentHeight))
 			);
-			const maxWidth = Math.max(12, floor().width - interaction.origin.x);
-			const maxHeight = Math.max(12, floor().height - interaction.origin.y);
+			const maxWidth = Math.max(12, 2 * Math.min(interaction.origin.x, floor().width - interaction.origin.x));
+			const maxHeight = Math.max(12, 2 * Math.min(interaction.origin.y, floor().height - interaction.origin.y));
 			const boundedScale = Math.min(
 				scale,
 				maxWidth / Math.max(1, currentWidth),
@@ -1296,7 +1317,23 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 			originalHeight: element.height,
 			originalWidth: element.width,
 			pointerId: event.pointerId,
+			rotationDegrees: element.rotationDegrees ?? 0,
 			width: element.width
+		};
+		viewport.setPointerCapture(event.pointerId);
+	};
+
+	const beginMediaRotate = (event: PointerEvent, element: WayfindingStudioMediaElement): void => {
+		event.preventDefault();
+		event.stopPropagation();
+		interaction = {
+			angle: element.rotationDegrees ?? 0,
+			elementId: element.id,
+			kind: 'direction',
+			moved: false,
+			origin: { ...element.point },
+			pointerId: event.pointerId,
+			property: 'rotationDegrees'
 		};
 		viewport.setPointerCapture(event.pointerId);
 	};
@@ -1497,12 +1534,14 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		>
 			<CanvasScene
 				beginDirectionDrag={beginDirectionDrag}
+				activateVisitorDestination={(destinationId) => props.onPreviewDestinationSelect?.(destinationId)}
 				beginElementDrag={beginElementDrag}
 				beginGraphEdgePointDrag={beginGraphEdgePointDrag}
 				beginGraphNodeDrag={beginGraphNodeDrag}
 				beginInsertedGraphPointDrag={beginInsertedGraphPointDrag}
 				beginInsertedPolygonVertexDrag={beginInsertedPolygonVertexDrag}
 				beginMediaResize={beginMediaResize}
+				beginMediaRotate={beginMediaRotate}
 				beginVertexDrag={beginVertexDrag}
 				camera={camera}
 				draft={draft}

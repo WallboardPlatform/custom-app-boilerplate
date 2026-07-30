@@ -156,6 +156,7 @@ export interface WayfindingStudioMediaElement extends WayfindingStudioElementBas
 	destinationId?: string;
 	height: number;
 	point: WayfindingPoint;
+	rotationDegrees?: number;
 	type: 'icon' | 'logo';
 	width: number;
 }
@@ -198,6 +199,7 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 	photoAssetIds?: string[];
 	routeable?: boolean;
 	status?: string;
+	symbolAssetId?: string;
 	translations?: Record<string, WayfindingStudioTranslation>;
 	website?: string;
 }
@@ -729,6 +731,13 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 			else if (asset.kind !== 'logo') issues.push({ code: 'destination-logo-kind-mismatch', elementIds: [destination.id, destination.logoAssetId], message: `Destination '${destination.id}' logo '${destination.logoAssetId}' must use a logo asset.`, severity: 'error' });
 		}
 
+		if (destination.symbolAssetId) {
+			const asset: WayfindingStudioAsset | undefined = assetsById.get(destination.symbolAssetId);
+
+			if (!asset) issues.push({ code: 'missing-destination-symbol', elementIds: [destination.id, destination.symbolAssetId], message: `Destination '${destination.id}' references missing symbol '${destination.symbolAssetId}'.`, severity: 'error' });
+			else if (asset.kind !== 'icon') issues.push({ code: 'destination-symbol-kind-mismatch', elementIds: [destination.id, destination.symbolAssetId], message: `Destination '${destination.id}' symbol '${destination.symbolAssetId}' must use an icon asset.`, severity: 'error' });
+		}
+
 		for (const assetId of destination.photoAssetIds ?? []) {
 			const asset: WayfindingStudioAsset | undefined = assetsById.get(assetId);
 
@@ -796,7 +805,14 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 			if ((element.type === 'icon' || element.type === 'logo') && element.destinationId && !destinationIds.has(element.destinationId)) issues.push({ code: 'missing-destination', elementIds: [element.id, element.destinationId], message: `Element '${element.id}' references missing destination '${element.destinationId}'.`, severity: 'error' });
 
-			if ((element.type === 'icon' || element.type === 'logo') && (!(element.width > 0) || !(element.height > 0) || element.point.x + element.width > floor.width || element.point.y + element.height > floor.height)) issues.push({ code: 'invalid-media-bounds', elementIds: [element.id], message: `Media element '${element.id}' needs positive dimensions fully inside its floor.`, severity: 'error' });
+			if ((element.type === 'icon' || element.type === 'logo') && (
+				!(element.width > 0)
+				|| !(element.height > 0)
+				|| element.point.x - element.width / 2 < 0
+				|| element.point.y - element.height / 2 < 0
+				|| element.point.x + element.width / 2 > floor.width
+				|| element.point.y + element.height / 2 > floor.height
+			)) issues.push({ code: 'invalid-media-bounds', elementIds: [element.id], message: `Media element '${element.id}' needs positive dimensions fully inside its floor.`, severity: 'error' });
 		}
 
 		if (floor.walkableMask) {
@@ -973,7 +989,7 @@ export const renderWayfindingFloorSvg = (
 	const media = (element: WayfindingStudioMediaElement): string => {
 		const asset: WayfindingStudioAsset | undefined = assetById.get(element.assetId);
 
-		return asset ? `<image ${attrs(element)}${element.destinationId ? ` data-wayfinding-location-id="${escapeXml(element.destinationId)}"` : ''} href="${escapeXml(assetHref(asset))}" x="${number(element.point.x - element.width / 2)}" y="${number(element.point.y - element.height / 2)}" width="${number(element.width)}" height="${number(element.height)}" preserveAspectRatio="xMidYMid meet"/>` : '';
+		return asset ? `<image ${attrs(element)}${element.destinationId ? ` data-wayfinding-location-id="${escapeXml(element.destinationId)}"` : ''} href="${escapeXml(assetHref(asset))}" x="${number(element.point.x - element.width / 2)}" y="${number(element.point.y - element.height / 2)}" width="${number(element.width)}" height="${number(element.height)}"${element.rotationDegrees ? ` transform="rotate(${number(element.rotationDegrees)} ${number(element.point.x)} ${number(element.point.y)})"` : ''} preserveAspectRatio="xMidYMid meet"/>` : '';
 	};
 	const door = (item: WayfindingStudioElement): string => {
 		const value = item as WayfindingStudioDoorElement;

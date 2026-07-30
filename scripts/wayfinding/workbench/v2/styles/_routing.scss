@@ -21,6 +21,26 @@
 	border-left-color: #5f7380;
 }
 
+.route-readiness--compact {
+	gap: 0;
+	padding: 9px 10px;
+	margin-bottom: 10px;
+}
+
+.route-readiness--compact .route-readiness__heading {
+	grid-template-columns: 26px minmax(0, 1fr);
+	gap: 8px;
+}
+
+.route-readiness--compact .route-readiness__icon {
+	width: 26px;
+	height: 26px;
+}
+
+.route-readiness--compact .route-readiness__heading strong {
+	font-size: 11px;
+}
+
 .route-readiness__heading {
 	display: grid;
 	grid-template-columns: 30px minmax(0, 1fr);
@@ -228,6 +248,15 @@
 	grid-template-columns: 1fr;
 }
 
+.route-task-grid--editing {
+	margin-bottom: 10px;
+	gap: 8px;
+}
+
+.route-task-grid--editing .route-task:first-child {
+	grid-column: 1 / -1;
+}
+
 .route-subpanel {
 	margin-top: 10px;
 	padding: 10px;
@@ -282,6 +311,93 @@
 	color: var(--text-muted);
 	background: #eef7f4;
 	border-left: 3px solid var(--accent);
+}
+
+.route-build-requirements {
+	display: grid;
+	gap: 6px;
+	margin-bottom: 10px;
+	padding: 9px;
+	background: #fff8e7;
+	border: 1px solid #e7d294;
+	border-radius: 5px;
+}
+
+.route-build-requirements__heading {
+	display: grid;
+	gap: 2px;
+	padding: 2px 2px 5px;
+}
+
+.route-build-requirements__heading strong {
+	font-size: 11px;
+}
+
+.route-build-requirements__heading span {
+	font-size: 9px;
+	color: var(--text-muted);
+}
+
+.route-build-requirement {
+	display: grid;
+	grid-template-columns: 22px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 8px;
+	min-height: 48px;
+	padding: 7px 8px;
+	text-align: left;
+	color: var(--text);
+	background: white;
+	border: 1px solid #dfc878;
+	border-radius: 4px;
+}
+
+.route-build-requirement:hover {
+	border-color: #9c7310;
+	box-shadow: 0 2px 8px rgb(65 49 10 / 10%);
+}
+
+.route-build-requirement > span:first-child {
+	display: grid;
+	width: 22px;
+	height: 22px;
+	place-items: center;
+	font-size: 9px;
+	font-weight: 850;
+	color: #694d08;
+	background: #fff1c3;
+	border-radius: 50%;
+}
+
+.route-build-requirement > span:nth-child(2) {
+	display: grid;
+	min-width: 0;
+	gap: 2px;
+}
+
+.route-build-requirement strong {
+	font-size: 10px;
+}
+
+.route-build-requirement small {
+	font-size: 9px;
+	line-height: 1.35;
+	color: var(--text-muted);
+}
+
+.route-build-requirement > span:last-child {
+	font-size: 9px;
+	font-weight: 850;
+	color: var(--accent-dark);
+}
+
+.route-build-cta {
+	position: sticky;
+	z-index: 2;
+	bottom: -10px;
+	padding: 9px 0 10px;
+	margin-top: -1px;
+	background: linear-gradient(to bottom, rgb(255 255 255 / 0%), white 9px);
 }
 
 .route-build-report {
@@ -618,4 +734,3 @@
 	border: 0;
 	border-radius: 0;
 }
-
