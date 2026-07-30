@@ -20,38 +20,14 @@ import type {
 	EditorStore
 } from '../../../editor-core/types';
 import { BUILTIN_MAP_ICONS } from '../../icon-library';
-import { Field } from '../ui';
+import { Field, UploadField } from '../ui';
+import { readImageFile } from '../features/assets/image-file';
 
 interface AssetLibraryProps {
 	onNotify: (message: string, tone?: 'danger' | 'info' | 'success' | 'warning') => void;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
 }
-
-const readImage = async (file: File): Promise<{
-	dataUrl: string;
-	height: number;
-	width: number;
-}> => {
-	const dataUrl = await new Promise<string>((resolve, reject): void => {
-		const reader = new FileReader();
-		reader.onerror = (): void => reject(new Error('The selected image could not be read.'));
-		reader.onload = (): void => {
-			if (typeof reader.result === 'string') resolve(reader.result);
-			else reject(new Error('The selected image did not produce a valid data URL.'));
-		};
-		reader.readAsDataURL(file);
-	});
-	const image = new Image();
-	image.src = dataUrl;
-	await image.decode();
-
-	return {
-		dataUrl,
-		height: image.naturalHeight || 64,
-		width: image.naturalWidth || 64
-	};
-};
 
 const assetUseCount = (snapshot: EditorSnapshot, assetId: string): number => {
 	const project = snapshot.state.project;
@@ -102,7 +78,7 @@ export const AssetLibrary = (props: AssetLibraryProps): JSX.Element => {
 		if (!file) return;
 
 		try {
-			const source = await readImage(file);
+			const source = await readImageFile(file);
 			const asset: WayfindingStudioAsset = {
 				dataUrl: source.dataUrl,
 				id: `${kind}-${Date.now().toString(36)}`,
@@ -124,30 +100,44 @@ export const AssetLibrary = (props: AssetLibraryProps): JSX.Element => {
 			);
 		} catch (error) {
 			props.onNotify(error instanceof Error ? error.message : 'The image could not be loaded.', 'danger');
+
+			throw error;
 		}
 	};
 
 	return (
 		<div class="asset-library">
 			<div class="asset-upload-grid">
-				<label class="file-picker compact">
-					<ImagePlus size={15} />
-					<span>Upload symbol</span>
-					<input type="file" accept="image/*" onChange={(event) => void upload(event.currentTarget.files?.[0], 'icon')} />
-				</label>
-				<label class="file-picker compact">
-					<PackagePlus size={15} />
-					<span>Upload logo</span>
-					<input type="file" accept="image/*" onChange={(event) => void upload(event.currentTarget.files?.[0], 'logo')} />
-				</label>
-				<label class="file-picker compact">
-					<Images size={15} />
-					<span>Upload photo</span>
-					<input type="file" accept="image/*" onChange={(event) => void upload(event.currentTarget.files?.[0], 'photo')} />
-				</label>
+				<UploadField
+					accept="image/*"
+					actionLabel="Upload symbol"
+					description="Theme-aware map marker"
+					icon={ImagePlus}
+					onSelect={(file) => upload(file, 'icon')}
+					title="Symbol"
+					variant="compact"
+				/>
+				<UploadField
+					accept="image/*"
+					actionLabel="Upload logo"
+					description="Preserved brand artwork"
+					icon={PackagePlus}
+					onSelect={(file) => upload(file, 'logo')}
+					title="Logo"
+					variant="compact"
+				/>
+				<UploadField
+					accept="image/*"
+					actionLabel="Upload photo"
+					description="Destination gallery image"
+					icon={Images}
+					onSelect={(file) => upload(file, 'photo')}
+					title="Photo"
+					variant="compact"
+				/>
 			</div>
 
-			<Field label="Built-in map symbols" hint="Select a symbol, then click the map to place it.">
+			<Field composite label="Built-in map symbols" hint="Select a symbol, then click the map to place it.">
 				<div class="builtin-icon-grid">
 					<For each={BUILTIN_MAP_ICONS}>{(icon) => (
 						<button
@@ -164,7 +154,7 @@ export const AssetLibrary = (props: AssetLibraryProps): JSX.Element => {
 			</Field>
 
 			<Show when={assets().length > 0}>
-				<Field label="Project assets" hint="Symbols are reusable map markers. Logos identify a destination. Photos appear in visitor details.">
+				<Field composite label="Project assets" hint="Symbols are reusable map markers. Logos identify a destination. Photos appear in visitor details.">
 					<div class="project-asset-grid">
 						<For each={assets()}>{(asset) => {
 							const uses = createMemo(() => assetUseCount(props.snapshot(), asset.id));

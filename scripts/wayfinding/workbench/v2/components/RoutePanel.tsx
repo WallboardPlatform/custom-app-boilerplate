@@ -26,8 +26,8 @@ import {
 	getRouteReadiness,
 	type RouteReadinessAction
 } from '../route-readiness';
-import type { CanvasSelectionActions } from '../Canvas2d';
-import { EmptyState, IconButton, PanelNav, PanelSection } from '../ui';
+import type { CanvasSelectionActions } from '../features/map';
+import { EmptyState, IconButton, PanelNav, PanelResizeHandle, PanelSection } from '../ui';
 import { FreehandSettings } from './FreehandSettings';
 import { SmartTraceSettings } from './SmartTraceSettings';
 import { RouteGraphNavigator } from './RouteGraphNavigator';
@@ -168,6 +168,11 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 
 	return (
 		<aside class="left-panel panel-shell route-panel">
+			<PanelResizeHandle
+				panelId="left"
+				store={props.store}
+				width={() => state().panels.left.width}
+			/>
 			<div class="panel-title">
 				<span>
 					<small>{state().workspace === 'route-edit' ? 'Route workspace' : 'Route test'}</small>
@@ -324,7 +329,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 								>
 									<button
 										type="button"
-										class="button full"
+										class="wb-studio-action full"
 										onClick={() => props.store.dispatch({ type: 'selection/clear' })}
 									>
 										<Trash2 size={16} /> Clear preview
@@ -414,7 +419,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 						<div class="workflow-intro">
 							<small>Step 2</small>
 							<strong>Generate the first network</strong>
-							<p>The builder connects linked doors through the reviewed pedestrian space. Existing manual route edits will be replaced.</p>
+							<p>The builder connects linked doors through reviewed pedestrian space. Reviewed and hand-authored corrections are preserved.</p>
 						</div>
 						<div class="route-summary route-summary--large">
 							<span><strong>{floorNodes().length}</strong> nodes</span>
@@ -422,7 +427,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 						</div>
 						<button
 							type="button"
-							class="button primary full"
+							class="wb-studio-action primary full"
 							disabled={
 								readiness().walkableAreas === 0
 								|| readiness().origins === 0
@@ -453,6 +458,16 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 										<strong>{report().connectedSemanticNodes}/{report().totalSemanticNodes}</strong>
 										<span>destination anchors connected</span>
 									</div>
+									<dl class="route-build-report__diff">
+										<div>
+											<dt>Generated</dt>
+											<dd>{report().diff.generatedEdgesAfter} segments</dd>
+										</div>
+										<div>
+											<dt>Preserved</dt>
+											<dd>{report().diff.manualEdgesPreserved} manual</dd>
+										</div>
+									</dl>
 									<Show
 										when={report().diagnostics.length > 0}
 										fallback={<p>Every authored entrance and start point reached the generated network.</p>}
@@ -462,7 +477,7 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 												{(diagnostic) => <li>{diagnostic.message}</li>}
 											</For>
 										</ul>
-										<button type="button" class="button full" onClick={() => setView('edit')}>
+										<button type="button" class="wb-studio-action full" onClick={() => setView('edit')}>
 											Review flagged connectors
 										</button>
 									</Show>
@@ -516,10 +531,10 @@ export const RoutePanel = (props: RoutePanelProps): JSX.Element => {
 						</div>
 						<button
 							type="button"
-							class="button primary full"
-							onClick={() => props.store.dispatch({ type: 'workspace/set', workspace: 'route-preview' })}
+							class="wb-studio-action primary full"
+							onClick={() => props.store.dispatch({ type: 'workspace/set', workspace: 'preview' })}
 						>
-							<Route size={16} /> Open route preview
+							<Route size={16} /> Open Preview
 						</button>
 					</Show>
 				</Show>

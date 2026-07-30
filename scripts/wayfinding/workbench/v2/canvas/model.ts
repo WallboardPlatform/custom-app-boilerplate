@@ -57,27 +57,18 @@ export const edgeGeometry = (
 		.map((point) => ({ x: point.x, y: point.y }));
 };
 
-export type FloorPresentationMode = 'editor' | 'route-preview' | 'visitor';
+export type FloorPresentationMode = 'editor' | 'preview';
 
 const presentationRules: Record<Exclude<FloorPresentationMode, 'editor'>, string[]> = {
-	'route-preview': [
-		'#POIs{display:none}',
-		'#Labels{display:none}',
-		'#Walkable polygon{fill:#eef4f2;fill-opacity:.96;stroke:#c7d5d1;stroke-width:2}',
-		'#Locations polygon{fill-opacity:.82;stroke-width:2.5}',
-		'#Obstacles polygon{fill:#263432;fill-opacity:.9;stroke:#172321;stroke-width:2}',
-		'#Doors line{stroke:#fff;stroke-width:9}',
-		'#Transitions circle{fill:#fff;stroke:#2563eb;stroke-width:4}'
-	],
-	visitor: [
+	preview: [
 		'#POIs{display:none}',
 		'#Origins{display:none}',
 		'#Labels{display:none}',
-		'.visitor-floor-surface{fill:#f8faf9;stroke:#a9bbb6;stroke-width:2}',
+		'.preview-floor-surface{fill:#f8faf9;stroke:#a9bbb6;stroke-width:2}',
 		'#Walkable polygon{fill:#edf4f1;fill-opacity:.98;stroke:#c8d6d2;stroke-width:2}',
 		'#Locations polygon{fill-opacity:.86;stroke-width:2.5;filter:drop-shadow(0 5px 8px rgba(22,42,37,.14))}',
 		'#Obstacles polygon{fill:#263432;fill-opacity:.92;stroke:#172321;stroke-width:2}',
-		'#Doors line{stroke:#fff;stroke-width:10}',
+		'#Doors line{stroke:#17473f;stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 1px 1px rgba(255,255,255,.9))}',
 		'#Transitions circle{fill:#fff;stroke:#2563eb;stroke-width:4}'
 	]
 };
@@ -106,8 +97,8 @@ export const renderEditorFloorSvg = (
 	}
 	const source = renderWayfindingFloorSvg(project, floorId);
 	const floor = project.floors.find((candidate) => candidate.id === floorId);
-	const presentationMarkup = presentationMode === 'visitor' && floor
-		? `<rect class="visitor-floor-surface" x="0" y="0" width="${floor.width}" height="${floor.height}"/>`
+	const presentationMarkup = presentationMode === 'preview' && floor
+		? `<rect class="preview-floor-surface" x="0" y="0" width="${floor.width}" height="${floor.height}"/>`
 		: '';
 
 	return source.replace('>', `><style>${hiddenRules.join('')}</style>${presentationMarkup}`);

@@ -12,7 +12,7 @@ import type {
 	WayfindingPoint
 } from '../../../src/utils/wayfinding.js';
 
-export type EditorWorkspace = 'map' | 'route-edit' | 'route-preview' | 'visitor-preview';
+export type EditorWorkspace = 'map' | 'route-edit' | 'preview';
 export type EditorViewMode = '2d' | '3d';
 export type EditorPanelId = 'left' | 'right';
 export type EditorTool =

@@ -48,7 +48,7 @@ button:disabled {
 }
 
 .workbench {
-	--accent: #138b75;
+	--accent: #0f806d;
 	--accent-dark: #0c6658;
 	--accent-soft: #e4f3ef;
 	--app-bar: #132321;
@@ -271,8 +271,10 @@ button:disabled {
 
 .icon-button {
 	display: inline-grid;
+	flex: 0 0 34px;
 	width: 34px;
 	height: 34px;
+	min-width: 34px;
 	padding: 0;
 	place-items: center;
 	color: currentColor;

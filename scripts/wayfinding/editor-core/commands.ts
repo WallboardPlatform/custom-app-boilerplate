@@ -298,7 +298,13 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 			return mutateProject(state, (project): void => {
 				const index: number = project.graph.edges.findIndex((edge): boolean => edge.id === command.edgeId);
 
-				if (index >= 0) project.graph.edges[index] = { ...project.graph.edges[index], ...command.patch };
+				if (index >= 0) {
+					project.graph.edges[index] = {
+						...project.graph.edges[index],
+						...command.patch,
+						authoringOwnership: 'manual'
+					};
+				}
 			});
 
 		case 'graph/edge-remove':
@@ -317,7 +323,13 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 			return mutateProject(state, (project): void => {
 				const index: number = project.graph.nodes.findIndex((node): boolean => node.id === command.nodeId);
 
-				if (index >= 0) project.graph.nodes[index] = { ...project.graph.nodes[index], ...command.patch };
+				if (index >= 0) {
+					project.graph.nodes[index] = {
+						...project.graph.nodes[index],
+						...command.patch,
+						authoringOwnership: 'manual'
+					};
+				}
 			});
 
 		case 'graph/node-remove':

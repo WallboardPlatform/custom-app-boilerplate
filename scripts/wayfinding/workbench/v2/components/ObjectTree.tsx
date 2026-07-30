@@ -28,7 +28,7 @@ import type {
 	EditorSnapshot,
 	EditorStore
 } from '../../../editor-core/types';
-import type { CanvasSelectionActions } from '../Canvas2d';
+import type { CanvasSelectionActions } from '../features/map';
 
 interface ObjectTreeProps {
 	actions: Accessor<CanvasSelectionActions | undefined>;

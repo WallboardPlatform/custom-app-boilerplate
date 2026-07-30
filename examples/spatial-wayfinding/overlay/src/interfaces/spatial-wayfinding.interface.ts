@@ -73,6 +73,7 @@ export interface RuntimeLabel {
 	fontSize?: number;
 	fontWeight?: 400 | 600 | 700;
 	id: string;
+	maxWidth?: number;
 	outlineColor?: string;
 	outlineWidth?: number;
 	point: WayfindingPoint;

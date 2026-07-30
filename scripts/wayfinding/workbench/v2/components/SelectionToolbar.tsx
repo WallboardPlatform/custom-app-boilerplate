@@ -12,7 +12,7 @@ import {
 import { Show, type Accessor, type JSX } from 'solid-js';
 
 import type { EditorSnapshot } from '../../../editor-core/types';
-import type { CanvasSelectionActions } from '../Canvas2d';
+import type { CanvasSelectionActions } from '../features/map';
 
 interface SelectionToolbarProps {
 	actions: Accessor<CanvasSelectionActions | undefined>;

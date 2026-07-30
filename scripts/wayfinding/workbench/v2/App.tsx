@@ -21,11 +21,6 @@ import {
 	type WayfindingStudioIssue
 } from '../../studio-project.mts';
 import {
-	createWayfindingMapPackage,
-	WAYFINDING_MAP_PACKAGE_EXTENSION,
-	WAYFINDING_MAP_PACKAGE_MIME_TYPE
-} from '../../runtime-package.mts';
-import {
 	buildFloorRouteNetwork,
 	type RouteBuildResult
 } from '../../editor-core/route-builder.mts';
@@ -35,19 +30,16 @@ import {
 } from '../../editor-core/selectors';
 import { createEditorStore } from '../../editor-core/store';
 import type { EditorStore } from '../../editor-core/types';
-import { Canvas2d } from './Canvas2d';
-import type { CanvasSelectionActions } from './Canvas2d';
+import { Canvas2d, type CanvasSelectionActions } from './features/map';
 import { AppBar } from './components/AppBar';
 import type { StudioCommand } from './components/CommandPalette';
 import { InspectorPanel } from './components/InspectorPanel';
 import { ProjectPanel, type ProjectView } from './components/ProjectPanel';
-import { RoutePanel } from './components/RoutePanel';
 import { SelectionToolbar } from './components/SelectionToolbar';
 import { StageToolbar } from './components/StageToolbar';
 import { StatusBar } from './components/StatusBar';
 import { ToolRail } from './components/ToolRail';
 import { updateProject } from './components/project-edit';
-import { VisitorPanel } from './components/VisitorPanel';
 import {
 	type ConfirmState,
 	type RepairReportState,
@@ -55,9 +47,15 @@ import {
 	WorkbenchOverlays
 } from './components/WorkbenchOverlays';
 import {
-	routeJourneyToDestination,
-	type VisitorRouteProfile
-} from './route';
+	getThreeDimensionalReadiness,
+	VisitorPanel,
+	createPreviewSession
+} from './features/preview';
+import { downloadPublishedRuntime } from './features/publishing';
+import {
+	RoutePanel,
+	routeJourneyToDestination
+} from './features/routing';
 import {
 	filterVisitorDestinations,
 	visitorCategoryOptions,
@@ -74,24 +72,6 @@ const Scene3dView = lazy(async () => {
 	return { default: module.Scene3dView };
 });
 
-const downloadBytes = (
-	value: Uint8Array,
-	fileName: string,
-	mimeType: string
-): void => {
-	const buffer = new ArrayBuffer(value.byteLength);
-	new Uint8Array(buffer).set(value);
-	const url: string = URL.createObjectURL(new Blob([buffer], { type: mimeType }));
-	const anchor: HTMLAnchorElement = document.createElement('a');
-	anchor.href = url;
-	anchor.download = fileName;
-	anchor.click();
-	URL.revokeObjectURL(url);
-};
-
-const safeFileStem = (value: string): string =>
-	value.trim().replaceAll(/[^a-zA-Z0-9._-]+/g, '-').replaceAll(/^-+|-+$/g, '') || 'wayfinding-project';
-
 const App = (): JSX.Element => {
 	const store: EditorStore = createEditorStore();
 	const workspaceDensity = useResponsiveWorkspace(store);
@@ -101,18 +81,12 @@ const App = (): JSX.Element => {
 	const [confirmResolver, setConfirmResolver] = createSignal<(value: boolean) => void>();
 	const [repairReport, setRepairReport] = createSignal<RepairReportState>();
 	const [pointer, setPointer] = createSignal<{ x: number; y: number }>();
-	const [visitorQuery, setVisitorQuery] = createSignal('');
-	const [visitorCategory, setVisitorCategory] = createSignal('');
-	const [visitorFloorFilter, setVisitorFloorFilter] = createSignal('');
-	const [visitorRouteDestinationId, setVisitorRouteDestinationId] = createSignal<string>();
-	const [visitorRouteOriginId, setVisitorRouteOriginId] = createSignal<string>();
-	const [visitorRouteProfile, setVisitorRouteProfile] = createSignal<VisitorRouteProfile>('standard');
 	const [shortcutsOpen, setShortcutsOpen] = createSignal(false);
 	const [commandPaletteOpen, setCommandPaletteOpen] = createSignal(false);
 	const [projectView, setProjectView] = createSignal<ProjectView>('content');
 	const [exportIssues, setExportIssues] = createSignal<WayfindingStudioIssue[]>([]);
 	const [routeBuildReport, setRouteBuildReport] = createSignal<RouteBuildResult>();
-	const [visitorLanguage, setVisitorLanguage] = createSignal(
+	const preview = createPreviewSession(
 		store.getSnapshot().state.project.defaultLanguage ?? 'en'
 	);
 	let fitCanvas = (): void => undefined;
@@ -123,6 +97,9 @@ const App = (): JSX.Element => {
 	const currentFloor = createMemo(() =>
 		state().project.floors.find((floor) => floor.id === state().currentFloorId)
 		?? state().project.floors[0]
+	);
+	const threeDimensionalReadiness = createMemo(() =>
+		getThreeDimensionalReadiness(state().project, state().currentFloorId)
 	);
 	const [selectionActions, setSelectionActions] = createSignal<CanvasSelectionActions>();
 	const openProjectSetup = (): void => {
@@ -136,7 +113,7 @@ const App = (): JSX.Element => {
 	const startFloorPlanUpload = (): void => {
 		openProjectSetup();
 		queueMicrotask(() =>
-			document.querySelector<HTMLInputElement>('[data-floor-background-input]')?.click()
+			document.querySelector<HTMLInputElement>('#floor-background-input')?.click()
 		);
 	};
 	const canvasIsEmpty = createMemo(() =>
@@ -175,11 +152,7 @@ const App = (): JSX.Element => {
 		return selection?.kind === 'graph-edge' ? selection.geometryIndex : undefined;
 	});
 	const selectedRouteDestinationId = createMemo(() =>
-		state().workspace === 'visitor-preview'
-			? visitorRouteDestinationId()
-			: state().workspace === 'route-preview'
-				? selectedDestination()?.id
-				: undefined
+		state().workspace === 'preview' ? preview.state().destinationId : undefined
 	);
 	const inspectorTitle = createMemo(() =>
 		element()
@@ -190,8 +163,8 @@ const App = (): JSX.Element => {
 				?? (
 					state().workspace === 'route-edit'
 						? 'Route network'
-						: state().workspace === 'route-preview'
-							? 'Journey preview'
+						: state().workspace === 'preview'
+							? 'Preview'
 							: 'Project overview'
 				)
 	);
@@ -216,17 +189,17 @@ const App = (): JSX.Element => {
 	const visibleDestinations = createMemo(() => filterVisitorDestinations(
 		state().project.destinations,
 		{
-			category: visitorCategory() || undefined,
-			floorId: visitorFloorFilter() || undefined,
-			language: visitorLanguage(),
-			query: visitorQuery()
+			category: preview.state().category || undefined,
+			floorId: preview.state().floorId || undefined,
+			language: preview.state().language,
+			query: preview.state().query
 		}
 	));
 	const visitorRouteJourney = createMemo(() => routeJourneyToDestination(
 		state().project,
-		visitorRouteDestinationId(),
-		visitorRouteProfile(),
-		visitorRouteOriginId()
+		preview.state().destinationId,
+		preview.state().profile,
+		preview.state().originId
 	));
 	const studioCommands = createMemo<StudioCommand[]>(() => [
 		{
@@ -279,19 +252,11 @@ const App = (): JSX.Element => {
 		},
 		{
 			group: 'Workspace',
-			id: 'workspace-route-preview',
+			id: 'workspace-preview',
 			keywords: ['simulate', 'directions'],
-			label: 'Open route preview',
-			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'route-preview' }),
+			label: 'Open Preview',
+			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'preview' }),
 			shortcut: '3'
-		},
-		{
-			group: 'Workspace',
-			id: 'workspace-visitor-preview',
-			keywords: ['directory', 'runtime', 'public'],
-			label: 'Open visitor preview',
-			run: (): void => store.dispatch({ type: 'workspace/set', workspace: 'visitor-preview' }),
-			shortcut: '4'
 		},
 		{
 			group: 'View',
@@ -306,12 +271,12 @@ const App = (): JSX.Element => {
 			label: 'Switch to 2D editor',
 			run: (): void => store.dispatch({ type: 'view/set', viewMode: '2d' })
 		},
-		{
+		...(threeDimensionalReadiness().ready ? [{
 			group: 'View',
 			id: 'view-3d',
 			label: 'Switch to 3D preview',
 			run: (): void => store.dispatch({ type: 'view/set', viewMode: '3d' })
-		},
+		} satisfies StudioCommand] : []),
 		{
 			group: 'View',
 			id: 'toggle-left-panel',
@@ -373,27 +338,41 @@ const App = (): JSX.Element => {
 	createEffect(() => {
 		const available = state().project.languages ?? [];
 
-		if (available.some((language) => language.code === visitorLanguage())) return;
-		setVisitorLanguage(state().project.defaultLanguage ?? available[0]?.code ?? 'en');
+		if (available.some((language) => language.code === preview.state().language)) return;
+		preview.setLanguage(state().project.defaultLanguage ?? available[0]?.code ?? 'en');
 	});
 	createEffect(() => {
-		if (visitorCategory() && !visitorCategories().includes(visitorCategory())) {
-			setVisitorCategory('');
+		if (preview.state().category && !visitorCategories().includes(preview.state().category)) {
+			preview.setCategory('');
 		}
 
-		if (visitorFloorFilter() && !visitorFloors().some((floor) => floor.id === visitorFloorFilter())) {
-			setVisitorFloorFilter('');
+		if (preview.state().floorId && !visitorFloors().some((floor) => floor.id === preview.state().floorId)) {
+			preview.setFloorId('');
 		}
 
 		if (
-			visitorRouteDestinationId()
-			&& !state().project.destinations.some((destination) => destination.id === visitorRouteDestinationId())
+			preview.state().destinationId
+			&& !state().project.destinations.some((destination) => destination.id === preview.state().destinationId)
 		) {
-			setVisitorRouteDestinationId(undefined);
+			preview.setDestinationId(undefined);
 		}
 
-		if (!visitorOrigins().some((origin) => origin.id === visitorRouteOriginId())) {
-			setVisitorRouteOriginId(visitorOrigins()[0]?.id);
+		if (!visitorOrigins().some((origin) => origin.id === preview.state().originId)) {
+			preview.setOriginId(visitorOrigins()[0]?.id);
+		}
+	});
+	createEffect(() => {
+		if (state().workspace !== 'preview') return;
+		const destination = selectedDestination();
+
+		// Floor navigation clears the editor selection. That must not erase an
+		// active journey: Preview owns its transient destination independently.
+		if (!destination) return;
+		preview.setDestinationId(destination.routeable === false ? undefined : destination.id);
+	});
+	createEffect(() => {
+		if (state().viewMode === '3d' && !threeDimensionalReadiness().ready) {
+			store.dispatch({ type: 'view/set', viewMode: '2d' });
 		}
 	});
 
@@ -429,24 +408,39 @@ const App = (): JSX.Element => {
 	};
 	const buildRoutes = async (): Promise<void> => {
 		const currentFloorId = state().currentFloorId;
-		const floorNodeIds = new Set(state().project.graph.nodes
-			.filter((node) => node.levelId === currentFloorId)
-			.map((node) => node.id));
-		const existingEdges = state().project.graph.edges.filter((edge) =>
-			floorNodeIds.has(edge.from) || floorNodeIds.has(edge.to)
-		);
-
-		if (existingEdges.length > 0 && !await confirm({
-			body: `This replaces ${existingEdges.length} route segment${existingEdges.length === 1 ? '' : 's'} on the current floor, including manual adjustments. The change can be undone.`,
-			confirmLabel: 'Rebuild routes',
-			title: 'Replace the current route network?'
-		})) return;
 
 		try {
 			const result = buildFloorRouteNetwork(state().project, currentFloorId);
+			const diff = result.diff;
+			const replacesGeneratedTopology = diff.generatedEdgesBefore > 0 || diff.generatedNodesBefore > 0;
+
+			if (replacesGeneratedTopology && !await confirm({
+				body: 'Only Studio-generated topology will be replaced. Reviewed and hand-authored corrections remain intact, and the complete change can still be undone.',
+				confirmLabel: 'Apply rebuild',
+				details: [
+					{
+						label: 'Generated route points',
+						value: `${diff.generatedNodesBefore} → ${diff.generatedNodesAfter}`
+					},
+					{
+						label: 'Generated segments',
+						value: `${diff.generatedEdgesBefore} → ${diff.generatedEdgesAfter}`
+					},
+					{
+						label: 'Manual corrections preserved',
+						value: `${diff.manualNodesPreserved} points · ${diff.manualEdgesPreserved} segments`
+					},
+					{
+						label: 'Destination anchors connected',
+						value: `${result.connectedSemanticNodes}/${result.totalSemanticNodes}`
+					}
+				],
+				title: 'Review route build changes'
+			})) return;
+
 			store.dispatch({
 				type: 'project/replace',
-				label: existingEdges.length ? 'Rebuild route network' : 'Build route network',
+				label: replacesGeneratedTopology ? 'Rebuild route network' : 'Build route network',
 				project: result.project
 			});
 			store.dispatch({ type: 'selection/clear' });
@@ -466,12 +460,7 @@ const App = (): JSX.Element => {
 
 	const exportRuntime = (): void => {
 		try {
-			const mapPackage = createWayfindingMapPackage(state().project);
-			downloadBytes(
-				mapPackage,
-				`${safeFileStem(state().project.name)}${WAYFINDING_MAP_PACKAGE_EXTENSION}`,
-				WAYFINDING_MAP_PACKAGE_MIME_TYPE
-			);
+			downloadPublishedRuntime(state().project);
 			notify('Published map downloaded.', 'success');
 		} catch {
 			const issues = deliveryIssues().filter((issue) => issue.severity === 'error');
@@ -531,12 +520,16 @@ const App = (): JSX.Element => {
 	return (
 		<div
 			class="workbench"
+			style={{
+				'--panel-width-left': `${state().panels.left.width}px`,
+				'--panel-width-right': `${state().panels.right.width}px`
+			}}
 			classList={{
 				'compact-layout': workspaceDensity() === 'compact',
 				'left-collapsed': state().panels.left.collapsed,
 				'narrow-layout': workspaceDensity() === 'narrow',
 				'right-collapsed': state().panels.right.collapsed,
-				'visitor-workspace': state().workspace === 'visitor-preview'
+				'preview-workspace': state().workspace === 'preview'
 			}}
 		>
 			<AppBar
@@ -549,17 +542,17 @@ const App = (): JSX.Element => {
 			/>
 
 			<div class="work-area">
-				<Show when={state().workspace !== 'visitor-preview'}>
+				<Show when={state().workspace !== 'preview'}>
 					<Show
 						when={state().workspace === 'map'}
 						fallback={
 							<RoutePanel
 								onBuildRoutes={() => void buildRoutes()}
 								routeBuildReport={routeBuildReport}
-								routeOriginId={visitorRouteOriginId}
-								routeProfile={visitorRouteProfile}
-								setRouteOriginId={setVisitorRouteOriginId}
-								setRouteProfile={setVisitorRouteProfile}
+								routeOriginId={() => preview.state().originId}
+								routeProfile={() => preview.state().profile}
+								setRouteOriginId={preview.setOriginId}
+								setRouteProfile={preview.setProfile}
 								selectionActions={selectionActions}
 								snapshot={snapshot}
 								store={store}
@@ -596,8 +589,9 @@ const App = (): JSX.Element => {
 						onFit={() => fitCanvas()}
 						snapshot={snapshot}
 						store={store}
+						threeDimensionalReady={() => threeDimensionalReadiness().ready}
 					/>
-					<Show when={state().workspace !== 'visitor-preview' && state().viewMode === '2d'}>
+					<Show when={state().workspace !== 'preview' && state().viewMode === '2d'}>
 						<SelectionToolbar
 							actions={selectionActions}
 							label={inspectorTitle}
@@ -613,11 +607,11 @@ const App = (): JSX.Element => {
 										fitCanvas = fit;
 									}}
 									routeDestinationId={selectedRouteDestinationId}
-									routeOriginId={visitorRouteOriginId}
-									routeProfile={visitorRouteProfile}
+									routeOriginId={() => preview.state().originId}
+									routeProfile={() => preview.state().profile}
 									snapshot={snapshot}
 									store={store}
-									visitorLanguage={visitorLanguage}
+									visitorLanguage={() => preview.state().language}
 								/>
 							</Suspense>
 						)}
@@ -629,12 +623,13 @@ const App = (): JSX.Element => {
 							}}
 							registerSelectionActions={setSelectionActions}
 							routeDestinationId={selectedRouteDestinationId}
-							routeOriginId={visitorRouteOriginId}
-							routeProfile={visitorRouteProfile}
+							routeOriginId={() => preview.state().originId}
+							routeProfile={() => preview.state().profile}
 							snapshot={snapshot}
 							store={store}
 							visitorDestinations={visibleDestinations}
-							visitorLanguage={visitorLanguage}
+							visitorLanguage={() => preview.state().language}
+							showRouteNetwork={() => preview.state().diagnosticLayers.routeNetwork}
 							onPointerCoordinate={setPointer}
 						/>
 						<Show when={canvasIsEmpty() && state().workspace === 'map'}>
@@ -644,7 +639,7 @@ const App = (): JSX.Element => {
 								<span>Start with a map image, then trace destinations and pedestrian space.</span>
 								<button
 									type="button"
-									class="button primary"
+									class="wb-studio-action primary"
 									onClick={startFloorPlanUpload}
 								>
 									<ImagePlus size={16} /> Choose image
@@ -652,46 +647,50 @@ const App = (): JSX.Element => {
 							</div>
 						</Show>
 					</Show>
-					<Show when={state().workspace === 'visitor-preview'}>
+					<Show when={state().workspace === 'preview'}>
 						<VisitorPanel
 							assets={() => state().project.assets}
 							categories={visitorCategories}
-							category={visitorCategory}
+							category={() => preview.state().category}
 							destinations={visibleDestinations}
-							floorFilter={visitorFloorFilter}
+							floorFilter={() => preview.state().floorId}
 							floors={visitorFloors}
-							language={visitorLanguage}
+							language={() => preview.state().language}
 							languages={() => state().project.languages ?? []}
 							layerVisible={(layerId) => state().layerVisibility[layerId]}
-							query={visitorQuery}
-							routeDestinationId={visitorRouteDestinationId}
+							query={() => preview.state().query}
+							routeDestinationId={() => preview.state().destinationId}
 							routeJourney={visitorRouteJourney}
-							routeOriginId={visitorRouteOriginId}
+							routeOriginId={() => preview.state().originId}
 							routeOrigins={visitorOrigins}
-							routeProfile={visitorRouteProfile}
+							routeProfile={() => preview.state().profile}
 							selected={selectedDestination}
-							setCategory={setVisitorCategory}
+							setCategory={preview.setCategory}
 							setFloorFilter={(floorId) => {
-								setVisitorFloorFilter(floorId);
+								preview.setFloorId(floorId);
 
 								if (floorId) store.dispatch({ type: 'floor/select', floorId });
 							}}
-							setLanguage={setVisitorLanguage}
-							setQuery={setVisitorQuery}
-							setRouteDestinationId={setVisitorRouteDestinationId}
-							setRouteOriginId={setVisitorRouteOriginId}
-							setRouteProfile={setVisitorRouteProfile}
+							setLanguage={preview.setLanguage}
+							setQuery={preview.setQuery}
+							setRouteDestinationId={preview.setDestinationId}
+							setRouteOriginId={preview.setOriginId}
+							setRouteProfile={preview.setProfile}
+							simulationOpen={() => preview.state().simulationOpen}
+							setSimulationOpen={preview.setSimulationOpen}
+							showRouteNetwork={() => preview.state().diagnosticLayers.routeNetwork}
+							setShowRouteNetwork={(visible) => preview.setDiagnosticLayer('routeNetwork', visible)}
 							store={store}
 						/>
 					</Show>
-					<Show when={state().workspace !== 'visitor-preview'}>
+					<Show when={state().workspace !== 'preview'}>
 						<div class="coordinate-readout">
 							{pointer() ? `x ${Math.round(pointer()!.x)}  y ${Math.round(pointer()!.y)}` : 'x --  y --'}
 						</div>
 					</Show>
 				</main>
 
-				<Show when={state().workspace !== 'visitor-preview'}>
+				<Show when={state().workspace !== 'preview'}>
 					<Show when={state().panels.right.collapsed}>
 						<button
 							type="button"

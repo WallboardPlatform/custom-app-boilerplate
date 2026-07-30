@@ -41,19 +41,12 @@ export const WORKSPACE_DEFINITIONS: Record<EditorWorkspace, WorkspaceDefinition>
 		label: 'Route edit',
 		purpose: 'Define pedestrian space, generate the route network, and refine route geometry.'
 	},
-	'route-preview': {
+	preview: {
 		allowedSelectionKinds: ['destination'],
 		allowedTools: ['pan'],
 		defaultTool: 'pan',
-		label: 'Route preview',
-		purpose: 'Test a visitor journey without exposing authoring handles.'
-	},
-	'visitor-preview': {
-		allowedSelectionKinds: ['destination'],
-		allowedTools: ['pan'],
-		defaultTool: 'pan',
-		label: 'Visitor preview',
-		purpose: 'Inspect the final directory, destination details, layers, and route presentation.'
+		label: 'Preview',
+		purpose: 'Test the published directory, destination details, layers, and route guidance in one workspace.'
 	}
 };
 

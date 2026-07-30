@@ -10,6 +10,11 @@ import {
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
+import { buildFloorRouteNetwork } from '../editor-core/route-builder.mts';
+import {
+	inspectRouteGeometry,
+	measureRouteNetwork
+} from './v2/route-geometry';
 
 const createRouteTestProject = (): WayfindingStudioProject => {
 	const project: WayfindingStudioProject = createWayfindingStudioProject('route-clear-test');
@@ -705,6 +710,49 @@ test('builds routes from authored walkable areas and auto-links a nearby door', 
 	expect(approachGeometry[1].x).toBeLessThan(door?.point.x ?? Number.NEGATIVE_INFINITY);
 	expect(Math.abs(approachGeometry[1].y - (door?.point.y ?? 0))).toBeLessThanOrEqual(10);
 	expect(approachGeometry.every((point): boolean => point.x >= 50 && point.x <= 850 && point.y >= 80 && point.y <= 520)).toBe(true);
+	const comparisonProject = createAutomaticRouteTestProject();
+	const comparisonFloor = comparisonProject.floors[0];
+	const comparisonDoor = comparisonFloor.elements.find(
+		(element): element is WayfindingStudioDoorElement => element.type === 'door'
+	);
+
+	if (comparisonDoor) comparisonDoor.locationId = 'meeting-room-shape';
+	synchronizeWayfindingStudioGraph(comparisonProject);
+	const currentBuild = buildFloorRouteNetwork(comparisonProject, comparisonFloor.id, {
+		cellSize: 4,
+		clearanceCells: 1
+	});
+	const legacyQuality = measureRouteNetwork(builtProject.graph.edges, builtProject.graph.nodes);
+	const currentQuality = measureRouteNetwork(
+		currentBuild.project.graph.edges,
+		currentBuild.project.graph.nodes
+	);
+	const misleadingIssueCodes = new Set(['backtracking', 'short-zigzag', 'zero-length-segment']);
+	const legacyMisleadingIssues = builtProject.graph.edges.flatMap((edge) =>
+		inspectRouteGeometry(edge, builtProject.graph.nodes)
+	).filter((issue) => misleadingIssueCodes.has(issue.code));
+	const currentMisleadingIssues = currentBuild.project.graph.edges.flatMap((edge) =>
+		inspectRouteGeometry(edge, currentBuild.project.graph.nodes)
+	).filter((issue) => misleadingIssueCodes.has(issue.code));
+
+	await testInfo.attach('legacy-vs-current-route-quality.json', {
+		body: Buffer.from(JSON.stringify({
+			current: {
+				...currentQuality,
+				edges: currentBuild.project.graph.edges.length,
+				misleadingIssues: currentMisleadingIssues.length
+			},
+			fixture: 'automatic-route-test',
+			legacy: {
+				...legacyQuality,
+				edges: builtProject.graph.edges.length,
+				misleadingIssues: legacyMisleadingIssues.length
+			}
+		}, null, 2)),
+		contentType: 'application/json'
+	});
+	expect(currentQuality.score).toBeGreaterThanOrEqual(legacyQuality.score);
+	expect(currentMisleadingIssues.length).toBeLessThanOrEqual(legacyMisleadingIssues.length);
 	expect(errors).toEqual([]);
 });
 

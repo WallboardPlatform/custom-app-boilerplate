@@ -19,7 +19,8 @@ import {
 	routeToDestination,
 	type VisitorRouteProfile
 } from './route';
-import { visitorSceneProject } from './visitor-scene';
+import { presentationSceneProject } from './features/preview/presentation-scene';
+import { Button } from './ui';
 
 export const Scene3dView = (props: {
 	registerFit: (fit: () => void) => void;
@@ -36,14 +37,14 @@ export const Scene3dView = (props: {
 	let readyGeneration = 0;
 	const [ready, setReady] = createSignal(false);
 	const project = createMemo(() => props.snapshot().state.project);
-	const renderProject = createMemo(() => props.snapshot().state.workspace === 'visitor-preview'
-		? visitorSceneProject(
+	const renderProject = createMemo(() => props.snapshot().state.workspace === 'preview'
+		? presentationSceneProject(
 			project(),
 			props.snapshot().state.layerVisibility,
 			props.visitorLanguage?.()
 		)
 		: project());
-	const presentationMode = createMemo(() => props.snapshot().state.workspace === 'visitor-preview' ? 'visitor' : 'editor');
+	const presentationMode = createMemo(() => props.snapshot().state.workspace === 'preview' ? 'visitor' : 'editor');
 	const floorId = createMemo(() => props.snapshot().state.currentFloorId);
 	const selectedElementId = createMemo(() => {
 		const selection = props.snapshot().state.selection;
@@ -66,7 +67,7 @@ export const Scene3dView = (props: {
 	const route = createMemo(() => floorRoutePoints(
 		routeToDestination(
 			project(),
-			props.snapshot().state.workspace === 'visitor-preview'
+			props.snapshot().state.workspace === 'preview'
 				? props.routeDestinationId?.()
 				: selectedDestinationId(),
 			props.routeProfile?.() ?? 'standard',
@@ -102,7 +103,7 @@ export const Scene3dView = (props: {
 
 				props.store.dispatch({
 					type: 'selection/set',
-					selection: destinationId && props.snapshot().state.workspace === 'visitor-preview'
+					selection: destinationId && props.snapshot().state.workspace === 'preview'
 						? { id: destinationId, kind: 'destination' }
 						: { id: elementId, kind: 'element' }
 				});
@@ -144,16 +145,16 @@ export const Scene3dView = (props: {
 				<div class="scene3d-progress" role="status">Preparing 3D map...</div>
 			</Show>
 			<div class="scene3d-camera-actions" aria-label="3D camera controls">
-				<button
-					type="button"
-					class="button compact"
+				<Button
+					size="compact"
+					tone="overlay"
 					onClick={() => scene?.resetCamera()}
 				>
 					<RotateCcw size={16} /> Reset view
-				</button>
-				<button
-					type="button"
-					class="button compact"
+				</Button>
+				<Button
+					size="compact"
+					tone="overlay"
 					onClick={() => {
 						const camera3d = scene?.getCameraState();
 
@@ -166,7 +167,7 @@ export const Scene3dView = (props: {
 					}}
 				>
 					<Bookmark size={16} /> Save view
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

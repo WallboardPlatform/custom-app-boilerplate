@@ -74,6 +74,28 @@ const createTextTexture = (label: RuntimeLabel): { height: number; texture: THRE
 	return { height: canvas.height, texture, width: canvas.width };
 };
 
+const createImageTexture = (
+	asset: RuntimeAsset,
+	onReady?: () => void
+): THREE.CanvasTexture => {
+	const canvas = document.createElement('canvas');
+	canvas.width = Math.max(1, asset.naturalWidth ?? 1);
+	canvas.height = Math.max(1, asset.naturalHeight ?? 1);
+	const texture = new THREE.CanvasTexture(canvas);
+	texture.colorSpace = THREE.SRGBColorSpace;
+	const image = new Image();
+	image.addEventListener('load', (): void => {
+		const context = canvas.getContext('2d');
+		context?.clearRect(0, 0, canvas.width, canvas.height);
+		context?.drawImage(image, 0, 0, canvas.width, canvas.height);
+		texture.needsUpdate = true;
+		onReady?.();
+	}, { once: true });
+	image.src = asset.dataUrl;
+
+	return texture;
+};
+
 export interface SpatialSceneOptions {
 	accentColor: () => string;
 	assets: RuntimeAsset[];
@@ -113,7 +135,7 @@ export class SpatialScene {
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.shadowMap.enabled = true;
-		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.renderer.domElement.className = 'wb-spatial-wayfinding-canvas';
 		this.renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional campus map');
 		this.host.append(this.renderer.domElement);
@@ -306,10 +328,8 @@ export class SpatialScene {
 		const baseMaterial = new THREE.MeshStandardMaterial({ color: '#f3f0e7', roughness: 0.96 });
 
 		if (backgroundAsset) {
-			const texture = new THREE.TextureLoader().load(backgroundAsset.dataUrl);
-			texture.colorSpace = THREE.SRGBColorSpace;
 			baseMaterial.color.set('#ffffff');
-			baseMaterial.map = texture;
+			baseMaterial.map = createImageTexture(backgroundAsset);
 		}
 		const base = new THREE.Mesh(
 			new THREE.PlaneGeometry(this.floor.width + 80, this.floor.height + 80),
@@ -367,7 +387,7 @@ export class SpatialScene {
 			const material = new THREE.SpriteMaterial({ depthTest: false, map: texture, transparent: true });
 			const sprite = new THREE.Sprite(material);
 			const worldHeight: number = Math.max(18, element.fontSize ?? 28) * 1.9;
-			sprite.scale.set(worldHeight * width / height, worldHeight, 1);
+			sprite.scale.set(Math.min(worldHeight * width / height, element.maxWidth ?? Number.POSITIVE_INFINITY), worldHeight, 1);
 			sprite.position.copy(centeredPoint(this.floor, element.point, labelElevation(this.floor, element.point)));
 			sprite.renderOrder = 20;
 			this.scene.add(sprite);
@@ -396,8 +416,7 @@ export class SpatialScene {
 		const asset: RuntimeAsset | undefined = this.options.assets.find((candidate): boolean => candidate.id === element.assetId);
 
 		if (!asset) return;
-		const texture = new THREE.TextureLoader().load(asset.dataUrl);
-		texture.colorSpace = THREE.SRGBColorSpace;
+		const texture = createImageTexture(asset);
 		const material = new THREE.SpriteMaterial({ depthTest: false, map: texture, transparent: true });
 		const sprite = new THREE.Sprite(material);
 		const assetRatio: number = asset.naturalWidth && asset.naturalHeight ? asset.naturalWidth / asset.naturalHeight : element.width / element.height;

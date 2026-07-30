@@ -22,7 +22,7 @@ import {
 	setDefaultProjectLanguage
 } from '../../../editor-core/directory';
 import type { WayfindingStudioProject } from '../../../studio-project.mts';
-import { Field } from '../ui';
+import { Button, Field } from '../ui';
 import { updateProject } from './project-edit';
 
 export const DirectorySettings = (props: {
@@ -102,24 +102,26 @@ export const DirectorySettings = (props: {
 						<div class="settings-row">
 							<span class="language-code">{language.code}</span>
 							<strong>{language.label}</strong>
-							<Show
-								when={project().defaultLanguage !== language.code}
-								fallback={<span class="status-label">Default</span>}
-							>
+							<div class="settings-row__actions">
+								<Show
+									when={project().defaultLanguage !== language.code}
+									fallback={<span class="status-label">Default</span>}
+								>
+									<button
+										type="button"
+										class="text-button"
+										onClick={() => edit('Change default language', (next): void => {
+											setDefaultProjectLanguage(next, language.code);
+										})}
+									>Make default</button>
+								</Show>
 								<button
 									type="button"
-								class="text-button"
-								onClick={() => edit('Change default language', (next): void => {
-									setDefaultProjectLanguage(next, language.code);
-								})}
-							>Make default</button>
-							</Show>
-							<button
-								type="button"
-								class="text-button danger"
-								disabled={languages().length <= 1}
-								onClick={() => removeLanguage(language.code)}
-							>Remove</button>
+									class="text-button danger"
+									disabled={languages().length <= 1}
+									onClick={() => removeLanguage(language.code)}
+								>Remove</button>
+							</div>
 						</div>
 					)}</For>
 				</div>
@@ -141,7 +143,16 @@ export const DirectorySettings = (props: {
 							}}
 						/>
 					</Field>
-					<button type="button" class="button compact" onClick={addLanguage}>Add</button>
+					<Button
+						size="compact"
+						tone="primary"
+						full
+						class="inline-form__action"
+						disabled={!languageCode().trim() || !languageLabel().trim()}
+						onClick={addLanguage}
+					>
+						Add language
+					</Button>
 				</div>
 			</div>
 
@@ -184,7 +195,15 @@ export const DirectorySettings = (props: {
 										if (event.key === 'Escape') setEditingCategory(undefined);
 									}}
 								/>
-								<button type="button" class="button compact" onClick={commitCategoryRename}>Save</button>
+								<Button
+									size="compact"
+									tone="primary"
+									full
+									disabled={!categoryDraft().trim()}
+									onClick={commitCategoryRename}
+								>
+									Save
+								</Button>
 							</div>
 						</Show>
 					)}</For>
@@ -200,7 +219,16 @@ export const DirectorySettings = (props: {
 							}}
 						/>
 					</Field>
-					<button type="button" class="button compact" onClick={addCategory}>Add</button>
+					<Button
+						size="compact"
+						tone="primary"
+						full
+						class="inline-form__action"
+						disabled={!category().trim()}
+						onClick={addCategory}
+					>
+						Add category
+					</Button>
 				</div>
 			</div>
 		</div>

@@ -20,7 +20,7 @@ import type {
 	WayfindingEdge,
 	WayfindingNode
 } from '../../../../../src/utils/wayfinding.js';
-import { IconButton } from '../ui';
+import { IconButton, PanelResizeHandle } from '../ui';
 import {
 	DestinationInspector,
 	ElementInspector,
@@ -74,10 +74,10 @@ export const InspectorPanel = (props: InspectorPanelProps): JSX.Element => {
 	const contextualOverview = (): JSX.Element => {
 		const workspace = props.snapshot().state.workspace;
 
-		if (workspace === 'route-edit' || workspace === 'route-preview') {
+		if (workspace === 'route-edit') {
 			return (
 				<RouteWorkspaceOverview
-					mode={workspace === 'route-edit' ? 'edit' : 'preview'}
+					mode="edit"
 					selectedDestination={props.selectedDestination}
 					snapshot={props.snapshot}
 				/>
@@ -94,6 +94,11 @@ export const InspectorPanel = (props: InspectorPanelProps): JSX.Element => {
 
 	return (
 		<aside class="right-panel panel-shell" aria-label="Inspector">
+			<PanelResizeHandle
+				panelId="right"
+				store={props.store}
+				width={() => props.snapshot().state.panels.right.width}
+			/>
 			<div class="panel-title">
 				<span>
 					<small>Inspector</small>

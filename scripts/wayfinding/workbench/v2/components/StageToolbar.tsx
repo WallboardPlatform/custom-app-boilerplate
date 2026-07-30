@@ -1,7 +1,6 @@
 import {
 	Box,
 	Frame,
-	Network,
 	SquareDashedMousePointer
 } from 'lucide-solid';
 import { Show, type Accessor, type JSX } from 'solid-js';
@@ -10,11 +9,13 @@ import type {
 	EditorSnapshot,
 	EditorStore
 } from '../../../editor-core/types';
+import { Button } from '../ui';
 
 interface StageToolbarProps {
 	onFit: () => void;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
+	threeDimensionalReady: Accessor<boolean>;
 }
 
 export const StageToolbar = (props: StageToolbarProps): JSX.Element => (
@@ -29,36 +30,21 @@ export const StageToolbar = (props: StageToolbarProps): JSX.Element => (
 				<SquareDashedMousePointer size={16} />
 				<span>2D</span>
 			</button>
-			<button
-				type="button"
-				aria-pressed={props.snapshot().state.viewMode === '3d'}
-				classList={{ active: props.snapshot().state.viewMode === '3d' }}
-				onClick={() => props.store.dispatch({ type: 'view/set', viewMode: '3d' })}
-			>
-				<Box size={16} />
-				<span>3D</span>
-			</button>
+			<Show when={props.threeDimensionalReady()}>
+				<button
+					type="button"
+					aria-pressed={props.snapshot().state.viewMode === '3d'}
+					classList={{ active: props.snapshot().state.viewMode === '3d' }}
+					onClick={() => props.store.dispatch({ type: 'view/set', viewMode: '3d' })}
+				>
+					<Box size={16} />
+					<span>3D</span>
+				</button>
+			</Show>
 		</div>
-		<button type="button" class="button compact stage-action" onClick={() => props.onFit()}>
+		<Button class="stage-action" size="compact" tone="overlay" onClick={() => props.onFit()}>
 			<Frame size={16} />
 			<span>Fit</span>
-		</button>
-		<Show when={props.snapshot().state.workspace === 'route-preview'}>
-			<button
-				type="button"
-				class="button compact stage-action stage-network-toggle"
-				classList={{ active: props.snapshot().state.layerVisibility['route-network'] }}
-				aria-pressed={props.snapshot().state.layerVisibility['route-network']}
-				title="Show the authored route graph behind the visitor route"
-				onClick={() => props.store.dispatch({
-						type: 'layer/set',
-						layerId: 'route-network',
-						visible: !props.snapshot().state.layerVisibility['route-network']
-					})}
-			>
-				<Network size={15} />
-				<span>Route graph</span>
-			</button>
-		</Show>
+		</Button>
 	</div>
 );

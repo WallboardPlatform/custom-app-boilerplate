@@ -2,6 +2,8 @@ export type WayfindingNodeKind = 'route' | 'location' | 'transition';
 
 export type WayfindingEdgeKind = 'walk' | 'outdoor' | 'stairs' | 'elevator' | 'escalator' | 'shuttle';
 
+export type WayfindingAuthoringOwnership = 'generated' | 'manual';
+
 export type WayfindingTraversal = 'outdoor-path' | 'crossing' | 'indoor-corridor' | 'open-area' | 'portal' | 'transition';
 
 export type WayfindingReviewStatus = 'confirmed' | 'proposed';
@@ -32,6 +34,7 @@ export interface WayfindingWalkableMaskDocument {
 }
 
 export interface WayfindingNode {
+	authoringOwnership?: WayfindingAuthoringOwnership;
 	id: string;
 	levelId: string;
 	kind: WayfindingNodeKind;
@@ -42,6 +45,7 @@ export interface WayfindingNode {
 }
 
 export interface WayfindingEdge {
+	authoringOwnership?: WayfindingAuthoringOwnership;
 	id: string;
 	from: string;
 	to: string;

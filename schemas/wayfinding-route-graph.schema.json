@@ -26,6 +26,7 @@
 			"additionalProperties": false,
 			"required": ["id", "levelId", "kind", "x", "y"],
 			"properties": {
+				"authoringOwnership": { "enum": ["generated", "manual"] },
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"kind": { "enum": ["route", "location", "transition"] },
@@ -49,6 +50,7 @@
 			"additionalProperties": false,
 			"required": ["id", "from", "to", "kind", "accessible", "bidirectional"],
 			"properties": {
+				"authoringOwnership": { "enum": ["generated", "manual"] },
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"from": { "$ref": "#/$defs/nonEmptyString" },
 				"to": { "$ref": "#/$defs/nonEmptyString" },

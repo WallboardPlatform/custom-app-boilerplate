@@ -84,6 +84,7 @@ interface CanvasSceneProps {
 	selectedPolygonGeometry: Accessor<WayfindingPoint[]>;
 	selectedVertexIndex: Accessor<number | undefined>;
 	selectElement: (element: WayfindingStudioElement) => void;
+	showRouteNetwork?: Accessor<boolean>;
 	snapshot: Accessor<EditorSnapshot>;
 	visitorLabelPlacements: Accessor<VisitorMapLabelPlacement[]>;
 	visitorMapItems: Accessor<VisitorMapItem[]>;
@@ -233,15 +234,16 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 		wayfindingStudioProjectDefaults(state().project).route;
 	const originDefaults = (): ReturnType<typeof wayfindingStudioProjectDefaults>['origin'] =>
 		wayfindingStudioProjectDefaults(state().project).origin;
-	const isVisitor = (): boolean => workspace() === 'visitor-preview';
+	const isPreview = (): boolean => workspace() === 'preview';
 	const showRouteNetwork = (): boolean => workspace() === 'route-edit'
 		|| (
-			workspace() === 'route-preview'
-			&& state().layerVisibility['route-network']
+			workspace() === 'preview'
+			&& Boolean(props.showRouteNetwork?.())
 		);
-	const showSimulatedRoute = (): boolean => (
-		workspace() === 'route-preview' || workspace() === 'visitor-preview'
-	) && state().layerVisibility['simulated-route'] && props.route().length >= 2;
+	const showSimulatedRoute = (): boolean =>
+		workspace() === 'preview'
+		&& state().layerVisibility['simulated-route']
+		&& props.route().length >= 2;
 	const directionMarkers = (): RouteDirectionMarker[] => routeDirectionMarkers(
 		props.route(),
 		110 / props.camera().scale,
@@ -403,7 +405,7 @@ export const CanvasScene = (props: CanvasSceneProps): JSX.Element => {
 				</Show>
 			</svg>
 
-			<Show when={isVisitor()}>
+			<Show when={isPreview()}>
 				<svg
 					class="visitor-map-overlay"
 					preserveAspectRatio="none"

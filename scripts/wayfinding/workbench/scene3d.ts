@@ -207,7 +207,7 @@ export class WayfindingScene3d {
 		this.renderer.setClearColor('#26302e');
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.shadowMap.enabled = true;
-		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.renderer.domElement.setAttribute('aria-label', 'Rotatable 3D map preview');
 		this.renderer.domElement.className = 'scene-3d-canvas';
 		this.host.append(this.renderer.domElement);
@@ -528,7 +528,7 @@ export class WayfindingScene3d {
 		this.addDisposable(sprite);
 		this.scene.add(sprite);
 		this.host.dataset.labelCount = String(Number(this.host.dataset.labelCount ?? 0) + 1);
-		if (label.id.startsWith('visitor-destination-label:')) {
+		if (label.id.startsWith('presentation-destination-label:')) {
 			this.host.dataset.destinationLabelCount = String(
 				Number(this.host.dataset.destinationLabelCount ?? 0) + 1
 			);

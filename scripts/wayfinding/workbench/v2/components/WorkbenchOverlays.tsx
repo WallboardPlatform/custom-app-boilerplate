@@ -28,6 +28,7 @@ import { ShortcutsDialog } from './ShortcutsDialog';
 export interface ConfirmState {
 	body: string;
 	confirmLabel: string;
+	details?: Array<{ label: string; value: string }>;
 	title: string;
 }
 
@@ -81,11 +82,23 @@ export const WorkbenchOverlays = (props: WorkbenchOverlaysProps): JSX.Element =>
 						<div class="dialog-icon"><CircleHelp size={20} /></div>
 						<h2 id="confirm-title">{confirmation.title}</h2>
 						<p>{confirmation.body}</p>
+						<Show when={confirmation.details?.length}>
+							<dl class="dialog-diff">
+								<For each={confirmation.details}>
+									{(detail) => (
+										<div>
+											<dt>{detail.label}</dt>
+											<dd>{detail.value}</dd>
+										</div>
+									)}
+								</For>
+							</dl>
+						</Show>
 						<div class="dialog-actions">
-							<button type="button" class="button" onClick={() => props.onResolveConfirm(false)}>
+							<button type="button" class="wb-studio-action" onClick={() => props.onResolveConfirm(false)}>
 								Cancel
 							</button>
-							<button type="button" class="button primary" onClick={() => props.onResolveConfirm(true)}>
+							<button type="button" class="wb-studio-action primary" onClick={() => props.onResolveConfirm(true)}>
 								{confirmation.confirmLabel}
 							</button>
 						</div>
@@ -113,7 +126,7 @@ export const WorkbenchOverlays = (props: WorkbenchOverlaysProps): JSX.Element =>
 							<For each={report.repairs}>{(repair) => <li>{repair.message}</li>}</For>
 						</ul>
 						<div class="dialog-actions">
-							<button type="button" class="button primary" onClick={props.onCloseRepairReport}>
+				<button type="button" class="wb-studio-action primary" onClick={props.onCloseRepairReport}>
 								Continue reviewing
 							</button>
 						</div>
@@ -133,10 +146,10 @@ export const WorkbenchOverlays = (props: WorkbenchOverlaysProps): JSX.Element =>
 							Restore it before starting a new project, or discard it permanently.
 						</p>
 						<div class="dialog-actions">
-							<button type="button" class="button danger-ghost" onClick={props.onDiscardRecovery}>
+					<button type="button" class="wb-studio-action danger-ghost" onClick={props.onDiscardRecovery}>
 								Discard recovery
 							</button>
-							<button type="button" class="button primary" onClick={props.onRestoreRecovery}>
+					<button type="button" class="wb-studio-action primary" onClick={props.onRestoreRecovery}>
 								Restore work
 							</button>
 						</div>
@@ -164,7 +177,7 @@ export const WorkbenchOverlays = (props: WorkbenchOverlaysProps): JSX.Element =>
 						)}</For>
 					</div>
 					<div class="dialog-actions">
-						<button type="button" class="button" onClick={() => props.onCloseExportIssues()}>Close</button>
+					<button type="button" class="wb-studio-action" onClick={() => props.onCloseExportIssues()}>Close</button>
 					</div>
 				</div>
 			</div>

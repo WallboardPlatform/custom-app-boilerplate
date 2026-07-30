@@ -345,11 +345,11 @@ export const STUDIO_CAPABILITIES: StudioCapability[] = [
 		'canvas',
 		'three-dimensional-semantic-parity',
 		'Show visitor symbols, labels, origins, selections, route animation, and floor transitions in 3D.',
-		[v2('Scene3dView.tsx'), unit('workbench/scene3d.ts'), v2('visitor-scene.ts')],
+		[v2('Scene3dView.tsx'), unit('workbench/scene3d.ts'), v2('features/preview/presentation-scene.ts')],
 		['visitor 3D preserves localized discovery, floor transitions, and route guidance'],
 		{
 			legacyRequired: false,
-			tests: [v2('visitor-scene.test.mts'), canvasSpec]
+			tests: [v2('presentation-scene.test.mts'), canvasSpec]
 		}
 	),
 
@@ -569,11 +569,11 @@ export const STUDIO_CAPABILITIES: StudioCapability[] = [
 		'visitor',
 		'visitor-three-dimensional-experience',
 		'Offer the same search, selection, details, floor, and route journey in 3D.',
-		[v2('Scene3dView.tsx'), visitorPanel, v2('visitor-scene.ts')],
+		[v2('Scene3dView.tsx'), visitorPanel, v2('features/preview/presentation-scene.ts')],
 		['visitor 3D preserves localized discovery, floor transitions, and route guidance'],
 		{
 			legacyRequired: false,
-			tests: [v2('visitor-scene.test.mts'), canvasSpec]
+			tests: [v2('presentation-scene.test.mts'), canvasSpec]
 		}
 	),
 	capability(

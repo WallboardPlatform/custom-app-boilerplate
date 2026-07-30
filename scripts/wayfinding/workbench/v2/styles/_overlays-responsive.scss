@@ -21,6 +21,8 @@
 .toast.danger { border-left-color: #e25349; }
 
 .toast button {
+	width: 28px;
+	height: 28px;
 	display: grid;
 	padding: 2px;
 	place-items: center;
@@ -29,11 +31,11 @@
 	border: 0;
 }
 
-.visitor-workspace .toast {
+.preview-workspace .toast {
 	right: calc(var(--visitor-panel-reserve) + 18px);
 }
 
-.workbench:not(.right-collapsed, .visitor-workspace) .toast {
+.workbench:not(.right-collapsed, .preview-workspace) .toast {
 	right: calc(var(--panel-width-right) + 18px);
 }
 
@@ -133,6 +135,42 @@
 	font-size: 12px;
 	line-height: 1.55;
 	color: var(--muted);
+}
+
+.dialog-diff {
+	display: grid;
+	gap: 1px;
+	margin: 16px 0 0;
+	overflow: hidden;
+	background: var(--border);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+}
+
+.dialog-diff div {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 9px 11px;
+	background: var(--panel-soft);
+}
+
+.dialog-diff dt,
+.dialog-diff dd {
+	margin: 0;
+	font-size: 11px;
+	line-height: 1.35;
+}
+
+.dialog-diff dt {
+	color: var(--muted);
+}
+
+.dialog-diff dd {
+	font-weight: 800;
+	text-align: right;
+	color: var(--ink);
 }
 
 .repair-report-dialog {
@@ -309,7 +347,7 @@ summary:focus-visible {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.visitor-workspace .toast {
+	.preview-workspace .toast {
 		right: auto;
 		left: 18px;
 		max-width: min(420px, calc(100% - 438px));

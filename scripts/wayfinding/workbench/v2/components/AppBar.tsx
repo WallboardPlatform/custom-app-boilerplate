@@ -2,12 +2,11 @@ import {
 	ArrowDownToLine,
 	FileDown,
 	Map,
+	Play,
 	Redo2,
-	Route,
 	Save,
 	Search,
 	Undo2,
-	UsersRound,
 	Waypoints
 } from 'lucide-solid';
 import { For, type Accessor, type JSX } from 'solid-js';
@@ -27,8 +26,7 @@ interface AppBarProps {
 const workspaceOptions: Array<{ icon: typeof Map; id: EditorWorkspace; label: string }> = [
 	{ icon: Map, id: 'map', label: 'Map' },
 	{ icon: Waypoints, id: 'route-edit', label: 'Route edit' },
-	{ icon: Route, id: 'route-preview', label: 'Route preview' },
-	{ icon: UsersRound, id: 'visitor-preview', label: 'Visitor preview' }
+	{ icon: Play, id: 'preview', label: 'Preview' }
 ];
 
 export const AppBar = (props: AppBarProps): JSX.Element => (
@@ -64,8 +62,10 @@ export const AppBar = (props: AppBarProps): JSX.Element => (
 				return (
 					<button
 						type="button"
+						aria-label={option.label}
 						aria-pressed={props.snapshot().state.workspace === option.id}
 						classList={{ active: props.snapshot().state.workspace === option.id }}
+						title={option.label}
 						onClick={() => props.store.dispatch({ type: 'workspace/set', workspace: option.id })}
 					>
 						<Icon size={16} />

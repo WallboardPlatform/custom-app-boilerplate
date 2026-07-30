@@ -189,6 +189,25 @@ const createTestProject = (): WayfindingStudioProject => {
 	return project;
 };
 
+const createLongContentTestProject = (): WayfindingStudioProject => {
+	const project = createTestProject();
+	const destination = project.destinations[0];
+	project.name = 'Northline International Medical and Research Campus';
+	project.floors[0].name = 'Ground floor - Main visitor services and outpatient reception';
+	project.categories = ['Visitor services, accessibility, admissions, and campus assistance'];
+	destination.category = project.categories[0];
+	destination.name = 'International visitor information, accessibility, and admissions assistance';
+	destination.description = 'A fully staffed visitor service point for international guests, step-free arrival support, admissions guidance, campus orientation, and accessible onward travel.';
+	destination.translations = {
+		hu: {
+			description: 'Nemzetkozi vendegszolgalat, akadalymentes erkezesi segitseg, felveteli tajekoztatas es reszletes kampuszorientacio.',
+			name: 'Nemzetkozi latogatoi informacio, akadalymentesseg es felveteli segitseg'
+		}
+	};
+
+	return project;
+};
+
 const createMultiFloorTestProject = (): WayfindingStudioProject => {
 	const project = createTestProject();
 	const ground = project.floors[0];
@@ -561,6 +580,13 @@ const openProjectSettings = async (page: Page): Promise<void> => {
 	await expect(page.getByLabel('Project name')).toBeVisible();
 };
 
+const openPreviewSimulation = async (page: Page): Promise<void> => {
+	const drawer = page.locator('#preview-simulation-drawer');
+
+	if (!await drawer.isVisible()) await page.getByRole('button', { name: 'Simulation' }).click();
+	await expect(drawer).toBeVisible();
+};
+
 const panelLayoutProblems = (page: Page): Promise<string[]> => page.evaluate(() => {
 	const visible = (element: Element): boolean => {
 		const style = getComputedStyle(element);
@@ -663,6 +689,154 @@ const panelLayoutProblems = (page: Page): Promise<string[]> => page.evaluate(() 
 	return problems;
 });
 
+const editorSurfaceProblems = async (page: Page): Promise<string[]> => [
+	...await panelLayoutProblems(page),
+	...await page.evaluate(() => {
+		const visible = (element: Element): boolean => {
+			const bounds = element.getBoundingClientRect();
+			const style = getComputedStyle(element);
+
+			return element.checkVisibility({
+				checkOpacity: true,
+				checkVisibilityCSS: true
+			})
+				&& style.display !== 'none'
+				&& style.visibility !== 'hidden'
+				&& Number(style.opacity) > 0
+				&& bounds.width > 1
+				&& bounds.height > 1
+				&& bounds.right > 0
+				&& bounds.bottom > 0
+				&& bounds.left < innerWidth
+				&& bounds.top < innerHeight;
+		};
+		const label = (element: Element): string => {
+			const html = element as HTMLElement;
+			const name = html.getAttribute('aria-label')
+				?? html.getAttribute('title')
+				?? html.textContent?.trim().replace(/\s+/gu, ' ').slice(0, 44)
+				?? '';
+
+			return `${element.tagName.toLocaleLowerCase()}.${html.className || '-'}:${name}`;
+		};
+		const accessibleName = (element: Element): string => {
+			const html = element as HTMLElement;
+			const labelledBy = html.getAttribute('aria-labelledby');
+			const explicit = html.getAttribute('aria-label')?.trim()
+				|| html.getAttribute('title')?.trim()
+				|| (labelledBy
+					? labelledBy.split(/\s+/gu)
+						.map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+						.join(' ')
+						.trim()
+					: '');
+
+			return explicit || html.textContent?.trim() || '';
+		};
+		const parseColor = (value: string): [number, number, number, number] | undefined => {
+			const channels = value.match(/[\d.]+/gu)?.map(Number);
+
+			if (!channels || channels.length < 3) return undefined;
+
+			return [channels[0], channels[1], channels[2], channels[3] ?? 1];
+		};
+		const effectiveBackground = (element: Element): [number, number, number, number] | undefined => {
+			let current: Element | null = element;
+
+			while (current) {
+				const color = parseColor(getComputedStyle(current).backgroundColor);
+
+				if (color && color[3] > 0.96) return color;
+				current = current.parentElement;
+			}
+
+			return [255, 255, 255, 1];
+		};
+		const luminance = (color: [number, number, number, number]): number => {
+			const channels = color.slice(0, 3).map((value) => {
+				const normalized = value / 255;
+
+				return normalized <= 0.03928
+					? normalized / 12.92
+					: ((normalized + 0.055) / 1.055) ** 2.4;
+			});
+
+			return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+		};
+		const contrast = (
+			foreground: [number, number, number, number],
+			background: [number, number, number, number]
+		): number => {
+			const foregroundLuminance = luminance(foreground);
+			const backgroundLuminance = luminance(background);
+
+			return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+				/ (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+		};
+		const problems: string[] = [];
+
+		for (const control of [...document.querySelectorAll('button, input, select, textarea, summary')].filter(visible)) {
+			const bounds = control.getBoundingClientRect();
+			const html = control as HTMLInputElement;
+			const scrollContainer = Boolean(control.closest('.panel-scroll, .visitor-results, .visitor-panel'));
+
+			if (
+				!scrollContainer
+				&& (
+					bounds.left < -1
+					|| bounds.top < -1
+					|| bounds.right > innerWidth + 1
+					|| bounds.bottom > innerHeight + 1
+				)
+			) problems.push(`viewport clipping ${label(control)}`);
+
+			if (control.matches('button, summary') && !accessibleName(control)) {
+				problems.push(`unnamed action ${label(control)}`);
+			}
+
+			if (
+				control.matches('input:not([type="hidden"]), select, textarea')
+				&& !html.labels?.length
+				&& !html.getAttribute('aria-label')
+				&& !html.getAttribute('aria-labelledby')
+			) problems.push(`unlabelled field ${label(control)}`);
+
+			if (
+				control.matches('button, summary')
+				&& !html.closest('.app-bar')
+				&& (bounds.width < 28 || bounds.height < 28)
+			) problems.push(`small target ${label(control)} ${Math.round(bounds.width)}x${Math.round(bounds.height)}`);
+		}
+
+		const contrastTargets = [
+			...document.querySelectorAll(
+				'.panel-shell button, .panel-shell summary, .panel-shell label > span,'
+				+ '.visitor-panel button, .visitor-panel label > span, .visitor-results__summary,'
+				+ '.app-bar button, .status-bar button'
+			)
+		].filter(visible).filter((element) => Boolean(element.textContent?.trim()));
+
+		for (const element of contrastTargets) {
+			if ((element as HTMLButtonElement).disabled) continue;
+			const style = getComputedStyle(element);
+			const foreground = parseColor(style.color);
+			const background = effectiveBackground(element);
+
+			if (!foreground || !background || foreground[3] < 0.96) continue;
+			const fontSize = Number.parseFloat(style.fontSize);
+			const fontWeight = Number.parseInt(style.fontWeight, 10);
+			const threshold = fontSize >= 18 || (fontSize >= 14 && fontWeight >= 700) ? 3 : 4.5;
+			const ratio = contrast(foreground, background);
+
+			if (ratio + 0.05 < threshold) {
+				problems.push(`contrast ${label(element)} ${ratio.toFixed(2)}:${threshold.toFixed(1)}`);
+			}
+		}
+
+		return problems;
+	})
+];
+
 test('project context and command palette switch workspaces without moving the map', async ({ page }) => {
 	await openEditor(page);
 	const before = await mapTransform(page);
@@ -677,10 +851,16 @@ test('project context and command palette switch workspaces without moving the m
 	expect(await mapTransform(page)).toBe(before);
 });
 
-test('guides a first-time author from an empty project into floor-plan setup', async ({ page }) => {
+test('guides a first-time author from an empty project into floor-plan setup', async ({ page }, testInfo) => {
 	await page.goto('/v2/');
 	await expect(page.getByText('Add a floor plan', { exact: true })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Map', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	const emptyScreenshotPath = testInfo.outputPath('empty-project.png');
+	await page.screenshot({ path: emptyScreenshotPath });
+	await testInfo.attach('empty-project', {
+		contentType: 'image/png',
+		path: emptyScreenshotPath
+	});
 
 	const chooserPromise = page.waitForEvent('filechooser');
 	await page.getByRole('button', { name: 'Choose image', exact: true }).click();
@@ -841,10 +1021,10 @@ test('edits project directory registries and localized destination content end t
 	await expect(projectPanel.getByText('Languages and categories')).toBeVisible();
 	await projectPanel.getByLabel('Code').fill('de');
 	await projectPanel.getByLabel('Language').fill('Deutsch');
-	await projectPanel.getByRole('button', { name: 'Add', exact: true }).first().click();
+	await projectPanel.getByRole('button', { name: 'Add language', exact: true }).click();
 	await expect(projectPanel.getByText('Deutsch', { exact: true })).toBeVisible();
 	await projectPanel.getByLabel('New category').fill('Guest services');
-	await projectPanel.locator('.category-form').getByRole('button', { name: 'Add', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Add category', exact: true }).click();
 	await expect(projectPanel.getByRole('button', { name: 'Rename Guest services' })).toBeVisible();
 
 	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
@@ -857,8 +1037,9 @@ test('edits project directory registries and localized destination content end t
 	await page.getByLabel('Description in Deutsch').blur();
 	await page.getByLabel('Category').selectOption('Guest services');
 
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
-	await page.getByLabel('Language').selectOption('de');
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('de');
 	await page.getByRole('button', { name: 'Open Gasteinformation in the directory' }).click();
 	await expect(page.getByText('Gasteinformation', { exact: true }).first()).toBeVisible();
 	await expect(page.getByText('Information und Hilfe fur Gaste.', { exact: true })).toBeVisible();
@@ -910,13 +1091,12 @@ test('persists configured origin and route appearance across 2D and 3D previews'
 	await projectPanel.getByRole('combobox', { name: 'Animation', exact: true }).selectOption('pulse');
 	await projectPanel.getByRole('slider', { name: 'Animation speed' }).fill('88');
 
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	const origin = page.locator('.visitor-origin-marker');
 	await expect(origin).toHaveAttribute('data-origin-animation-2d', 'pulse');
 	await expect(origin).toHaveAttribute('data-animation-speed', '92');
 	await expect(origin).toHaveAttribute('style', /#8f3db4/u);
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	const route = page.locator('.route-overlay .simulated-route');
 	await expect(route).toHaveClass(/pulsing/u);
 	await expect(route).toHaveAttribute('style', /stroke: (?:#e11d48|rgb\(225, 29, 72\))/u);
@@ -958,7 +1138,7 @@ test('uploads, reuses, assigns, and previews project assets end to end', async (
 	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
 	await page.getByRole('checkbox', { name: 'northline-atrium.svg', exact: true }).check();
 
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
 	await expect(page.locator('.visitor-detail__hero')).toBeVisible();
 	await expect(page.locator('.visitor-detail__gallery img')).toHaveCount(1);
@@ -1027,12 +1207,13 @@ test('keeps the map camera stable across panel, workspace, and undo interactions
 
 test('visitor preview provides a clean localized directory and route experience', async ({ page }, testInfo) => {
 	await openEditor(page);
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await expect(page.getByLabel('Visitor map directory')).toBeVisible();
 	await expect(page.locator('.route-network-line')).toHaveCount(0);
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
 
-	await page.getByLabel('Language').selectOption('hu');
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
 	await expect(page.getByRole('button', { name: 'Open Informacio in the directory' })).toBeVisible();
 	await page.getByRole('button', { name: 'Open Informacio in the directory' }).click();
 	await expect(page.locator('.visitor-detail')).toContainText('Informacio es segitseg latogatoknak.');
@@ -1042,14 +1223,14 @@ test('visitor preview provides a clean localized directory and route experience'
 	await expect(page.locator('.visitor-detail')).toContainText('A-12');
 	await expect(page.locator('.visitor-detail__hero')).toBeVisible();
 	await expect(page.locator('.visitor-detail__identity img')).toBeVisible();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
 	await expect(page.locator('.simulated-route-casing')).toHaveCSS('fill', 'none');
 	const mapBounds = await page.locator('.canvas-viewport').boundingBox();
 	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
 	expect(mapBounds).not.toBeNull();
 	expect(directoryBounds).not.toBeNull();
-	expect(mapBounds!.x + mapBounds!.width).toBeLessThanOrEqual(directoryBounds!.x);
+	expect(mapBounds!.width).toBeGreaterThan((page.viewportSize()?.width ?? 0) * 0.65);
+	expect(directoryBounds!.width).toBeLessThanOrEqual(420);
 	const screenshotPath = testInfo.outputPath('visitor-route-2d.png');
 	await page.screenshot({ path: screenshotPath });
 	await testInfo.attach('visitor-route-2d', {
@@ -1063,9 +1244,8 @@ test('visitor preview provides a clean localized directory and route experience'
 
 test('reports route metrics only after calibration and clears guidance without editing the project', async ({ page }) => {
 	await openEditor(page);
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	await expect(page.getByText(/Distance unavailable - calibrate the map scale/)).toBeVisible();
 	await page.getByRole('button', { name: /Clear directions/ }).click();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
@@ -1076,9 +1256,8 @@ test('reports route metrics only after calibration and clears guidance without e
 	const scale = page.getByLabel('Map scale');
 	await scale.fill('20');
 	await scale.blur();
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	await expect(page.getByText('52 m', { exact: true })).toBeVisible();
 	await expect(page.getByText('1 min', { exact: true })).toBeVisible();
 	await page.getByRole('button', { name: /Clear directions/ }).click();
@@ -1091,7 +1270,7 @@ test('reports route metrics only after calibration and clears guidance without e
 
 test('visitor 3D preserves localized discovery, floor transitions, and route guidance', async ({ page }, testInfo) => {
 	await openEditor(page, createMultiFloorTestProject());
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: '3D' }).click();
 	const host = page.locator('.scene3d-host');
 
@@ -1100,11 +1279,11 @@ test('visitor 3D preserves localized discovery, floor transitions, and route gui
 	await expect(host).toHaveAttribute('data-transition-count', '1');
 	await expect(host).toHaveAttribute('data-destination-label-count', '1');
 
-	await page.getByLabel('Language').selectOption('hu');
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
 	await expect(host).toHaveAttribute('data-destination-label-texts', /A-12 {2}Informacio/u);
 
 	await page.getByRole('button', { name: /Sky gallery/ }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	await expect.poll(async () =>
 		Number(await host.getAttribute('data-route-points') ?? 0)
 	).toBeGreaterThan(1);
@@ -1120,7 +1299,8 @@ test('visitor 3D preserves localized discovery, floor transitions, and route gui
 	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
 	expect(sceneBounds).not.toBeNull();
 	expect(directoryBounds).not.toBeNull();
-	expect(sceneBounds!.x + sceneBounds!.width).toBeLessThanOrEqual(directoryBounds!.x);
+	expect(sceneBounds!.width).toBeGreaterThan((page.viewportSize()?.width ?? 0) * 0.65);
+	expect(directoryBounds!.width).toBeLessThanOrEqual(420);
 	const screenshotPath = testInfo.outputPath('visitor-route-3d.png');
 	await page.screenshot({ path: screenshotPath });
 	await testInfo.attach('visitor-route-3d', {
@@ -1174,14 +1354,144 @@ test('keeps dense editor and visitor panels collision-free', async ({ page }) =>
 	await openProjectSettings(page);
 	expect(await panelLayoutProblems(page)).toEqual([]);
 
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 	expect(await panelLayoutProblems(page)).toEqual([]);
 
 	await page.setViewportSize({ width: 1024, height: 720 });
 	await page.waitForTimeout(250);
 	expect(await panelLayoutProblems(page)).toEqual([]);
+});
+
+test('keeps every core workflow first-class across the desktop viewport matrix', async ({ page }, testInfo) => {
+	test.setTimeout(120_000);
+	const consoleProblems: string[] = [];
+	page.on('console', (message) => {
+		if (message.type() === 'error' || message.type() === 'warning') {
+			consoleProblems.push(`${message.type()}: ${message.text()}`);
+		}
+	});
+	page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.stack ?? error.message}`));
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	const viewports = [
+		{ width: 1024, height: 720 },
+		{ width: 1280, height: 720 },
+		{ width: 1440, height: 900 },
+		{ width: 1920, height: 1080 }
+	] as const;
+
+	for (const viewport of viewports) {
+		await page.setViewportSize(viewport);
+		await page.waitForTimeout(180);
+		await page.getByRole('button', { name: 'Map', exact: true }).click();
+		const projectPanel = page.locator('.left-panel');
+
+		for (const tabName of ['Project', 'Directory', 'Assets', 'Style', 'Objects'] as const) {
+			await projectPanel.getByRole('button', { name: tabName, exact: true }).click();
+			expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} ${tabName}`).toEqual([]);
+			expect(consoleProblems, `${viewport.width}x${viewport.height} ${tabName} console`).toEqual([]);
+		}
+
+		await page.getByRole('button', { name: 'Route edit' }).click();
+		await projectPanel.getByRole('button', { name: 'Edit', exact: true }).click();
+		expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} Routing`).toEqual([]);
+		expect(consoleProblems, `${viewport.width}x${viewport.height} Routing console`).toEqual([]);
+
+		await page.getByRole('button', { name: 'Preview' }).click();
+		await openPreviewSimulation(page);
+		await page.getByLabel('Preview language').selectOption('hu');
+		await page.getByRole('button', { name: 'Open Informacio in the directory' }).click();
+		expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} Preview`).toEqual([]);
+		expect(consoleProblems, `${viewport.width}x${viewport.height} Preview console`).toEqual([]);
+
+		const screenshotPath = testInfo.outputPath(`quality-${viewport.width}x${viewport.height}.png`);
+		await page.screenshot({ path: screenshotPath });
+		await testInfo.attach(`quality-${viewport.width}x${viewport.height}`, {
+			contentType: 'image/png',
+			path: screenshotPath
+		});
+	}
+
+	expect(consoleProblems).toEqual([]);
+});
+
+test('keeps long localized project and destination content collision-free', async ({ page }, testInfo) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page, createLongContentTestProject());
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Directory', exact: true }).click();
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
+	await expect(page.getByLabel('Name', { exact: true })).toHaveValue(
+		'International visitor information, accessibility, and admissions assistance'
+	);
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
+	await page.getByRole('button', { name: /Open Nemzetkozi latogatoi informacio.*in the directory/u }).click();
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	const screenshotPath = testInfo.outputPath('long-localized-preview.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('long-localized-preview', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('shows inline loading-safe validation for unsupported uploads', async ({ page }, testInfo) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	const input = projectPanel.getByLabel('Upload photo');
+	await input.setInputFiles({
+		buffer: Buffer.from('not an image'),
+		mimeType: 'text/plain',
+		name: 'notes.txt'
+	});
+
+	await expect(projectPanel.getByRole('alert')).toContainText('Choose a PNG, JPEG, WebP, SVG');
+	await expect(projectPanel.locator('.wb-studio-upload--error')).toBeVisible();
+	await expect(projectPanel.locator('.wb-studio-button').filter({ hasText: /^Upload photo$/u })).toBeEnabled();
+	const screenshotPath = testInfo.outputPath('upload-validation.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('upload-validation', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('keeps upload controls coherent while an image is loading', async ({ page }, testInfo) => {
+	await page.addInitScript(() => {
+		HTMLImageElement.prototype.decode = async function decode(): Promise<void> {
+			await new Promise((resolve) => setTimeout(resolve, 450));
+		};
+	});
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	const upload = projectPanel.locator('.wb-studio-upload').filter({ hasText: 'Photo' });
+	await projectPanel.getByLabel('Upload photo').setInputFiles({
+		buffer: Buffer.from(
+			'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">'
+			+ '<rect width="320" height="180" fill="#dbeafe"/>'
+			+ '</svg>'
+		),
+		mimeType: 'image/svg+xml',
+		name: 'visitor-lounge.svg'
+	});
+	await expect(upload).toHaveAttribute('aria-busy', 'true');
+	await expect(upload.getByRole('button', { name: 'Reading...' })).toBeDisabled();
+	const screenshotPath = testInfo.outputPath('upload-loading.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('upload-loading', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+	await expect(upload).toHaveAttribute('aria-busy', 'false');
+	await expect(projectPanel.getByText('visitor-lounge.svg', { exact: true })).toBeVisible();
 });
 
 test('renders a non-empty 3D scene and saves and restores its floor camera', async ({ page }, testInfo) => {
@@ -1230,7 +1540,7 @@ test('renders a non-empty 3D scene and saves and restores its floor camera', asy
 			Math.abs(value - currentCameraValues[index])
 		));
 	}).toBeLessThan(0.25);
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await expect(canvas).toBeVisible();
 	await page.getByRole('button', { name: /Visitor information/ }).click();
 	await expect(canvas).toBeVisible();
@@ -1378,9 +1688,9 @@ test('authors and edits POIs, floor connections, and labels with discoverable ke
 	await page.getByLabel('Displayed text').blur();
 	await expect(page.locator('#Labels')).toContainText('North concourse');
 
-	const visitorPreview = page.getByRole('button', { name: 'Visitor preview' });
-	await visitorPreview.click();
-	await expect(visitorPreview).toHaveAttribute('aria-pressed', 'true');
+	const preview = page.getByRole('button', { name: 'Preview' });
+	await preview.click();
+	await expect(preview).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: 'Open Coffee kiosk in the directory' }).click();
 	await expect(page.locator('.visitor-detail')).toContainText('Fresh coffee beside the main concourse.');
 	expect(reactiveWarnings).toEqual([]);
@@ -1443,14 +1753,14 @@ test('builds a route network from authored pedestrian space and linked doors', a
 
 	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
 	const edgeCount = await page.locator('.route-network-line').count();
-	await page.getByRole('button', { name: 'Route preview' }).click();
-	await page.getByLabel('Destination').selectOption('destination-meeting');
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Meeting room in the directory' }).click();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
 	const routePathCommands = (await page.locator('.route-overlay .simulated-route').getAttribute('d'))
 		?.match(/[MLQ]/gu) ?? [];
 	expect(routePathCommands.length).toBeGreaterThan(2);
 
-	await page.getByRole('button', { name: 'Clear preview' }).click();
+	await page.getByRole('button', { name: 'Clear directions' }).click();
 	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
 	await page.getByRole('button', { name: 'Route edit' }).click();
 	await expect(page.locator('.route-network-line')).toHaveCount(edgeCount);
@@ -1463,9 +1773,7 @@ test('preserves and rebuilds routes from an imported painted pedestrian mask', a
 	await expect(page.locator('.painted-mask-overlay rect')).not.toHaveCount(0);
 	await page.getByRole('button', { name: 'Build', exact: true }).click();
 	await page.getByRole('button', { name: /Rebuild route network/ }).click();
-	await page.getByRole('dialog', { name: /Replace the current route network/ })
-		.getByRole('button', { name: 'Rebuild routes' })
-		.click();
+	await expect(page.getByRole('dialog')).toHaveCount(0);
 
 	await expect(page.locator('.route-build-report')).toContainText('destination anchors connected');
 	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
@@ -1535,13 +1843,14 @@ test('places, moves, and removes route junctions without moving the camera', asy
 
 test('switches between standard and step-free route profiles on the authored graph', async ({ page }) => {
 	await openEditor(page, createRouteProfileTestProject());
-	await page.getByRole('button', { name: 'Route preview' }).click();
-	await page.getByLabel('Destination').selectOption('destination-information');
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
 	const route = page.locator('.route-overlay .simulated-route');
 	await expect(route).toHaveCount(1);
 	await expect(route).toHaveAttribute('d', 'M 320 650 L 1300 430');
 	const standardPath = await route.getAttribute('d');
 
+	await openPreviewSimulation(page);
 	await page.getByRole('button', { name: /Step-free/ }).click();
 	await expect(route).not.toHaveAttribute('d', standardPath ?? '');
 	await expect(route).toHaveAttribute(
@@ -1776,16 +2085,15 @@ test('reports recoverable geometry repairs and accepts the same project file aga
 
 test('presents a continuous multi-floor visitor journey with an explicit transition', async ({ page }) => {
 	await openEditor(page, createMultiFloorTestProject());
-	await page.getByRole('button', { name: 'Visitor preview' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
 	await page.getByRole('button', { name: /Sky gallery/ }).click();
-	await page.getByRole('button', { name: /Show directions/ }).click();
 
 	await expect(page.locator('.visitor-journey__floor')).toHaveCount(2);
 	await expect(page.locator('.visitor-journey')).toContainText('Ground floor');
 	await expect(page.locator('.visitor-journey')).toContainText('First floor');
 	await expect(page.locator('.visitor-journey__transition')).toContainText('Take the elevator to First floor');
 	await page.locator('.visitor-journey__floor').filter({ hasText: 'First floor' }).click();
-	await page.getByRole('button', { name: 'Filters' }).click();
+	await openPreviewSimulation(page);
 	await expect(page.locator('.visitor-panel').getByLabel('Visible floor')).toHaveValue('first');
 });
 
@@ -1797,7 +2105,7 @@ test('authors, calibrates, illustrates, reorders, and deletes floors without los
 	await page.getByLabel('Floor name').blur();
 	await page.getByLabel('Map scale').fill('24');
 	await page.getByLabel('Map scale').blur();
-	await page.locator('[data-floor-background-input]').setInputFiles({
+	await page.locator('#floor-background-input').setInputFiles({
 		buffer: Buffer.from(
 			'<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">'
 			+ '<rect width="640" height="360" fill="#eef6f3"/>'

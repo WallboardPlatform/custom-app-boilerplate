@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { createWayfindingStudioProject } from '../../studio-project.mts';
 import type { EditorLayerId } from '../../editor-core/types.ts';
-import { visitorSceneProject } from './visitor-scene.ts';
+import { presentationSceneProject } from './features/preview/presentation-scene.ts';
 
 const visibility = (visible = true): Record<EditorLayerId, boolean> => ({
 	background: visible,
@@ -64,7 +64,7 @@ void test('visitor scene keeps presentation layers and removes authoring evidenc
 		}
 	];
 
-	const projected = visitorSceneProject(project, visibility());
+	const projected = presentationSceneProject(project, visibility());
 	assert.deepEqual(projected.floors[0].elements.map((element) => element.id), [
 		'location-1',
 		'walkable-1',
@@ -109,6 +109,15 @@ void test('visitor scene honors label and media visibility without hiding locati
 			type: 'label'
 		},
 		{
+			floorId: floor.id,
+			id: 'destination-name-label',
+			point: { x: 50, y: 50 },
+			provenance: 'customer-source',
+			status: 'confirmed',
+			text: 'Visitor information',
+			type: 'label'
+		},
+		{
 			destinationId: 'destination-information',
 			floorId: floor.id,
 			id: 'poi-1',
@@ -135,7 +144,7 @@ void test('visitor scene honors label and media visibility without hiding locati
 	const layers = visibility();
 	layers.location = false;
 
-	const projected = visitorSceneProject(project, layers, 'hu');
+	const projected = presentationSceneProject(project, layers, 'hu');
 	assert.deepEqual(
 		projected.floors[0].elements.map((element) => element.id),
 		[
@@ -143,11 +152,11 @@ void test('visitor scene honors label and media visibility without hiding locati
 			'label-1',
 			'poi-1',
 			'transition-1',
-			'visitor-destination-label:destination-information'
+			'presentation-destination-label:destination-information'
 		]
 	);
 	const destinationLabel = projected.floors[0].elements.find(
-		(element) => element.id === 'visitor-destination-label:destination-information'
+		(element) => element.id === 'presentation-destination-label:destination-information'
 	);
 	assert.equal(destinationLabel?.type, 'label');
 	assert.equal(destinationLabel?.type === 'label' ? destinationLabel.text : undefined, 'A-12  Információ');
@@ -155,7 +164,7 @@ void test('visitor scene honors label and media visibility without hiding locati
 
 	layers.label = false;
 	assert.deepEqual(
-		visitorSceneProject(project, layers, 'hu').floors[0].elements.map((element) => element.id),
+		presentationSceneProject(project, layers, 'hu').floors[0].elements.map((element) => element.id),
 		['location-1', 'poi-1', 'transition-1']
 	);
 });

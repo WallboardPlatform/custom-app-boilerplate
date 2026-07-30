@@ -125,13 +125,13 @@ void test('floor reordering is transactional, bounded, and undoable', (): void =
 	);
 });
 
-void test('visitor preview clears authoring selection without changing the selected view', (): void => {
+void test('preview clears authoring selection without changing the selected view', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'view/set', viewMode: '3d' });
 	store.dispatch({ type: 'selection/set', selection: { id: 'location-1', kind: 'element' } });
-	store.dispatch({ type: 'workspace/set', workspace: 'visitor-preview' });
+	store.dispatch({ type: 'workspace/set', workspace: 'preview' });
 
-	assert.equal(store.getSnapshot().state.workspace, 'visitor-preview');
+	assert.equal(store.getSnapshot().state.workspace, 'preview');
 	assert.equal(store.getSnapshot().state.viewMode, '3d');
 	assert.equal(store.getSnapshot().state.selection, undefined);
 });
@@ -148,7 +148,7 @@ void test('workspace transitions reject tools and selections that do not belong 
 	store.dispatch({ type: 'tool/set', tool: 'location' });
 	assert.equal(store.getSnapshot().state.activeTool, 'select');
 	store.dispatch({ type: 'selection/set', selection: { id: 'edge-1', kind: 'graph-edge' } });
-	store.dispatch({ type: 'workspace/set', workspace: 'route-preview' });
+	store.dispatch({ type: 'workspace/set', workspace: 'preview' });
 	assert.equal(store.getSnapshot().state.activeTool, 'pan');
 	assert.equal(store.getSnapshot().state.selection, undefined);
 });

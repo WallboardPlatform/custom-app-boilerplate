@@ -24,7 +24,7 @@ export interface RouteBuildOptions {
 }
 
 export interface RouteBuildDiagnostic {
-	code: 'connector-fallback' | 'connector-missing';
+	code: 'connector-fallback' | 'connector-missing' | 'network-disconnected';
 	elementId?: string;
 	message: string;
 	nodeId: string;
@@ -34,11 +34,47 @@ export interface RouteBuildDiagnostic {
 export interface RouteBuildResult {
 	connectedSemanticNodes: number;
 	diagnostics: RouteBuildDiagnostic[];
+	diff: RouteBuildDiff;
 	edges: number;
 	nodes: number;
 	project: WayfindingStudioProject;
+	stages: RouteBuildStageReport[];
 	totalSemanticNodes: number;
 }
+
+export type RouteBuildStageId =
+	| 'clearance'
+	| 'entrance-connection'
+	| 'pruning'
+	| 'safe-simplification'
+	| 'space-normalization'
+	| 'topology'
+	| 'validation';
+
+export interface RouteBuildStageReport {
+	id: RouteBuildStageId;
+	metrics: Record<string, number>;
+}
+
+export interface RouteBuildDiff {
+	generatedEdgesAfter: number;
+	generatedEdgesBefore: number;
+	generatedNodesAfter: number;
+	generatedNodesBefore: number;
+	manualEdgesPreserved: number;
+	manualNodesPreserved: number;
+}
+
+const generatedPrefix = (floorId: string): string => `generated:${floorId}:`;
+
+const isGeneratedRouteElement = (
+	element: Pick<WayfindingEdge | WayfindingNode, 'authoringOwnership' | 'id'>,
+	floorId: string
+): boolean => element.authoringOwnership === 'generated'
+	|| (
+		element.authoringOwnership === undefined
+		&& element.id.startsWith(generatedPrefix(floorId))
+	);
 
 const pointInPolygon = (point: WayfindingPoint, polygon: readonly WayfindingPoint[]): boolean => {
 	let inside = false;
@@ -518,11 +554,13 @@ export const buildFloorRouteNetwork = (
 	const { columns, mask, rows } = usesPaintedMask
 		? documentMask(floor, cellSize)
 		: polygonMask(floor, cellSize);
+	const normalizedWalkableCells = mask.reduce((total, value) => total + value, 0);
 	const clearanceCells = Math.max(0, Math.min(4, Math.round(options.clearanceCells ?? 1)));
 	const clearanceMask = erodeWalkableMask(mask, columns, rows, clearanceCells);
 	const clearanceCount = clearanceMask.reduce((total, value) => total + value, 0);
 	const networkMask = clearanceCount > 0 ? clearanceMask : mask;
 	const rawSkeleton = skeletonizeWalkableMask(networkMask, columns, rows);
+	const centerlineCells = rawSkeleton.reduce((total, value) => total + value, 0);
 	const semanticNodes = project.graph.nodes.filter((node) => node.levelId === floorId && Boolean(node.semanticElementId));
 	const semanticElements = new Map<string, WayfindingStudioElement>(
 		floor.elements.map((element) => [element.id, element])
@@ -578,12 +616,17 @@ export const buildFloorRouteNetwork = (
 	}
 
 	const network = extractSkeletonNetwork(networkMask, columns, rows, new Set(anchorIndexByNodeId.values()));
+	const topologyPointCount = network.chains.reduce(
+		(total, chain) => total + chain.indices.length,
+		0
+	);
 	const nodeIdByIndex = new Map<number, string>();
 	const generatedNodes: WayfindingNode[] = network.nodeIndices.map((index) => {
 		const id = `generated:${floorId}:node:${index}`;
 		nodeIdByIndex.set(index, id);
 
 		return {
+			authoringOwnership: 'generated',
 			id,
 			kind: 'route',
 			levelId: floorId,
@@ -607,6 +650,7 @@ export const buildFloorRouteNetwork = (
 		);
 		generatedEdges.push({
 			accessible: true,
+			authoringOwnership: 'generated',
 			bidirectional: true,
 			distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
 			from,
@@ -683,6 +727,7 @@ export const buildFloorRouteNetwork = (
 		if (geometry.length === 1) geometry.push({ x: generatedNode.x, y: generatedNode.y });
 		generatedEdges.push({
 			accessible: true,
+			authoringOwnership: 'generated',
 			bidirectional: true,
 			distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
 			from: node.id,
@@ -717,27 +762,186 @@ export const buildFloorRouteNetwork = (
 		);
 	}
 
-	const removedNodeIds = new Set(project.graph.nodes
-		.filter((node) => node.levelId === floorId && !node.semanticElementId)
-		.map((node) => node.id));
-	const retainedNodes = project.graph.nodes.filter((node) => node.levelId !== floorId || Boolean(node.semanticElementId));
+	const nodesById = new Map(project.graph.nodes.map((node) => [node.id, node]));
+	const edgeTouchesFloor = (edge: WayfindingEdge): boolean =>
+		nodesById.get(edge.from)?.levelId === floorId
+		|| nodesById.get(edge.to)?.levelId === floorId;
+	const generatedEdgesBefore = project.graph.edges.filter((edge) =>
+		edgeTouchesFloor(edge) && isGeneratedRouteElement(edge, floorId)
+	);
+	const manualFloorEdges = project.graph.edges.filter((edge) =>
+		edgeTouchesFloor(edge) && !isGeneratedRouteElement(edge, floorId)
+	);
+	const manualEndpointIds = new Set(manualFloorEdges.flatMap((edge) => [edge.from, edge.to]));
+	const generatedNodesBefore = project.graph.nodes.filter((node) =>
+		node.levelId === floorId
+		&& !node.semanticElementId
+		&& isGeneratedRouteElement(node, floorId)
+		&& !manualEndpointIds.has(node.id)
+	);
+	const retainedNodes = project.graph.nodes
+		.filter((node) =>
+			node.levelId !== floorId
+			|| Boolean(node.semanticElementId)
+			|| !isGeneratedRouteElement(node, floorId)
+			|| manualEndpointIds.has(node.id)
+		)
+		.map((node) =>
+			manualEndpointIds.has(node.id) && !node.semanticElementId
+				? { ...node, authoringOwnership: 'manual' as const }
+				: node
+		);
+	const retainedNodeIds = new Set(retainedNodes.map((node) => node.id));
+	const retainedNodeById = new Map(retainedNodes.map((node) => [node.id, node]));
 	const retainedEdges = project.graph.edges.filter((edge) =>
-		!removedNodeIds.has(edge.from)
-		&& !removedNodeIds.has(edge.to)
-		&& !edge.id.startsWith(`generated:${floorId}:`)
+		!edgeTouchesFloor(edge) || !isGeneratedRouteElement(edge, floorId)
+	);
+	const retainedEdgeIds = new Set(retainedEdges.map((edge) => edge.id));
+	const nextGeneratedNodes = generatedNodes.filter((node) => !retainedNodeIds.has(node.id));
+	const nextGeneratedEdges = generatedEdges
+		.filter((edge) => !retainedEdgeIds.has(edge.id))
+		.map((edge): WayfindingEdge => {
+			const geometry = edge.geometry?.map((point) => ({ ...point }));
+			const from = retainedNodeById.get(edge.from);
+			const to = retainedNodeById.get(edge.to);
+
+			if (geometry && from) geometry[0] = { x: from.x, y: from.y };
+
+			if (geometry && to) geometry[geometry.length - 1] = { x: to.x, y: to.y };
+
+			return geometry
+				? {
+					...edge,
+					distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
+					geometry
+				}
+				: edge;
+		});
+	const simplifiedPointCount = nextGeneratedEdges.reduce(
+		(total, edge) => total + (edge.geometry?.length ?? 2),
+		0
 	);
 	project.graph = {
 		...project.graph,
-		edges: [...retainedEdges, ...generatedEdges],
-		nodes: [...retainedNodes, ...generatedNodes]
+		edges: [...retainedEdges, ...nextGeneratedEdges],
+		nodes: [...retainedNodes, ...nextGeneratedNodes]
 	};
+	const adjacency = new Map<string, Set<string>>();
+
+	for (const edge of project.graph.edges) {
+		if (!adjacency.has(edge.from)) adjacency.set(edge.from, new Set());
+
+		if (!adjacency.has(edge.to)) adjacency.set(edge.to, new Set());
+		adjacency.get(edge.from)!.add(edge.to);
+
+		if (edge.bidirectional) adjacency.get(edge.to)!.add(edge.from);
+	}
+	const originNodeIds = semanticNodes
+		.filter((node) => semanticElements.get(node.semanticElementId ?? '')?.type === 'origin')
+		.map((node) => node.id);
+	const reachableNodeIds = new Set(originNodeIds);
+	const reachabilityQueue = [...originNodeIds];
+
+	for (let cursor = 0; cursor < reachabilityQueue.length; cursor += 1) {
+		for (const neighbor of adjacency.get(reachabilityQueue[cursor]) ?? []) {
+			if (reachableNodeIds.has(neighbor)) continue;
+			reachableNodeIds.add(neighbor);
+			reachabilityQueue.push(neighbor);
+		}
+	}
+	const connectedSemanticNodes = semanticNodes.filter((node) =>
+		anchorIndexByNodeId.has(node.id) && reachableNodeIds.has(node.id)
+	).length;
+
+	for (const node of semanticNodes) {
+		if (
+			!anchorIndexByNodeId.has(node.id)
+			|| reachableNodeIds.has(node.id)
+			|| originNodeIds.includes(node.id)
+		) continue;
+		const semanticElement = semanticElements.get(node.semanticElementId ?? '');
+
+		diagnostics.push({
+			code: 'network-disconnected',
+			elementId: semanticElement?.id,
+			message: `${semanticElement?.id ?? node.id} reaches walkable space but is disconnected from every origin.`,
+			nodeId: node.id,
+			severity: 'error'
+		});
+	}
 
 	return {
-		connectedSemanticNodes: anchorIndexByNodeId.size,
+		connectedSemanticNodes,
 		diagnostics,
-		edges: generatedEdges.length,
-		nodes: generatedNodes.length,
+		diff: {
+			generatedEdgesAfter: nextGeneratedEdges.length,
+			generatedEdgesBefore: generatedEdgesBefore.length,
+			generatedNodesAfter: nextGeneratedNodes.length,
+			generatedNodesBefore: generatedNodesBefore.length,
+			manualEdgesPreserved: manualFloorEdges.length,
+			manualNodesPreserved: retainedNodes.filter((node) =>
+				node.levelId === floorId
+				&& !node.semanticElementId
+				&& !isGeneratedRouteElement(node, floorId)
+			).length
+		},
+		edges: nextGeneratedEdges.length,
+		nodes: nextGeneratedNodes.length,
 		project,
+		stages: [
+			{
+				id: 'space-normalization',
+				metrics: {
+					cellSize,
+					columns,
+					rows,
+					walkableCells: normalizedWalkableCells
+				}
+			},
+			{
+				id: 'clearance',
+				metrics: {
+					clearanceCells,
+					retainedCells: networkMask.reduce((total, value) => total + value, 0)
+				}
+			},
+			{
+				id: 'topology',
+				metrics: {
+					centerlineCells,
+					chains: network.chains.length,
+					junctions: network.nodeIndices.length
+				}
+			},
+			{
+				id: 'entrance-connection',
+				metrics: {
+					connected: connectedSemanticNodes,
+					requested: semanticNodes.length
+				}
+			},
+			{
+				id: 'pruning',
+				metrics: {
+					edges: nextGeneratedEdges.length,
+					nodes: nextGeneratedNodes.length
+				}
+			},
+			{
+				id: 'safe-simplification',
+				metrics: {
+					inputPoints: topologyPointCount,
+					outputPoints: simplifiedPointCount
+				}
+			},
+			{
+				id: 'validation',
+				metrics: {
+					errors: diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length,
+					warnings: diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
+				}
+			}
+		],
 		totalSemanticNodes: semanticNodes.length
 	};
 };

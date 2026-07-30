@@ -91,6 +91,7 @@ interface Canvas2dProps {
 	routeDestinationId?: Accessor<string | undefined>;
 	routeOriginId?: Accessor<string | undefined>;
 	routeProfile?: Accessor<VisitorRouteProfile>;
+	showRouteNetwork?: Accessor<boolean>;
 	snapshot: Accessor<EditorSnapshot>;
 	store: EditorStore;
 	visitorDestinations?: Accessor<WayfindingStudioDestination[]>;
@@ -246,7 +247,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	const route = createMemo(() => floorRoutePoints(
 		routeToDestination(
 			props.snapshot().state.project,
-			props.snapshot().state.workspace === 'visitor-preview'
+			props.snapshot().state.workspace === 'preview'
 				? props.routeDestinationId?.()
 				: selectedDestinationId(),
 			props.routeProfile?.() ?? 'standard',
@@ -256,11 +257,9 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 	));
 	const renderedSvg = createMemo(() => {
 		const state = props.snapshot().state;
-		const presentationMode: FloorPresentationMode = state.workspace === 'visitor-preview'
-			? 'visitor'
-			: state.workspace === 'route-preview'
-				? 'route-preview'
-				: 'editor';
+		const presentationMode: FloorPresentationMode = state.workspace === 'preview'
+			? 'preview'
+			: 'editor';
 
 		return renderEditorFloorSvg(
 			previewProject(),
@@ -875,7 +874,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 		const elementTarget = target?.closest('[data-editor-element-id], [data-wayfinding-level]');
 		const visitorDestinationTarget = target?.closest('[data-visitor-destination-id]');
 
-		if (state.workspace === 'visitor-preview') {
+		if (state.workspace === 'preview') {
 			const destinationId = visitorDestinationTarget?.getAttribute('data-visitor-destination-id');
 
 			if (destinationId) {
@@ -1532,6 +1531,7 @@ export const Canvas2d = (props: Canvas2dProps): JSX.Element => {
 				selectedPolygonGeometry={selectedPolygonGeometry}
 				selectedVertexIndex={selectedVertexIndex}
 				selectElement={selectElement}
+				showRouteNetwork={props.showRouteNetwork}
 				snapshot={props.snapshot}
 				visitorLabelPlacements={visitorLabelPlacements}
 				visitorMapItems={visitorMapItems}

@@ -414,7 +414,7 @@ export const GraphNodeInspector = (props: {
 			</PanelSection>
 			<button
 				type="button"
-				class="button danger block"
+					class="wb-studio-action danger block"
 				onClick={() => props.store.dispatch({ type: 'graph/node-remove', nodeId: props.node.id })}
 			>
 				Delete route point
@@ -544,12 +544,12 @@ export const GraphEdgeInspector = (props: {
 				body="Use these tools when a generated segment bends unnecessarily or leaves the pedestrian area."
 			>
 				<div class="inspector-action-grid">
-					<button type="button" class="button" onClick={repairGeometry}>
+					<button type="button" class="wb-studio-action" onClick={repairGeometry}>
 						Clean geometry
 					</button>
 					<button
 						type="button"
-						class="button"
+						class="wb-studio-action"
 						title="Replace all bends with a direct segment. Confirm that it stays inside walkable space."
 						onClick={straightenGeometry}
 					>
@@ -559,7 +559,7 @@ export const GraphEdgeInspector = (props: {
 				<Show when={props.geometryIndex !== undefined}>
 					<button
 						type="button"
-						class="button block"
+						class="wb-studio-action block"
 						disabled={!props.edge.geometry || props.edge.geometry.length <= 2}
 						onClick={removeGeometryPoint}
 					>
@@ -574,7 +574,7 @@ export const GraphEdgeInspector = (props: {
 			</PanelSection>
 			<button
 				type="button"
-				class="button danger block"
+						class="wb-studio-action danger block"
 				onClick={() => props.store.dispatch({ type: 'graph/edge-remove', edgeId: props.edge.id })}
 			>
 				Delete route segment
@@ -811,7 +811,7 @@ export const RouteWorkspaceOverview = (props: {
 	return (
 		<PanelSection
 			title={props.mode === 'edit' ? 'Network status' : 'Journey status'}
-			eyebrow={props.mode === 'edit' ? 'Route authoring' : 'Route preview'}
+			eyebrow={props.mode === 'edit' ? 'Route authoring' : 'Route testing'}
 			defaultOpen
 		>
 			<div class="overview-grid route-overview-grid">

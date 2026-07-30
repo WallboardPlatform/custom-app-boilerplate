@@ -3,6 +3,10 @@ import { For, Show } from 'solid-js';
 import type { LucideProps } from 'lucide-solid';
 import { Dynamic } from 'solid-js/web';
 
+export { Button } from './Button';
+export { PanelResizeHandle } from './PanelResizeHandle';
+export { UploadField } from './UploadField';
+
 interface IconButtonProps {
 	active?: boolean;
 	disabled?: boolean;
@@ -47,12 +51,27 @@ export const PanelSection = (props: PanelSectionProps): JSX.Element => (
 	</details>
 );
 
-export const Field = (props: ParentProps<{ label: string; hint?: string }>): JSX.Element => (
-	<label class="field">
-		<span>{props.label}</span>
-		{props.children}
-		<Show when={props.hint}><small>{props.hint}</small></Show>
-	</label>
+export const Field = (props: ParentProps<{
+	composite?: boolean;
+	hint?: string;
+	label: string;
+}>): JSX.Element => (
+	<Show
+		when={props.composite}
+		fallback={(
+			<label class="field">
+				<span>{props.label}</span>
+				{props.children}
+				<Show when={props.hint}><small>{props.hint}</small></Show>
+			</label>
+		)}
+	>
+		<div class="field" role="group" aria-label={props.label}>
+			<span>{props.label}</span>
+			{props.children}
+			<Show when={props.hint}><small>{props.hint}</small></Show>
+		</div>
+	</Show>
 );
 
 export const EmptyState = (props: { title: string; body: string }): JSX.Element => (

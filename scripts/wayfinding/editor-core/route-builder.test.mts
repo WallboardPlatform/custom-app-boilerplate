@@ -3,9 +3,62 @@ import test from 'node:test';
 
 import {
 	createWayfindingStudioProject,
-	synchronizeWayfindingStudioGraph
+	synchronizeWayfindingStudioGraph,
+	type WayfindingStudioFloor,
+	type WayfindingStudioProject
 } from '../studio-project.mts';
 import { buildFloorRouteNetwork } from './route-builder.mts';
+
+const createRebuildFixture = (): {
+	floor: WayfindingStudioFloor;
+	project: WayfindingStudioProject;
+} => {
+	const project = createWayfindingStudioProject('Route rebuild ownership test');
+	const floor = project.floors[0];
+	floor.width = 320;
+	floor.height = 180;
+	floor.unitsPerMeter = 10;
+	floor.elements.push(
+		{
+			floorId: floor.id,
+			geometry: [
+				{ x: 20, y: 40 },
+				{ x: 300, y: 40 },
+				{ x: 300, y: 140 },
+				{ x: 20, y: 140 }
+			],
+			id: 'walkable-main',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'walkable'
+		},
+		{
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'You are here',
+			point: { x: 40, y: 90 },
+			provenance: 'reviewer-authored',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		},
+		{
+			angle: 0,
+			floorId: floor.id,
+			id: 'door-room-a',
+			length: 42,
+			locationId: 'room-a',
+			point: { x: 280, y: 90 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'door'
+		}
+	);
+	synchronizeWayfindingStudioGraph(project);
+
+	return { floor, project };
+};
 
 void test('builds a contained route graph and connects semantic anchors', () => {
 	const project = createWayfindingStudioProject('Route test');
@@ -60,6 +113,15 @@ void test('builds a contained route graph and connects semantic anchors', () => 
 	assert.ok(result.edges > 0);
 	assert.equal(result.connectedSemanticNodes, result.totalSemanticNodes);
 	assert.deepEqual(result.diagnostics, []);
+	assert.deepEqual(result.stages.map((stage) => stage.id), [
+		'space-normalization',
+		'clearance',
+		'topology',
+		'entrance-connection',
+		'pruning',
+		'safe-simplification',
+		'validation'
+	]);
 	assert.ok(originNode);
 	assert.ok(doorNode);
 	assert.ok(result.project.graph.edges.some((edge) => edge.from === originNode.id || edge.to === originNode.id));
@@ -534,4 +596,193 @@ void test('does not replace a curved centerline with a long diagonal shortcut', 
 			assert.equal(isLongDiagonal, false, `${edge.id} replaced the dogleg with a long diagonal`);
 		}
 	}
+});
+
+void test('preserves hand-authored route points and segments during generation', () => {
+	const { floor, project } = createRebuildFixture();
+	project.graph.nodes.push(
+		{
+			authoringOwnership: 'manual',
+			id: 'manual-node-a',
+			kind: 'route',
+			levelId: floor.id,
+			x: 100,
+			y: 100
+		},
+		{
+			authoringOwnership: 'manual',
+			id: 'manual-node-b',
+			kind: 'route',
+			levelId: floor.id,
+			x: 130,
+			y: 100
+		}
+	);
+	project.graph.edges.push({
+		accessible: true,
+		authoringOwnership: 'manual',
+		bidirectional: true,
+		from: 'manual-node-a',
+		geometry: [{ x: 100, y: 100 }, { x: 115, y: 96 }, { x: 130, y: 100 }],
+		id: 'manual-edge-a',
+		kind: 'walk',
+		reviewStatus: 'confirmed',
+		to: 'manual-node-b'
+	});
+
+	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6 });
+
+	assert.deepEqual(
+		result.project.graph.nodes.filter((node) => node.id.startsWith('manual-node')),
+		project.graph.nodes.filter((node) => node.id.startsWith('manual-node'))
+	);
+	assert.deepEqual(
+		result.project.graph.edges.find((edge) => edge.id === 'manual-edge-a'),
+		project.graph.edges.find((edge) => edge.id === 'manual-edge-a')
+	);
+	assert.equal(result.diff.manualNodesPreserved, 2);
+	assert.equal(result.diff.manualEdgesPreserved, 1);
+});
+
+void test('preserves reviewed corrections to generated topology without duplicate IDs', () => {
+	const { floor, project } = createRebuildFixture();
+	const firstBuild = buildFloorRouteNetwork(project, floor.id, { cellSize: 6 });
+	const correctedProject = firstBuild.project;
+	const correctedEdge = correctedProject.graph.edges.find((edge) =>
+		edge.id.startsWith(`generated:${floor.id}:edge:`)
+	);
+
+	assert.ok(correctedEdge?.geometry);
+	const correctedNode = correctedProject.graph.nodes.find((node) => node.id === correctedEdge.from);
+
+	assert.ok(correctedNode);
+	correctedNode.authoringOwnership = 'manual';
+	correctedNode.x += 4;
+	correctedNode.y -= 3;
+	correctedEdge.authoringOwnership = 'manual';
+	correctedEdge.reviewStatus = 'confirmed';
+	correctedEdge.geometry = [
+		{ x: correctedNode.x, y: correctedNode.y },
+		{ x: correctedNode.x + 12, y: correctedNode.y + 2 },
+		{ ...correctedEdge.geometry.at(-1)! }
+	];
+	const expectedNode = structuredClone(correctedNode);
+	const expectedEdge = structuredClone(correctedEdge);
+
+	const rebuilt = buildFloorRouteNetwork(correctedProject, floor.id, { cellSize: 6 });
+
+	assert.deepEqual(rebuilt.project.graph.nodes.find((node) => node.id === expectedNode.id), expectedNode);
+	assert.deepEqual(rebuilt.project.graph.edges.find((edge) => edge.id === expectedEdge.id), expectedEdge);
+	assert.equal(rebuilt.project.graph.nodes.filter((node) => node.id === expectedNode.id).length, 1);
+	assert.equal(rebuilt.project.graph.edges.filter((edge) => edge.id === expectedEdge.id).length, 1);
+	assert.ok(rebuilt.diff.manualNodesPreserved >= 1);
+	assert.ok(rebuilt.diff.manualEdgesPreserved >= 1);
+});
+
+void test('reports anchors in disconnected pedestrian regions as unreachable', () => {
+	const { floor, project } = createRebuildFixture();
+	const walkable = floor.elements.find((element) => element.type === 'walkable');
+
+	assert.ok(walkable?.type === 'walkable');
+	walkable.geometry = [
+		{ x: 20, y: 40 },
+		{ x: 120, y: 40 },
+		{ x: 120, y: 140 },
+		{ x: 20, y: 140 }
+	];
+	floor.elements.push({
+		floorId: floor.id,
+		geometry: [
+			{ x: 220, y: 40 },
+			{ x: 300, y: 40 },
+			{ x: 300, y: 140 },
+			{ x: 220, y: 140 }
+		],
+		id: 'walkable-island',
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'walkable'
+	});
+	synchronizeWayfindingStudioGraph(project);
+
+	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 5 });
+
+	assert.ok(result.connectedSemanticNodes < result.totalSemanticNodes);
+	assert.ok(result.diagnostics.some((diagnostic) => diagnostic.code === 'network-disconnected'));
+});
+
+void test('keeps a narrow valid corridor route instead of eroding it away', () => {
+	const { floor, project } = createRebuildFixture();
+	const walkable = floor.elements.find((element) => element.type === 'walkable');
+
+	assert.ok(walkable?.type === 'walkable');
+	walkable.geometry = [
+		{ x: 20, y: 80 },
+		{ x: 300, y: 80 },
+		{ x: 300, y: 105 },
+		{ x: 20, y: 105 }
+	];
+	const origin = floor.elements.find((element) => element.type === 'origin');
+	const door = floor.elements.find((element) => element.type === 'door');
+
+	assert.ok(origin?.type === 'origin');
+	assert.ok(door?.type === 'door');
+	origin.point = { x: 40, y: 92 };
+	door.point = { x: 280, y: 92 };
+	synchronizeWayfindingStudioGraph(project);
+
+	const result = buildFloorRouteNetwork(project, floor.id, {
+		cellSize: 5,
+		clearanceCells: 2
+	});
+
+	assert.equal(result.connectedSemanticNodes, result.totalSemanticNodes);
+	assert.ok(result.edges > 0);
+});
+
+void test('rebuilding one floor leaves every other floor route unchanged', () => {
+	const { floor, project } = createRebuildFixture();
+	const upperFloor = {
+		...structuredClone(floor),
+		elements: [],
+		id: 'level-1',
+		name: 'Level 1',
+		order: 1
+	};
+	project.floors.push(upperFloor);
+	project.graph.nodes.push(
+		{
+			authoringOwnership: 'generated',
+			id: 'generated:level-1:node:1',
+			kind: 'route',
+			levelId: upperFloor.id,
+			x: 40,
+			y: 40
+		},
+		{
+			authoringOwnership: 'generated',
+			id: 'generated:level-1:node:2',
+			kind: 'route',
+			levelId: upperFloor.id,
+			x: 80,
+			y: 40
+		}
+	);
+	project.graph.edges.push({
+		accessible: true,
+		authoringOwnership: 'generated',
+		bidirectional: true,
+		from: 'generated:level-1:node:1',
+		geometry: [{ x: 40, y: 40 }, { x: 80, y: 40 }],
+		id: 'generated:level-1:edge:1',
+		kind: 'walk',
+		to: 'generated:level-1:node:2'
+	});
+	const expectedUpperNodes = structuredClone(project.graph.nodes.filter((node) => node.levelId === upperFloor.id));
+	const expectedUpperEdges = structuredClone(project.graph.edges.filter((edge) => edge.id.startsWith('generated:level-1:')));
+
+	const result = buildFloorRouteNetwork(project, floor.id, { cellSize: 6 });
+
+	assert.deepEqual(result.project.graph.nodes.filter((node) => node.levelId === upperFloor.id), expectedUpperNodes);
+	assert.deepEqual(result.project.graph.edges.filter((edge) => edge.id.startsWith('generated:level-1:')), expectedUpperEdges);
 });

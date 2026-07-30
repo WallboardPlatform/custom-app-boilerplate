@@ -15,7 +15,6 @@ import {
 	X
 } from 'lucide-solid';
 import {
-	createSignal,
 	For,
 	Show,
 	type Accessor,
@@ -63,6 +62,8 @@ export const VisitorPanel = (props: {
 	}>>;
 	routeProfile: Accessor<VisitorRouteProfile>;
 	selected: Accessor<WayfindingStudioDestination | undefined>;
+	setShowRouteNetwork: (visible: boolean) => void;
+	setSimulationOpen: (open: boolean) => void;
 	setCategory: (value: string) => void;
 	setFloorFilter: (value: string) => void;
 	setLanguage: (value: string) => void;
@@ -70,9 +71,10 @@ export const VisitorPanel = (props: {
 	setRouteDestinationId: (value: string | undefined) => void;
 	setRouteOriginId: (value: string | undefined) => void;
 	setRouteProfile: (value: VisitorRouteProfile) => void;
+	showRouteNetwork: Accessor<boolean>;
+	simulationOpen: Accessor<boolean>;
 	store: EditorStore;
 }): JSX.Element => {
-	const [filtersOpen, setFiltersOpen] = createSignal(false);
 	const floorName = (destination: WayfindingStudioDestination): string =>
 		props.floors().find((floor) => floor.id === destination.floor)?.name
 		?? destination.floor
@@ -95,6 +97,8 @@ export const VisitorPanel = (props: {
 		}
 	};
 	const inspectDestination = (destination: WayfindingStudioDestination): void => {
+		props.setRouteDestinationId(destination.routeable === false ? undefined : destination.id);
+
 		if (destination.floor) {
 			props.store.dispatch({ type: 'floor/select', floorId: destination.floor });
 		}
@@ -134,29 +138,15 @@ export const VisitorPanel = (props: {
 				<strong>Explore the map</strong>
 			</div>
 			<div class="visitor-panel__header-actions">
-				<Show when={props.languages().length > 1}>
-					<label class="visitor-language-picker">
-						<Globe2 size={15} />
-						<span class="sr-only">Language</span>
-						<select
-							aria-label="Language"
-							value={props.language()}
-							onChange={(event) => props.setLanguage(event.currentTarget.value)}
-						>
-							<For each={props.languages()}>{(language) => (
-								<option value={language.code}>{language.label}</option>
-							)}</For>
-						</select>
-					</label>
-				</Show>
 				<button
 					type="button"
-					classList={{ active: filtersOpen() }}
-					aria-expanded={filtersOpen()}
-					onClick={() => setFiltersOpen((open) => !open)}
+					classList={{ active: props.simulationOpen() }}
+					aria-expanded={props.simulationOpen()}
+					aria-controls="preview-simulation-drawer"
+					onClick={() => props.setSimulationOpen(!props.simulationOpen())}
 				>
 					<SlidersHorizontal size={16} />
-					<span>Filters</span>
+					<span>Simulation</span>
 				</button>
 			</div>
 		</header>
@@ -164,14 +154,42 @@ export const VisitorPanel = (props: {
 			<Search size={17} />
 			<input
 				type="search"
+				aria-label="Search destinations"
 				placeholder="Search destinations"
 				value={props.query()}
 				onInput={(event) => props.setQuery(event.currentTarget.value)}
 			/>
 		</div>
-		<Show when={filtersOpen()}>
-			<div class="visitor-filter-sheet">
+		<Show when={props.simulationOpen()}>
+			<div class="visitor-filter-sheet" id="preview-simulation-drawer">
+				<div class="visitor-filter-sheet__heading">
+					<div>
+						<small>Preview controls</small>
+						<strong>Simulation</strong>
+					</div>
+					<button
+						type="button"
+						aria-label="Close simulation controls"
+						onClick={() => props.setSimulationOpen(false)}
+					>
+						<X size={16} />
+					</button>
+				</div>
 				<div class="visitor-panel__toolbar">
+					<Show when={props.languages().length > 1}>
+						<label>
+							<span>Language</span>
+							<select
+								aria-label="Preview language"
+								value={props.language()}
+								onChange={(event) => props.setLanguage(event.currentTarget.value)}
+							>
+								<For each={props.languages()}>{(language) => (
+									<option value={language.code}>{language.label}</option>
+								)}</For>
+							</select>
+						</label>
+					</Show>
 					<label>
 						<span>Floor</span>
 						<select
@@ -253,6 +271,14 @@ export const VisitorPanel = (props: {
 									{layer.label}
 								</label>
 							)}</For>
+							<label class="visitor-layer-toggle">
+								<input
+									type="checkbox"
+									checked={props.showRouteNetwork()}
+									onChange={(event) => props.setShowRouteNetwork(event.currentTarget.checked)}
+								/>
+								Route network
+							</label>
 						</div>
 					</div>
 				</div>
@@ -339,7 +365,7 @@ export const VisitorPanel = (props: {
 					fallback={(
 						<button
 							type="button"
-							class="button primary full"
+							class="wb-studio-action primary full"
 							disabled={props.selected()!.routeable === false}
 							onClick={() => showDirections(props.selected()!)}
 						>
@@ -422,7 +448,7 @@ export const VisitorPanel = (props: {
 						</Show>
 						<button
 							type="button"
-							class="button full"
+							class="wb-studio-action full"
 							onClick={() => props.setRouteDestinationId(undefined)}
 						>
 							<X size={16} /> Clear directions

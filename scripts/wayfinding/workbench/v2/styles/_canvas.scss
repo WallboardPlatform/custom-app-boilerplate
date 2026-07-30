@@ -16,19 +16,19 @@
 	right: 0;
 }
 
-.visitor-workspace .stage,
+.preview-workspace .stage,
 .compact-layout .stage,
 .narrow-layout .stage {
 	left: 0;
 	right: 0;
 }
 
-.visitor-workspace .canvas-viewport,
-.visitor-workspace .scene3d-host {
+.preview-workspace .canvas-viewport,
+.preview-workspace .scene3d-host {
 	right: var(--visitor-panel-reserve);
 }
 
-.visitor-workspace .stage-toolbar {
+.preview-workspace .stage-toolbar {
 	left: calc((100% - var(--visitor-panel-reserve)) / 2);
 }
 
@@ -193,7 +193,7 @@
 	border: 0;
 }
 
-.button {
+.wb-studio-action {
 	display: inline-flex;
 	min-height: 34px;
 	align-items: center;
@@ -208,29 +208,22 @@
 	border-radius: 4px;
 }
 
-.button:hover {
+.wb-studio-action:hover {
 	background: #f3f7f5;
 	border-color: #738781;
 }
 
-.button.primary {
+.wb-studio-action.primary {
 	color: white;
 	background: var(--accent);
 	border-color: var(--accent);
 }
 
-.button.primary:hover {
+.wb-studio-action.primary:hover {
 	background: var(--accent-dark);
 }
 
-.button.compact {
-	min-height: 30px;
-	color: white;
-	background: transparent;
-	border-color: #536763;
-}
-
-.button.full {
+.wb-studio-action.full {
 	width: 100%;
 }
 
@@ -308,7 +301,7 @@ input[type='checkbox'] {
 	right: 14px;
 }
 
-.scene3d-camera-actions .button {
+.scene3d-camera-actions .wb-studio-button {
 	min-width: 34px;
 	padding: 0 8px;
 }

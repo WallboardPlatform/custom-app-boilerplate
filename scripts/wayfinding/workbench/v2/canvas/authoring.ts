@@ -299,20 +299,33 @@ export const buildRouteEdgeAuthoring = (options: {
 	if (!fromNode) {
 		commands.push({
 			type: 'graph/node-add',
-			node: { id: fromId, kind: 'route', levelId: options.floorId, ...first }
+			node: {
+				authoringOwnership: 'manual',
+				id: fromId,
+				kind: 'route',
+				levelId: options.floorId,
+				...first
+			}
 		});
 	}
 
 	if (!toNode) {
 		commands.push({
 			type: 'graph/node-add',
-			node: { id: toId, kind: 'route', levelId: options.floorId, ...last }
+			node: {
+				authoringOwnership: 'manual',
+				id: toId,
+				kind: 'route',
+				levelId: options.floorId,
+				...last
+			}
 		});
 	}
 	commands.push({
 		type: 'graph/edge-add',
 		edge: {
 			accessible: true,
+			authoringOwnership: 'manual',
 			bidirectional: true,
 			from: fromId,
 			geometry,

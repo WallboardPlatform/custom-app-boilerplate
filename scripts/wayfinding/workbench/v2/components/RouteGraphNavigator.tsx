@@ -19,7 +19,7 @@ import {
 
 import { selectedFloor } from '../../../editor-core/selectors';
 import type { EditorSnapshot, EditorStore } from '../../../editor-core/types';
-import type { CanvasSelectionActions } from '../Canvas2d';
+import type { CanvasSelectionActions } from '../features/map';
 import {
 	inspectRouteGeometry,
 	measureRouteNetwork,

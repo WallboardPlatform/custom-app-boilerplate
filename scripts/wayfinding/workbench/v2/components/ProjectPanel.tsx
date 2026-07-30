@@ -13,15 +13,22 @@ import { createMemo, For, Show, type Accessor, type JSX, type Setter } from 'sol
 import { projectCounts, selectedFloor } from '../../../editor-core/selectors';
 import type { EditorLayerId, EditorSnapshot, EditorStore } from '../../../editor-core/types';
 import type { WayfindingStudioAsset } from '../../../studio-project.mts';
-import { Field, IconButton, PanelNav, PanelSection } from '../ui';
-import type { CanvasSelectionActions } from '../Canvas2d';
-import { AssetLibrary } from './AssetLibrary';
-import { DirectorySettings } from './DirectorySettings';
+import {
+	Field,
+	IconButton,
+	PanelNav,
+	PanelResizeHandle,
+	PanelSection,
+	UploadField
+} from '../ui';
+import type { CanvasSelectionActions } from '../features/map';
+import { AssetLibrary, readImageFile } from '../features/assets';
+import { DirectorySettings } from '../features/directory';
+import { ProjectSettings } from '../features/appearance';
 import { DraftInput } from './draft-fields';
 import { FreehandSettings } from './FreehandSettings';
 import { ObjectTree } from './ObjectTree';
 import { updateProject } from './project-edit';
-import { ProjectSettings } from './ProjectSettings';
 import { SmartTraceSettings } from './SmartTraceSettings';
 
 interface ProjectPanelProps {
@@ -78,33 +85,15 @@ const projectViews = [
 	{ id: 'appearance', label: 'Style' }
 ] satisfies Array<{ id: ProjectView; label: string }>;
 
-const readImage = async (file: File): Promise<{
-	dataUrl: string;
-	height: number;
-	width: number;
-}> => {
-	const dataUrl = await new Promise<string>((resolve, reject): void => {
-		const reader = new FileReader();
-		reader.onerror = (): void => reject(new Error('The selected image could not be read.'));
-		reader.onload = (): void => {
-			if (typeof reader.result === 'string') resolve(reader.result);
-			else reject(new Error('The selected image did not produce a valid data URL.'));
-		};
-		reader.readAsDataURL(file);
-	});
-	const image = new Image();
-	image.src = dataUrl;
-	await image.decode();
-
-	return { dataUrl, height: image.naturalHeight, width: image.naturalWidth };
-};
-
 export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 	const state = createMemo(() => props.snapshot().state);
 	const floor = createMemo(() => selectedFloor(state()));
 	const orderedFloors = createMemo(() => [...state().project.floors].sort((a, b) => a.order - b.order));
 	const floorIndex = createMemo(() => orderedFloors().findIndex((item) => item.id === floor().id));
 	const counts = createMemo(() => projectCounts(state()));
+	const floorBackground = createMemo(() => state().project.assets.find(
+		(asset) => asset.id === floor().backgroundAssetId
+	));
 	const addFloor = (): void => {
 		const floorNumber = state().project.floors.length + 1;
 		const floorId = `level-${Date.now().toString(36)}`;
@@ -120,7 +109,7 @@ export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 		if (!file) return;
 
 		try {
-			const source = await readImage(file);
+			const source = await readImageFile(file);
 			const assetId = `background-${Date.now().toString(36)}`;
 			const asset: WayfindingStudioAsset = {
 				dataUrl: source.dataUrl,
@@ -144,11 +133,35 @@ export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 			props.onNotify(`Loaded ${file.name}`, 'success');
 		} catch (error) {
 			props.onNotify(error instanceof Error ? error.message : 'The image could not be loaded.', 'danger');
+
+			throw error;
 		}
+	};
+
+	const removeBackground = (): void => {
+		const backgroundAssetId = floor().backgroundAssetId;
+
+		if (!backgroundAssetId) return;
+		const floorId = floor().id;
+		updateProject(props.store, props.snapshot(), 'Remove floor background', (project): void => {
+			const target = project.floors.find((item) => item.id === floorId);
+
+			if (!target) return;
+			delete target.backgroundAssetId;
+
+			if (!project.floors.some((item) => item.backgroundAssetId === backgroundAssetId)) {
+				project.assets = project.assets.filter((asset) => asset.id !== backgroundAssetId);
+			}
+		});
 	};
 
 	return (
 		<aside class="left-panel panel-shell">
+			<PanelResizeHandle
+				panelId="left"
+				store={props.store}
+				width={() => state().panels.left.width}
+			/>
 			<div class="panel-title">
 				<span>
 					<small>Project</small>
@@ -169,10 +182,10 @@ export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 			<div class="panel-scroll">
 				<Show when={props.view() === 'setup'}>
 					<div class="file-actions">
-						<button type="button" class="button primary" onClick={() => props.onNew()}>
+						<button type="button" class="wb-studio-action primary" onClick={() => props.onNew()}>
 							<MapPinned size={16} /> New
 						</button>
-						<button type="button" class="button" onClick={() => props.onOpen()}>
+						<button type="button" class="wb-studio-action" onClick={() => props.onOpen()}>
 							<FolderOpen size={16} /> Open
 						</button>
 						<input
@@ -247,21 +260,27 @@ export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 							</div>
 						</Field>
 						<Field
+							composite
 							label="Floor background"
 							hint={floor().backgroundAssetId
 								? state().project.assets.find((asset) => asset.id === floor().backgroundAssetId)?.name
 								: 'Add the map image used as the tracing and visitor-map base.'}
 						>
-							<label class="file-picker">
-								<ImagePlus size={16} />
-								<span>{floor().backgroundAssetId ? 'Replace image' : 'Choose image'}</span>
-								<input
-									data-floor-background-input
-									type="file"
-									accept="image/*"
-									onChange={(event) => void addBackground(event.currentTarget.files?.[0])}
-								/>
-							</label>
+							<UploadField
+								accept="image/*"
+								actionLabel="Choose image"
+								description="Drop a floor plan here or browse for an image."
+								fileName={floorBackground()?.name}
+								icon={ImagePlus}
+								inputId="floor-background-input"
+								metadata={floorBackground()?.naturalWidth && floorBackground()?.naturalHeight
+									? `${floorBackground()!.naturalWidth} × ${floorBackground()!.naturalHeight} px`
+									: undefined}
+								onRemove={removeBackground}
+								onSelect={addBackground}
+								previewUrl={floorBackground()?.dataUrl}
+								title="Floor plan artwork"
+							/>
 						</Field>
 						<div class="floor-actions">
 							<IconButton
@@ -284,12 +303,12 @@ export const ProjectPanel = (props: ProjectPanelProps): JSX.Element => {
 									direction: 1
 								})}
 							/>
-							<button type="button" class="button" onClick={addFloor}>
+							<button type="button" class="wb-studio-action" onClick={addFloor}>
 								<FolderPlus size={16} /> Add floor
 							</button>
 							<button
 								type="button"
-								class="button danger"
+								class="wb-studio-action danger"
 								disabled={state().project.floors.length <= 1}
 								onClick={() => props.onDeleteFloor(floor().id, floor().name)}
 							>
