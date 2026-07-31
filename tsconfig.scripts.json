@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"allowImportingTsExtensions": true,
+		"baseUrl": ".",
 		"checkJs": false,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
@@ -14,10 +15,19 @@
 		"resolveJsonModule": true,
 		"strict": true,
 		"target": "ES2022",
+		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"paths": {
+			"@interfaces/*": ["examples/spatial-wayfinding/overlay/src/interfaces/*"],
+			"@utils/*": ["src/utils/*"]
+		},
 		"types": ["node"]
 	},
 	"include": [
 		"scripts/**/*.mts",
-		"scripts/**/*.mjs"
+		"scripts/**/*.mjs",
+		"examples/spatial-wayfinding/overlay/src/interfaces/spatial-wayfinding.interface.ts",
+		"examples/spatial-wayfinding/overlay/src/utils/wayfinding-map-package.ts",
+		"src/utils/wayfinding-contract.ts",
+		"src/utils/wayfinding.ts"
 	]
 }

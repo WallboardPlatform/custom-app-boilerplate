@@ -3,7 +3,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import type {
 	RuntimeAsset,
 	RuntimeDestination,
-	RuntimeFloor,
+	RuntimeLevel,
 	RuntimeProjectDefaults,
 	WayfindingRuntimeBundle
 } from '@interfaces/spatial-wayfinding.interface';
@@ -15,7 +15,8 @@ const DEFAULT_ORIGIN_MARKER_SIZE_3D = 46;
 
 type PublishedAssetDescriptor = Omit<RuntimeAsset, 'bytes' | 'dataUrl'>;
 
-interface PublishedFloorDescriptor extends Omit<RuntimeFloor, 'elements' | 'svg'> {
+interface PublishedLevelDescriptor extends Omit<RuntimeLevel, 'elements' | 'svg' | 'role'> {
+	role?: RuntimeLevel['role'];
 	scenePath: string;
 	svgPath: string;
 }
@@ -28,7 +29,7 @@ interface PublishedManifest {
 	defaultLanguage: string;
 	destinationsPath: string;
 	format: typeof FORMAT;
-	formatVersion: 1;
+	formatVersion: 1 | 2;
 	generatedAt: string;
 	graphPath: string;
 	mapPath: string;
@@ -36,28 +37,56 @@ interface PublishedManifest {
 	projectName: string;
 }
 
-interface PublishedMap {
+interface PublishedMapBase {
 	assets: PublishedAssetDescriptor[];
 	categories: string[];
 	defaultLanguage: string;
 	defaults: RuntimeProjectDefaults;
-	floors: PublishedFloorDescriptor[];
 	languages: Array<{ code: string; label: string }>;
 	projectId: string;
 	projectName: string;
 }
 
+interface PublishedMapV1 extends PublishedMapBase {
+	floors: PublishedLevelDescriptor[];
+}
+
+interface PublishedMapV2 extends PublishedMapBase {
+	buildings: WayfindingRuntimeBundle['buildings'];
+	connectors: WayfindingRuntimeBundle['connectors'];
+	levels: PublishedLevelDescriptor[];
+	presentation: WayfindingRuntimeBundle['presentation'];
+	siteLevelId?: string;
+}
+
 interface PublishedScene {
+	alignment?: RuntimeLevel['alignment'];
 	backgroundAssetId?: string;
-	camera3d?: RuntimeFloor['camera3d'];
-	elements: RuntimeFloor['elements'];
+	buildingId?: string;
+	camera3d?: RuntimeLevel['camera3d'];
+	elements: RuntimeLevel['elements'];
+	elevationMeters?: number;
 	height: number;
 	id: string;
+	levelNumber?: number;
 	name: string;
 	order: number;
+	role?: RuntimeLevel['role'];
 	unitsPerMeter?: number;
 	width: number;
 }
+
+type PublishedDestination = Omit<RuntimeDestination, 'entranceRefs' | 'geometryRefs' | 'levelId'> & {
+	entranceRefs?: Array<{ elementId: string; floorId?: string; levelId?: string }>;
+	floor?: string;
+	geometryRefs?: Array<{
+		elementId: string;
+		floorId?: string;
+		levelId?: string;
+		representation: 'area' | 'point';
+	}>;
+	levelId?: string;
+};
 
 const requiredEntry = (entries: Record<string, Uint8Array>, path: string): Uint8Array => {
 	const entry: Uint8Array | undefined = entries[path];
@@ -118,12 +147,12 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 	const entries: Record<string, Uint8Array> = unzipSync(archive);
 	const manifest = parseJson<PublishedManifest>(entries, 'manifest.json');
 
-	if (manifest.format !== FORMAT || manifest.formatVersion !== 1) {
+	if (manifest.format !== FORMAT || ![1, 2].includes(manifest.formatVersion)) {
 		throw new Error('This app does not support the selected published map version.');
 	}
 
-	const map = parseJson<PublishedMap>(entries, manifest.mapPath);
-	const destinationDocument = parseJson<{ Destinations?: { rows?: RuntimeDestination[] } }>(
+	const map = parseJson<PublishedMapV1 | PublishedMapV2>(entries, manifest.mapPath);
+	const destinationDocument = parseJson<{ Destinations?: { rows?: PublishedDestination[] } }>(
 		entries,
 		manifest.destinationsPath
 	);
@@ -132,34 +161,62 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 		bytes: requiredEntry(entries, asset.path),
 		dataUrl: bytesToDataUrl(asset.mimeType, requiredEntry(entries, asset.path))
 	}));
-	const floors: RuntimeFloor[] = map.floors.map((descriptor): RuntimeFloor => {
+	const descriptors = 'levels' in map ? map.levels : map.floors;
+	const levels: RuntimeLevel[] = descriptors.map((descriptor): RuntimeLevel => {
 		const scene = parseJson<PublishedScene>(entries, descriptor.scenePath);
+		const normalizeElement = (element: RuntimeLevel['elements'][number]): RuntimeLevel['elements'][number] => {
+			const legacy = element as RuntimeLevel['elements'][number] & { floorId?: string };
+			const normalized = { ...legacy, levelId: legacy.levelId ?? legacy.floorId ?? scene.id };
+			delete normalized.floorId;
+
+			return normalized;
+		};
 
 		return {
+			alignment: scene.alignment ?? descriptor.alignment,
 			backgroundAssetId: scene.backgroundAssetId ?? descriptor.backgroundAssetId,
+			buildingId: scene.buildingId ?? descriptor.buildingId,
 			camera3d: scene.camera3d ?? descriptor.camera3d,
-			elements: scene.elements,
+			elements: scene.elements.map(normalizeElement),
+			elevationMeters: scene.elevationMeters ?? descriptor.elevationMeters,
 			height: scene.height,
 			id: scene.id,
+			levelNumber: scene.levelNumber ?? descriptor.levelNumber,
 			name: scene.name,
 			order: scene.order,
+			role: scene.role ?? descriptor.role ?? 'standalone',
 			svg: inlineAssets(strFromU8(requiredEntry(entries, descriptor.svgPath)), assets),
 			unitsPerMeter: scene.unitsPerMeter ?? descriptor.unitsPerMeter,
 			width: scene.width
 		};
 	});
+	const destinations = (destinationDocument.Destinations?.rows ?? []).map((destination): RuntimeDestination => ({
+		...destination,
+		entranceRefs: destination.entranceRefs?.map((reference) => ({ elementId: reference.elementId, levelId: reference.levelId ?? reference.floorId ?? '' })),
+		geometryRefs: destination.geometryRefs?.map((reference) => ({ elementId: reference.elementId, levelId: reference.levelId ?? reference.floorId ?? '', representation: reference.representation })),
+		levelId: destination.levelId ?? destination.floor
+	}));
+	const v2 = 'levels' in map ? map : undefined;
 
 	return {
 		assets,
+		buildings: v2?.buildings ?? [],
 		categories: map.categories,
+		connectors: v2?.connectors ?? [],
 		defaultLanguage: map.defaultLanguage,
 		defaults: normalizeProjectDefaults(map.defaults, assets),
-		destinations: { Destinations: { rows: destinationDocument.Destinations?.rows ?? [] } },
+		destinations: { Destinations: { rows: destinations } },
 		format: 'wallboard-wayfinding-runtime',
-		formatVersion: 1,
-		floors,
+		formatVersion: 2,
+		levels,
 		graph: parseJson<WayfindingGraphDocument>(entries, manifest.graphPath),
 		languages: map.languages,
+		presentation: v2?.presentation ?? {
+			buildingTapBehavior: 'focus-actions',
+			defaultOverviewMode: 'site',
+			enabledOverviewModes: ['site']
+		},
+		siteLevelId: v2?.siteLevelId,
 		manifest: {
 			capabilities: manifest.capabilities,
 			generatedAt: manifest.generatedAt,

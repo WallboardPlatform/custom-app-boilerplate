@@ -536,9 +536,10 @@ for (const preset of [...presets, ...scenarioPresets]) {
 			await page.waitForTimeout(500);
 			captureCandidates.push(await page.screenshot({ animations: 'disabled' }));
 		}
-		const stableCapture: Buffer = captureCandidates.reduce((largest, candidate): Buffer => {
-			return candidate.byteLength > largest.byteLength ? candidate : largest;
-		});
+		// The first forced repaint can still contain a partially restored compositor layer
+		// when WebGL and DOM text share the surface. The second frame is the deliberately
+		// settled capture; PNG byte size is not a stability signal and can prefer the broken frame.
+		const stableCapture: Buffer = captureCandidates[captureCandidates.length - 1];
 		fs.writeFileSync(
 			path.join(screenshotDirectory, `${safePresetName}-${preset.width}x${preset.height}.png`),
 			stableCapture

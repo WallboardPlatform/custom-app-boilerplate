@@ -41,7 +41,7 @@ export const previewScenarios: PreviewScenario[] = [
 	{
 		id: 'flat-map',
 		fixture: createFixture('spatial-wayfinding-flat', { ...baseConfig, defaultView: '2d' }),
-		interactionSteps: [{ type: 'click', role: 'button', name: 'The Forum' }],
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Events / G21 The Forum Next' }],
 		viewport: { width: 1920, height: 1080, background: 'light' },
 		minimumContentCoverage: { width: 99, height: 97 }
 	},
@@ -50,6 +50,33 @@ export const previewScenarios: PreviewScenario[] = [
 		fixture: createFixture('spatial-wayfinding-dark', { ...baseConfig, themePreset: 'dark' }),
 		viewport: { width: 1366, height: 768, background: 'dark' },
 		minimumContentCoverage: { width: 98, height: 96 }
+	},
+	{
+		id: 'multi-building-site',
+		fixture: createFixture('spatial-wayfinding-multi-building-site', { ...baseConfig, defaultView: '2d', title: 'Northline Multi-Building Campus' }),
+		interactionSteps: [{ type: 'click', role: 'button', name: 'Building / 3 levels Library Explore inside' }],
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		minimumContentCoverage: { width: 99, height: 97 }
+	},
+	{
+		id: 'multi-building-atlas',
+		fixture: createFixture('spatial-wayfinding-multi-building-atlas', { ...baseConfig, defaultView: '2d', title: 'Northline Multi-Building Campus' }),
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: 'Building / 3 levels Library Explore inside' },
+			{ type: 'click', role: 'button', name: 'Directions' }
+		],
+		viewport: { width: 1920, height: 1080, background: 'light' },
+		minimumContentCoverage: { width: 98, height: 96 }
+	},
+	{
+		id: 'multi-building-exploded',
+		fixture: createFixture('spatial-wayfinding-multi-building-exploded', { ...baseConfig, defaultView: '3d', title: 'Northline Multi-Building Campus' }),
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: 'Library Special Collections' },
+			{ type: 'click', role: 'button', name: 'Exploded 3D' }
+		],
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		minimumContentCoverage: { width: 99, height: 97 }
 	}
 ];
 
