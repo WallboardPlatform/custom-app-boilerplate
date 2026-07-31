@@ -94,7 +94,10 @@
 						"animation2d": { "enum": ["none", "pulse", "radar"] },
 						"animation3d": { "enum": ["bounce", "none", "pulse"] },
 						"animationSpeed": { "type": "number", "minimum": 1, "maximum": 300 },
-						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+						"color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+						"markerAssetId": { "$ref": "#/$defs/nonEmptyString" },
+						"markerSize2d": { "type": "number", "minimum": 20, "maximum": 96 },
+						"markerSize3d": { "type": "number", "minimum": 28, "maximum": 120 }
 					}
 				},
 				"walkable": { "$ref": "#/$defs/requiredPolygonPresentation" },
@@ -143,7 +146,7 @@
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" },
 				"name": { "$ref": "#/$defs/nonEmptyString" },
-				"kind": { "enum": ["background", "icon", "logo", "photo"] },
+				"kind": { "enum": ["background", "icon", "logo", "marker", "photo"] },
 				"mimeType": { "$ref": "#/$defs/nonEmptyString" },
 				"dataUrl": { "type": "string", "pattern": "^data:" },
 				"naturalHeight": { "type": "number", "exclusiveMinimum": 0 },

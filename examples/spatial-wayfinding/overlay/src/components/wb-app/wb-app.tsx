@@ -60,6 +60,17 @@ const mediaDimensions = (media: RuntimeMedia, asset?: RuntimeAsset): { height: n
 	return { height: media.height, width: media.height * ratio };
 };
 
+const markerDimensions = (asset: RuntimeAsset, maximumSide: number): { height: number; width: number } => {
+	const ratio: number = Math.max(
+		0.2,
+		Math.min(5, (asset.naturalWidth ?? 1) / Math.max(1, asset.naturalHeight ?? 1))
+	);
+
+	return ratio >= 1
+		? { height: maximumSide / ratio, width: maximumSide }
+		: { height: maximumSide, width: maximumSide * ratio };
+};
+
 export default (props: WbAppProps): JSX.Element => {
 	void props;
 	const settings: Accessor<Settings> = useSettings();
@@ -238,6 +249,21 @@ export default (props: WbAppProps): JSX.Element => {
 	const backgroundAsset = createMemo((): RuntimeAsset | undefined =>
 		runtime()?.assets.find((asset): boolean => asset.id === floor()?.backgroundAssetId)
 	);
+	const originMarkerAsset = createMemo((): RuntimeAsset | undefined => {
+		const loaded = runtime();
+		const markerAssetId: string | undefined = loaded?.defaults.origin.markerAssetId;
+
+		return markerAssetId
+			? loaded?.assets.find((asset): boolean => asset.id === markerAssetId && asset.kind === 'symbol')
+			: undefined;
+	});
+	const originMarkerDimensions = createMemo((): { height: number; width: number } | undefined => {
+		const asset = originMarkerAsset();
+
+		return asset
+			? markerDimensions(asset, runtime()?.defaults.origin.markerSize2d ?? 28)
+			: undefined;
+	});
 	const selectedPhotos = createMemo((): RuntimeAsset[] => {
 		const photoIds: string[] = selected()?.photoAssetIds ?? [];
 
@@ -253,6 +279,7 @@ export default (props: WbAppProps): JSX.Element => {
 	const themeStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-spatial-accent': settings().accentColor,
 		'--wb-spatial-background': settings().backgroundColor,
+		'--wb-spatial-origin': runtime()?.defaults.origin.color ?? settings().accentColor,
 		'--wb-spatial-panel': settings().panelColor,
 		'--wb-spatial-primary': settings().primaryTextColor,
 		'--wb-spatial-route': runtime()?.defaults.route.color ?? settings().accentColor,
@@ -299,6 +326,7 @@ export default (props: WbAppProps): JSX.Element => {
 			assets: loaded.assets,
 			motionEnabled: (): boolean => settings().motionPreset !== 'off',
 			onSelectDestination: chooseDestination,
+			originDefaults: loaded.defaults.origin,
 			routeAnimationSpeed: (): number => loaded.defaults.route.animationSpeed,
 			routeColor: (): string => loaded.defaults.route.color || settings().accentColor,
 			routeWidth: (): number => loaded.defaults.route.lineWidth
@@ -552,12 +580,48 @@ export default (props: WbAppProps): JSX.Element => {
 									)}
 								</For>
 								<For each={activeFloor().elements.filter((element): element is RuntimeOrigin => element.type === 'origin')}>
-									{(origin: RuntimeOrigin): JSX.Element => (
-										<g class="wb-spatial-wayfinding-origin">
-											<circle cx={origin.point.x} cy={origin.point.y} r="24" />
-											<circle cx={origin.point.x} cy={origin.point.y} r="9" />
-										</g>
-									)}
+									{(origin: RuntimeOrigin): JSX.Element => {
+										const markerSize: number = runtime()?.defaults.origin.markerSize2d ?? 28;
+										const dimensions = originMarkerDimensions();
+
+										return (
+											<g
+												class="wb-spatial-wayfinding-origin"
+												data-origin-marker={originMarkerAsset() ? 'custom-image-replacement' : 'default'}
+											>
+												<circle
+													class="wb-spatial-wayfinding-origin-beacon"
+													cx={origin.point.x}
+													cy={origin.point.y}
+													r={Math.max(24, markerSize * 0.65)}
+												/>
+												<Show
+													when={originMarkerAsset()}
+													fallback={(
+														<circle
+															class="wb-spatial-wayfinding-origin-core"
+															cx={origin.point.x}
+															cy={origin.point.y}
+															r={Math.max(7, markerSize * 0.32)}
+														/>
+													)}
+												>
+													{(asset): JSX.Element => (
+														<image
+															class="wb-spatial-wayfinding-origin-artwork"
+															data-origin-marker-2d="custom-image-replacement"
+															href={asset().dataUrl}
+															x={origin.point.x - dimensions!.width / 2}
+															y={origin.point.y - dimensions!.height / 2}
+															width={dimensions!.width}
+															height={dimensions!.height}
+															preserveAspectRatio="xMidYMid meet"
+														/>
+													)}
+												</Show>
+											</g>
+										);
+									}}
 								</For>
 								<Show when={selectedTarget()}>
 									{(target: Accessor<WayfindingPoint>): JSX.Element => (

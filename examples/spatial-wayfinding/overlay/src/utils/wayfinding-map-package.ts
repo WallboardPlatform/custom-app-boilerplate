@@ -10,6 +10,8 @@ import type {
 import type { WayfindingGraphDocument } from '@utils/wayfinding';
 
 const FORMAT = 'wallboard-wayfinding-map';
+const DEFAULT_ORIGIN_MARKER_SIZE_2D = 28;
+const DEFAULT_ORIGIN_MARKER_SIZE_3D = 46;
 
 type PublishedAssetDescriptor = Omit<RuntimeAsset, 'bytes' | 'dataUrl'>;
 
@@ -89,6 +91,29 @@ const inlineAssets = (svg: string, assets: RuntimeAsset[]): string => {
 	return result;
 };
 
+const normalizeProjectDefaults = (
+	defaults: RuntimeProjectDefaults,
+	assets: RuntimeAsset[]
+): RuntimeProjectDefaults => {
+	const markerAssetId: string | undefined = defaults.origin.markerAssetId;
+
+	if (
+		markerAssetId
+		&& !assets.some((asset): boolean => asset.id === markerAssetId && asset.kind === 'symbol')
+	) {
+		throw new Error(`The published You are here marker '${markerAssetId}' is missing or is not a symbol asset.`);
+	}
+
+	return {
+		...defaults,
+		origin: {
+			...defaults.origin,
+			markerSize2d: Math.max(20, Math.min(96, defaults.origin.markerSize2d ?? DEFAULT_ORIGIN_MARKER_SIZE_2D)),
+			markerSize3d: Math.max(28, Math.min(120, defaults.origin.markerSize3d ?? DEFAULT_ORIGIN_MARKER_SIZE_3D))
+		}
+	};
+};
+
 export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntimeBundle => {
 	const entries: Record<string, Uint8Array> = unzipSync(archive);
 	const manifest = parseJson<PublishedManifest>(entries, 'manifest.json');
@@ -128,7 +153,7 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 		assets,
 		categories: map.categories,
 		defaultLanguage: map.defaultLanguage,
-		defaults: map.defaults,
+		defaults: normalizeProjectDefaults(map.defaults, assets),
 		destinations: { Destinations: { rows: destinationDocument.Destinations?.rows ?? [] } },
 		format: 'wallboard-wayfinding-runtime',
 		formatVersion: 1,

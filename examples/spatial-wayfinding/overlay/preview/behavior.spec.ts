@@ -130,6 +130,22 @@ test('loads the published map package and renders a nonblank WebGL scene', async
 	expect(dataUrlLength).toBeGreaterThan(8_000);
 });
 
+test('replaces the complete 2D and 3D origin artwork with the published custom marker', async ({ page }): Promise<void> => {
+	await openApp(page);
+	const root = page.locator('[data-preview-id="spatial-wayfinding-root"]');
+	const canvas = root.locator('canvas');
+	await expect(canvas).toHaveAttribute('data-origin-marker-3d', 'custom-image-replacement');
+	await expect(canvas).toHaveAttribute('data-origin-marker-size3d', '84');
+	await expect(canvas).toHaveAttribute('data-origin-marker-texture', 'ready');
+	await page.getByRole('button', { name: '2D', exact: true }).click();
+	const marker = page.locator('.wb-spatial-wayfinding-origin');
+	await expect(marker).toHaveAttribute('data-origin-marker', 'custom-image-replacement');
+	await expect(marker.locator('.wb-spatial-wayfinding-origin-artwork')).toHaveAttribute('width', '64');
+	await expect(marker.locator('.wb-spatial-wayfinding-origin-artwork')).toHaveAttribute('height', '32');
+	await expect(marker.locator('.wb-spatial-wayfinding-origin-core')).toHaveCount(0);
+	await expect(marker.locator('.wb-spatial-wayfinding-origin-beacon')).toHaveCount(1);
+});
+
 test('shows destination media, metadata, and a route in both map views', async ({ page }): Promise<void> => {
 	await openApp(page);
 	const root = page.locator('[data-preview-id="spatial-wayfinding-root"]');

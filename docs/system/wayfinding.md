@@ -145,6 +145,11 @@ The 3D switch is shown only when the active project passes geometry, camera, con
 - Symbols are semantic and may adapt to theme.
 - Logos preserve brand identity.
 - Photos belong to destination details unless explicitly placed as map media.
+- A custom You are here artwork uses an asset with `kind: "marker"` and is referenced by `defaults.origin.markerAssetId`.
+- The marker image replaces the complete default marker artwork in both 2D and 3D; consumers must not composite the old pin or center dot behind it.
+- `defaults.origin.markerSize2d` (20-96 map units) and `markerSize3d` (28-120 map units) control independent maximum sides while preserving the image aspect ratio.
+- Published packages expose the referenced marker as a `symbol` runtime asset. In 3D it remains upright and camera-facing; the separate ground/pulse beacon may remain visible.
+- Packages without a marker reference retain the default origin marker. Consumers use 28 and 46 as the legacy-compatible 2D and 3D size fallbacks.
 - Map media uses center-based placement, scale, and rotation.
 - File inputs are hidden behind accessible upload controls with validation, preview, metadata, replace, and remove actions.
 
