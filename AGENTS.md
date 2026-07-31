@@ -23,7 +23,9 @@ Build production Wallboard widgets, not demo pages. Start with:
 
 `README.md` is the setup and command reference. Do not preload unrelated system docs.
 
-For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and use the repository's Wayfinding Studio workflow. Keep the v1 artifacts distinct: author and preserve the `.wbwayfinding` source, publish a `.wbmap` from it, package that `.wbmap` in the custom app, then return the editable project, published map, and accepted app delivery. Never hand-edit `.wbmap` or build from loose export diagnostics. Use `examples/spatial-wayfinding` (Northline) as the proven package/runtime mechanics reference, not as a mandatory visual template.
+For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and author it in [Wayfinding Studio](https://wayfinding.wallboard.info). Studio authoring and publishing are operated outside this repository; do not recreate or embed editor code here. Keep the v1 artifacts distinct: preserve the `.wbwayfinding` source, publish a `.wbmap`, package that `.wbmap` in the custom app, then return the editable project, published map, and accepted app delivery. Never hand-edit `.wbmap` or build from loose export diagnostics. Use `examples/spatial-wayfinding` (Northline) as the proven package/runtime mechanics reference, not as a mandatory visual template.
+
+This public repository is the complete Wayfinding interoperability contract for custom-app authors. Keep `schemas/wayfinding-*.schema.json`, the shared runtime utilities, package loader, TypeScript interfaces, documentation, and reference example mutually consistent. A Studio format or package change is not releasable until its public contract is updated here; building a Wayfinding widget must never require access to a separate codebase.
 
 ## Non-Negotiable
 
