@@ -1,8 +1,8 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "72b73ca13f023adafea382d8cdae82632f29f67ae4071bd7c10c6b87e993afe8",
-	"reviewedAt": "2026-07-27T16:50:51.824Z",
-	"reviewer": "Claude visual QA",
+	"sourceHash": "11d3431355b943d24f210435d50c021caa2f8fdc66ee78e98e0e06831d12cfbc",
+	"reviewedAt": "2026-07-31T11:45:04.302Z",
+	"reviewer": "Codex visual QA",
 	"criteria": [
 		{
 			"id": "promptFidelity",
