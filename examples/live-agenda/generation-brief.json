@@ -10,88 +10,266 @@
 		"Cancelled and malformed events should be ignored without preventing valid events from rendering.",
 		"Bundled calendar names, event details, timestamps, and identifiers are synthetic and preserve only representative provider shapes."
 	],
-	"app": { "mode": "new", "name": "Live Agenda", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Live Agenda",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "Venue agendas are placed in full-screen, split, portrait, and compact signage zones."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen venue agenda.", "minimumContentCoverage": { "width": 90, "height": 75 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low programme zone.", "minimumContentCoverage": { "width": 90, "height": 82 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait lobby display.", "minimumContentCoverage": { "width": 85, "height": 85 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact agenda tile.", "minimumContentCoverage": { "width": 85, "height": 85 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen venue agenda.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 75
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide-low programme zone.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 82
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait lobby display.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact agenda tile.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "calendarData", "source": "built-in", "contract": "CALENDAR" }
+			{
+				"property": "calendarData",
+				"source": "built-in",
+				"contract": "CALENDAR"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "venueName", "purpose": "Venue or room context." },
-		{ "property": "boardTitle", "purpose": "Primary agenda title." },
-		{ "property": "upcomingTitle", "purpose": "Upcoming-event section title." },
-		{ "property": "emptyStateText", "purpose": "Message shown when no valid events remain." },
-		{ "property": "maxUpcoming", "purpose": "Maximum number of upcoming events rendered." },
-		{ "property": "timeFormat", "purpose": "12-hour or 24-hour event times." },
-		{ "property": "showClock", "purpose": "Controls the live header clock.", "effect": "clock-visibility" },
-		{ "property": "backgroundColor", "purpose": "Board background color." },
-		{ "property": "panelColor", "purpose": "Featured-event surface color." },
-		{ "property": "primaryTextColor", "purpose": "Primary text color." },
-		{ "property": "secondaryTextColor", "purpose": "Secondary text color." },
-		{ "property": "accentColor", "purpose": "Agenda hierarchy and timeline color.", "effect": "accent-color" },
-		{ "property": "liveColor", "purpose": "Active-event status color." }
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "venueName",
+			"purpose": "Venue or room context."
+		},
+		{
+			"property": "boardTitle",
+			"purpose": "Primary agenda title."
+		},
+		{
+			"property": "upcomingTitle",
+			"purpose": "Upcoming-event section title."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when no valid events remain."
+		},
+		{
+			"property": "maxUpcoming",
+			"purpose": "Maximum number of upcoming events rendered."
+		},
+		{
+			"property": "timeFormat",
+			"purpose": "12-hour or 24-hour event times."
+		},
+		{
+			"property": "showClock",
+			"purpose": "Controls the live header clock.",
+			"effect": "clock-visibility"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Board background color."
+		},
+		{
+			"property": "panelColor",
+			"purpose": "Featured-event surface color."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Primary text color."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Secondary text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Agenda hierarchy and timeline color.",
+			"effect": "accent-color"
+		},
+		{
+			"property": "liveColor",
+			"purpose": "Active-event status color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "board-title",
-			"source": { "type": "setting", "properties": ["boardTitle"] },
-			"selectors": [".agenda-heading h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"boardTitle"
+				]
+			},
+			"selectors": [
+				".agenda-heading h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
 			"rationale": "The configurable agenda title must remain complete whenever possible without colliding with the date and clock.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "upcoming-heading",
-			"source": { "type": "setting", "properties": ["upcomingTitle"] },
-			"selectors": [".upcoming-header h3"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"upcomingTitle"
+				]
+			},
+			"selectors": [
+				".upcoming-header h3"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 14, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 14,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize before the event count.",
 			"rationale": "The section heading shares a bounded row with a live count and must adapt without moving that count.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "featured-event-title",
-			"source": { "type": "datasource", "properties": ["calendarData"] },
-			"selectors": [".featured-title"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"calendarData"
+				]
+			},
+			"selectors": [
+				".featured-title"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Clamp after two lines while preserving time, location, and active-event state.",
 			"rationale": "The featured event can carry a two-line editorial title, but the full agenda must remain visible in the assigned zone.",
 			"evidenceScenario": "long-labels"
 		}
 	],
 	"states": [
-		{ "scenario": "light-theme", "expectation": "The coordinated light preset keeps current and upcoming agenda items clearly differentiated." },
-		{ "scenario": "microsoft-calendar", "expectation": "Nested Microsoft-style timestamps normalize into a chronological Full HD agenda whose title and event descenders remain intact." },
-		{ "scenario": "icalendar", "expectation": "iCalendar summary and flat timestamp fields normalize into the same agenda model." },
-		{ "scenario": "empty", "expectation": "An explicit empty state replaces the agenda body." },
-		{ "scenario": "long-labels", "expectation": "Long titles, descriptions, venues, and locations remain contained." },
-		{ "scenario": "all-day", "expectation": "All-day events use an explicit all-day label instead of misleading clock times." },
-		{ "scenario": "live-datasource-update", "expectation": "Calendar updates replace visible event data without rebuilding the app." }
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated light preset keeps current and upcoming agenda items clearly differentiated."
+		},
+		{
+			"scenario": "microsoft-calendar",
+			"expectation": "Nested Microsoft-style timestamps normalize into a chronological Full HD agenda whose title and event descenders remain intact."
+		},
+		{
+			"scenario": "icalendar",
+			"expectation": "iCalendar summary and flat timestamp fields normalize into the same agenda model."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty state replaces the agenda body."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long titles, descriptions, venues, and locations remain contained."
+		},
+		{
+			"scenario": "all-day",
+			"expectation": "All-day events use an explicit all-day label instead of misleading clock times."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "Calendar updates replace visible event data without rebuilding the app."
+		}
 	],
 	"behaviors": [
-		{ "id": "provider-normalization", "expectation": "Google or Microsoft and iCalendar responses produce the same stable agenda hierarchy.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "active-event-progress", "expectation": "An event spanning the current time is marked live and reports bounded progress.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update", "expectation": "A datasource refresh updates the visible programme in place.", "evidence": { "scenario": "live-datasource-update" } }
+		{
+			"id": "provider-normalization",
+			"expectation": "Google or Microsoft and iCalendar responses produce the same stable agenda hierarchy.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "active-event-progress",
+			"expectation": "An event spanning the current time is marked live and reports bounded progress.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "live-update",
+			"expectation": "A datasource refresh updates the visible programme in place.",
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "agent-authored",
@@ -101,7 +279,9 @@
 			"The active or next event occupies the main reading field.",
 			"Upcoming events use a continuous timeline rather than repeated cards."
 		],
-		"avoid": ["A generic page counter in the top-right corner."]
+		"avoid": [
+			"A generic page counter in the top-right corner."
+		]
 	},
 	"visualReview": {
 		"intent": "A calm, editorial venue agenda with a strong live-event focal point and a compact chronological timeline.",

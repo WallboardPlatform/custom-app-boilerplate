@@ -9,102 +9,312 @@
 		"Menu sections contain different numbers of items and must paginate without leaving broken columns.",
 		"Temporarily unavailable dishes remain in the datasource and are hidden through an availability field."
 	],
-	"app": { "mode": "new", "name": "Cordo Menu Board", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Cordo Menu Board",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "The photographed menu identity must survive full-screen, wide-low, portrait, and compact restaurant signage placements."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen branded dinner menu.", "minimumContentCoverage": { "width": 85, "height": 85 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low menu zone with reduced secondary copy.", "minimumContentCoverage": { "width": 90, "height": 85 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait menu display.", "minimumContentCoverage": { "width": 85, "height": 85 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact menu composition.", "minimumContentCoverage": { "width": 85, "height": 85 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen branded dinner menu.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide-low menu zone with reduced secondary copy.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 85
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait menu display.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact menu composition.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "menuData", "source": "generated", "contract": "TABLE" }
+			{
+				"property": "menuData",
+				"source": "generated",
+				"contract": "TABLE"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "backgroundColor", "purpose": "Custom main menu-board background color." },
-		{ "property": "headerBackgroundColor", "purpose": "Custom masthead background color." },
-		{ "property": "headerTextColor", "purpose": "Custom masthead text color." },
-		{ "property": "storyBackgroundColor", "purpose": "Custom editorial story-panel background color." },
-		{ "property": "storyTextColor", "purpose": "Custom editorial story-panel text color." },
-		{ "property": "primaryTextColor", "purpose": "Custom primary menu text color." },
-		{ "property": "secondaryTextColor", "purpose": "Custom supporting menu text color." },
-		{ "property": "accentColor", "purpose": "Custom primary accent color." },
-		{ "property": "accentTextColor", "purpose": "Custom accent color for labels on light surfaces." },
-		{ "property": "lineColor", "purpose": "Custom divider and leader-line color." },
-		{ "property": "featuredColor", "purpose": "Custom featured-item and price color." },
-		{ "property": "restaurantLabel", "purpose": "Small venue category label." },
-		{ "property": "restaurantName", "purpose": "Primary restaurant name." },
-		{ "property": "editionTitle", "purpose": "Menu edition title." },
-		{ "property": "editionSubtitle", "purpose": "Menu edition supporting line." },
-		{ "property": "storyEyebrow", "purpose": "Editorial story label." },
-		{ "property": "storyTitle", "purpose": "Editorial story headline." },
-		{ "property": "storyDescription", "purpose": "Editorial story description." },
-		{ "property": "courseLabel", "purpose": "Course offer label." },
-		{ "property": "courseName", "purpose": "Course offer name." },
-		{ "property": "coursePrice", "purpose": "Course offer price." },
-		{ "property": "closingText", "purpose": "Service-hours note." },
-		{ "property": "allergenText", "purpose": "Allergen notice." },
-		{ "property": "emptyStateText", "purpose": "Message when no menu rows are available." },
-		{ "property": "pageDurationSeconds", "purpose": "Duration for rotating menu pages." },
-		{ "property": "motionPreset", "purpose": "Selects Off, Subtle, or Expressive page transitions.", "effect": "motion-preset" }
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Custom main menu-board background color."
+		},
+		{
+			"property": "headerBackgroundColor",
+			"purpose": "Custom masthead background color."
+		},
+		{
+			"property": "headerTextColor",
+			"purpose": "Custom masthead text color."
+		},
+		{
+			"property": "storyBackgroundColor",
+			"purpose": "Custom editorial story-panel background color."
+		},
+		{
+			"property": "storyTextColor",
+			"purpose": "Custom editorial story-panel text color."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Custom primary menu text color."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Custom supporting menu text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Custom primary accent color."
+		},
+		{
+			"property": "accentTextColor",
+			"purpose": "Custom accent color for labels on light surfaces."
+		},
+		{
+			"property": "lineColor",
+			"purpose": "Custom divider and leader-line color."
+		},
+		{
+			"property": "featuredColor",
+			"purpose": "Custom featured-item and price color."
+		},
+		{
+			"property": "restaurantLabel",
+			"purpose": "Small venue category label."
+		},
+		{
+			"property": "restaurantName",
+			"purpose": "Primary restaurant name."
+		},
+		{
+			"property": "editionTitle",
+			"purpose": "Menu edition title."
+		},
+		{
+			"property": "editionSubtitle",
+			"purpose": "Menu edition supporting line."
+		},
+		{
+			"property": "storyEyebrow",
+			"purpose": "Editorial story label."
+		},
+		{
+			"property": "storyTitle",
+			"purpose": "Editorial story headline."
+		},
+		{
+			"property": "storyDescription",
+			"purpose": "Editorial story description."
+		},
+		{
+			"property": "courseLabel",
+			"purpose": "Course offer label."
+		},
+		{
+			"property": "courseName",
+			"purpose": "Course offer name."
+		},
+		{
+			"property": "coursePrice",
+			"purpose": "Course offer price."
+		},
+		{
+			"property": "closingText",
+			"purpose": "Service-hours note."
+		},
+		{
+			"property": "allergenText",
+			"purpose": "Allergen notice."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message when no menu rows are available."
+		},
+		{
+			"property": "pageDurationSeconds",
+			"purpose": "Duration for rotating menu pages."
+		},
+		{
+			"property": "motionPreset",
+			"purpose": "Selects Off, Subtle, or Expressive page transitions.",
+			"effect": "motion-preset"
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "restaurant-name",
-			"source": { "type": "setting", "properties": ["restaurantName"] },
-			"selectors": [".wb-restaurant-menu-header h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"restaurantName"
+				]
+			},
+			"selectors": [
+				".wb-restaurant-menu-header h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
 			"rationale": "The restaurant name is the primary brand signal and should adapt before the masthead composition is compressed.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "dish-name",
-			"source": { "type": "datasource", "properties": ["menuData"] },
-			"selectors": [".wb-restaurant-menu-item__line > strong"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"menuData"
+				]
+			},
+			"selectors": [
+				".wb-restaurant-menu-item__line > strong"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the dish name after reserving the price and leader line; keep the full value in the editable datasource.",
 			"rationale": "Single-line dish and price registration preserves menu scan rhythm across uneven sections and rotating pages.",
 			"evidenceScenario": "long-labels"
 		}
 	],
 	"states": [
-		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves the reference-led editorial menu identity." },
-		{ "scenario": "static-unbound", "expectation": "Representative menu content remains visible before binding." },
-		{ "scenario": "empty", "expectation": "An explicit empty menu message replaces missing dishes." },
-		{ "scenario": "bound-null", "expectation": "A null bound datasource remains stable and does not substitute sample rows." },
-		{ "scenario": "long-labels", "expectation": "Long section, dish, description, and badge text remains contained." },
-		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same menu model." },
-		{ "scenario": "last-page", "expectation": "Uneven section counts and the final partial page remain balanced." },
-		{ "scenario": "quick-edit-update", "expectation": "Edited dish names and prices update without rebuilding the app." },
-		{ "scenario": "motion-off", "expectation": "Menu pagination remains functional with page transition animation disabled." }
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated light preset preserves the reference-led editorial menu identity."
+		},
+		{
+			"scenario": "static-unbound",
+			"expectation": "Representative menu content remains visible before binding."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty menu message replaces missing dishes."
+		},
+		{
+			"scenario": "bound-null",
+			"expectation": "A null bound datasource remains stable and does not substitute sample rows."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long section, dish, description, and badge text remains contained."
+		},
+		{
+			"scenario": "row-array",
+			"expectation": "Processed row-array output normalizes to the same menu model."
+		},
+		{
+			"scenario": "last-page",
+			"expectation": "Uneven section counts and the final partial page remain balanced."
+		},
+		{
+			"scenario": "quick-edit-update",
+			"expectation": "Edited dish names and prices update without rebuilding the app."
+		},
+		{
+			"scenario": "motion-off",
+			"expectation": "Menu pagination remains functional with page transition animation disabled."
+		}
 	],
 	"behaviors": [
-		{ "id": "uneven-section-pagination", "expectation": "Different item counts per section rotate on schedule into balanced, non-overlapping menu pages with an optional bounded transition.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "quick-edit-update", "expectation": "Datasource edits update placed menu content immediately.", "evidence": { "scenario": "quick-edit-update" } }
+		{
+			"id": "uneven-section-pagination",
+			"expectation": "Different item counts per section rotate on schedule into balanced, non-overlapping menu pages with an optional bounded transition.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "quick-edit-update",
+			"expectation": "Datasource edits update placed menu content immediately.",
+			"evidence": {
+				"scenario": "quick-edit-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "reference-led",
 		"summary": "Translate the supplied Cordo menu photograph into a digital editorial system while preserving its recognizable restaurant character.",
-		"references": ["User-provided Cordo restaurant menu photograph."],
+		"references": [
+			"User-provided Cordo restaurant menu photograph."
+		],
 		"signatureChoices": [
 			"Course sections keep the source menu's editorial rhythm rather than becoming dashboard cards.",
 			"Restaurant name, edition copy, and menu typography establish the venue before operational metadata."
 		],
-		"avoid": ["Replacing the photographed identity with the boilerplate example palette."]
+		"avoid": [
+			"Replacing the photographed identity with the boilerplate example palette."
+		]
 	},
 	"visualReview": {
 		"intent": "A polished editorial restaurant menu that feels branded, legible, and intentionally composed rather than template-like.",

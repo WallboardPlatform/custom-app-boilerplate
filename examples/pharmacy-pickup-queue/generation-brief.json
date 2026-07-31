@@ -27,127 +27,284 @@
 			"height": 270,
 			"role": "primary",
 			"purpose": "Fixed pharmacy pickup queue display.",
-			"minimumContentCoverage": { "width": 90, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 88
+			}
 		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "queueData", "source": "generated", "contract": "TABLE" }
+			{
+				"property": "queueData",
+				"source": "generated",
+				"contract": "TABLE"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "pharmacyName", "purpose": "Names the pharmacy in the compact header." },
-		{ "property": "emptyStateText", "purpose": "Explains that no pickup tickets are available." },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom semantic palette.", "effect": "theme-preset" },
-		{ "property": "backgroundColor", "purpose": "Custom theme canvas background." },
-		{ "property": "heroBackgroundColor", "purpose": "Custom theme currently-called hero background." },
-		{ "property": "surfaceColor", "purpose": "Custom theme next-queue surface." },
-		{ "property": "primaryTextColor", "purpose": "Custom theme primary text." },
-		{ "property": "secondaryTextColor", "purpose": "Custom theme supporting text." },
-		{ "property": "accentColor", "purpose": "Custom theme queue-order and waiting accent." },
-		{ "property": "alertColor", "purpose": "Custom theme hold and unknown-state accent." }
+		{
+			"property": "pharmacyName",
+			"purpose": "Names the pharmacy in the compact header."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Explains that no pickup tickets are available."
+		},
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Light, Dark, or Custom semantic palette.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Custom theme canvas background."
+		},
+		{
+			"property": "heroBackgroundColor",
+			"purpose": "Custom theme currently-called hero background."
+		},
+		{
+			"property": "surfaceColor",
+			"purpose": "Custom theme next-queue surface."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Custom theme primary text."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Custom theme supporting text."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Custom theme queue-order and waiting accent."
+		},
+		{
+			"property": "alertColor",
+			"purpose": "Custom theme hold and unknown-state accent."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "pharmacy-name",
-			"source": { "type": "setting", "properties": ["pharmacyName"] },
-			"selectors": [".pharmacy-brand__name"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"pharmacyName"
+				]
+			},
+			"selectors": [
+				".pharmacy-brand__name"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Keep the Greenline cross mark and ellipsize only the end of the configured name.",
 			"rationale": "The pharmacy identity is supporting wayfinding and must not displace the queue content.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "hero-ticket",
-			"source": { "type": "datasource", "properties": ["queueData"] },
-			"selectors": [".queue-hero__ticket"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"queueData"
+				]
+			},
+			"selectors": [
+				".queue-hero__ticket"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 30, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 30,
+				"maximumLines": 1
+			},
 			"fallback": "Hide the optional note and next queue before fitting to 30px; at that floor preserve the readable ticket prefix and ellipsize the tail.",
 			"rationale": "The active ticket is the board's primary message and must remain dominant and complete whenever physically possible.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "hero-counter",
-			"source": { "type": "datasource", "properties": ["queueData"] },
-			"selectors": [".queue-hero__counter-value"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"queueData"
+				]
+			},
+			"selectors": [
+				".queue-hero__counter-value"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 16, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 16,
+				"maximumLines": 1
+			},
 			"fallback": "Keep the counter direction cue and ellipsize the counter tail at the readable floor.",
 			"rationale": "Customers must be able to pair the active ticket with its destination counter.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "hero-note",
-			"source": { "type": "datasource", "properties": ["queueData"] },
-			"selectors": [".queue-hero__note"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"queueData"
+				]
+			},
+			"selectors": [
+				".queue-hero__note"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Remove the optional note when hero labels need the space, otherwise ellipsize its tail.",
 			"rationale": "The note is useful context but is subordinate to ticket and counter readability.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "next-ticket",
-			"source": { "type": "datasource", "properties": ["queueData"] },
-			"selectors": [".queue-row__ticket"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"queueData"
+				]
+			},
+			"selectors": [
+				".queue-row__ticket"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Keep queue position and the start of the ticket visible while ellipsizing the tail.",
 			"rationale": "Secondary tickets must stay on one scan line in the fixed compact list.",
 			"evidenceScenario": "long-next-labels"
 		},
 		{
 			"id": "next-counter",
-			"source": { "type": "datasource", "properties": ["queueData"] },
-			"selectors": [".queue-row__counter"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"queueData"
+				]
+			},
+			"selectors": [
+				".queue-row__counter"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the counter tail before reducing the ticket label.",
 			"rationale": "Counter context is useful for the next queue but remains secondary to ticket identity.",
 			"evidenceScenario": "long-next-labels"
 		},
 		{
 			"id": "empty-message",
-			"source": { "type": "setting", "properties": ["emptyStateText"] },
-			"selectors": [".queue-empty__message"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"emptyStateText"
+				]
+			},
+			"selectors": [
+				".queue-empty__message"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Limit the configured message to two complete centered lines.",
 			"rationale": "The empty state should remain calm and readable without changing the board dimensions.",
 			"evidenceScenario": "empty"
 		}
 	],
 	"states": [
-		{ "scenario": "dark-theme", "expectation": "The coordinated dark palette preserves contrast and queue hierarchy." },
-		{ "scenario": "static-unbound", "expectation": "Synthetic representative queue data appears before a datasource is selected." },
-		{ "scenario": "empty", "expectation": "A calm full-body empty state replaces the hero and next list." },
-		{ "scenario": "one-ticket", "expectation": "A lone called ticket expands into the secondary region instead of leaving an empty list." },
-		{ "scenario": "long-labels", "expectation": "Long ticket, counter, pharmacy, and note text stays contained while the hero remains dominant." },
-		{ "scenario": "long-next-labels", "expectation": "Long upcoming ticket and counter labels ellipsize cleanly without disturbing row registration." },
-		{ "scenario": "many-waiting", "expectation": "Only three upcoming tickets render and the remaining count is stated without growing the DOM." },
-		{ "scenario": "unknown-state", "expectation": "An unrecognized state remains visible with an explicit question mark and CHECK STATE text cue." },
-		{ "scenario": "invalid-rows", "expectation": "Rows without ticket identity are ignored while valid rows remain stable." },
-		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same queue model." },
-		{ "scenario": "live-datasource-update", "expectation": "A live table edit replaces the active hero ticket without rebuilding the app." }
+		{
+			"scenario": "dark-theme",
+			"expectation": "The coordinated dark palette preserves contrast and queue hierarchy."
+		},
+		{
+			"scenario": "static-unbound",
+			"expectation": "Synthetic representative queue data appears before a datasource is selected."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "A calm full-body empty state replaces the hero and next list."
+		},
+		{
+			"scenario": "one-ticket",
+			"expectation": "A lone called ticket expands into the secondary region instead of leaving an empty list."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long ticket, counter, pharmacy, and note text stays contained while the hero remains dominant."
+		},
+		{
+			"scenario": "long-next-labels",
+			"expectation": "Long upcoming ticket and counter labels ellipsize cleanly without disturbing row registration."
+		},
+		{
+			"scenario": "many-waiting",
+			"expectation": "Only three upcoming tickets render and the remaining count is stated without growing the DOM."
+		},
+		{
+			"scenario": "unknown-state",
+			"expectation": "An unrecognized state remains visible with an explicit question mark and CHECK STATE text cue."
+		},
+		{
+			"scenario": "invalid-rows",
+			"expectation": "Rows without ticket identity are ignored while valid rows remain stable."
+		},
+		{
+			"scenario": "row-array",
+			"expectation": "Processed row-array output normalizes to the same queue model."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "A live table edit replaces the active hero ticket without rebuilding the app."
+		}
 	],
 	"behaviors": [
 		{
 			"id": "queue-state-selection",
 			"expectation": "The first called row becomes the hero, completed rows are omitted, and waiting, hold, and unknown rows retain source order.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "live-update",
 			"expectation": "A datasource push updates the active ticket and counter in place.",
-			"evidence": { "scenario": "live-datasource-update" }
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "instruction-led",

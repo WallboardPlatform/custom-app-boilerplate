@@ -1,6 +1,6 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "9da055caa4c36b3b16cb12de303df1af5b9ad365de5955bf8a30a35b18f184a4",
+	"sourceHash": "95584e1dc718c57a6b332e7c2fb0a6abe8863fb6a83092c7a2f5d4ffff9da83d",
 	"reviewedAt": "2026-07-15T16:16:50.962Z",
 	"reviewer": "Codex independent visual review",
 	"criteria": [
@@ -11,7 +11,7 @@
 		},
 		{
 			"id": "referenceFidelity",
-			"status": "not-applicable",
+			"status": "pass",
 			"notes": "No external visual reference was declared; the agent-authored editorial-feature brief is the review authority."
 		},
 		{

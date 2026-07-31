@@ -9,70 +9,237 @@
 		"The customer selects an existing RSS or Wallboard-integrated feed rather than maintaining rows manually.",
 		"Feed media is optional and unsafe or broken URLs must fall back without breaking the story layout."
 	],
-	"app": { "mode": "new", "name": "Newsroom Spotlight", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Newsroom Spotlight",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "Feed stories must support full-screen, split-screen, portrait, and compact editorial placements."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen editorial feature.", "minimumContentCoverage": { "width": 90, "height": 86 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide-low news zone.", "minimumContentCoverage": { "width": 92, "height": 84 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait newsroom display.", "minimumContentCoverage": { "width": 88, "height": 88 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editorial tile.", "minimumContentCoverage": { "width": 88, "height": 85 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen editorial feature.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 86
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide-low news zone.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 84
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait newsroom display.",
+			"minimumContentCoverage": {
+				"width": 88,
+				"height": 88
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact editorial tile.",
+			"minimumContentCoverage": {
+				"width": 88,
+				"height": 85
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "feedData", "source": "built-in", "contract": "FEED" }
+			{
+				"property": "feedData",
+				"source": "built-in",
+				"contract": "FEED"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "themePreset", "purpose": "Selects the coordinated Light, Dark, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "sourceLabel", "purpose": "Editorial source or series label." },
-		{ "property": "emptyStateText", "purpose": "Message shown when no valid stories exist." },
-		{ "property": "rotationSeconds", "purpose": "Duration before the next story is featured." },
-		{ "property": "maxStories", "purpose": "Maximum number of normalized stories retained for rotation." },
-		{ "property": "showDescription", "purpose": "Controls featured-story supporting copy.", "effect": "description-visibility" },
-		{ "property": "showTimestamp", "purpose": "Controls the featured publication date." },
-		{ "property": "imagePosition", "purpose": "Places featured media left or right.", "effect": "image-position" },
-		{ "property": "backgroundColor", "purpose": "Outer editorial canvas color." },
-		{ "property": "panelColor", "purpose": "Featured-story panel color." },
-		{ "property": "primaryTextColor", "purpose": "Featured primary text color." },
-		{ "property": "secondaryTextColor", "purpose": "Featured supporting text color." },
-		{ "property": "accentColor", "purpose": "Series, category, and progress accent color." }
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Light, Dark, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "sourceLabel",
+			"purpose": "Editorial source or series label."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when no valid stories exist."
+		},
+		{
+			"property": "rotationSeconds",
+			"purpose": "Duration before the next story is featured."
+		},
+		{
+			"property": "maxStories",
+			"purpose": "Maximum number of normalized stories retained for rotation."
+		},
+		{
+			"property": "showDescription",
+			"purpose": "Controls featured-story supporting copy.",
+			"effect": "description-visibility"
+		},
+		{
+			"property": "showTimestamp",
+			"purpose": "Controls the featured publication date."
+		},
+		{
+			"property": "imagePosition",
+			"purpose": "Places featured media left or right.",
+			"effect": "image-position"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Outer editorial canvas color."
+		},
+		{
+			"property": "panelColor",
+			"purpose": "Featured-story panel color."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Featured primary text color."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Featured supporting text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Series, category, and progress accent color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "story-title",
-			"source": { "type": "datasource", "properties": ["feedData"] },
-			"selectors": [".story-title"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"feedData"
+				]
+			},
+			"selectors": [
+				".story-title"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 3 },
+			"limits": {
+				"maximumLines": 3
+			},
 			"fallback": "Clamp after three lines and omit excess headline text only after preserving source, date, and story media.",
 			"rationale": "Editorial headlines need natural line breaks and more room than operational labels, but must not displace the story rail or frame.",
 			"evidenceScenario": "long-labels"
 		}
 	],
 	"states": [
-		{ "scenario": "dark-theme", "expectation": "The coordinated dark preset preserves editorial hierarchy and readable story contrast." },
-		{ "scenario": "wallboard-feed", "expectation": "Current Wallboard feed items normalize with media, categories, and epoch-second publication dates." },
-		{ "scenario": "rss-parser", "expectation": "Legacy feed.entries output normalizes enclosure media and HTML-derived snippets." },
-		{ "scenario": "rss-channel", "expectation": "RSS channel.item output normalizes into the same editorial story model." },
-		{ "scenario": "empty", "expectation": "An explicit empty state replaces missing feed content." },
-		{ "scenario": "broken-media", "expectation": "A failed story image is replaced by the designed media fallback." },
-		{ "scenario": "long-labels", "expectation": "Long source, category, headline, and description text remain contained." },
-		{ "scenario": "rotation", "expectation": "A multi-item feed advances to the next featured story on schedule." },
-		{ "scenario": "live-datasource-update", "expectation": "A feed refresh updates visible stories without rebuilding the app." }
+		{
+			"scenario": "dark-theme",
+			"expectation": "The coordinated dark preset preserves editorial hierarchy and readable story contrast."
+		},
+		{
+			"scenario": "wallboard-feed",
+			"expectation": "Current Wallboard feed items normalize with media, categories, and epoch-second publication dates."
+		},
+		{
+			"scenario": "rss-parser",
+			"expectation": "Legacy feed.entries output normalizes enclosure media and HTML-derived snippets."
+		},
+		{
+			"scenario": "rss-channel",
+			"expectation": "RSS channel.item output normalizes into the same editorial story model."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty state replaces missing feed content."
+		},
+		{
+			"scenario": "broken-media",
+			"expectation": "A failed story image is replaced by the designed media fallback."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long source, category, headline, and description text remain contained."
+		},
+		{
+			"scenario": "rotation",
+			"expectation": "A multi-item feed advances to the next featured story on schedule."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "A feed refresh updates visible stories without rebuilding the app."
+		}
 	],
 	"behaviors": [
-		{ "id": "feed-normalization", "expectation": "Current Wallboard and legacy RSS wrappers produce the same editorial hierarchy.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "timed-rotation", "expectation": "The next valid story becomes featured after the configured duration.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "media-fallback", "expectation": "Broken or absent feed media uses the designed fallback without a broken image.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update", "expectation": "Datasource changes update visible story content in place.", "evidence": { "scenario": "live-datasource-update" } }
+		{
+			"id": "feed-normalization",
+			"expectation": "Current Wallboard and legacy RSS wrappers produce the same editorial hierarchy.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "timed-rotation",
+			"expectation": "The next valid story becomes featured after the configured duration.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "media-fallback",
+			"expectation": "Broken or absent feed media uses the designed fallback without a broken image.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource changes update visible story content in place.",
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "agent-authored",
@@ -82,7 +249,9 @@
 			"One inspectable story image carries first-viewport weight.",
 			"The upcoming-story rail reads as editorial sequencing, not KPI pagination."
 		],
-		"avoid": ["Dark nested cards with equal visual weight."]
+		"avoid": [
+			"Dark nested cards with equal visual weight."
+		]
 	},
 	"visualReview": {
 		"intent": "A magazine-like story display with real media weight, disciplined typography, and a restrained upcoming-story rail.",
