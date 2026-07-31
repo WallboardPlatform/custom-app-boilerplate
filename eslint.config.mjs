@@ -19,10 +19,7 @@ export default tseslint.config(
 	{
 		files: [
 			'**/src/**/*.{ts,tsx}',
-			'scripts/**/*.mts',
-			'scripts/wayfinding/editor-core/**/*.ts',
-			'scripts/wayfinding/workbench/app/**/*.{ts,tsx}',
-			'scripts/wayfinding/workbench/*.ts'
+			'scripts/**/*.mts'
 		],
 
 		languageOptions: {
@@ -30,8 +27,7 @@ export default tseslint.config(
 				parser: '@typescript-eslint/parser',
 				project: [
 					'./tsconfig.json',
-					'./tsconfig.scripts.json',
-					'./scripts/wayfinding/workbench/tsconfig.json'
+					'./tsconfig.scripts.json'
 				],
 				tsconfigRootDir: process.cwd(),
 				ecmaVersion: 2020,
