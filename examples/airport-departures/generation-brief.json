@@ -9,78 +9,241 @@
 		"The customer maintains departures as table rows and expects live edits without rebuilding the app.",
 		"Rows missing core flight identity fields should be ignored instead of breaking the board."
 	],
-	"app": { "mode": "new", "name": "Airport Departures Board", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Airport Departures Board",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "The board is intended for full-screen, split-screen, portrait, and compact airport signage zones."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Full-screen departure board.", "minimumContentCoverage": { "width": 90, "height": 90 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Split-screen reader-board zone.", "minimumContentCoverage": { "width": 90, "height": 90 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Portrait information display.", "minimumContentCoverage": { "width": 85, "height": 90 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact editor or playlist zone.", "minimumContentCoverage": { "width": 85, "height": 90 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Full-screen departure board.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 90
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Split-screen reader-board zone.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 90
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Portrait information display.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 90
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact editor or playlist zone.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 90
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "departuresData", "source": "generated", "contract": "TABLE" }
+			{
+				"property": "departuresData",
+				"source": "generated",
+				"contract": "TABLE"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "airportCode", "purpose": "Short airport identifier." },
-		{ "property": "airportName", "purpose": "Airport name in the board header." },
-		{ "property": "boardTitle", "purpose": "Primary board title." },
-		{ "property": "terminalLabel", "purpose": "Terminal context." },
-		{ "property": "informationLabel", "purpose": "Supporting live-information label." },
-		{ "property": "emptyStateText", "purpose": "Message shown when no valid departures exist." },
-		{ "property": "pageDurationSeconds", "purpose": "Rotation duration for paginated departures." },
-		{ "property": "backgroundColor", "purpose": "Board background color." },
-		{ "property": "textColor", "purpose": "Primary text color." },
-		{ "property": "accentColor", "purpose": "Status and hierarchy accent color." }
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "airportCode",
+			"purpose": "Short airport identifier."
+		},
+		{
+			"property": "airportName",
+			"purpose": "Airport name in the board header."
+		},
+		{
+			"property": "boardTitle",
+			"purpose": "Primary board title."
+		},
+		{
+			"property": "terminalLabel",
+			"purpose": "Terminal context."
+		},
+		{
+			"property": "informationLabel",
+			"purpose": "Supporting live-information label."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when no valid departures exist."
+		},
+		{
+			"property": "pageDurationSeconds",
+			"purpose": "Rotation duration for paginated departures."
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Board background color."
+		},
+		{
+			"property": "textColor",
+			"purpose": "Primary text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Status and hierarchy accent color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "board-title",
-			"source": { "type": "setting", "properties": ["boardTitle"] },
-			"selectors": [".departures-header h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"boardTitle"
+				]
+			},
+			"selectors": [
+				".departures-header h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
 			"rationale": "The configurable board title is primary wayfinding text and should remain complete whenever the available width permits.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "departure-destination",
-			"source": { "type": "datasource", "properties": ["departuresData"] },
-			"selectors": [".departure-row .departure-destination strong"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"departuresData"
+				]
+			},
+			"selectors": [
+				".departure-row .departure-destination strong"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the destination after preserving the departure time, flight, gate, and status columns.",
 			"rationale": "Timetable row alignment and scan speed are more important than showing an unbounded destination on multiple lines.",
 			"evidenceScenario": "long-labels"
 		}
 	],
 	"states": [
-		{ "scenario": "light-theme", "expectation": "The coordinated light preset remains legible and preserves the departure-board hierarchy." },
-		{ "scenario": "static-unbound", "expectation": "Representative departures remain visible before a datasource is selected." },
-		{ "scenario": "empty", "expectation": "An explicit empty state replaces the table body." },
-		{ "scenario": "bound-null", "expectation": "A null bound value remains stable and communicates missing data." },
-		{ "scenario": "long-labels", "expectation": "Long destinations, airlines, and statuses remain contained in a wide-low zone." },
-		{ "scenario": "odd-count", "expectation": "A short odd row count fills the available body without top compression." },
-		{ "scenario": "invalid-rows", "expectation": "Malformed rows are skipped while valid departures still render." },
-		{ "scenario": "row-array", "expectation": "Processed row-array output normalizes to the same board model." },
-		{ "scenario": "maximum-content", "expectation": "A large source paginates without rendering an unbounded DOM." },
-		{ "scenario": "last-page", "expectation": "The final partial page remains balanced after rotation." },
-		{ "scenario": "live-datasource-update", "expectation": "A datasource edit updates the placed board without rebuilding." }
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated light preset remains legible and preserves the departure-board hierarchy."
+		},
+		{
+			"scenario": "static-unbound",
+			"expectation": "Representative departures remain visible before a datasource is selected."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty state replaces the table body."
+		},
+		{
+			"scenario": "bound-null",
+			"expectation": "A null bound value remains stable and communicates missing data."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long destinations, airlines, and statuses remain contained in a wide-low zone."
+		},
+		{
+			"scenario": "odd-count",
+			"expectation": "A short odd row count fills the available body without top compression."
+		},
+		{
+			"scenario": "invalid-rows",
+			"expectation": "Malformed rows are skipped while valid departures still render."
+		},
+		{
+			"scenario": "row-array",
+			"expectation": "Processed row-array output normalizes to the same board model."
+		},
+		{
+			"scenario": "maximum-content",
+			"expectation": "A large source paginates without rendering an unbounded DOM."
+		},
+		{
+			"scenario": "last-page",
+			"expectation": "The final partial page remains balanced after rotation."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "A datasource edit updates the placed board without rebuilding."
+		}
 	],
 	"behaviors": [
-		{ "id": "adaptive-pagination", "expectation": "Rows per page adapt to height, rotate on schedule, and fill the final page without overlap.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update", "expectation": "Datasource changes update visible flight status in place.", "evidence": { "scenario": "live-datasource-update" } }
+		{
+			"id": "adaptive-pagination",
+			"expectation": "Rows per page adapt to height, rotate on schedule, and fill the final page without overlap.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource changes update visible flight status in place.",
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "instruction-led",
@@ -90,7 +253,9 @@
 			"One continuous timetable with strong horizontal registration.",
 			"Status color is reserved for actionable departure changes."
 		],
-		"avoid": ["Independent cards for each flight row."]
+		"avoid": [
+			"Independent cards for each flight row."
+		]
 	},
 	"visualReview": {
 		"intent": "A dense, high-contrast transport board optimized for fast scanning rather than decorative presentation.",
