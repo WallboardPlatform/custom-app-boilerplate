@@ -1,4 +1,11 @@
 import type { WayfindingGraphDocument, WayfindingPoint } from '@utils/wayfinding';
+import type {
+	WayfindingAlignment,
+	WayfindingBuilding,
+	WayfindingConnector,
+	WayfindingLevelRole,
+	WayfindingPresentationSettings
+} from '@utils/wayfinding-contract';
 
 export interface RuntimeAsset {
 	bytes: Uint8Array;
@@ -22,15 +29,17 @@ export interface RuntimeDestination {
 	brandAssetIds?: string[];
 	category?: string;
 	description?: string;
-	entranceRefs?: Array<{ elementId: string; floorId: string }>;
+	entranceRefs?: Array<{ elementId: string; levelId: string }>;
+	/** v1 package compatibility; normalized loaders populate levelId. */
 	floor?: string;
 	geometryRefs?: Array<{
 		elementId: string;
-		floorId: string;
+		levelId: string;
 		representation: 'area' | 'point';
 	}>;
 	hours?: string;
 	id: string;
+	levelId?: string;
 	mapNumber?: string;
 	name: string;
 	phone?: string;
@@ -43,8 +52,9 @@ export interface RuntimeDestination {
 }
 
 export interface RuntimePolygon {
+	buildingId?: string;
 	destinationId?: string;
-	floorId?: string;
+	levelId?: string;
 	geometry: WayfindingPoint[];
 	id: string;
 	label?: string;
@@ -53,12 +63,12 @@ export interface RuntimePolygon {
 		fillColor?: string;
 		fillOpacity?: number;
 	};
-	type: 'location' | 'obstacle' | 'walkable';
+	type: 'building' | 'location' | 'obstacle' | 'walkable';
 }
 
 export interface RuntimeDoor {
 	angle: number;
-	floorId?: string;
+	levelId?: string;
 	id: string;
 	length: number;
 	locationId?: string;
@@ -69,7 +79,7 @@ export interface RuntimeDoor {
 export interface RuntimeLabel {
 	color?: string;
 	fontFamily?: 'monospace' | 'sans-serif' | 'serif';
-	floorId?: string;
+	levelId?: string;
 	fontSize?: number;
 	fontWeight?: 400 | 600 | 700;
 	id: string;
@@ -85,7 +95,7 @@ export interface RuntimeLabel {
 export interface RuntimeMedia {
 	assetId: string;
 	destinationId?: string;
-	floorId?: string;
+	levelId?: string;
 	height: number;
 	id: string;
 	point: WayfindingPoint;
@@ -95,7 +105,7 @@ export interface RuntimeMedia {
 
 export interface RuntimeOrigin {
 	facingDegrees: number;
-	floorId?: string;
+	levelId?: string;
 	id: string;
 	label: string;
 	point: WayfindingPoint;
@@ -106,7 +116,7 @@ export interface RuntimeOrigin {
 export interface RuntimePointOfInterest {
 	category?: string;
 	destinationId?: string;
-	floorId?: string;
+	levelId?: string;
 	id: string;
 	label?: string;
 	point: WayfindingPoint;
@@ -116,7 +126,7 @@ export interface RuntimePointOfInterest {
 export interface RuntimeTransition {
 	accessible: boolean;
 	connectionId: string;
-	floorId?: string;
+	levelId?: string;
 	id: string;
 	kind: 'elevator' | 'escalator' | 'ramp' | 'stairs';
 	label: string;
@@ -167,8 +177,10 @@ export interface RuntimeProjectDefaults {
 	};
 }
 
-export interface RuntimeFloor {
+export interface RuntimeLevel {
+	alignment?: WayfindingAlignment;
 	backgroundAssetId?: string;
+	buildingId?: string;
 	camera3d?: {
 		azimuthDegrees: number;
 		distance: number;
@@ -177,10 +189,13 @@ export interface RuntimeFloor {
 		targetY: number;
 	};
 	elements: RuntimeElement[];
+	elevationMeters?: number;
 	height: number;
 	id: string;
+	levelNumber?: number;
 	name: string;
 	order: number;
+	role: WayfindingLevelRole;
 	svg: string;
 	/** Map units per real-world metre, authored in the Studio project. */
 	unitsPerMeter?: number;
@@ -189,15 +204,19 @@ export interface RuntimeFloor {
 
 export interface WayfindingRuntimeBundle {
 	assets: RuntimeAsset[];
+	buildings: WayfindingBuilding[];
 	categories: string[];
 	defaultLanguage: string;
 	defaults: RuntimeProjectDefaults;
+	connectors: WayfindingConnector[];
 	destinations: { Destinations: { rows: RuntimeDestination[] } };
 	format: 'wallboard-wayfinding-runtime';
-	formatVersion: 1;
-	floors: RuntimeFloor[];
+	formatVersion: 2;
+	levels: RuntimeLevel[];
 	graph: WayfindingGraphDocument;
 	languages: Array<{ code: string; label: string }>;
+	presentation: WayfindingPresentationSettings;
+	siteLevelId?: string;
 	manifest: {
 		capabilities: {
 			routing: boolean;

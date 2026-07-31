@@ -57,4 +57,51 @@ describe('buildRouteGuidance', (): void => {
 		assert.equal(legs[0].instructions.at(-1)?.text, 'Take the elevator to First floor');
 		assert.deepEqual(legs[1].instructions.map((instruction) => instruction.kind), ['continue', 'arrive']);
 	});
+
+	it('names the building entrance and authored vertical connector', (): void => {
+		const legs = buildRouteGuidance(
+			{
+				edgeIds: ['campus-path', 'semantic-connector:library-main:1', 'lobby-path', 'semantic-connector:library-lift:1', 'archive-path'],
+				nodeIds: ['start', 'entrance-site', 'entrance-inside', 'lift-ground', 'lift-first', 'archive'],
+				path: [
+					{ levelId: 'site', x: 0, y: 0 },
+					{ levelId: 'site', x: 20, y: 0 },
+					{ levelId: 'ground', x: 20, y: 0 },
+					{ levelId: 'ground', x: 40, y: 0 },
+					{ levelId: 'first', x: 40, y: 0 },
+					{ levelId: 'first', x: 60, y: 0 }
+				]
+			},
+			[
+				{ id: 'site', name: 'Northline Campus', role: 'site' },
+				{ buildingId: 'library', id: 'ground', name: 'Ground floor', role: 'building-floor' },
+				{ buildingId: 'library', id: 'first', name: 'Level 1', role: 'building-floor' }
+			],
+			[
+				{ from: 'start', id: 'campus-path', kind: 'walk', to: 'entrance-site' },
+				{ from: 'entrance-site', id: 'semantic-connector:library-main:1', kind: 'walk', to: 'entrance-inside' },
+				{ from: 'entrance-inside', id: 'lobby-path', kind: 'walk', to: 'lift-ground' },
+				{ from: 'lift-ground', id: 'semantic-connector:library-lift:1', kind: 'elevator', to: 'lift-first' },
+				{ from: 'lift-first', id: 'archive-path', kind: 'walk', to: 'archive' }
+			],
+			[
+				{ id: 'start', levelId: 'site' },
+				{ id: 'entrance-site', levelId: 'site', semanticElementId: 'library-main:site' },
+				{ id: 'entrance-inside', levelId: 'ground', semanticElementId: 'library-main:inside' },
+				{ id: 'lift-ground', levelId: 'ground', semanticElementId: 'library-lift:g' },
+				{ id: 'lift-first', levelId: 'first', semanticElementId: 'library-lift:1' },
+				{ id: 'archive', levelId: 'first' }
+			],
+			{
+				buildings: [{ id: 'library', name: 'Library' }],
+				connectors: [
+					{ endpoints: [{ id: 'library-main:site', levelId: 'site', role: 'site' }, { id: 'library-main:inside', levelId: 'ground', role: 'interior' }], id: 'library-main', kind: 'entrance', label: 'Main entrance' },
+					{ endpoints: [{ id: 'library-lift:g', levelId: 'ground' }, { id: 'library-lift:1', levelId: 'first' }], id: 'library-lift', kind: 'elevator', label: 'Library elevator' }
+				]
+			}
+		);
+
+		assert.equal(legs[0].instructions.at(-1)?.text, 'Enter Library through Main entrance and continue on Ground floor');
+		assert.equal(legs[1].instructions.at(-1)?.text, 'Take Library elevator to Level 1');
+	});
 });

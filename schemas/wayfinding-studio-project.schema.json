@@ -4,10 +4,10 @@
 	"title": "Wallboard Wayfinding Studio Project",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["format", "formatVersion", "projectId", "name", "createdAt", "updatedAt", "assets", "floors", "graph", "destinations"],
+	"required": ["format", "formatVersion", "projectId", "name", "createdAt", "updatedAt", "assets", "buildings", "connectors", "levels", "graph", "destinations", "presentation"],
 	"properties": {
 		"format": { "const": "wallboard-wayfinding-studio" },
-		"formatVersion": { "const": 1 },
+		"formatVersion": { "const": 2 },
 		"projectId": { "$ref": "#/$defs/nonEmptyString" },
 		"name": { "$ref": "#/$defs/nonEmptyString" },
 		"createdAt": { "$ref": "#/$defs/nonEmptyString" },
@@ -15,9 +15,13 @@
 		"defaultLanguage": { "$ref": "#/$defs/nonEmptyString" },
 		"defaults": { "$ref": "#/$defs/projectDefaults" },
 		"assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+		"buildings": { "type": "array", "items": { "$ref": "#/$defs/building" } },
+		"connectors": { "type": "array", "items": { "$ref": "#/$defs/connector" } },
 		"categories": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
 		"languages": { "type": "array", "items": { "$ref": "#/$defs/language" } },
-		"floors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/floor" } },
+		"levels": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/level" } },
+		"presentation": { "$ref": "#/$defs/presentation" },
+		"siteLevelId": { "$ref": "#/$defs/nonEmptyString" },
 		"graph": {
 			"type": "object",
 			"additionalProperties": false,
@@ -48,6 +52,28 @@
 				"pitchDegrees": { "type": "number", "minimum": 5, "maximum": 85 },
 				"targetX": { "type": "number" },
 				"targetY": { "type": "number" }
+			}
+		},
+		"alignment": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["siteLevelId", "x", "y", "rotationDegrees", "scale"],
+			"properties": {
+				"siteLevelId": { "$ref": "#/$defs/nonEmptyString" },
+				"x": { "type": "number" },
+				"y": { "type": "number" },
+				"rotationDegrees": { "type": "number" },
+				"scale": { "type": "number", "exclusiveMinimum": 0 }
+			}
+		},
+		"presentation": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["buildingTapBehavior", "defaultOverviewMode", "enabledOverviewModes"],
+			"properties": {
+				"buildingTapBehavior": { "enum": ["focus-actions", "enter-immediately"] },
+				"defaultOverviewMode": { "enum": ["site", "atlas-2d", "exploded-3d"] },
+				"enabledOverviewModes": { "type": "array", "uniqueItems": true, "items": { "enum": ["site", "atlas-2d", "exploded-3d"] } }
 			}
 		},
 		"polygonPresentation": {
@@ -156,11 +182,12 @@
 		"polygonElement": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "geometry"],
+			"required": ["id", "levelId", "status", "provenance", "type", "geometry"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
-				"type": { "enum": ["location", "obstacle", "walkable"] }, "geometry": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+				"type": { "enum": ["building", "location", "obstacle", "walkable"] }, "geometry": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+				"buildingId": { "$ref": "#/$defs/nonEmptyString" },
 				"label": { "type": "string" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" },
 				"presentation": { "$ref": "#/$defs/polygonPresentation" }
 			}
@@ -168,9 +195,9 @@
 		"doorElement": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point", "angle", "length"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point", "angle", "length"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
 				"type": { "const": "door" }, "point": { "$ref": "#/$defs/point" }, "angle": { "type": "number" }, "length": { "type": "number", "exclusiveMinimum": 0 },
 				"locationId": { "$ref": "#/$defs/nonEmptyString" }
@@ -178,36 +205,36 @@
 		},
 		"poiElement": {
 			"type": "object", "additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
 				"type": { "const": "poi" }, "point": { "$ref": "#/$defs/point" }, "category": { "type": "string" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" }, "label": { "type": "string" }
 			}
 		},
 		"originElement": {
 			"type": "object", "additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point", "facingDegrees", "label", "screenId"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point", "facingDegrees", "label", "screenId"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
 				"type": { "const": "origin" }, "point": { "$ref": "#/$defs/point" }, "defaultLanguage": { "type": "string" }, "facingDegrees": { "type": "number" }, "label": { "$ref": "#/$defs/nonEmptyString" }, "screenId": { "$ref": "#/$defs/nonEmptyString" }
 			}
 		},
 		"transitionElement": {
 			"type": "object", "additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point", "accessible", "connectionId", "kind", "label"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point", "accessible", "connectionId", "kind", "label"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
-				"type": { "const": "transition" }, "point": { "$ref": "#/$defs/point" }, "accessible": { "type": "boolean" }, "connectionId": { "$ref": "#/$defs/nonEmptyString" }, "kind": { "enum": ["elevator", "escalator", "stairs"] }, "label": { "$ref": "#/$defs/nonEmptyString" }
+				"type": { "const": "transition" }, "point": { "$ref": "#/$defs/point" }, "accessible": { "type": "boolean" }, "connectionId": { "$ref": "#/$defs/nonEmptyString" }, "kind": { "enum": ["elevator", "escalator", "ramp", "stairs"] }, "label": { "$ref": "#/$defs/nonEmptyString" }
 			}
 		},
 		"labelElement": {
 			"type": "object", "additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point", "text"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point", "text"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
 				"type": { "const": "label" }, "point": { "$ref": "#/$defs/point" }, "text": { "type": "string" },
 				"fontFamily": { "enum": ["sans-serif", "serif", "monospace"] }, "fontSize": { "type": "number", "minimum": 6, "maximum": 512 },
@@ -218,19 +245,24 @@
 		},
 		"mediaElement": {
 			"type": "object", "additionalProperties": false,
-			"required": ["id", "floorId", "status", "provenance", "type", "point", "assetId", "width", "height"],
+			"required": ["id", "levelId", "status", "provenance", "type", "point", "assetId", "width", "height"],
 			"properties": {
-				"id": { "$ref": "#/$defs/nonEmptyString" }, "floorId": { "$ref": "#/$defs/nonEmptyString" },
+				"id": { "$ref": "#/$defs/nonEmptyString" }, "levelId": { "$ref": "#/$defs/nonEmptyString" },
 				"status": { "enum": ["confirmed", "proposed"] }, "provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
 				"type": { "enum": ["icon", "logo"] }, "point": { "$ref": "#/$defs/point" }, "assetId": { "$ref": "#/$defs/nonEmptyString" }, "destinationId": { "$ref": "#/$defs/nonEmptyString" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 }, "rotationDegrees": { "type": "number" }
 			}
 		},
-		"floor": {
+		"level": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "name", "order", "width", "height", "elements"],
+			"required": ["id", "name", "order", "role", "width", "height", "elements"],
 			"properties": {
 				"id": { "$ref": "#/$defs/nonEmptyString" }, "name": { "$ref": "#/$defs/nonEmptyString" }, "order": { "type": "integer" },
+				"role": { "enum": ["site", "building-floor", "standalone"] },
+				"buildingId": { "$ref": "#/$defs/nonEmptyString" },
+				"levelNumber": { "type": "number" },
+				"elevationMeters": { "type": "number" },
+				"alignment": { "$ref": "#/$defs/alignment" },
 				"width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 },
 				"backgroundAssetId": { "$ref": "#/$defs/nonEmptyString" },
 				"camera3d": { "$ref": "#/$defs/camera3d" },
@@ -239,6 +271,70 @@
 					{ "$ref": "#/$defs/polygonElement" }, { "$ref": "#/$defs/doorElement" }, { "$ref": "#/$defs/poiElement" },
 					{ "$ref": "#/$defs/originElement" }, { "$ref": "#/$defs/transitionElement" }, { "$ref": "#/$defs/labelElement" }, { "$ref": "#/$defs/mediaElement" }
 				] } }
+			}
+		},
+		"building": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "name", "footprintElementId", "siteLevelId"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"name": { "$ref": "#/$defs/nonEmptyString" },
+				"footprintElementId": { "$ref": "#/$defs/nonEmptyString" },
+				"siteLevelId": { "$ref": "#/$defs/nonEmptyString" },
+				"defaultLevelId": { "$ref": "#/$defs/nonEmptyString" },
+				"preferredEntranceConnectorId": { "$ref": "#/$defs/nonEmptyString" },
+				"preferredExternalEntranceId": { "$ref": "#/$defs/nonEmptyString" },
+				"accessible": { "type": "boolean" },
+				"category": { "type": "string" },
+				"description": { "type": "string" },
+				"externalEntrances": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "label", "accessible", "point"],
+						"properties": {
+							"id": { "$ref": "#/$defs/nonEmptyString" },
+							"label": { "$ref": "#/$defs/nonEmptyString" },
+							"accessible": { "type": "boolean" },
+							"point": { "$ref": "#/$defs/point" }
+						}
+					}
+				},
+				"externalRouteBehavior": { "enum": ["nearest-entrance", "preferred-entrance"] },
+				"heightMeters": { "type": "number", "exclusiveMinimum": 0 },
+				"hours": { "type": "string" },
+				"logoAssetId": { "$ref": "#/$defs/nonEmptyString" },
+				"phone": { "type": "string" },
+				"photoAssetIds": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyString" }, "uniqueItems": true },
+				"website": { "type": "string" }
+			}
+		},
+		"connectorEndpoint": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "levelId", "point"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"levelId": { "$ref": "#/$defs/nonEmptyString" },
+				"point": { "$ref": "#/$defs/point" },
+				"role": { "enum": ["site", "interior"] }
+			}
+		},
+		"connector": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "label", "kind", "accessible", "bidirectional", "endpoints", "provenance", "status"],
+			"properties": {
+				"id": { "$ref": "#/$defs/nonEmptyString" },
+				"label": { "$ref": "#/$defs/nonEmptyString" },
+				"kind": { "enum": ["entrance", "elevator", "stairs", "escalator", "ramp"] },
+				"accessible": { "type": "boolean" },
+				"bidirectional": { "type": "boolean" },
+				"endpoints": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/connectorEndpoint" } },
+				"provenance": { "enum": ["ai-draft", "customer-source", "reviewer-authored"] },
+				"status": { "enum": ["confirmed", "proposed"] }
 			}
 		},
 		"destination": {
@@ -251,7 +347,7 @@
 				"accessible": { "type": "boolean" },
 				"category": { "type": "string" },
 				"description": { "type": "string" },
-				"floor": { "type": "string" },
+				"levelId": { "type": "string" },
 				"hours": { "type": "string" },
 				"logoAssetId": { "$ref": "#/$defs/nonEmptyString" },
 				"mapNumber": { "type": "string" },

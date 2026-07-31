@@ -13,8 +13,10 @@ export interface RouteGuidancePoint {
 }
 
 export interface RouteGuidanceFloor {
+	buildingId?: string;
 	id: string;
 	name: string;
+	role?: 'building-floor' | 'site' | 'standalone';
 	unitsPerMeter?: number;
 }
 
@@ -28,6 +30,17 @@ export interface RouteGuidanceEdge {
 export interface RouteGuidanceNode {
 	id: string;
 	levelId: string;
+	semanticElementId?: string;
+}
+
+export interface RouteGuidanceContext {
+	buildings: Array<{ id: string; name: string }>;
+	connectors: Array<{
+		endpoints: Array<{ id: string; levelId: string; role?: 'interior' | 'site' }>;
+		id: string;
+		kind: 'elevator' | 'entrance' | 'escalator' | 'ramp' | 'stairs';
+		label: string;
+	}>;
 }
 
 export interface RouteGuidanceRoute {
@@ -37,13 +50,13 @@ export interface RouteGuidanceRoute {
 }
 
 export interface RouteGuidanceInstruction {
-	floorId: string;
+	levelId: string;
 	kind: RouteGuidanceInstructionKind;
 	text: string;
 }
 
 export interface RouteGuidanceLeg {
-	floorId: string;
+	levelId: string;
 	floorName: string;
 	instructions: RouteGuidanceInstruction[];
 	points: RouteGuidancePoint[];
@@ -78,23 +91,53 @@ const transitionLabel = (kind: RouteGuidanceEdge['kind'] | undefined): string =>
 	}
 };
 
-const routeTransitionKind = (
+const routeTransitionStep = (
 	route: RouteGuidanceRoute,
 	edges: RouteGuidanceEdge[],
 	nodes: RouteGuidanceNode[],
 	fromFloorId: string,
 	toFloorId: string
-): RouteGuidanceEdge['kind'] | undefined => {
+): { edge?: RouteGuidanceEdge; from: RouteGuidanceNode; to: RouteGuidanceNode } | undefined => {
 	for (let index = 1; index < route.nodeIds.length; index += 1) {
 		const left = nodes.find((node): boolean => node.id === route.nodeIds[index - 1]);
 		const right = nodes.find((node): boolean => node.id === route.nodeIds[index]);
 
 		if (left?.levelId !== fromFloorId || right?.levelId !== toFloorId) continue;
 
-		return edges.find((edge): boolean => edge.id === route.edgeIds[index - 1])?.kind;
+		return {
+			edge: edges.find((edge): boolean => edge.id === route.edgeIds[index - 1]),
+			from: left,
+			to: right
+		};
 	}
 
 	return undefined;
+};
+
+const transitionInstructionText = (
+	step: ReturnType<typeof routeTransitionStep>,
+	fromFloor: RouteGuidanceFloor | undefined,
+	toFloor: RouteGuidanceFloor | undefined,
+	context?: RouteGuidanceContext
+): string => {
+	const fallback = `Take the ${transitionLabel(step?.edge?.kind)} to ${toFloor?.name ?? step?.to.levelId ?? 'the next level'}`;
+
+	if (!step || !context) return fallback;
+	const semanticIds = new Set([step.from.semanticElementId, step.to.semanticElementId].filter((id): id is string => Boolean(id)));
+	const connector = context.connectors.find((candidate): boolean =>
+		candidate.endpoints.filter((endpoint): boolean => semanticIds.has(endpoint.id)).length === 2
+		|| step.edge?.id.includes(`:${candidate.id}:`) === true
+	);
+
+	if (!connector) return fallback;
+	if (connector.kind !== 'entrance') return `Take ${connector.label} to ${toFloor?.name ?? step.to.levelId}`;
+	const buildingId = toFloor?.buildingId ?? fromFloor?.buildingId;
+	const buildingName = context.buildings.find((building): boolean => building.id === buildingId)?.name ?? 'the building';
+	const entering = fromFloor?.role === 'site' || connector.endpoints.find((endpoint): boolean => endpoint.id === step.from.semanticElementId)?.role === 'site';
+
+	return entering
+		? `Enter ${buildingName} through ${connector.label} and continue on ${toFloor?.name ?? step.to.levelId}`
+		: `Exit ${buildingName} through ${connector.label} to ${toFloor?.name ?? step.to.levelId}`;
 };
 
 const turnInstruction = (
@@ -123,7 +166,7 @@ const turnInstruction = (
 	const approach = distanceText(incomingLength, unitsPerMeter);
 
 	return {
-		floorId: point.levelId,
+		levelId: point.levelId,
 		kind,
 		text: approach ? `In ${approach}, turn ${direction}` : `Turn ${direction}`
 	};
@@ -131,9 +174,10 @@ const turnInstruction = (
 
 export const buildRouteGuidance = (
 	route: RouteGuidanceRoute,
-	floors: RouteGuidanceFloor[],
+	levels: RouteGuidanceFloor[],
 	edges: RouteGuidanceEdge[],
-	nodes: RouteGuidanceNode[]
+	nodes: RouteGuidanceNode[],
+	context?: RouteGuidanceContext
 ): RouteGuidanceLeg[] => {
 	const grouped: RouteGuidancePoint[][] = [];
 
@@ -148,13 +192,13 @@ export const buildRouteGuidance = (
 	}
 
 	return grouped.map((points, legIndex): RouteGuidanceLeg => {
-		const floor = floors.find((candidate): boolean => candidate.id === points[0].levelId);
+		const floor = levels.find((candidate): boolean => candidate.id === points[0].levelId);
 		const floorName = floor?.name ?? points[0].levelId;
 		const instructions: RouteGuidanceInstruction[] = [];
 
 		if (legIndex === 0) {
 			instructions.push({
-				floorId: points[0].levelId,
+				levelId: points[0].levelId,
 				kind: 'start',
 				text: `Start on ${floorName}`
 			});
@@ -178,37 +222,37 @@ export const buildRouteGuidance = (
 		);
 
 		if (nextPoints) {
-			const nextFloor = floors.find((candidate): boolean => candidate.id === nextPoints[0].levelId);
-			const transition = transitionLabel(routeTransitionKind(
+			const nextFloor = levels.find((candidate): boolean => candidate.id === nextPoints[0].levelId);
+			const transitionStep = routeTransitionStep(
 				route,
 				edges,
 				nodes,
 				points[0].levelId,
 				nextPoints[0].levelId
-			));
+			);
 			instructions.push({
-				floorId: points[0].levelId,
+				levelId: points[0].levelId,
 				kind: 'transition',
-				text: `Take the ${transition} to ${nextFloor?.name ?? nextPoints[0].levelId}`
+				text: transitionInstructionText(transitionStep, floor, nextFloor, context)
 			});
 		} else {
 			if (instructions.length === (legIndex === 0 ? 1 : 0) && length > 0) {
 				const journeyDistance = distanceText(length, floor?.unitsPerMeter);
 				instructions.push({
-					floorId: points[0].levelId,
+					levelId: points[0].levelId,
 					kind: 'continue',
 					text: journeyDistance ? `Continue for ${journeyDistance}` : 'Continue along the highlighted route'
 				});
 			}
 			instructions.push({
-				floorId: points[0].levelId,
+				levelId: points[0].levelId,
 				kind: 'arrive',
 				text: 'Arrive at your destination'
 			});
 		}
 
 		return {
-			floorId: points[0].levelId,
+			levelId: points[0].levelId,
 			floorName,
 			instructions,
 			points

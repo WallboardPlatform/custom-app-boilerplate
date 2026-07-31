@@ -5,13 +5,14 @@ import type { WayfindingPoint } from '@utils/wayfinding';
 import type {
 	RuntimeAsset,
 	RuntimeElement,
-	RuntimeFloor,
+	RuntimeLevel,
 	RuntimeLabel,
 	RuntimeMedia,
 	RuntimeOrigin,
 	RuntimePointOfInterest,
 	RuntimeProjectDefaults,
-	RuntimePolygon
+	RuntimePolygon,
+	WayfindingRuntimeBundle
 } from '@interfaces/spatial-wayfinding.interface';
 
 const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boolean => {
@@ -27,17 +28,17 @@ const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boo
 	return inside;
 };
 
-const centeredPoint = (floor: RuntimeFloor, point: WayfindingPoint, elevation = 0): THREE.Vector3 => new THREE.Vector3(
+const centeredPoint = (floor: RuntimeLevel, point: WayfindingPoint, elevation = 0): THREE.Vector3 => new THREE.Vector3(
 	point.x - floor.width / 2,
 	elevation,
 	point.y - floor.height / 2
 );
 
-const polygonHeight = (floor: RuntimeFloor, polygon: RuntimePolygon): number => Math.min(floor.width, floor.height)
-	* (polygon.presentation?.extrusionHeight ?? (polygon.type === 'location' ? 28 : 0))
+const polygonHeight = (floor: RuntimeLevel, polygon: RuntimePolygon): number => Math.min(floor.width, floor.height)
+	* (polygon.presentation?.extrusionHeight ?? (polygon.type === 'building' ? 54 : polygon.type === 'location' ? 28 : 0))
 	/ 500;
 
-const labelElevation = (floor: RuntimeFloor, point: WayfindingPoint): number => {
+const labelElevation = (floor: RuntimeLevel, point: WayfindingPoint): number => {
 	const polygon: RuntimePolygon | undefined = floor.elements
 		.filter((element): element is RuntimePolygon => 'geometry' in element)
 		.reverse()
@@ -112,8 +113,15 @@ export interface SpatialSceneOptions {
 	accentColor: () => string;
 	assets: RuntimeAsset[];
 	motionEnabled: () => boolean;
+	onSelectBuilding?: (buildingId: string) => void;
 	onSelectDestination: (destinationId: string) => void;
 	originDefaults: RuntimeProjectDefaults['origin'];
+	overview?: {
+		activeBuildingId?: string;
+		activeLevelId?: string;
+		routes: Array<{ levelId: string; points: WayfindingPoint[] }>;
+		runtime: WayfindingRuntimeBundle;
+	};
 	routeAnimationSpeed: () => number;
 	routeColor: () => string;
 	routeWidth: () => number;
@@ -122,6 +130,7 @@ export interface SpatialSceneOptions {
 export class SpatialScene {
 	private readonly camera = new THREE.PerspectiveCamera(38, 1, 0.1, 20_000);
 	private readonly controls: OrbitControls;
+	private readonly buildingObjects = new Map<string, THREE.Object3D[]>();
 	private readonly destinationObjects = new Map<string, THREE.Object3D[]>();
 	private frameId?: number;
 	private readonly originMarkers: THREE.Object3D[] = [];
@@ -142,7 +151,7 @@ export class SpatialScene {
 
 	public constructor(
 		private readonly host: HTMLElement,
-		private readonly floor: RuntimeFloor,
+		private readonly floor: RuntimeLevel,
 		private readonly options: SpatialSceneOptions
 	) {
 		this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
@@ -169,6 +178,8 @@ export class SpatialScene {
 		this.scene.add(fill);
 		this.scene.add(this.selectedPulse);
 		this.addFloor();
+
+		if (this.options.overview) this.addExplodedOverview(this.options.overview);
 		this.resetCamera();
 		this.renderer.domElement.addEventListener('pointerdown', (event: PointerEvent): void => {
 			this.pointerStart = { x: event.clientX, y: event.clientY };
@@ -202,7 +213,13 @@ export class SpatialScene {
 	}
 
 	public resetCamera(): void {
-		const state = this.floor.camera3d ?? {
+		const state = this.options.overview ? {
+			azimuthDegrees: -28,
+			distance: Math.max(this.floor.width, this.floor.height) * 1.18,
+			pitchDegrees: 55,
+			targetX: this.floor.width / 2,
+			targetY: this.floor.height / 2
+		} : this.floor.camera3d ?? {
 			azimuthDegrees: 36,
 			distance: Math.max(this.floor.width, this.floor.height) * 1.6,
 			pitchDegrees: 48,
@@ -221,6 +238,21 @@ export class SpatialScene {
 		);
 		this.camera.lookAt(target);
 		this.controls.update();
+	}
+
+	public selectBuilding(buildingId?: string): void {
+		for (const [id, objects] of this.buildingObjects) {
+			for (const object of objects) {
+				const mesh = object as THREE.Mesh;
+				const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+
+				for (const material of materials) {
+					if (!(material instanceof THREE.MeshStandardMaterial)) continue;
+					material.emissive.set(id === buildingId ? this.options.accentColor() : '#000000');
+					material.emissiveIntensity = id === buildingId ? 0.3 : 0;
+				}
+			}
+		}
 	}
 
 	public selectDestination(destinationId?: string): void {
@@ -357,8 +389,116 @@ export class SpatialScene {
 		for (const element of this.floor.elements) this.addElement(element);
 	}
 
+	private addExplodedOverview(overview: NonNullable<SpatialSceneOptions['overview']>): void {
+		const routeLevelIds = new Set(overview.routes.map((route): string => route.levelId));
+		const relevantBuildingIds = new Set<string>();
+
+		if (overview.activeBuildingId) relevantBuildingIds.add(overview.activeBuildingId);
+		for (const level of overview.runtime.levels) {
+			if (routeLevelIds.has(level.id) && level.buildingId) relevantBuildingIds.add(level.buildingId);
+		}
+		const toSite = (level: RuntimeLevel, point: WayfindingPoint): WayfindingPoint => {
+			if (!level.alignment) return point;
+			const radians = level.alignment.rotationDegrees * Math.PI / 180;
+			const x = point.x * level.alignment.scale;
+			const y = point.y * level.alignment.scale;
+
+			return {
+				x: level.alignment.x + x * Math.cos(radians) - y * Math.sin(radians),
+				y: level.alignment.y + x * Math.sin(radians) + y * Math.cos(radians)
+			};
+		};
+		const heightByLevelId = new Map<string, number>();
+
+		for (const building of overview.runtime.buildings) {
+			const levels = overview.runtime.levels
+				.filter((level): boolean => level.buildingId === building.id && Boolean(level.alignment))
+				.sort((left, right): number => (left.elevationMeters ?? left.order) - (right.elevationMeters ?? right.order));
+
+			if (!relevantBuildingIds.has(building.id) || levels.length === 0) continue;
+
+			for (const [index, level] of levels.entries()) {
+				const alignment = level.alignment!;
+				const center = toSite(level, { x: level.width / 2, y: level.height / 2 });
+				const active = level.id === overview.activeLevelId;
+				const routeRelevant = routeLevelIds.has(level.id);
+				const vertical = 30 + index * Math.max(54, Math.max(this.floor.width, this.floor.height) * 0.045);
+				heightByLevelId.set(level.id, vertical);
+				const texture = new THREE.TextureLoader().load(
+					`data:image/svg+xml;charset=utf-8,${encodeURIComponent(level.svg)}`
+				);
+				texture.colorSpace = THREE.SRGBColorSpace;
+				const plane = new THREE.Mesh(
+					new THREE.PlaneGeometry(level.width * alignment.scale, level.height * alignment.scale),
+					new THREE.MeshStandardMaterial({
+						color: '#ffffff',
+						map: texture,
+						opacity: active || routeRelevant ? 1 : 0.4,
+						roughness: 0.86,
+						side: THREE.DoubleSide,
+						transparent: !active && !routeRelevant
+					})
+				);
+				plane.position.set(center.x - this.floor.width / 2, vertical, center.y - this.floor.height / 2);
+				plane.rotation.x = -Math.PI / 2;
+				plane.rotation.z = -THREE.MathUtils.degToRad(alignment.rotationDegrees);
+				plane.castShadow = true;
+				plane.receiveShadow = true;
+				plane.renderOrder = 20 + index;
+				this.scene.add(plane);
+			}
+		}
+
+		for (const connector of overview.runtime.connectors) {
+			const endpoints = connector.endpoints.filter((endpoint): boolean => heightByLevelId.has(endpoint.levelId));
+
+			if (endpoints.length < 2) continue;
+			const points = endpoints.map((endpoint): THREE.Vector3 => {
+				const level = overview.runtime.levels.find((candidate): boolean => candidate.id === endpoint.levelId)!;
+				const point = toSite(level, endpoint.point);
+
+				return new THREE.Vector3(
+					point.x - this.floor.width / 2,
+					heightByLevelId.get(level.id)! + 3,
+					point.y - this.floor.height / 2
+				);
+			});
+			const line = new THREE.Line(
+				new THREE.BufferGeometry().setFromPoints(points),
+				new THREE.LineBasicMaterial({
+					color: connector.accessible ? '#28bda4' : '#d2a448',
+					opacity: 0.78,
+					transparent: true
+				})
+			);
+			this.scene.add(line);
+		}
+
+		for (const route of overview.routes) {
+			const level = overview.runtime.levels.find((candidate): boolean => candidate.id === route.levelId);
+			const vertical = level ? heightByLevelId.get(level.id) : undefined;
+
+			if (!level?.alignment || vertical === undefined || route.points.length < 2) continue;
+			const vectors = route.points.map((point): THREE.Vector3 => {
+				const sitePoint = toSite(level, point);
+
+				return new THREE.Vector3(sitePoint.x - this.floor.width / 2, vertical + 5, sitePoint.y - this.floor.height / 2);
+			});
+			const curve = new THREE.CatmullRomCurve3(vectors, false, 'centripetal', 0.35);
+			const routeMesh = new THREE.Mesh(
+				new THREE.TubeGeometry(curve, Math.max(32, vectors.length * 16), 3.6, 10, false),
+				new THREE.MeshBasicMaterial({ color: this.options.routeColor(), depthTest: false, toneMapped: false })
+			);
+			routeMesh.renderOrder = 40;
+			this.scene.add(routeMesh);
+		}
+		this.renderer.domElement.dataset.overviewMode = 'exploded-3d';
+		this.renderer.domElement.dataset.explodedBuildingCount = String(relevantBuildingIds.size);
+		this.renderer.domElement.dataset.explodedLevelCount = String(heightByLevelId.size);
+	}
+
 	private addElement(element: RuntimeElement): void {
-		if (element.type === 'location' || element.type === 'obstacle' || element.type === 'walkable') {
+		if (element.type === 'building' || element.type === 'location' || element.type === 'obstacle' || element.type === 'walkable') {
 			const shape = new THREE.Shape();
 
 			for (const [index, point] of element.geometry.entries()) {
@@ -371,7 +511,7 @@ export class SpatialScene {
 			shape.closePath();
 			const height: number = polygonHeight(this.floor, element);
 			const opacity: number = element.presentation?.fillOpacity ?? 0.75;
-			const color = new THREE.Color(element.presentation?.fillColor ?? '#7ec8b5');
+			const color = new THREE.Color(element.presentation?.fillColor ?? (element.type === 'building' ? '#8aaea5' : '#7ec8b5'));
 			const materials = [
 				new THREE.MeshStandardMaterial({ color: color.clone().multiplyScalar(0.72), opacity, roughness: 0.86, transparent: opacity < 1 }),
 				new THREE.MeshStandardMaterial({ color, opacity, roughness: 0.76, transparent: opacity < 1 })
@@ -389,6 +529,14 @@ export class SpatialScene {
 				mesh.userData.destinationId = element.destinationId;
 				mesh.userData.baseY = mesh.position.y;
 				this.registerDestinationObject(element.destinationId, mesh);
+				this.selectable.push(mesh);
+			}
+
+			if (element.type === 'building' && element.buildingId) {
+				mesh.userData.buildingId = element.buildingId;
+				const buildingObjects = this.buildingObjects.get(element.buildingId) ?? [];
+				buildingObjects.push(mesh);
+				this.buildingObjects.set(element.buildingId, buildingObjects);
 				this.selectable.push(mesh);
 			}
 			this.scene.add(mesh);
@@ -580,8 +728,10 @@ export class SpatialScene {
 		this.raycaster.setFromCamera(pointer, this.camera);
 		const hit: THREE.Intersection | undefined = this.raycaster.intersectObjects(this.selectable, false)[0];
 		const destinationId: string | undefined = hit?.object.userData.destinationId as string | undefined;
+		const buildingId: string | undefined = hit?.object.userData.buildingId as string | undefined;
 
 		if (destinationId) this.options.onSelectDestination(destinationId);
+		else if (buildingId) this.options.onSelectBuilding?.(buildingId);
 	}
 
 	private resize(): void {

@@ -6,14 +6,44 @@ import type {
 
 const openApp = async (
 	page: Page,
-	viewport: { height: number; width: number } = { width: 1440, height: 900 }
+	viewport: { height: number; width: number } = { width: 1440, height: 900 },
+	query = ''
 ): Promise<void> => {
 	await page.setViewportSize(viewport);
-	const response = await page.goto('/preview/widget.html?background=light');
+	const response = await page.goto(`/preview/widget.html?background=light${query}`);
 	expect(response?.ok()).toBe(true);
 	await page.waitForFunction((): boolean => document.documentElement.dataset.previewReady === 'true' || Boolean(document.documentElement.dataset.previewError));
 	expect(await page.evaluate((): string | undefined => document.documentElement.dataset.previewError)).toBeUndefined();
 };
+
+test('supports global multi-building discovery, indoor entry, atlas guidance, and exploded 3D', async ({ page }): Promise<void> => {
+	await openApp(page, { width: 1920, height: 1080 }, '&venue=multi-building');
+	const root = page.locator('[data-preview-id="spatial-wayfinding-root"]');
+	await expect(root).toHaveAttribute('data-runtime-project', 'multi-building-campus');
+	await expect(page.locator('.wb-spatial-wayfinding-building')).toHaveCount(3);
+	const libraryResult = page.getByRole('button', { name: 'Building / 3 levels Library Explore inside', exact: true });
+	await expect(libraryResult).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Building / 2 levels Science Center Explore inside', exact: true })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Building / 0 levels Arena Exterior destination', exact: true })).toBeVisible();
+
+	await libraryResult.click();
+	await expect(root).toHaveAttribute('data-selected-building', 'library');
+	await expect(page.getByRole('button', { name: 'Explore inside', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Directions', exact: true }).click();
+	await expect(root).toHaveAttribute('data-overview-mode', 'atlas-2d');
+	await expect(page.locator('.wb-spatial-wayfinding-atlas-level')).toHaveCount(4);
+
+	await page.getByRole('button', { name: 'Explore inside', exact: true }).click();
+	await expect(page.getByLabel('Level')).toHaveValue('library-ground');
+	await page.getByLabel('Search destinations').fill('Special Collections');
+	await page.getByRole('button', { name: 'Library Special Collections', exact: true }).click();
+	await expect(root).toHaveAttribute('data-selected-destination', 'archives');
+	await expect(page.locator('.wb-spatial-wayfinding-atlas-level')).toHaveCount(3);
+	await page.getByRole('button', { name: 'Exploded 3D' }).click();
+	await expect(root).toHaveAttribute('data-overview-mode', 'exploded-3d');
+	await expect(root.locator('canvas')).toHaveAttribute('data-overview-mode', 'exploded-3d');
+	await expect(root.locator('canvas')).toHaveAttribute('data-exploded-level-count', '3');
+});
 
 const runtimeSurfaceProblems = (page: Page): Promise<string[]> => page.evaluate(() => {
 	const visible = (element: Element): boolean => {
@@ -56,7 +86,7 @@ const runtimeSurfaceProblems = (page: Page): Promise<string[]> => page.evaluate(
 		const bounds = control.getBoundingClientRect();
 		const html = control as HTMLInputElement;
 		const insideScrollableArea = Boolean(control.closest(
-			'.wb-spatial-wayfinding-destinations, .wb-spatial-wayfinding-details, .wb-spatial-wayfinding-route-floors'
+			'.wb-spatial-wayfinding-destinations, .wb-spatial-wayfinding-details, .wb-spatial-wayfinding-route-levels'
 		));
 
 		if (
@@ -94,7 +124,7 @@ const captureRuntime = async (
 ): Promise<void> => {
 	await openApp(page, viewport);
 	await page.getByRole('button', { name: '2D', exact: true }).click();
-	await page.getByRole('button', { name: 'Campus Cafe' }).click();
+	await page.getByRole('button', { name: 'Food / G31 Campus Cafe Open', exact: true }).click();
 	await expect(page.locator('.wb-spatial-wayfinding-route')).toBeVisible();
 	expect(await runtimeSurfaceProblems(page), `${viewport.width}x${viewport.height}`).toEqual([]);
 	const mapBounds = await page.getByRole('region', { name: 'Campus map', exact: true }).boundingBox();
@@ -188,8 +218,8 @@ test('keeps the idle map legible and emphasizes only the selected destination', 
 	await page.getByRole('button', { name: '2D', exact: true }).click();
 	const idleZone = page.locator('.wb-spatial-wayfinding-destination-zone').first();
 	await expect(idleZone).toHaveCSS('fill-opacity', '0.96');
-	await expect(page.locator('.wb-spatial-wayfinding-walkable')).toHaveCSS('fill-opacity', '0.96');
-	await page.getByRole('button', { name: 'Campus Cafe' }).click();
+	await expect(page.locator('.wb-spatial-wayfinding-walkable')).toHaveCSS('fill-opacity', '0');
+	await page.getByRole('button', { name: 'Food / G31 Campus Cafe Open', exact: true }).click();
 	const selectedZone = page.locator('.wb-spatial-wayfinding-zone.wb-spatial-wayfinding-selected');
 	await expect(selectedZone).toHaveCount(1);
 	await expect(selectedZone).toHaveCSS('fill-opacity', '0.96');
@@ -198,7 +228,7 @@ test('keeps the idle map legible and emphasizes only the selected destination', 
 test('resets selection and camera without destroying the scene', async ({ page }): Promise<void> => {
 	await openApp(page);
 	const root = page.locator('[data-preview-id="spatial-wayfinding-root"]');
-	await page.getByRole('button', { name: 'Campus Cafe' }).click();
+	await page.getByRole('button', { name: 'Food / G31 Campus Cafe Open', exact: true }).click();
 	await expect(root).toHaveAttribute('data-selected-destination', 'campus-cafe');
 	await page.getByRole('button', { name: 'Reset view' }).click();
 	await expect(root).toHaveAttribute('data-selected-destination', '');

@@ -1,43 +1,46 @@
 # Wayfinding
 
-[Wayfinding Studio](https://wayfinding.wallboard.info) is the canonical editor for Wallboard maps. Authoring, validation, and publishing are operated outside this custom-app repository. A project can publish a polished searchable map without routing; once a route network exists, publishing requires it to be safe and complete.
+[Wayfinding Studio](https://wayfinding.wallboard.info) authors and publishes portable venue maps. A project represents one site containing outdoor space, multiple buildings, independently aligned building levels, and optional standalone maps. Visitor apps consume only published `.wbmap` packages.
 
 ## Public compatibility contract
 
-This repository contains everything required to build a Wayfinding custom app. No external implementation source is required.
+This repository is self-contained: the following files are sufficient to build and validate a Wayfinding custom app.
 
 | Public source | Contract |
 |---------------|----------|
-| `schemas/wayfinding-studio-project.schema.json` | Editable `.wbwayfinding` project format |
-| `schemas/wayfinding-route-graph.schema.json` | Nodes, edges, geometry, accessibility, and traversal |
+| `schemas/wayfinding-studio-project.schema.json` | Editable v2 `.wbwayfinding` project |
+| `schemas/wayfinding-route-graph.schema.json` | Stable graph nodes, edges, geometry, accessibility, and traversal |
+| `src/utils/wayfinding-contract.ts` | Typed v2 authoring hierarchy and connector model |
 | `src/utils/wayfinding.ts` | Graph types and standard/step-free pathfinding |
-| `src/utils/wayfinding-presentation.ts` | Runtime presentation model |
-| `src/utils/wayfinding-guidance.ts` | Guidance capability and direction helpers |
-| `examples/spatial-wayfinding/overlay/src/interfaces/spatial-wayfinding.interface.ts` | Published package and scene types |
-| `examples/spatial-wayfinding/overlay/src/utils/wayfinding-map-package.ts` | `.wbmap` loader and validation pattern |
+| `src/utils/wayfinding-presentation.ts` | Runtime presentation scene and collision-aware labels |
+| `src/utils/wayfinding-guidance.ts` | Per-level guidance and transition instructions |
+| `examples/spatial-wayfinding/overlay/src/interfaces/spatial-wayfinding.interface.ts` | Published runtime types |
+| `examples/spatial-wayfinding/overlay/src/utils/wayfinding-map-package.ts` | v1/v2 `.wbmap` loader and normalization |
 | `examples/spatial-wayfinding` | Complete 2D/3D consumer reference |
 
-The schemas are the public release contract. Any Studio schema or `.wbmap` package change must update these schemas, runtime types, loader, documentation, and reference widget in the same release cycle.
+Any package-contract change must update the schema, types, loader, documentation, tests, and reference rendering in the same release cycle.
 
-## Artifact lifecycle
+## Artifacts and compatibility
 
-| Artifact | Purpose | Rule |
-|----------|---------|------|
-| `*.wbwayfinding` | Editable Studio source | Save, archive, and hand off. Never load directly in a visitor app. |
-| `*.wbmap` | Portable published map | Regenerate after every accepted project change. Never hand-edit. |
-| Custom-app ZIP | Installable visitor experience containing a `.wbmap` | Build and validate through the normal delivery workflow. |
+| Artifact | Purpose | Compatibility |
+|----------|---------|---------------|
+| `*.wbwayfinding` | Editable Studio source | New saves use `formatVersion: 2` |
+| `*.wbmap` | Portable visitor runtime | Loader accepts v1 and v2; new publishing emits v2 |
+| Custom-app ZIP | Installable visitor experience | Contains a published `.wbmap`, never editable source |
 
-`*.wbwayfinding` uses `format: "wallboard-wayfinding-studio"` and `formatVersion: 1`. No earlier Studio format is supported. Wayfinding Studio validates the file contract before publication; custom-app tooling can validate it against `schemas/wayfinding-studio-project.schema.json`.
+Opening a v1 editable project runs a one-way import: every old floor becomes a `standalone` level, existing transitions become connectors, and IDs, assets, destinations, graph geometry, cameras, and authored geometry remain intact. No building hierarchy is invented. The imported document requires **Save As**, so the original v1 file is not overwritten.
 
-`*.wbmap` is a ZIP containing:
+The runtime loader normalizes both package versions to `wallboard-wayfinding-runtime` v2. A v1 package becomes a set of standalone levels with no buildings or centralized connectors.
+
+A v2 `.wbmap` is a ZIP containing:
 
 ```text
 manifest.json
 map.json
 routes/graph.json
 data/destinations.json
-floors/<floor-id>.svg
-floors/<floor-id>.scene.json
+levels/<level-id>.svg
+levels/<level-id>.scene.json
 assets/*
 ```
 
@@ -45,138 +48,143 @@ The manifest derives capabilities from published content:
 
 ```ts
 interface WayfindingCapabilities {
-  routing: boolean;
-  stepFreeRouting: boolean;
+	routing: boolean;
+	stepFreeRouting: boolean;
 }
 ```
 
-No target-mode, fallback-mode, evidence ledger, migration payload, or painted-mask compatibility data belongs in the v1 contract.
+## Site, buildings, and levels
 
-## Project model
+The v2 hierarchy is `Site → Buildings → Levels`.
 
-| Section | Owns |
-|---------|------|
-| `assets` | Floor backgrounds, symbols, brand marks, and destination photos |
-| `floors` | Canvas bounds, scale, camera, and semantic map elements |
-| `destinations` | Searchable visitor content, categories, translations, status, and media relations |
-| `graph` | Route topology, geometry, accessibility, and generated/manual ownership |
-| `defaults` | Shared visual presentation defaults |
+| Model | Owns |
+|-------|------|
+| `siteLevelId` | Optional outdoor/campus level used as the conventional default visitor view |
+| `buildings[]` | Visitor information, footprint relation, height, default level, entrances, and external-route preference |
+| `levels[]` | Canvas, artwork, semantic elements, scale, camera, elevation, and optional site alignment |
+| `connectors[]` | Logical entrances and vertical movement with positioned endpoints |
+| `destinations[]` | Globally searchable building/floor content, categories, translations, status, and media |
+| `graph` | Stable route topology; all graph nodes reference `levelId` |
+| `presentation` | Building tap behavior and enabled combined overview modes |
 
-Semantic floor elements:
+Level roles:
 
-| Type | Purpose |
-|------|---------|
-| `location` | Room or area polygon and optional destination relation |
-| `door` | Public entrance associated with a location |
-| `poi` | Point-shaped destination or amenity |
-| `walkable` | Reviewed pedestrian space used by route generation and validation |
-| `obstacle` | Non-traversable region inside pedestrian space |
-| `origin` | Installed screen position, facing, and default language |
-| `transition` | Paired stairs, elevator, or escalator connection |
-| `label` | Independent presentation text |
-| `icon` | Semantic, theme-aware symbol |
-| `logo` | Brand artwork whose native colors are preserved |
+- `site`: outdoor/campus map;
+- `building-floor`: belongs to one building and has numeric level, elevation, and site alignment;
+- `standalone`: valid unassigned or migrated map.
 
-Stable IDs are mandatory. Geometry and editor state are separate: saved projects contain authored content, not selection, hover, open panels, preview journeys, or diagnostic-layer state.
+Each site building has a semantic `building` polygon linked by `footprintElementId`. It is the authoritative footprint for selection, hit testing, 3D massing, and interior entry. A building may remain a valid searchable/routable destination without indoor levels; routing then ends at its preferred or nearest external entrance.
 
-## Ownership boundary
+Level alignment maps unrelated source coordinates onto the site:
 
-Wayfinding Studio owns authoring UI, project persistence, routing generation, 2D/3D preview, and `.wbmap` publication. This repository owns the public compatibility contract, custom-app runtime consumption, signage interaction, legacy-browser packaging, and delivery validation. Do not copy Studio modules into an app; pass only the published `.wbmap` across the runtime boundary.
+```ts
+interface WayfindingAlignment {
+	siteLevelId: string;
+	x: number;
+	y: number;
+	rotationDegrees: number;
+	scale: number;
+}
+```
 
-## Studio workflow
+`elevationMeters` controls vertical placement independently of ordering. Combined views require complete, valid alignment for every displayed building floor.
 
-Open [wayfinding.wallboard.info](https://wayfinding.wallboard.info).
+## Semantic elements and connectors
 
-1. Create a project and add floors.
-2. Upload optional floor artwork. The image is a visual reference, not topology.
-3. In **Map**, author locations, pedestrian space, obstacles, doors, POIs, origins, transitions, labels, icons, and logos.
-4. In **Route edit**, build a network from reviewed vector pedestrian space and linked doors.
-5. Inspect the proposed build diff before replacing generated topology. Manual nodes and edges are preserved.
-6. Use **Preview** to test the same presentation scene and journey model consumed by the published runtime.
-7. Save the editable project and publish a `.wbmap`.
+Level elements include `building`, `location`, `door`, `poi`, `walkable`, `obstacle`, `origin`, `label`, `icon`, and `logo`. Imported standalone maps may retain legacy `transition` elements; new multi-level authoring uses `connectors[]`.
 
-The editor autosaves a recovery draft. File-handle saving and portable **Save as** remain separate, explicit actions.
+Connector kinds are `entrance`, `elevator`, `stairs`, `escalator`, and `ramp`.
+
+- An entrance pairs a site endpoint with an interior endpoint.
+- A vertical connector may span two or more levels of the same building.
+- `accessible` belongs to the connector and participates in step-free routing.
+- Entrance endpoints compile to graph `portal` edges.
+- Vertical endpoints compile to graph `transition` edges.
+- Logical route geometry remains separate per level while the journey remains continuous.
+
+Connector endpoint IDs are stable. Cross-building vertical connectors, duplicate endpoints, missing levels, unpaired entrances, and invalid endpoint roles are contract errors.
+
+## Authoring workflow
+
+1. Create or assign the site level.
+2. Draw/detect a building footprint and add visitor-facing information.
+3. Add building floors or assign existing standalone levels.
+4. Align each floor against the site with direct manipulation or numeric position, rotation, scale, and elevation controls.
+5. Pair exterior/interior entrances, then add elevators, stairs, escalators, and ramps.
+6. Author walkable space, obstacles, destinations, installed origins, and route topology on each active level.
+7. Validate standard and step-free journeys in Preview.
+8. Save the editable source and publish a v2 `.wbmap`.
+
+Alignment is an isolated overlay workflow with adjacent-level ghosts, snapping, reset, and validation. Ordinary map editing affects only the active level. Editor-only state such as selection, panel layout, preview journey, diagnostics, and hover is never persisted in the project contract.
 
 ## Routing contract
 
-Route generation is a staged transformation:
-
-1. normalize vector pedestrian space;
-2. subtract obstacles and apply clearance;
-3. extract corridor/open-area centerlines;
-4. build deterministic topology;
-5. connect origins, transitions, POIs, and valid public entrances;
-6. prune non-semantic branches without destroying required connectivity;
-7. simplify only when every replacement segment remains valid;
-8. score, diagnose, and validate the result;
-9. present a build diff before replacement.
+Routing produces one journey across outdoor paths, selected entrances, internal corridors, and vertical connectors. Entrance selection considers total path cost, visitor profile, connector availability, and destination level.
 
 Rules:
 
-- Location nodes terminate at a valid linked door, never at an arbitrary polygon centroid.
-- Door candidates must align with the location boundary and connect to pedestrian space.
-- A route segment must not cross a location, obstacle, wall, or unauthorised region.
-- Logical path geometry stays independent from rounded visual presentation.
-- Generated topology has explicit `authoringOwnership: "generated"`.
-- Hand-authored corrections have explicit `authoringOwnership: "manual"` and survive rebuilds.
-- Cross-floor transitions share a `connectionId`; accessibility is explicit.
-- Step-free routing excludes inaccessible edges.
-- Distance and walking time appear only when `unitsPerMeter` is calibrated.
-- A route network with any edge must connect every routeable destination from every origin before publishing.
-- A project with no graph edges remains a valid searchable map without turn-by-turn directions.
+- Route generation derives topology only from reviewed vector walkable space and obstacles; source artwork is never treated as trusted topology.
+- Location nodes terminate at linked public doors, never arbitrary polygon centroids.
+- Segments must not cross locations, obstacles, walls, or unauthorized regions.
+- Step-free routing rejects inaccessible entrances, stairs, and escalators.
+- Generated topology uses `authoringOwnership: "generated"`; manual corrections use `"manual"` and survive rebuilds.
+- Disabled edges and unavailable connectors participate in rerouting without changing the selected destination.
+- Distance and walking time appear only when every route level has calibrated `unitsPerMeter`.
+- A graph with edges must reach every routeable destination from every installed origin before publishing.
+- A project without graph edges remains a valid searchable map without turn-by-turn guidance.
 
-The shared `WayfindingGraph` owns standard/step-free shortest paths and disabled-edge rerouting.
+Instructions explicitly name the building, entrance or vertical connector, and target level. A fixed display cannot infer physical visitor progress, so progression between site, entrance, floor, and transition segments is visitor-controlled.
 
-## Preview and published presentation
+## Visitor presentation
 
-Editor Preview and the visitor runtime consume the same presentation-scene model:
+The default view is the conventional 2D site map. Global search returns buildings and interior destinations grouped by building without requiring the visitor to enter first.
 
-- 2D semantic rooms, walkable space, obstacles, doors, POIs, origins, transitions, labels, symbols, and routes;
-- 3D extrusions, authored camera, billboard labels/media, and destination emphasis;
-- one ephemeral preview session for origin, destination, profile, language, filters, active journey, and diagnostic layers;
-- adaptive map-first directory and destination details;
-- actionable unreachable states with stale guidance cleared immediately.
+Building tap behavior is authored per project:
 
-The 3D switch is shown only when the active project passes geometry, camera, contrast, label, and performance readiness.
+- `focus-actions` (default): one tap focuses the building and opens a touch-friendly card with **Explore inside** and **Directions**;
+- `enter-immediately`: one tap opens the configured default level.
 
-## Assets
+No visitor action depends on double-click. Building cards may show levels, destinations, accessibility, description, imagery, and whether an interior map is available.
+
+Optional combined modes are independently enabled and quality-gated:
+
+- `atlas-2d`: site plus only floors relevant to the selected building or active journey;
+- `exploded-3d`: aligned building masses on the site, selected/route-relevant floor stacks, ghosted inactive floors, and emphasized active route segments.
+
+The guided journey provides large **Next**, **Back**, **Overview**, and **Replay** controls. Switching between overview, building, and level scenes preserves the selected journey and saved camera state. Motion uses reduced-motion fallbacks.
+
+## Presentation assets
 
 - Backgrounds preserve source artwork.
 - Symbols are semantic and may adapt to theme.
-- Logos preserve brand identity.
-- Photos belong to destination details unless explicitly placed as map media.
-- A custom You are here artwork uses an asset with `kind: "marker"` and is referenced by `defaults.origin.markerAssetId`.
-- The marker image replaces the complete default marker artwork in both 2D and 3D; consumers must not composite the old pin or center dot behind it.
-- `defaults.origin.markerSize2d` (20-96 map units) and `markerSize3d` (28-120 map units) control independent maximum sides while preserving the image aspect ratio.
-- Published packages expose the referenced marker as a `symbol` runtime asset. In 3D it remains upright and camera-facing; the separate ground/pulse beacon may remain visible.
-- Packages without a marker reference retain the default origin marker. Consumers use 28 and 46 as the legacy-compatible 2D and 3D size fallbacks.
+- Logos preserve native brand colors.
+- Photos belong to visitor details unless explicitly placed as map media.
 - Map media uses center-based placement, scale, and rotation.
-- File inputs are hidden behind accessible upload controls with validation, preview, metadata, replace, and remove actions.
+- A custom You are here image uses an asset with `kind: "marker"` referenced by `defaults.origin.markerAssetId`.
+- The custom marker replaces the complete default artwork in 2D and 3D; consumers must not composite the old pin or center dot behind it.
+- `defaults.origin.markerSize2d` (20–96 map units) and `markerSize3d` (28–120 map units) control independent maximum sides while preserving aspect ratio.
+- The 3D marker remains upright and camera-facing; a separate ground/pulse beacon may remain visible.
 
-## AI-assisted authoring
+## Validation and acceptance
 
-AI may propose a project using the exact v1 schema. AI-created semantic elements use:
+Publishing rejects or clearly reports:
 
-```json
-{ "status": "proposed", "provenance": "ai-draft" }
-```
+- missing or overlapping building footprints;
+- floors assigned to missing buildings;
+- unaligned building floors required by enabled combined views;
+- missing, unpaired, or cross-building connector endpoints;
+- buildings without routeable entrances;
+- accessible destinations without an accessible building journey;
+- invalid floor order/elevation and disconnected route segments;
+- orphan IDs, missing assets, and invalid destination/geometry relations.
 
-AI may propose geometry but must not silently assert entrances, orientation, accessibility, or route correctness. Human review occurs in Studio.
+The maintained multi-building fixture is available as:
 
-## Validation
+- editable source: `examples/spatial-wayfinding/source/multi-building-campus.wbwayfinding`;
+- published package: `examples/spatial-wayfinding/overlay/src/assets/multi-building-campus.wbmap`.
 
-The editor repository validates schemas, route generation, project round trips, browser workflows, and production builds through `npm run check`. This repository validates the consuming visitor app through its normal example, visual-review, package, modern-build, and Chrome 49 gates.
+It contains three buildings, three- and two-floor interiors, an unmapped building, multiple entrances, elevator, stairs, escalator, ramp, rotated/scaled floor sources, outdoor obstacles, and non-trivial routes.
 
-Acceptance requires:
+Acceptance covers same-building, different-building, outdoor-to-indoor, indoor-to-outdoor, multi-floor, step-free, alternate-entrance, unmapped-building, disconnected, and unavailable-connector journeys. It also requires schema/package round trips, v1 loader compatibility, touch and keyboard operation, reduced motion, label collision, clipping, editor/runtime scene parity, performance, console cleanliness, modern builds, and Chrome 49 validation.
 
-- schema-valid v1 project and published package;
-- no duplicate/orphan IDs or missing assets;
-- valid destination, entrance, floor, and media relations;
-- standard and step-free route simulation from every origin;
-- deterministic complex-fixture coverage for branches, loops, obstacles, narrow corridors, disconnected space, multiple doors, cross-floor transitions, and manual corrections;
-- no route segment crossing prohibited geometry;
-- browser workflow tests for build confirmation, diagnostics, preview, save/open, and publish;
-- visual inspection at the supported editor and signage viewport matrix;
-- no overlap, clipping, invisible controls, focus failures, console errors, or stale preview state.
-
-`examples/spatial-wayfinding` is the maintained mechanics reference for consuming a `.wbmap`; it demonstrates the package contract without prescribing a visual style. Editor defects and authoring-contract changes belong to Wayfinding Studio, not this repository.
+`examples/spatial-wayfinding` demonstrates the public mechanics without prescribing a visual style.

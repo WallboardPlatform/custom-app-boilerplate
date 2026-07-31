@@ -8,10 +8,12 @@ export interface PresentationTranslation {
 export interface PresentationDestinationSource {
 	category?: string;
 	description?: string;
+	/** v1 runtime compatibility. */
 	floor?: string;
-	geometryRefs?: Array<{ floorId: string }>;
+	geometryRefs?: Array<{ levelId: string }>;
 	hours?: string;
 	id: string;
+	levelId?: string;
 	mapNumber?: string;
 	name: string;
 	phone?: string;
@@ -29,7 +31,7 @@ export interface PresentationElementSource {
 	type: string;
 }
 
-export interface PresentationFloorSource<
+export interface PresentationLevelSource<
 	TElement extends PresentationElementSource = PresentationElementSource
 > {
 	camera3d?: {
@@ -43,6 +45,7 @@ export interface PresentationFloorSource<
 	height: number;
 	id: string;
 	name: string;
+	role?: 'building-floor' | 'site' | 'standalone';
 	width: number;
 }
 
@@ -56,7 +59,7 @@ export interface PresentationMapItem {
 	category?: string;
 	description: string;
 	destinationId: string;
-	floorId?: string;
+	levelId?: string;
 	geometry?: WayfindingPoint[];
 	mapNumber?: string;
 	name: string;
@@ -79,26 +82,26 @@ export interface PresentationViewport {
 }
 
 export interface PresentationScene<
-	TFloor extends PresentationFloorSource,
+	TLevel extends PresentationLevelSource,
 	TDestination extends PresentationDestinationSource
 > {
-	activeFloor?: TFloor;
+	activeLevel?: TLevel;
 	destinations: TDestination[];
-	floors: TFloor[];
+	levels: TLevel[];
 	language: string;
 	mapItems: PresentationMapItem[];
 	projectId: string;
 	supersededLabelIds: string[];
-	version: 1;
+	version: 2;
 }
 
 export interface PresentationSceneSource<
-	TFloor extends PresentationFloorSource,
+	TLevel extends PresentationLevelSource,
 	TDestination extends PresentationDestinationSource
 > {
 	defaultLanguage?: string;
 	destinations: TDestination[];
-	floors: TFloor[];
+	levels: TLevel[];
 	projectId: string;
 }
 
@@ -128,10 +131,11 @@ export const isPresentationReadyDestination = (
 	return hasPurposefulName || hasSupportingContent;
 };
 
-export const presentationDestinationFloorIds = (
+export const presentationDestinationLevelIds = (
 	destination: PresentationDestinationSource
 ): string[] => Array.from(new Set([
-	...(destination.geometryRefs?.map((reference) => reference.floorId) ?? []),
+	...(destination.geometryRefs?.map((reference) => reference.levelId) ?? []),
+	...(destination.levelId ? [destination.levelId] : []),
 	...(destination.floor ? [destination.floor] : [])
 ]));
 
@@ -180,7 +184,7 @@ const polygonCentroid = (geometry: readonly WayfindingPoint[]): WayfindingPoint 
 };
 
 const destinationPosition = (
-	floor: PresentationFloorSource,
+	floor: PresentationLevelSource,
 	destinationId: string
 ): Pick<PresentationMapItem, 'anchor' | 'geometry'> | undefined => {
 	const polygon = floor.elements.find((element) =>
@@ -225,23 +229,23 @@ const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boo
 };
 
 export const buildPresentationScene = <
-	TFloor extends PresentationFloorSource,
+	TLevel extends PresentationLevelSource,
 	TDestination extends PresentationDestinationSource
 >(
-	source: PresentationSceneSource<TFloor, TDestination>,
-	options: { floorId?: string; language?: string } = {}
-): PresentationScene<TFloor, TDestination> => {
+	source: PresentationSceneSource<TLevel, TDestination>,
+	options: { levelId?: string; language?: string } = {}
+): PresentationScene<TLevel, TDestination> => {
 	const language = options.language || source.defaultLanguage || 'en';
-	const activeFloor = source.floors.find((floor) => floor.id === options.floorId) ?? source.floors[0];
+	const activeLevel = source.levels.find((floor) => floor.id === options.levelId) ?? source.levels[0];
 	const destinations = source.destinations.map((destination) =>
 		translatedPresentationDestination(destination, language)
 	);
-	const mapItems = activeFloor
+	const mapItems = activeLevel
 		? destinations.flatMap((destination): PresentationMapItem[] => {
-			const floorIds = presentationDestinationFloorIds(destination);
+			const levelIds = presentationDestinationLevelIds(destination);
 
-			if (floorIds.length > 0 && !floorIds.includes(activeFloor.id)) return [];
-			const positioned = destinationPosition(activeFloor, destination.id);
+			if (levelIds.length > 0 && !levelIds.includes(activeLevel.id)) return [];
+			const positioned = destinationPosition(activeLevel, destination.id);
 
 			if (!positioned) return [];
 
@@ -250,7 +254,7 @@ export const buildPresentationScene = <
 				category: destination.category,
 				description: destination.description ?? '',
 				destinationId: destination.id,
-				floorId: activeFloor.id,
+				levelId: activeLevel.id,
 				mapNumber: destination.mapNumber,
 				name: destination.name,
 				presentation: isPresentationReadyDestination(destination) ? 'ready' : 'draft'
@@ -268,7 +272,7 @@ export const buildPresentationScene = <
 			].map(normalizedLabelText)));
 	}
 
-	const supersededLabelIds = activeFloor?.elements
+	const supersededLabelIds = activeLevel?.elements
 		.filter((element) => {
 			const point = element.point;
 
@@ -283,14 +287,14 @@ export const buildPresentationScene = <
 		.map((element) => element.id) ?? [];
 
 	return {
-		activeFloor,
+		activeLevel,
 		destinations,
-		floors: source.floors,
+		levels: source.levels,
 		language,
 		mapItems,
 		projectId: source.projectId,
 		supersededLabelIds,
-		version: 1
+		version: 2
 	};
 };
 
@@ -479,18 +483,20 @@ export const layoutPresentationLabels = (
 };
 
 export const getPresentationThreeDimensionalReadiness = (
-	scene: PresentationScene<PresentationFloorSource, PresentationDestinationSource>
+	scene: PresentationScene<PresentationLevelSource, PresentationDestinationSource>
 ): PresentationReadiness => {
-	const floor = scene.activeFloor;
+	const floor = scene.activeLevel;
 
 	if (!floor) return { ready: false, reasons: ['The active floor no longer exists.'] };
 	const reasons: string[] = [];
 	const polygons = floor.elements.filter((element) =>
-		element.type === 'location'
+		element.type === 'building'
+		|| element.type === 'location'
 		|| element.type === 'obstacle'
 		|| element.type === 'walkable'
 	);
 	const locations = polygons.filter((polygon) => polygon.type === 'location');
+	const buildings = polygons.filter((polygon) => polygon.type === 'building');
 	const invalidGeometry = polygons.some((polygon) =>
 		!polygon.geometry
 		|| polygon.geometry.length < 3
@@ -502,7 +508,8 @@ export const getPresentationThreeDimensionalReadiness = (
 		}, 0) / 2) < 1
 	);
 
-	if (locations.length === 0) reasons.push('Add at least one room or destination area.');
+	if (floor.role === 'site' && buildings.length === 0) reasons.push('Add at least one building footprint.');
+	else if (floor.role !== 'site' && locations.length === 0) reasons.push('Add at least one room or destination area.');
 
 	if (invalidGeometry) reasons.push('Repair invalid or collapsed map geometry.');
 	const destinationIds = new Set(floor.elements
@@ -515,10 +522,7 @@ export const getPresentationThreeDimensionalReadiness = (
 		.filter((item) => item.presentation === 'ready')
 		.map((item) => item.destinationId));
 
-	if (
-		destinationIds.size === 0
-		|| [...destinationIds].some((destinationId) => !readyDestinationIds.has(destinationId))
-	) {
+	if ([...destinationIds].some((destinationId) => !readyDestinationIds.has(destinationId))) {
 		reasons.push('Name every visible destination before presenting it in 3D.');
 	}
 	const camera = floor.camera3d;
