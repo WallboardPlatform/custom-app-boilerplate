@@ -9,74 +9,225 @@
 		"Metrics and history remain separate collections because flattening them would lose their relationship.",
 		"The dashboard renders at most three primary metrics and twenty-four trend points."
 	],
-	"app": { "mode": "new", "name": "KPI Operations", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "KPI Operations",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "The same operational story must remain useful in dashboard bands, standard displays, portrait screens, and compact tiles."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1280, "height": 720, "role": "primary", "purpose": "Landscape operations dashboard.", "minimumContentCoverage": { "width": 85, "height": 75 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide dashboard band with compressed secondary detail.", "minimumContentCoverage": { "width": 90, "height": 75 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "fallback", "purpose": "Stacked portrait KPI layout.", "minimumContentCoverage": { "width": 85, "height": 85 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact KPI tile composition.", "minimumContentCoverage": { "width": 85, "height": 80 } }
+		{
+			"id": "app-default",
+			"width": 1280,
+			"height": 720,
+			"role": "primary",
+			"purpose": "Landscape operations dashboard.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 75
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide dashboard band with compressed secondary detail.",
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 75
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "fallback",
+			"purpose": "Stacked portrait KPI layout.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 85
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact KPI tile composition.",
+			"minimumContentCoverage": {
+				"width": 85,
+				"height": 80
+			}
+		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "operationsData", "source": "generated", "contract": "CUSTOM" }
+			{
+				"property": "operationsData",
+				"source": "generated",
+				"contract": "CUSTOM"
+			}
 		]
 	},
 	"settings": [
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom color scheme.", "effect": "theme-preset" },
-		{ "property": "titleText", "purpose": "Dashboard title." },
-		{ "property": "subtitleText", "purpose": "Dashboard context line." },
-		{ "property": "emptyStateText", "purpose": "Missing-data message." },
-		{ "property": "targetLabel", "purpose": "Target progress label." },
-		{ "property": "targetValue", "purpose": "Numeric target for progress calculation." },
-		{ "property": "fontFamily", "purpose": "Display typeface." },
-		{ "property": "backgroundColor", "purpose": "Root background color." },
-		{ "property": "surfaceColor", "purpose": "Metric surface color." },
-		{ "property": "primaryTextColor", "purpose": "Primary text color." },
-		{ "property": "secondaryTextColor", "purpose": "Supporting text color." },
-		{ "property": "accentColor", "purpose": "Chart and target accent." },
-		{ "property": "positiveColor", "purpose": "Positive performance color." },
-		{ "property": "warningColor", "purpose": "Warning and exception color." }
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom color scheme.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "titleText",
+			"purpose": "Dashboard title."
+		},
+		{
+			"property": "subtitleText",
+			"purpose": "Dashboard context line."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Missing-data message."
+		},
+		{
+			"property": "targetLabel",
+			"purpose": "Target progress label."
+		},
+		{
+			"property": "targetValue",
+			"purpose": "Numeric target for progress calculation."
+		},
+		{
+			"property": "fontFamily",
+			"purpose": "Display typeface."
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Root background color."
+		},
+		{
+			"property": "surfaceColor",
+			"purpose": "Metric surface color."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Primary text color."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Supporting text color."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Chart and target accent."
+		},
+		{
+			"property": "positiveColor",
+			"purpose": "Positive performance color."
+		},
+		{
+			"property": "warningColor",
+			"purpose": "Warning and exception color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "dashboard-title",
-			"source": { "type": "setting", "properties": ["titleText"] },
-			"selectors": [".wb-app__header h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"titleText"
+				]
+			},
+			"selectors": [
+				".wb-app__header h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
 			"rationale": "The configurable title is the board anchor and must fit before the timestamp and KPI field are compressed.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "metric-label",
-			"source": { "type": "datasource", "properties": ["operationsData"] },
-			"selectors": [".wb-app__metrics article > span"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"operationsData"
+				]
+			},
+			"selectors": [
+				".wb-app__metrics article > span"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Clamp after two lines so the value and delta remain visible.",
 			"rationale": "Metric labels may need a second line, but numeric values and trend context retain priority.",
 			"evidenceScenario": "long-labels"
 		}
 	],
 	"states": [
-		{ "scenario": "light-theme", "expectation": "The coordinated light preset preserves KPI hierarchy and semantic status contrast." },
-		{ "scenario": "empty", "expectation": "An explicit empty state occupies the dashboard without layout collapse." },
-		{ "scenario": "long-labels", "expectation": "Long metric labels and deltas remain readable in a wide-low surface." },
-		{ "scenario": "live-update", "expectation": "Updated metrics replace current values without rebuilding the app." }
+		{
+			"scenario": "light-theme",
+			"expectation": "The coordinated light preset preserves KPI hierarchy and semantic status contrast."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty state occupies the dashboard without layout collapse."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long metric labels and deltas remain readable in a wide-low surface."
+		},
+		{
+			"scenario": "live-update",
+			"expectation": "Updated metrics replace current values without rebuilding the app."
+		}
 	],
 	"behaviors": [
-		{ "id": "responsive-chart", "expectation": "The trend remains bounded, paints real data, and preserves balanced KPI card geometry.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update", "expectation": "Datasource updates propagate to metric labels and values.", "evidence": { "scenario": "live-update" } }
+		{
+			"id": "responsive-chart",
+			"expectation": "The trend remains bounded, paints real data, and preserves balanced KPI card geometry.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "live-update",
+			"expectation": "Datasource updates propagate to metric labels and values.",
+			"evidence": {
+				"scenario": "live-update"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "agent-authored",
@@ -86,7 +237,9 @@
 			"One oversized primary KPI anchors the reading order.",
 			"The trend is an integrated evidence field rather than a decorative chart card."
 		],
-		"avoid": ["A uniform grid of equally weighted metric cards."]
+		"avoid": [
+			"A uniform grid of equally weighted metric cards."
+		]
 	},
 	"visualReview": {
 		"intent": "A quiet operational dashboard with one dominant metric story, restrained surfaces, and a readable trend.",
