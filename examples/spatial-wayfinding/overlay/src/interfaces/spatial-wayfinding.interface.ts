@@ -154,6 +154,9 @@ export interface RuntimeProjectDefaults {
 		animation3d: 'bounce' | 'none' | 'pulse';
 		animationSpeed: number;
 		color: string;
+		markerAssetId?: string;
+		markerSize2d?: number;
+		markerSize3d?: number;
 	};
 	route: {
 		animation: 'flow' | 'none' | 'pulse';

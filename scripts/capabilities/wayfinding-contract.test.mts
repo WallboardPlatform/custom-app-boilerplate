@@ -65,6 +65,46 @@ void describe('public Wayfinding interoperability contract', (): void => {
 		);
 	});
 
+	void it('publishes the custom You are here marker as a complete public consumer contract', (): void => {
+		const projectPath = path.resolve('examples', 'spatial-wayfinding', 'source', 'campus.wbwayfinding');
+		const project = readJson(projectPath) as {
+			assets?: Array<{ id?: string; kind?: string }>;
+			defaults?: { origin?: { markerAssetId?: string; markerSize2d?: number; markerSize3d?: number } };
+		};
+		const projectOrigin = project.defaults?.origin;
+		const markerAssetId: string | undefined = projectOrigin?.markerAssetId;
+
+		assert.equal(projectOrigin?.markerSize2d, 64);
+		assert.equal(projectOrigin?.markerSize3d, 84);
+		assert.ok(markerAssetId);
+		assert.equal(
+			project.assets?.some((asset): boolean => asset.id === markerAssetId && asset.kind === 'marker'),
+			true
+		);
+
+		const packagePath = path.resolve(
+			'examples',
+			'spatial-wayfinding',
+			'overlay',
+			'src',
+			'assets',
+			'campus.wbmap'
+		);
+		const entries = unzipSync(new Uint8Array(fs.readFileSync(packagePath)));
+		const mapBytes: Uint8Array | undefined = entries['map.json'];
+
+		assert.ok(mapBytes, 'The public .wbmap reference must contain map.json.');
+		const map = JSON.parse(strFromU8(mapBytes)) as {
+			assets?: Array<{ id?: string; kind?: string }>;
+			defaults?: { origin?: { markerAssetId?: string; markerSize2d?: number; markerSize3d?: number } };
+		};
+		assert.deepEqual(map.defaults?.origin, projectOrigin);
+		assert.equal(
+			map.assets?.some((asset): boolean => asset.id === markerAssetId && asset.kind === 'symbol'),
+			true
+		);
+	});
+
 	void it('keeps every documented public consumer source available', (): void => {
 		for (const publicSource of [
 			'src/utils/wayfinding.ts',

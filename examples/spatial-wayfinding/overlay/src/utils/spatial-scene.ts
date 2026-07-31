@@ -10,6 +10,7 @@ import type {
 	RuntimeMedia,
 	RuntimeOrigin,
 	RuntimePointOfInterest,
+	RuntimeProjectDefaults,
 	RuntimePolygon
 } from '@interfaces/spatial-wayfinding.interface';
 
@@ -96,11 +97,23 @@ const createImageTexture = (
 	return texture;
 };
 
+const markerDimensions = (asset: RuntimeAsset, maximumSide: number): { height: number; width: number } => {
+	const ratio: number = Math.max(
+		0.2,
+		Math.min(5, (asset.naturalWidth ?? 1) / Math.max(1, asset.naturalHeight ?? 1))
+	);
+
+	return ratio >= 1
+		? { height: maximumSide / ratio, width: maximumSide }
+		: { height: maximumSide, width: maximumSide * ratio };
+};
+
 export interface SpatialSceneOptions {
 	accentColor: () => string;
 	assets: RuntimeAsset[];
 	motionEnabled: () => boolean;
 	onSelectDestination: (destinationId: string) => void;
+	originDefaults: RuntimeProjectDefaults['origin'];
 	routeAnimationSpeed: () => number;
 	routeColor: () => string;
 	routeWidth: () => number;
@@ -111,6 +124,7 @@ export class SpatialScene {
 	private readonly controls: OrbitControls;
 	private readonly destinationObjects = new Map<string, THREE.Object3D[]>();
 	private frameId?: number;
+	private readonly originMarkers: THREE.Object3D[] = [];
 	private readonly originPulses: THREE.Group[] = [];
 	private pointerStart?: { x: number; y: number };
 	private readonly raycaster = new THREE.Raycaster();
@@ -436,16 +450,49 @@ export class SpatialScene {
 	}
 
 	private addOrigin(element: RuntimeOrigin): void {
-		const color = '#0f8f78';
-		const marker = new THREE.Mesh(
-			new THREE.CylinderGeometry(13, 13, 8, 24),
-			new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35 })
-		);
-		marker.position.copy(centeredPoint(this.floor, element.point, 8));
+		const defaults = this.options.originDefaults;
+		const color: string = defaults.color;
+		const markerSize: number = defaults.markerSize3d ?? 46;
+		const markerAsset: RuntimeAsset | undefined = defaults.markerAssetId
+			? this.options.assets.find(
+				(asset): boolean => asset.id === defaults.markerAssetId && asset.kind === 'symbol'
+			)
+			: undefined;
+		let marker: THREE.Object3D;
+
+		if (markerAsset) {
+			const dimensions = markerDimensions(markerAsset, markerSize);
+			const texture = createImageTexture(markerAsset, (): void => {
+				this.renderer.domElement.dataset.originMarkerTexture = 'ready';
+			});
+			const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+				depthTest: false,
+				map: texture,
+				transparent: true
+			}));
+			sprite.scale.set(dimensions.width, dimensions.height, 1);
+			sprite.position.copy(centeredPoint(this.floor, element.point, dimensions.height / 2 + 8));
+			sprite.renderOrder = 30;
+			marker = sprite;
+			this.renderer.domElement.setAttribute('data-origin-marker-3d', 'custom-image-replacement');
+			this.renderer.domElement.dataset.originMarkerSize3d = markerSize.toString();
+		} else {
+			const pin = new THREE.Mesh(
+				new THREE.CylinderGeometry(13, 13, 8, 24),
+				new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35 })
+			);
+			pin.position.copy(centeredPoint(this.floor, element.point, 8));
+			marker = pin;
+			this.renderer.domElement.setAttribute('data-origin-marker-3d', 'default');
+		}
+
+		marker.userData.baseY = marker.position.y;
+		marker.userData.baseScale = marker.scale.clone();
+		this.originMarkers.push(marker);
 		const pulse = new THREE.Group();
 		pulse.position.copy(centeredPoint(this.floor, element.point, 3));
 		const ring = new THREE.Mesh(
-			new THREE.RingGeometry(18, 24, 32),
+			new THREE.RingGeometry(Math.max(18, markerSize * 0.42), Math.max(24, markerSize * 0.56), 32),
 			new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.72 })
 		);
 		ring.rotation.x = -Math.PI / 2;
@@ -468,6 +515,7 @@ export class SpatialScene {
 			this.registerDestinationObject(element.destinationId, marker);
 			this.selectable.push(marker);
 		}
+
 		this.scene.add(marker);
 	}
 
@@ -480,9 +528,19 @@ export class SpatialScene {
 	private animate(): void {
 		const frame = (time: number): void => {
 			this.controls.update();
-			const pulse: number = this.options.motionEnabled() ? 1 + Math.sin(time / 360) * 0.18 : 1;
+			const animation = this.options.motionEnabled() ? this.options.originDefaults.animation3d : 'none';
+			const phase: number = Math.sin(time / Math.max(240, this.options.originDefaults.animationSpeed * 10));
+			const pulse: number = animation === 'none' ? 1 : 1 + phase * 0.18;
 
 			for (const originPulse of this.originPulses) originPulse.scale.set(pulse, pulse, pulse);
+
+			for (const originMarker of this.originMarkers) {
+				const baseY: number = Number(originMarker.userData.baseY ?? originMarker.position.y);
+				const baseScale = originMarker.userData.baseScale as THREE.Vector3;
+				originMarker.position.y = baseY + (animation === 'bounce' ? phase * 5 : 0);
+				originMarker.scale.copy(baseScale).multiplyScalar(animation === 'pulse' ? 1 + phase * 0.08 : 1);
+			}
+
 			this.selectedPulse.scale.set(pulse, pulse, pulse);
 
 			if (this.options.motionEnabled() && this.routeTotalLength > 0) {
