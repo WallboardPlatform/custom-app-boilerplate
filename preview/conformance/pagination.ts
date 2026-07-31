@@ -4,10 +4,17 @@ import type { Locator, Page } from '@playwright/test';
 /**
  * Conformance suite for the paginated-content archetype.
  *
- * Seven examples page through more records than fit. The failure that matters is not visual: a
+ * Several examples page through more records than fit. The failure that matters is not visual: a
  * pager that silently drops a record shows a board which looks entirely correct and is wrong.
  * Nobody watching a departures board can tell that their flight is the one never scheduled into
  * a page.
+ *
+ * Two kinds of pager qualify and they differ in one way that matters here. A `rotating` board
+ * advances on its own and wraps, so a full cycle must return to where it started. A `manual` pager
+ * is driven by a viewer and stops at the last page, so walking forward and then back is the only
+ * way to see every record. Treating the second as the first is what kept two examples out of this
+ * suite: their Next control is disabled on the last page, so the cycle could never close and the
+ * suite would have been testing its own assumption.
  *
  * Constrains behaviour, never appearance: how pages are indicated, how they transition and how
  * many rows each holds is the app's; that every record is reachable exactly once is not.
@@ -16,10 +23,19 @@ import type { Locator, Page } from '@playwright/test';
 export interface PaginationConformanceTarget {
 	/** Human name used in test titles. */
 	name: string;
+	/**
+	 * How pages are traversed.
+	 *
+	 * `rotating` wraps on its own and must return to its starting page after a full cycle.
+	 * `manual` is viewer-driven and stops at the last page, so it must also supply `retreat`.
+	 */
+	traversal: 'manual' | 'rotating';
 	/** Navigates to the app with rotation under test control. */
 	open: (page: Page) => Promise<void>;
-	/** Advances exactly one page. */
+	/** Advances exactly one page. Must be a no-op on the last page of a manual pager. */
 	advance: (page: Page) => Promise<void>;
+	/** Steps back exactly one page. Required for manual traversal, unused for rotating. */
+	retreat?: (page: Page) => Promise<void>;
 	/** Number of pages the app claims to have. */
 	pageCount: (page: Page) => Promise<number>;
 	/** Zero-based index of the page currently shown. */
@@ -55,7 +71,12 @@ export const assertNoEmptyPage = async (target: PaginationConformanceTarget, pag
 		const keys: string[] = await target.visibleKeys(page);
 
 		expect(keys.length, `page ${await target.pageIndex(page)} renders no records`).toBeGreaterThan(0);
-		await target.advance(page);
+
+		// A manual pager has nothing to advance to on its last page, and asking it to would wait on a
+		// control the app has correctly disabled.
+		if (target.traversal === 'rotating' || visited < pages - 1) {
+			await target.advance(page);
+		}
 	}
 };
 
@@ -68,11 +89,40 @@ export const assertCycleReturnsToStart = async (
 	const pages: number = await target.pageCount(page);
 	const start: number = await target.pageIndex(page);
 
-	for (let visited = 0; visited < pages; visited += 1) {
+	if (target.traversal === 'rotating') {
+		for (let visited = 0; visited < pages; visited += 1) {
+			await target.advance(page);
+		}
+
+		expect(await target.pageIndex(page), 'a full cycle did not return to where it started').toBe(start);
+
+		return;
+	}
+
+	/*
+	 * A manual pager stops rather than wraps, so the equivalent invariant is that the walk is
+	 * reversible: forward to the last page, back to the first, landing where it began. A pager that
+	 * loses its place on the way back strands the viewer on a page they did not choose.
+	 */
+	const retreat = target.retreat;
+
+	expect(retreat, 'manual traversal must supply retreat so the walk can be reversed').toBeDefined();
+
+	if (!retreat) {
+		return;
+	}
+
+	for (let visited = 1; visited < pages; visited += 1) {
 		await target.advance(page);
 	}
 
-	expect(await target.pageIndex(page), 'a full cycle did not return to where it started').toBe(start);
+	expect(await target.pageIndex(page), 'advancing to the end did not reach the last page').toBe(pages - 1);
+
+	for (let visited = 1; visited < pages; visited += 1) {
+		await retreat(page);
+	}
+
+	expect(await target.pageIndex(page), 'walking back did not return to the first page').toBe(start);
 };
 
 export const assertEveryRecordShownOncePerCycle = async (
@@ -88,7 +138,11 @@ export const assertEveryRecordShownOncePerCycle = async (
 
 	for (let visited = 0; visited < pages; visited += 1) {
 		seen.push(...await target.visibleKeys(page));
-		await target.advance(page);
+
+		// See assertNoEmptyPage: a manual pager's last page has no next.
+		if (target.traversal === 'rotating' || visited < pages - 1) {
+			await target.advance(page);
+		}
 	}
 
 	const unique = new Set(seen);

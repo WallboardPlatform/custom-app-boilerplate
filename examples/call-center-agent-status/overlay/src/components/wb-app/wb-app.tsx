@@ -233,6 +233,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			class={`wb-app ${style['wb-app']}`}
 			data-host-ready={Boolean(props.hostElement)}
 			data-page-index={pageIndex()}
+			data-page-count={pages().length}
 			style={themeStyle()}
 		>
 			<header class="agent-header">

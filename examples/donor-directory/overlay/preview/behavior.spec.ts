@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { registerKeyboardConformance } from './conformance/keyboard';
+import { registerPaginationConformance } from './conformance/pagination';
 
 import {
 	categoryRows,
@@ -1440,3 +1441,58 @@ registerKeyboardConformance({
 	focusTarget: (page: Page): Locator => page.getByRole('searchbox').first()
 });
 
+
+const readPageIndex = async (page: Page): Promise<number> => {
+	const value: string | null = await page
+		.locator('[data-preview-id="donor-directory-root"]')
+		.getAttribute('data-page-index');
+
+	return Number.parseInt(value ?? '0', 10);
+};
+
+const stepPage = async (page: Page, control: 'Next donor page' | 'Previous donor page'): Promise<void> => {
+	const before: number = await readPageIndex(page);
+
+	await page.getByRole('button', { name: control }).click();
+	await page.waitForFunction((previous: number): boolean => {
+		const root: Element | null = document.querySelector('[data-preview-id="donor-directory-root"]');
+
+		return Number.parseInt(root?.getAttribute('data-page-index') ?? '0', 10) !== previous;
+	}, before);
+};
+
+/*
+ * Registered on uneven-last-page rather than the default, which fits on a single page: a one-page
+ * pager satisfies every assertion here without exercising any of them.
+ *
+ * Identity is the rendered donor name compared against the names the fixture supplied, so the
+ * expectation comes from outside the app. Comparing the app's own keys against themselves would
+ * confirm only that paging is self-consistent, which is exactly what a dropped record already is.
+ */
+registerPaginationConformance({
+	name: 'Donor directory pages',
+	traversal: 'manual',
+	open: async (page: Page): Promise<void> => {
+		await openScenario(page, 'uneven-last-page');
+	},
+	advance: (page: Page): Promise<void> => stepPage(page, 'Next donor page'),
+	retreat: (page: Page): Promise<void> => stepPage(page, 'Previous donor page'),
+	pageCount: async (page: Page): Promise<number> => {
+		const value: string | null = await page
+			.locator('[data-preview-id="donor-directory-root"]')
+			.getAttribute('data-page-count');
+
+		return Number.parseInt(value ?? '0', 10);
+	},
+	pageIndex: readPageIndex,
+	visibleKeys: async (page: Page): Promise<string[]> => {
+		return page.locator('[data-preview-id="donor-entry"]').evaluateAll((entries: Element[]): string[] => {
+			return entries.map((entry: Element): string => {
+				return (entry.querySelector('[data-entry-field="1"]')?.textContent ?? '').trim();
+			});
+		});
+	},
+	expectedKeys: async (): Promise<string[]> => {
+		return makeDonorRows(25, ['Community Friends']).map((row): string => String(row.Name));
+	}
+});
