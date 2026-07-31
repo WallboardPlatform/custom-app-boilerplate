@@ -169,6 +169,7 @@ void describe('keyboard conformance gate', (): void => {
 			const key: HTMLElement | null = document.querySelector('.letter');
 
 			key?.removeAttribute('aria-label');
+
 			if (key) key.innerHTML = '<svg width="12" height="12" aria-hidden="true"></svg>';
 		});
 

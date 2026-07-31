@@ -6,6 +6,7 @@ import type { Settings } from '@interfaces/application.interface';
 import type {
 	RuntimeAsset,
 	RuntimeDestination,
+	RuntimeDoor,
 	RuntimeElement,
 	RuntimeFloor,
 	RuntimeLabel,
@@ -13,11 +14,17 @@ import type {
 	RuntimeOrigin,
 	RuntimePointOfInterest,
 	RuntimePolygon,
-	RuntimeTranslation,
+	RuntimeTransition,
 	WayfindingRuntimeBundle
 } from '@interfaces/spatial-wayfinding.interface';
 import { WayfindingGraph } from '@utils/wayfinding';
 import type { WayfindingNode, WayfindingPoint, WayfindingRouteResult } from '@utils/wayfinding';
+import {
+	buildPresentationScene,
+	getPresentationThreeDimensionalReadiness,
+	layoutPresentationLabels,
+	presentationDestinationFloorIds
+} from '@utils/wayfinding-presentation';
 import { fetchWayfindingMapPackage } from '@utils/wayfinding-map-package';
 import { SpatialScene } from '@utils/spatial-scene';
 
@@ -34,46 +41,23 @@ interface WbAppProps {
 const polygonPoints = (points: WayfindingPoint[]): string =>
 	points.map((point: WayfindingPoint): string => `${point.x},${point.y}`).join(' ');
 
+const doorEndpoints = (door: RuntimeDoor): [WayfindingPoint, WayfindingPoint] => {
+	const radians = door.angle * Math.PI / 180;
+	const dx = Math.cos(radians) * door.length / 2;
+	const dy = Math.sin(radians) * door.length / 2;
+
+	return [
+		{ x: door.point.x - dx, y: door.point.y - dy },
+		{ x: door.point.x + dx, y: door.point.y + dy }
+	];
+};
+
 const mediaDimensions = (media: RuntimeMedia, asset?: RuntimeAsset): { height: number; width: number } => {
 	const ratio: number = asset?.naturalWidth && asset.naturalHeight
 		? asset.naturalWidth / asset.naturalHeight
 		: media.width / media.height;
 
 	return { height: media.height, width: media.height * ratio };
-};
-
-const translatedDestination = (
-	destination: RuntimeDestination,
-	language: string
-): RuntimeDestination => {
-	const translation: RuntimeTranslation | undefined = destination.translations?.[language];
-
-	return {
-		...destination,
-		description: translation?.description ?? destination.description,
-		name: translation?.name ?? destination.name
-	};
-};
-
-const destinationFloorIds = (destination: RuntimeDestination): string[] =>
-	Array.from(new Set(destination.geometryRefs?.map((reference): string => reference.floorId) ?? []));
-
-const pointForDestination = (floor: RuntimeFloor, destinationId?: string): WayfindingPoint | undefined => {
-	if (!destinationId) return undefined;
-	const element: RuntimePolygon | RuntimePointOfInterest | undefined = floor.elements.find(
-		(candidate: RuntimeElement): candidate is RuntimePolygon | RuntimePointOfInterest =>
-		(candidate.type === 'location' || candidate.type === 'poi') && candidate.destinationId === destinationId
-	);
-
-	if (!element) return undefined;
-
-	if (element.type === 'poi') return element.point;
-	const total = element.geometry.reduce(
-		(result, point): WayfindingPoint => ({ x: result.x + point.x, y: result.y + point.y }),
-		{ x: 0, y: 0 }
-	);
-
-	return { x: total.x / element.geometry.length, y: total.y / element.geometry.length };
 };
 
 export default (props: WbAppProps): JSX.Element => {
@@ -90,21 +74,82 @@ export default (props: WbAppProps): JSX.Element => {
 	const [showLabels, setShowLabels] = createSignal<boolean>(true);
 	const [showSymbols, setShowSymbols] = createSignal<boolean>(true);
 	const [view, setView] = createSignal<'2d' | '3d'>(settings().defaultView);
-	let previousDefaultView: '2d' | '3d' = settings().defaultView;
+	let previousDefaultView: '2d' | '3d' | undefined;
 	let sceneHost: HTMLDivElement | undefined;
 	let scene: SpatialScene | undefined;
 
-	const floor = createMemo((): RuntimeFloor | undefined => {
+	const presentationScene = createMemo(() => {
 		const loaded = runtime();
 
-		return loaded?.floors.find((candidate): boolean => candidate.id === selectedFloorId()) ?? loaded?.floors[0];
+		if (!loaded) return undefined;
+
+		return buildPresentationScene({
+			defaultLanguage: loaded.defaultLanguage,
+			destinations: loaded.destinations.Destinations.rows,
+			floors: loaded.floors,
+			projectId: loaded.manifest.projectId
+		}, {
+			floorId: selectedFloorId(),
+			language: selectedLanguage()
+		});
 	});
+	const floor = createMemo((): RuntimeFloor | undefined => presentationScene()?.activeFloor);
 	const destinations = createMemo((): RuntimeDestination[] => {
-		const loaded = runtime();
-		const language: string = selectedLanguage() || loaded?.defaultLanguage || 'en';
+		return presentationScene()?.destinations ?? [];
+	});
+	const presentationLabels = createMemo((): RuntimeLabel[] =>
+		layoutPresentationLabels(
+			presentationScene()?.mapItems ?? [],
+			1.4,
+			undefined,
+			floor() ? { height: floor()!.height, width: floor()!.width } : undefined
+		)
+			.map((placement): RuntimeLabel => ({
+				color: '#17332d',
+				floorId: placement.item.floorId,
+				fontSize: 26,
+				fontWeight: 700,
+				id: `presentation-destination-label:${placement.item.destinationId}`,
+				maxWidth: placement.item.geometry
+					? Math.max(80, Math.max(
+						...placement.item.geometry.map((point) => point.x)
+					) - Math.min(
+						...placement.item.geometry.map((point) => point.x)
+					) - 36)
+					: placement.width,
+				outlineColor: '#ffffff',
+				outlineWidth: 5,
+				point: placement.item.geometry
+					? placement.item.anchor
+					: {
+						x: placement.x + placement.width / 2,
+						y: placement.y + placement.height * 0.72
+					},
+				text: placement.item.mapNumber
+					? `${placement.item.mapNumber}  ${placement.item.name}`
+					: placement.item.name,
+				textAnchor: 'middle',
+				type: 'label'
+			}))
+	);
+	const presentationFloor = createMemo((): RuntimeFloor | undefined => {
+		const activeFloor = floor();
+		const supersededLabelIds = new Set(presentationScene()?.supersededLabelIds ?? []);
 
-		return (loaded?.destinations.Destinations.rows ?? [])
-			.map((destination): RuntimeDestination => translatedDestination(destination, language));
+		return activeFloor
+			? {
+				...activeFloor,
+				elements: [
+					...activeFloor.elements.filter((element) => !supersededLabelIds.has(element.id)),
+					...presentationLabels()
+				]
+			}
+			: undefined;
+	});
+	const threeDimensionalReady = createMemo((): boolean => {
+		const scene = presentationScene();
+
+		return scene ? getPresentationThreeDimensionalReadiness(scene).ready : false;
 	});
 	const visibleDestinations = createMemo((): RuntimeDestination[] => {
 		const floorId: string | undefined = floor()?.id;
@@ -112,7 +157,7 @@ export default (props: WbAppProps): JSX.Element => {
 		const sourceDestinations: RuntimeDestination[] = runtime()?.destinations.Destinations.rows ?? [];
 
 		return destinations().filter((destination): boolean => {
-			const floorIds: string[] = destinationFloorIds(destination);
+			const floorIds: string[] = presentationDestinationFloorIds(destination);
 
 			if (floorId && floorIds.length > 0 && !floorIds.includes(floorId)) return false;
 
@@ -199,10 +244,11 @@ export default (props: WbAppProps): JSX.Element => {
 		return runtime()?.assets.filter((asset): boolean => photoIds.includes(asset.id)) ?? [];
 	});
 	const selectedTarget = createMemo((): WayfindingPoint | undefined => {
-		const activeFloor: RuntimeFloor | undefined = floor();
 		const routeTarget = activeRoutePoints().at(-1);
 
-		return routeTarget ?? (activeFloor ? pointForDestination(activeFloor, selectedId()) : undefined);
+		return routeTarget ?? presentationScene()?.mapItems.find(
+			(item) => item.destinationId === selectedId()
+		)?.anchor;
 	});
 	const themeStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-spatial-accent': settings().accentColor,
@@ -216,7 +262,7 @@ export default (props: WbAppProps): JSX.Element => {
 
 	const chooseDestination = (destinationId: string): void => {
 		const destination: RuntimeDestination | undefined = destinations().find((candidate): boolean => candidate.id === destinationId);
-		const nextFloorId: string | undefined = destination && destinationFloorIds(destination)[0];
+		const nextFloorId: string | undefined = destination && presentationDestinationFloorIds(destination)[0];
 
 		if (nextFloorId) setSelectedFloorId(nextFloorId);
 		setSelectedId(destinationId);
@@ -243,10 +289,10 @@ export default (props: WbAppProps): JSX.Element => {
 	});
 
 	createEffect((): void => {
-		const activeFloor: RuntimeFloor | undefined = floor();
+		const activeFloor: RuntimeFloor | undefined = presentationFloor();
 		const loaded = runtime();
 
-		if (!activeFloor || !loaded || !sceneHost) return;
+		if (!activeFloor || !loaded || !sceneHost || !threeDimensionalReady()) return;
 		scene?.dispose();
 		const nextScene = new SpatialScene(sceneHost, activeFloor, {
 			accentColor: (): string => settings().accentColor,
@@ -270,9 +316,15 @@ export default (props: WbAppProps): JSX.Element => {
 	createEffect((): void => {
 		const nextDefaultView: '2d' | '3d' = settings().defaultView;
 
+		if (!runtime()) return;
+
 		if (nextDefaultView === previousDefaultView) return;
 		previousDefaultView = nextDefaultView;
-		setView(nextDefaultView);
+		setView(nextDefaultView === '3d' && !threeDimensionalReady() ? '2d' : nextDefaultView);
+	});
+
+	createEffect((): void => {
+		if (runtime() && view() === '3d' && !threeDimensionalReady()) setView('2d');
 	});
 
 	return (
@@ -295,14 +347,16 @@ export default (props: WbAppProps): JSX.Element => {
 					<Show when={settings().showViewSwitcher}>
 						<div class="wb-spatial-wayfinding-view-switcher" role="group" aria-label="Map view">
 							<button type="button" classList={{ 'wb-spatial-wayfinding-active': view() === '2d' }} onClick={(): void => { setView('2d'); }}>2D</button>
-							<button type="button" classList={{ 'wb-spatial-wayfinding-active': view() === '3d' }} onClick={(): void => { setView('3d'); }}>3D</button>
+							<Show when={threeDimensionalReady()}>
+								<button type="button" classList={{ 'wb-spatial-wayfinding-active': view() === '3d' }} onClick={(): void => { setView('3d'); }}>3D</button>
+							</Show>
 						</div>
 					</Show>
 					<button type="button" class="wb-spatial-wayfinding-reset" aria-label="Reset view" onClick={reset}>Reset</button>
 				</div>
 			</header>
 			<Show
-				when={floor()}
+				when={presentationFloor()}
 				fallback={
 					<main class="wb-spatial-wayfinding-loading" role={runtimeError() ? 'alert' : 'status'}>
 						<strong>{runtimeError() ? 'Map unavailable' : 'Loading campus map'}</strong>
@@ -361,6 +415,42 @@ export default (props: WbAppProps): JSX.Element => {
 										/>
 									)}
 								</For>
+								<For each={activeFloor().elements.filter((element): element is RuntimeDoor => element.type === 'door')}>
+									{(door: RuntimeDoor): JSX.Element => {
+										const [start, end] = doorEndpoints(door);
+
+										return (
+											<g class="wb-spatial-wayfinding-door" aria-label="Doorway">
+												<line
+													class="wb-spatial-wayfinding-door-opening"
+													x1={start.x}
+													y1={start.y}
+													x2={end.x}
+													y2={end.y}
+												/>
+												<line
+													class="wb-spatial-wayfinding-door-threshold"
+													x1={start.x}
+													y1={start.y}
+													x2={end.x}
+													y2={end.y}
+												/>
+											</g>
+										);
+									}}
+								</For>
+								<For each={activeFloor().elements.filter((element): element is RuntimeTransition => element.type === 'transition')}>
+									{(transition: RuntimeTransition): JSX.Element => (
+										<g
+											class="wb-spatial-wayfinding-transition"
+											aria-label={transition.label}
+											transform={`translate(${transition.point.x} ${transition.point.y})`}
+										>
+											<circle r="22" />
+											<text y="1">{transition.kind === 'elevator' ? '↕' : transition.kind === 'stairs' ? '↗' : '↑'}</text>
+										</g>
+									)}
+								</For>
 								<Show when={activeRoutePoints().length > 1}>
 									<polyline class="wb-spatial-wayfinding-route-shadow" points={polygonPoints(activeRoutePoints())} />
 									<polyline
@@ -377,7 +467,10 @@ export default (props: WbAppProps): JSX.Element => {
 									/>
 								</Show>
 								<Show when={showLabels()}>
-									<For each={activeFloor().elements.filter((element): element is RuntimeLabel => element.type === 'label')}>
+									<For each={activeFloor().elements.filter((element): element is RuntimeLabel =>
+										element.type === 'label'
+										&& !element.id.startsWith('presentation-destination-label:')
+									)}>
 										{(label: RuntimeLabel): JSX.Element => (
 											<text
 												x={label.point.x}
@@ -390,6 +483,32 @@ export default (props: WbAppProps): JSX.Element => {
 												font-weight={label.fontWeight}
 												stroke={label.outlineColor}
 												stroke-width={label.outlineWidth}
+												data-preview-allow-overflow
+											>
+												{label.text}
+											</text>
+										)}
+									</For>
+									<For each={presentationLabels()}>
+										{(label: RuntimeLabel): JSX.Element => (
+											<text
+												x={label.point.x}
+												y={label.point.y}
+												text-anchor={label.textAnchor}
+												class="wb-spatial-wayfinding-map-label wb-spatial-wayfinding-destination-label"
+												fill={label.color}
+												font-size={label.fontSize?.toString()}
+												font-weight={label.fontWeight}
+												stroke={label.outlineColor}
+												stroke-width={label.outlineWidth}
+												textLength={
+													label.maxWidth
+													&& label.text.length * (label.fontSize ?? 26) * 0.58 > label.maxWidth
+														? label.maxWidth
+														: undefined
+												}
+												lengthAdjust="spacingAndGlyphs"
+												data-destination-label={label.id.replace('presentation-destination-label:', '')}
 												data-preview-allow-overflow
 											>
 												{label.text}

@@ -1,8 +1,6 @@
-import type { StudioCapability } from './capabilities.ts';
-
 export interface StudioWorkflowContract {
 	browserContracts: string[];
-	capabilityIds: StudioCapability['id'][];
+	capabilityIds: string[];
 	id: string;
 	outcome: string;
 }
@@ -65,7 +63,6 @@ export const STUDIO_WORKFLOW_CONTRACTS: StudioWorkflowContract[] = [
 	{
 		browserContracts: [
 			'builds a route network from authored pedestrian space and linked doors',
-			'preserves and rebuilds routes from an imported painted pedestrian mask',
 			'authors a manual route segment in route edit mode',
 			'inserts, drags, and removes route bends without replacing the edge or moving the camera',
 			'places, moves, and removes route junctions without moving the camera',

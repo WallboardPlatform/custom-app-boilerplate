@@ -1,28 +1,34 @@
 {
-	"contractVersion": 1,
+	"format": "wallboard-wayfinding-studio",
+	"formatVersion": 1,
 	"projectId": "wayfinding-project",
 	"name": "Wayfinding project",
 	"createdAt": "2026-01-01T00:00:00.000Z",
 	"updatedAt": "2026-01-01T00:00:00.000Z",
-	"delivery": {
-		"contractVersion": 1,
-		"projectId": "wayfinding-project",
-		"source": { "kind": "floor-plan", "presentation": "source-overlay", "levels": 1, "equivalentRedrawAllowed": true },
-		"guidance": { "targetMode": "highlight", "allowFallback": true, "stepFreeRequired": false },
-		"evidence": {
-			"destinationMetadata": { "status": "unavailable", "provenance": "customer-provided" },
-			"destinationAnchors": { "status": "unavailable", "provenance": "ai-inferred" },
-			"currentLocationAnchors": { "status": "unavailable", "provenance": "customer-provided" },
-			"orientation": { "status": "unavailable", "provenance": "customer-provided" },
-			"walkableSpace": { "status": "unavailable", "provenance": "image-analysis" },
-			"routeTopology": { "status": "unavailable", "provenance": "ai-inferred" },
-			"entranceApproaches": { "status": "unavailable", "provenance": "ai-inferred" },
-			"levelTransitions": { "status": "unavailable", "provenance": "ai-inferred" },
-			"accessibility": { "status": "unavailable", "provenance": "customer-provided" }
-		}
+	"defaultLanguage": "en",
+	"defaults": {
+		"iconSize": 72,
+		"label": {
+			"color": "#17201f",
+			"fontFamily": "sans-serif",
+			"fontSize": 24,
+			"fontSize3d": 16,
+			"fontWeight": 600,
+			"outlineColor": "#ffffff",
+			"outlineWidth": 0
+		},
+		"location": { "extrusionHeight": 18, "fillColor": "#f4c95d", "fillOpacity": 0.72 },
+		"locationColor": { "fixedColor": "#f4c95d", "mode": "inherited" },
+		"logoSize": 96,
+		"obstacle": { "extrusionHeight": 24, "fillColor": "#31403d", "fillOpacity": 0.76 },
+		"origin": { "animation2d": "radar", "animation3d": "bounce", "animationSpeed": 48, "color": "#138b75" },
+		"route": { "animation": "flow", "animationSpeed": 48, "color": "#246bfd", "cornerRadius": 18, "lineWidth": 9 },
+		"walkable": { "extrusionHeight": 0, "fillColor": "#55bfa7", "fillOpacity": 0.28 }
 	},
 	"assets": [],
+	"categories": ["Accessibility", "Dining", "Events", "Parking", "Restrooms", "Services", "Shopping"],
+	"languages": [{ "code": "en", "label": "English" }],
 	"floors": [{ "id": "level-0", "name": "Level 0", "order": 0, "width": 1920, "height": 1080, "elements": [] }],
-	"graph": { "contractVersion": 2, "graphId": "wayfinding-project-graph", "nodes": [], "edges": [] },
+	"graph": { "graphId": "wayfinding-project-graph", "nodes": [], "edges": [] },
 	"destinations": []
 }

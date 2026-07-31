@@ -19,7 +19,71 @@ void test('project commands are undoable without rewinding viewport state', (): 
 	assert.equal(snapshot.canRedo, true);
 });
 
-void test('loading a legacy-compatible project resets document history and keeps panel preferences', (): void => {
+void test('continuous element controls merge into one undo step', (): void => {
+	const project = createWayfindingStudioProject('continuous-control-history');
+	const floor = project.floors[0];
+	floor.elements.push({
+		assetId: 'logo',
+		floorId: floor.id,
+		height: 60,
+		id: 'logo-on-map',
+		point: { x: 120, y: 80 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'logo',
+		width: 120
+	});
+	const store = createEditorStore(createEditorState(project));
+
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 70, width: 140 }
+	});
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 80, width: 160 }
+	});
+	store.dispatch({
+		type: 'element/patch',
+		elementId: 'logo-on-map',
+		historyGroup: 'media-scale',
+		patch: { height: 90, width: 180 }
+	});
+	store.undo();
+
+	const element = store.getSnapshot().state.project.floors[0].elements[0];
+	assert.equal(element.type, 'logo');
+	assert.equal(element.type === 'logo' ? element.width : undefined, 120);
+	assert.equal(element.type === 'logo' ? element.height : undefined, 60);
+});
+
+void test('continuous project appearance sliders merge into one undo step', (): void => {
+	const project = createWayfindingStudioProject('continuous-project-control-history');
+	const originalDefaults = structuredClone(project.defaults);
+	const store = createEditorStore(createEditorState(project));
+
+	for (const fillOpacity of [0.7, 0.6, 0.5]) {
+		const next = structuredClone(store.getSnapshot().state.project);
+		assert.ok(next.defaults);
+		next.defaults.location.fillOpacity = fillOpacity;
+		store.dispatch({
+			type: 'project/replace',
+			historyGroup: 'room-opacity',
+			label: 'Update project settings',
+			project: next
+		});
+	}
+	store.undo();
+
+	assert.deepEqual(store.getSnapshot().state.project.defaults, originalDefaults);
+	assert.equal(store.getSnapshot().canUndo, false);
+});
+
+void test('loading a project resets document history and keeps panel preferences', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'panel/toggle', panelId: 'left', collapsed: true });
 	const project = createWayfindingStudioProject('opened-project');
@@ -81,7 +145,9 @@ void test('floor removal keeps at least one floor and selects a valid remaining 
 			from: 'ground-node',
 			id: 'floor-connection',
 			kind: 'elevator',
-			to: 'gallery-node'
+			reviewStatus: 'confirmed',
+			to: 'gallery-node',
+			traversal: 'transition'
 		}
 	});
 	store.dispatch({ type: 'floor/select', floorId: 'level-1' });
@@ -125,13 +191,13 @@ void test('floor reordering is transactional, bounded, and undoable', (): void =
 	);
 });
 
-void test('visitor preview clears authoring selection without changing the selected view', (): void => {
+void test('preview clears authoring selection without changing the selected view', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'view/set', viewMode: '3d' });
 	store.dispatch({ type: 'selection/set', selection: { id: 'location-1', kind: 'element' } });
-	store.dispatch({ type: 'workspace/set', workspace: 'visitor-preview' });
+	store.dispatch({ type: 'workspace/set', workspace: 'preview' });
 
-	assert.equal(store.getSnapshot().state.workspace, 'visitor-preview');
+	assert.equal(store.getSnapshot().state.workspace, 'preview');
 	assert.equal(store.getSnapshot().state.viewMode, '3d');
 	assert.equal(store.getSnapshot().state.selection, undefined);
 });
@@ -148,7 +214,7 @@ void test('workspace transitions reject tools and selections that do not belong 
 	store.dispatch({ type: 'tool/set', tool: 'location' });
 	assert.equal(store.getSnapshot().state.activeTool, 'select');
 	store.dispatch({ type: 'selection/set', selection: { id: 'edge-1', kind: 'graph-edge' } });
-	store.dispatch({ type: 'workspace/set', workspace: 'route-preview' });
+	store.dispatch({ type: 'workspace/set', workspace: 'preview' });
 	assert.equal(store.getSnapshot().state.activeTool, 'pan');
 	assert.equal(store.getSnapshot().state.selection, undefined);
 });
@@ -296,7 +362,9 @@ void test('route graph mutations keep edges and nodes referentially consistent',
 					],
 					id: 'edge-a-b',
 					kind: 'walk',
-					to: 'node-b'
+					reviewStatus: 'confirmed',
+					to: 'node-b',
+					traversal: 'indoor-corridor'
 				}
 			}
 		],

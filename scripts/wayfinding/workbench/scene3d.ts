@@ -17,164 +17,61 @@ import type {
 	WayfindingStudioProjectDefaults,
 	WayfindingStudioTransitionElement
 } from '../studio-project.mts';
-
-const pointInPolygon = (point: WayfindingPoint, polygon: WayfindingPoint[]): boolean => {
-	let inside = false;
-
-	for (let left = 0, right = polygon.length - 1; left < polygon.length; right = left++) {
-		const a: WayfindingPoint = polygon[left];
-		const b: WayfindingPoint = polygon[right];
-
-		if ((a.y > point.y) !== (b.y > point.y) && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x) inside = !inside;
-	}
-
-	return inside;
-};
-
-const polygonHeight = (
-	floor: WayfindingStudioFloor,
-	polygon: WayfindingStudioPolygonElement,
-	defaults: WayfindingStudioProjectDefaults
-): number => {
-	const visualHeight: number = polygon.presentation?.extrusionHeight ?? defaults[polygon.type].extrusionHeight;
-
-	return Math.min(floor.width, floor.height) * visualHeight / 500;
-};
-
-const polygonColor = (polygon: WayfindingStudioPolygonElement, defaults: WayfindingStudioProjectDefaults): string =>
-	polygon.presentation?.fillColor ?? defaults[polygon.type].fillColor;
-const polygonOpacity = (polygon: WayfindingStudioPolygonElement, defaults: WayfindingStudioProjectDefaults): number =>
-	polygon.presentation?.fillOpacity ?? defaults[polygon.type].fillOpacity;
-const POLYGON_LAYER_ORDER: Record<WayfindingStudioPolygonElement['type'], number> = {
-	walkable: 1,
-	location: 2,
-	obstacle: 3
-};
-
-const centeredPoint = (floor: WayfindingStudioFloor, point: WayfindingPoint, elevation = 0): THREE.Vector3 => new THREE.Vector3(
-	point.x - floor.width / 2,
-	elevation,
-	point.y - floor.height / 2
-);
-
-const labelElevation = (
-	floor: WayfindingStudioFloor,
-	elements: WayfindingStudioElement[],
-	point: WayfindingPoint,
-	defaults: WayfindingStudioProjectDefaults
-): number => {
-	const polygon: WayfindingStudioPolygonElement | undefined = elements
-		.filter((element): element is WayfindingStudioPolygonElement => 'geometry' in element)
-		.reverse()
-		.find((element): boolean => pointInPolygon(point, element.geometry));
-
-	return (polygon ? polygonHeight(floor, polygon, defaults) : 0) + groundClearance(floor);
-};
-
-const groundClearance = (floor: WayfindingStudioFloor): number => Math.min(floor.width, floor.height) * 0.018;
-
-interface Scene3dPresentation {
-	background: string;
-	camera: Pick<WayfindingStudioCamera3d, 'azimuthDegrees' | 'distance' | 'pitchDegrees'>;
-	floorBaseColor: string;
-	floorBaseDepthRatio: number;
-	floorRoughness: number;
-	locationOpacityFloor: number;
-	showFloorBase: boolean;
-}
-
-const scenePresentation = (
-	floor: WayfindingStudioFloor,
-	mode: WayfindingScene3dMode
-): Scene3dPresentation => {
-	const maximumDimension: number = Math.max(floor.width, floor.height);
-
-	return mode === 'visitor'
-		? {
-			background: '#172321',
-			camera: {
-				azimuthDegrees: 16,
-				distance: maximumDimension * 0.94,
-				pitchDegrees: 67
-			},
-			floorBaseColor: '#1f302d',
-			floorBaseDepthRatio: 0.004,
-			floorRoughness: 0.96,
-			locationOpacityFloor: 0.92,
-			showFloorBase: true
-		}
-		: {
-			background: '#26302e',
-			camera: {
-				azimuthDegrees: 36,
-				distance: maximumDimension * 1.75,
-				pitchDegrees: 48
-			},
-			floorBaseColor: '#d8dfdc',
-			floorBaseDepthRatio: 0.012,
-			floorRoughness: 0.94,
-			locationOpacityFloor: 0,
-			showFloorBase: false
-		};
-};
-
-const createTextTexture = (
-	label: WayfindingStudioLabelElement,
-	defaults: WayfindingStudioProjectDefaults
-): { height: number; texture: THREE.CanvasTexture; width: number } => {
-	const fontFamily: Record<NonNullable<WayfindingStudioLabelElement['fontFamily']>, string> = {
-		monospace: '"Courier New", monospace',
-		'sans-serif': 'Arial, sans-serif',
-		serif: 'Georgia, serif'
-	};
-	const fontSize: number = Math.max(12, label.fontSize ?? defaults.label.fontSize);
-	const padding: number = Math.ceil(fontSize * 0.42 + (label.outlineWidth ?? defaults.label.outlineWidth) * 2);
-	const canvas: HTMLCanvasElement = document.createElement('canvas');
-	const context: CanvasRenderingContext2D = canvas.getContext('2d')!;
-	context.font = `${label.fontWeight ?? defaults.label.fontWeight} ${fontSize}px ${fontFamily[label.fontFamily ?? defaults.label.fontFamily]}`;
-	canvas.width = Math.max(8, Math.ceil(context.measureText(label.text || ' ').width + padding * 2));
-	canvas.height = Math.max(8, Math.ceil(fontSize * 1.45 + padding * 2));
-	const drawingContext: CanvasRenderingContext2D = canvas.getContext('2d')!;
-	drawingContext.font = `${label.fontWeight ?? defaults.label.fontWeight} ${fontSize}px ${fontFamily[label.fontFamily ?? defaults.label.fontFamily]}`;
-	drawingContext.textAlign = 'center';
-	drawingContext.textBaseline = 'middle';
-	drawingContext.lineJoin = 'round';
-	const outlineWidth: number = label.outlineWidth ?? defaults.label.outlineWidth;
-
-	if (outlineWidth > 0) {
-		drawingContext.strokeStyle = label.outlineColor ?? defaults.label.outlineColor;
-		drawingContext.lineWidth = outlineWidth * 2;
-		drawingContext.strokeText(label.text, canvas.width / 2, canvas.height / 2);
-	}
-
-	drawingContext.fillStyle = label.color ?? defaults.label.color;
-	drawingContext.fillText(label.text, canvas.width / 2, canvas.height / 2);
-	const texture = new THREE.CanvasTexture(canvas);
-	texture.colorSpace = THREE.SRGBColorSpace;
-	texture.needsUpdate = true;
-
-	return { height: canvas.height, texture, width: canvas.width };
-};
+import {
+	centeredPoint,
+	createTextTexture,
+	groundClearance,
+	labelElevation,
+	POLYGON_LAYER_ORDER,
+	polygonColor,
+	polygonHeight,
+	polygonOpacity,
+	scenePresentation,
+	type Scene3dPresentation,
+	type WayfindingScene3dMode
+} from './scene3d-presentation';
+import {
+	createOriginMarker3d,
+	type OriginMarker3d,
+	updateOriginMarker3d
+} from './scene3d-markers.mts';
+import {
+	createRoundedRouteCurve,
+	positionRouteFlowMarker
+} from './scene3d-route.mts';
 
 export interface WayfindingScene3dOptions {
+	loadCameraState?: (
+		mode: WayfindingScene3dMode,
+		projectId: string,
+		floorId: string
+	) => WayfindingStudioCamera3d | undefined;
+	onCameraStateChange?: (
+		mode: WayfindingScene3dMode,
+		projectId: string,
+		floorId: string,
+		state: WayfindingStudioCamera3d
+	) => void;
 	onSelectElement: (elementId: string) => void;
 }
 
-export type WayfindingScene3dMode = 'editor' | 'visitor';
+export type { WayfindingScene3dMode } from './scene3d-presentation';
 
 export class WayfindingScene3d {
 	private readonly camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100_000);
 	private currentFloor?: WayfindingStudioFloor;
 	private currentProject?: WayfindingStudioProject;
 	private readonly controls: OrbitControls;
+	private readonly destinationLabelSprites: THREE.Sprite[] = [];
 	private readonly disposableObjects: THREE.Object3D[] = [];
+	private cameraResetFrame?: number;
 	private frameId?: number;
 	private lastBuildKey?: string;
 	private presentationMode: WayfindingScene3dMode = 'editor';
 	private readonly originAnimations: Array<{
 		baseY: number;
-		group: THREE.Group;
 		kind: WayfindingStudioProjectDefaults['origin']['animation3d'];
+		marker: OriginMarker3d;
 		phase: number;
 		speed: number;
 	}> = [];
@@ -183,6 +80,13 @@ export class WayfindingScene3d {
 	private readonly renderer: THREE.WebGLRenderer;
 	private readonly resizeObserver: ResizeObserver;
 	private readonly routeObjects: THREE.Object3D[] = [];
+	private readonly transientCameraStates = new Map<string, WayfindingStudioCamera3d>();
+	private screenOverlayBounds: Array<{
+		bottom: number;
+		left: number;
+		right: number;
+		top: number;
+	}> = [];
 	private routeAnimation?: {
 		curve: THREE.Curve<THREE.Vector3>;
 		kind: WayfindingStudioProjectDefaults['route']['animation'];
@@ -197,6 +101,7 @@ export class WayfindingScene3d {
 		object: THREE.Object3D;
 	};
 	private selectedElementId?: string;
+	private readonly reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 	private visible = false;
 
 	public constructor(private readonly host: HTMLElement, private readonly options: WayfindingScene3dOptions) {
@@ -207,7 +112,7 @@ export class WayfindingScene3d {
 		this.renderer.setClearColor('#26302e');
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 		this.renderer.shadowMap.enabled = true;
-		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.renderer.domElement.setAttribute('aria-label', 'Rotatable 3D map preview');
 		this.renderer.domElement.className = 'scene-3d-canvas';
 		this.host.append(this.renderer.domElement);
@@ -260,7 +165,10 @@ export class WayfindingScene3d {
 	}
 
 	public dispose(): void {
+		if (this.cameraResetFrame !== undefined) window.cancelAnimationFrame(this.cameraResetFrame);
+
 		if (this.frameId !== undefined) window.cancelAnimationFrame(this.frameId);
+		this.rememberCurrentCamera();
 		this.resizeObserver.disconnect();
 		this.controls.dispose();
 		this.disposeSceneContent();
@@ -299,31 +207,38 @@ export class WayfindingScene3d {
 			floorId,
 			presentationMode
 		});
+
 		if (buildKey === this.lastBuildKey) {
 			this.currentProject = project;
 			this.currentFloor = floor;
 			this.presentationMode = presentationMode;
 			this.selectElement(this.selectedElementId);
+
 			if (route) this.updateRoute(project, floorId, route);
 			this.render();
+
 			return;
 		}
-		const sameFloorCamera: WayfindingStudioCamera3d | undefined = this.currentFloor?.id === floor.id
-			? this.getCameraState()
-			: undefined;
+		this.rememberCurrentCamera();
+		const transientCameraKey = `${project.projectId}:${presentationMode}:${floor.id}`;
+		const transientCamera = this.transientCameraStates.get(transientCameraKey)
+			?? this.options.loadCameraState?.(presentationMode, project.projectId, floor.id);
 		this.currentProject = project;
 		this.currentFloor = floor;
 		this.presentationMode = presentationMode;
 		this.renderer.setClearColor(scenePresentation(floor, presentationMode).background);
+		this.renderer.toneMappingExposure = presentationMode === 'visitor' ? 0.98 : 0.86;
 		this.disposeSceneContent();
 		this.host.dataset.renderedMediaCount = '0';
 		this.host.dataset.readyMediaCount = '0';
+		this.host.dataset.cameraFacingMediaCount = '0';
 		this.host.dataset.labelCount = '0';
 		this.host.dataset.destinationLabelCount = '0';
 		this.host.dataset.destinationLabelTexts = '[]';
 		this.host.dataset.poiCount = '0';
 		this.host.dataset.transitionCount = '0';
 		this.addFloorPlane(project, floor);
+
 		for (const element of floor.elements) this.addElement(project, floor, element);
 		const maximumDimension: number = Math.max(floor.width, floor.height);
 		// Keep the depth range tight enough for stable coplanar map rendering on large floor plans.
@@ -332,13 +247,28 @@ export class WayfindingScene3d {
 		this.controls.minDistance = maximumDimension * 0.18;
 		this.controls.maxDistance = maximumDimension * 4;
 		this.camera.updateProjectionMatrix();
-		this.applyCameraState(sameFloorCamera ?? floor.camera3d ?? this.defaultCameraState(floor));
+		this.applyCameraState(transientCamera ?? floor.camera3d ?? this.defaultCameraState(floor));
 		this.lastBuildKey = buildKey;
 		this.host.dataset.sceneBuilds = String(Number(this.host.dataset.sceneBuilds ?? 0) + 1);
 		this.host.dataset.mediaCount = String(floor.elements.filter((element): boolean => element.type === 'icon' || element.type === 'logo').length);
 		this.selectElement(this.selectedElementId);
 		this.updateRoute(project, floorId, route ?? []);
 		this.render();
+	}
+
+	private rememberCurrentCamera(): void {
+		const cameraState = this.getCameraState();
+
+		if (!cameraState || !this.currentFloor || !this.currentProject) return;
+		const key = `${this.currentProject.projectId}:${this.presentationMode}:${this.currentFloor.id}`;
+
+		this.transientCameraStates.set(key, cameraState);
+		this.options.onCameraStateChange?.(
+			this.presentationMode,
+			this.currentProject.projectId,
+			this.currentFloor.id,
+			cameraState
+		);
 	}
 
 	public updateRoute(project: WayfindingStudioProject, floorId: string, points: WayfindingPoint[]): void {
@@ -352,12 +282,34 @@ export class WayfindingScene3d {
 
 	public resetCamera(): void {
 		if (!this.currentFloor) return;
-		this.applyCameraState(this.currentFloor.camera3d ?? this.defaultCameraState(this.currentFloor));
+		const floorId = this.currentFloor.id;
+		const state = structuredClone(
+			this.currentFloor.camera3d ?? this.defaultCameraState(this.currentFloor)
+		);
+
+		if (this.cameraResetFrame !== undefined) window.cancelAnimationFrame(this.cameraResetFrame);
+		this.applyCameraState(state);
+		// OrbitControls can receive the final drag event in the same frame as a
+		// toolbar click. Reapply once after that frame so Reset is exact instead
+		// of stopping a fraction of a degree away from the saved view.
+		this.cameraResetFrame = window.requestAnimationFrame((): void => {
+			this.cameraResetFrame = undefined;
+
+			if (this.currentFloor?.id !== floorId) return;
+			this.applyCameraState(state);
+			this.render();
+		});
+	}
+
+	public refreshScreenOverlays(): void {
+		this.collectScreenOverlayBounds();
+		this.render();
 	}
 
 	public selectElement(elementId?: string): void {
 		this.selectedElementId = elementId;
 		this.selectedPulse = undefined;
+
 		for (const object of this.selectableObjects) {
 			const mesh: THREE.Mesh | undefined = object instanceof THREE.Mesh ? object : undefined;
 			const material: THREE.Material | THREE.Material[] | undefined = mesh?.material;
@@ -370,8 +322,16 @@ export class WayfindingScene3d {
 
 			for (const candidate of Array.isArray(material) ? material : material ? [material] : []) {
 				if (candidate instanceof THREE.MeshStandardMaterial) {
-					candidate.emissive.setHex(selected ? 0x4f3b00 : 0x000000);
-					candidate.emissiveIntensity = selected ? 0.85 : 0;
+					const baseEmissive: THREE.Color = candidate.userData.baseSelectionEmissive instanceof THREE.Color
+						? candidate.userData.baseSelectionEmissive
+						: candidate.emissive.clone();
+					const baseEmissiveIntensity: number = typeof candidate.userData.baseSelectionEmissiveIntensity === 'number'
+						? candidate.userData.baseSelectionEmissiveIntensity
+						: candidate.emissiveIntensity;
+					candidate.userData.baseSelectionEmissive = baseEmissive;
+					candidate.userData.baseSelectionEmissiveIntensity = baseEmissiveIntensity;
+					candidate.emissive.copy(selected ? new THREE.Color('#d8aa3b') : baseEmissive);
+					candidate.emissiveIntensity = selected ? Math.max(baseEmissiveIntensity, 0.85) : baseEmissiveIntensity;
 				} else if (candidate instanceof THREE.MeshBasicMaterial || candidate instanceof THREE.SpriteMaterial) {
 					const baseColor: THREE.Color = candidate.userData.baseSelectionColor instanceof THREE.Color
 						? candidate.userData.baseSelectionColor
@@ -480,7 +440,9 @@ export class WayfindingScene3d {
 		const background: WayfindingStudioAsset | undefined = project.assets.find((asset): boolean => asset.id === floor.backgroundAssetId);
 		const geometry = new THREE.PlaneGeometry(floor.width, floor.height);
 		const material = new THREE.MeshStandardMaterial({
-			color: background ? '#ffffff' : '#e7ece9',
+			color: background
+				? '#ffffff'
+				: this.presentationMode === 'visitor' ? '#edf3f0' : '#e7ece9',
 			map: background ? new THREE.TextureLoader().load(background.dataUrl, (texture): void => {
 				texture.colorSpace = THREE.SRGBColorSpace;
 				this.render();
@@ -489,7 +451,7 @@ export class WayfindingScene3d {
 			side: THREE.DoubleSide
 		});
 		const plane = new THREE.Mesh(geometry, material);
-		plane.receiveShadow = this.presentationMode !== 'visitor';
+		plane.receiveShadow = true;
 		plane.rotation.x = -Math.PI / 2;
 		plane.position.y = 0;
 		this.addDisposable(plane);
@@ -511,15 +473,60 @@ export class WayfindingScene3d {
 			this.addDisposable(base);
 			this.scene.add(base);
 		}
+
+		if (this.presentationMode === 'visitor') {
+			const outlineGeometry = new THREE.BufferGeometry().setFromPoints([
+				new THREE.Vector3(-floor.width / 2, 0.7, -floor.height / 2),
+				new THREE.Vector3(floor.width / 2, 0.7, -floor.height / 2),
+				new THREE.Vector3(floor.width / 2, 0.7, floor.height / 2),
+				new THREE.Vector3(-floor.width / 2, 0.7, floor.height / 2)
+			]);
+			const outline = new THREE.LineLoop(
+				outlineGeometry,
+				new THREE.LineBasicMaterial({
+					color: '#6c8c84',
+					transparent: true,
+					opacity: 0.72
+				})
+			);
+			outline.renderOrder = 3;
+			this.addDisposable(outline);
+			this.scene.add(outline);
+		}
 	}
 
 	private addLabel(project: WayfindingStudioProject, floor: WayfindingStudioFloor, label: WayfindingStudioLabelElement): void {
 		const defaults: WayfindingStudioProjectDefaults = wayfindingStudioProjectDefaults(project);
 		const { height, texture, width } = createTextTexture(label, defaults);
-		const material = new THREE.SpriteMaterial({ depthTest: false, map: texture, transparent: true });
+		const destinationLabel = label.id.startsWith('presentation-destination-label:');
+		const material = new THREE.SpriteMaterial({
+			depthTest: false,
+			map: texture,
+			sizeAttenuation: !destinationLabel,
+			transparent: true
+		});
 		const sprite = new THREE.Sprite(material);
-		const worldHeight: number = Math.max(12, label.fontSize ?? defaults.label.fontSize) * 1.45;
-		sprite.scale.set(worldHeight * width / height, worldHeight, 1);
+
+		if (destinationLabel) {
+			sprite.userData.screenPixelWidth = width;
+			sprite.userData.screenPixelHeight = height;
+			sprite.userData.destinationId = label.id.slice('presentation-destination-label:'.length);
+			// Keep the callout entirely above its marker. A centered sprite lets
+			// destination geometry show through the label and looks visually broken.
+			sprite.center.set(0.5, -0.2);
+			this.destinationLabelSprites.push(sprite);
+			this.updateScreenSpaceSprite(sprite);
+			this.host.setAttribute(
+				'data-destination-label-font-size-3d',
+				String(defaults.label.fontSize3d)
+			);
+		} else {
+			const worldHeight: number = Math.max(
+				12,
+				label.fontSize ?? defaults.label.fontSize
+			) * 1.45;
+			sprite.scale.set(worldHeight * width / height, worldHeight, 1);
+		}
 		sprite.position.copy(centeredPoint(floor, label.point, labelElevation(floor, floor.elements, label.point, defaults)));
 		sprite.userData.elementId = label.id;
 		sprite.userData.selectionPulse = true;
@@ -528,7 +535,8 @@ export class WayfindingScene3d {
 		this.addDisposable(sprite);
 		this.scene.add(sprite);
 		this.host.dataset.labelCount = String(Number(this.host.dataset.labelCount ?? 0) + 1);
-		if (label.id.startsWith('visitor-destination-label:')) {
+
+		if (label.id.startsWith('presentation-destination-label:')) {
 			this.host.dataset.destinationLabelCount = String(
 				Number(this.host.dataset.destinationLabelCount ?? 0) + 1
 			);
@@ -561,17 +569,45 @@ export class WayfindingScene3d {
 		});
 		image.src = asset.dataUrl;
 		texture.colorSpace = THREE.SRGBColorSpace;
-		const material = new THREE.MeshBasicMaterial({
+		const materialOptions = {
 			depthTest: false,
 			map: texture,
-			side: THREE.DoubleSide,
 			transparent: true
+		};
+		const center = media.point;
+		const position = centeredPoint(
+			floor,
+			center,
+			labelElevation(floor, floor.elements, center, wayfindingStudioProjectDefaults(project))
+		);
+
+		if (media.destinationId) {
+			const sprite = new THREE.Sprite(new THREE.SpriteMaterial(materialOptions));
+			sprite.position.copy(position);
+			sprite.scale.set(media.width, media.height, 1);
+			sprite.userData.elementId = media.id;
+			sprite.userData.selectionPulse = true;
+			sprite.userData.cameraFacing = true;
+			sprite.renderOrder = 19;
+			this.selectableObjects.push(sprite);
+			this.addDisposable(sprite);
+			this.scene.add(sprite);
+			this.host.dataset.renderedMediaCount = String(Number(this.host.dataset.renderedMediaCount ?? 0) + 1);
+			this.host.dataset.cameraFacingMediaCount = String(
+				Number(this.host.dataset.cameraFacingMediaCount ?? 0) + 1
+			);
+
+			return;
+		}
+		const material = new THREE.MeshBasicMaterial({
+			...materialOptions,
+			side: THREE.DoubleSide
 		});
 		const geometry = new THREE.PlaneGeometry(media.width, media.height);
 		const plane = new THREE.Mesh(geometry, material);
-		const center = media.point;
-		plane.position.copy(centeredPoint(floor, center, labelElevation(floor, floor.elements, center, wayfindingStudioProjectDefaults(project))));
+		plane.position.copy(position);
 		plane.rotation.x = -Math.PI / 2;
+		plane.rotation.z = THREE.MathUtils.degToRad(-(media.rotationDegrees ?? 0));
 		plane.userData.elementId = media.id;
 		plane.userData.selectionPulse = true;
 		plane.renderOrder = 19;
@@ -583,66 +619,74 @@ export class WayfindingScene3d {
 
 	private addOrigin(project: WayfindingStudioProject, floor: WayfindingStudioFloor, origin: WayfindingStudioOriginElement): void {
 		const defaults: WayfindingStudioProjectDefaults = wayfindingStudioProjectDefaults(project);
-		const size: number = Math.max(12, Math.min(floor.width, floor.height) * 0.024);
-		const baseY: number = labelElevation(floor, floor.elements, origin.point, defaults) + size * 0.28;
-		const group = new THREE.Group();
-		const baseMaterial = new THREE.MeshStandardMaterial({
-			color: defaults.origin.color,
-			emissive: new THREE.Color(defaults.origin.color).multiplyScalar(0.32),
-			emissiveIntensity: 0.7,
-			roughness: 0.5
-		});
-		const base = new THREE.Mesh(new THREE.CylinderGeometry(size * 0.34, size * 0.42, size * 0.28, 28), baseMaterial);
-		base.castShadow = true;
-		const halo = new THREE.Mesh(
-			new THREE.TorusGeometry(size * 0.62, Math.max(1.4, size * 0.08), 10, 36),
-			new THREE.MeshBasicMaterial({ color: defaults.origin.color, depthTest: false, transparent: true, opacity: 0.82 })
-		);
-		halo.rotation.x = Math.PI / 2;
-		halo.position.y = -size * 0.12;
-		group.add(base, halo);
-		group.position.copy(centeredPoint(floor, origin.point, baseY));
-		group.userData.elementId = origin.id;
-		group.renderOrder = 32;
-		this.selectableObjects.push(base);
-		base.userData.elementId = origin.id;
-		base.userData.selectionPulse = true;
-		this.addDisposable(group);
-		this.scene.add(group);
+		const size: number = Math.max(14, Math.min(floor.width, floor.height) * 0.025);
+		const baseY: number = labelElevation(floor, floor.elements, origin.point, defaults);
+		const marker = createOriginMarker3d(defaults.origin.color, origin.id, size);
+
+		marker.root.position.copy(centeredPoint(floor, origin.point, baseY));
+		this.selectableObjects.push(marker.body);
+		this.addDisposable(marker.root);
+		this.scene.add(marker.root);
 		this.originAnimations.push({
 			baseY,
-			group,
 			kind: defaults.origin.animation3d,
+			marker,
 			phase: Math.random() * Math.PI * 2,
 			speed: Math.max(1, defaults.origin.animationSpeed)
 		});
 		this.host.setAttribute('data-origin-animation-3d', defaults.origin.animation3d);
 		this.host.setAttribute('data-origin-animation-speed', String(defaults.origin.animationSpeed));
+		this.host.setAttribute('data-origin-camera-facing', 'true');
 		this.host.setAttribute('data-origin-color', defaults.origin.color);
+		this.host.setAttribute('data-origin-ground-beacon', 'true');
+		this.host.setAttribute('data-origin-marker-3d', 'upright-pin');
+		this.host.setAttribute('data-origin-screen-height', '46');
 	}
 
 	private addPoi(project: WayfindingStudioProject, floor: WayfindingStudioFloor, poi: WayfindingStudioPointElement): void {
 		const defaults = wayfindingStudioProjectDefaults(project);
-		const size = Math.max(14, Math.min(floor.width, floor.height) * 0.022);
+		const destinationMarker = poi.id.startsWith('presentation-destination-marker:');
+		const size = Math.max(
+			destinationMarker ? 8 : 14,
+			Math.min(floor.width, floor.height) * (destinationMarker ? 0.01 : 0.022)
+		);
 		const elevation = labelElevation(floor, floor.elements, poi.point, defaults) + size * 0.62;
 		const group = new THREE.Group();
 		const marker = new THREE.Mesh(
 			new THREE.SphereGeometry(size * 0.42, 24, 18),
 			new THREE.MeshStandardMaterial({
-				color: '#0f8f83',
-				emissive: '#063f3a',
-				emissiveIntensity: 0.42,
+				color: destinationMarker ? '#ffffff' : '#0f8f83',
+				emissive: destinationMarker ? '#0f8f83' : '#063f3a',
+				emissiveIntensity: destinationMarker ? 0.62 : 0.42,
 				roughness: 0.42
 			})
 		);
 		const stem = new THREE.Mesh(
 			new THREE.ConeGeometry(size * 0.2, size * 0.52, 18),
-			new THREE.MeshStandardMaterial({ color: '#0b6f67', roughness: 0.56 })
+			new THREE.MeshStandardMaterial({ color: destinationMarker ? '#0f8f83' : '#0b6f67', roughness: 0.56 })
 		);
+		const halo = destinationMarker
+			? new THREE.Mesh(
+				new THREE.TorusGeometry(size * 0.58, Math.max(1, size * 0.07), 8, 28),
+				new THREE.MeshBasicMaterial({
+					color: '#65c8b4',
+					depthTest: false,
+					opacity: 0.82,
+					transparent: true
+				})
+			)
+			: undefined;
 
 		stem.position.y = -size * 0.42;
 		stem.rotation.z = Math.PI;
-		group.add(marker, stem);
+
+		if (halo) {
+			halo.rotation.x = Math.PI / 2;
+			halo.position.y = -size * 0.08;
+			group.add(marker, stem, halo);
+		} else {
+			group.add(marker, stem);
+		}
 		group.position.copy(centeredPoint(floor, poi.point, elevation));
 		group.userData.elementId = poi.id;
 		group.renderOrder = 28;
@@ -651,7 +695,15 @@ export class WayfindingScene3d {
 		this.selectableObjects.push(marker);
 		this.addDisposable(group);
 		this.scene.add(group);
-		this.host.dataset.poiCount = String(Number(this.host.dataset.poiCount ?? 0) + 1);
+
+		if (destinationMarker) {
+			this.host.dataset.destinationMarkerCount = String(
+				Number(this.host.dataset.destinationMarkerCount ?? 0) + 1
+			);
+			this.host.dataset.destinationMarkerStyle = 'compact-3d';
+		} else {
+			this.host.dataset.poiCount = String(Number(this.host.dataset.poiCount ?? 0) + 1);
+		}
 	}
 
 	private addTransition(
@@ -736,8 +788,8 @@ export class WayfindingScene3d {
 			})
 			: new THREE.ShapeGeometry(shape);
 		const mesh = new THREE.Mesh(geometry, materials);
-		mesh.castShadow = this.presentationMode !== 'visitor' && height > 0.01;
-		mesh.receiveShadow = this.presentationMode !== 'visitor';
+		mesh.castShadow = height > 0.01;
+		mesh.receiveShadow = true;
 		mesh.rotation.x = -Math.PI / 2;
 		mesh.position.y = height > 0.01 ? layerOrder * 0.025 : layerOrder * 0.16;
 		mesh.renderOrder = layerOrder;
@@ -770,7 +822,11 @@ export class WayfindingScene3d {
 			delete this.host.dataset.routeProgress;
 			delete this.host.dataset.routeWidth;
 			delete this.host.dataset.routeElevation;
+			delete this.host.dataset.routeEndpointCount;
 			delete this.host.dataset.floorPeak;
+			this.host.removeAttribute('data-route-presentation-3d');
+			this.host.removeAttribute('data-route-flow-marker-3d');
+
 			return;
 		}
 		this.host.dataset.routePoints = String(points.length);
@@ -782,18 +838,53 @@ export class WayfindingScene3d {
 			point,
 			groundClearance(floor)
 		));
-		const curve = new THREE.CurvePath<THREE.Vector3>();
-		for (let index = 1; index < vectors.length; index += 1) {
-			curve.add(new THREE.LineCurve3(vectors[index - 1], vectors[index]));
-		}
-		const radius: number = Math.max(1.5, defaults.route.lineWidth / 2);
-		const geometry = new THREE.TubeGeometry(curve, Math.max(24, points.length * 8), radius, 8, false);
-		const material = new THREE.MeshBasicMaterial({ color: defaults.route.color, depthTest: false });
+		const radius: number = Math.max(1.6, defaults.route.lineWidth * 0.46);
+		const curve = createRoundedRouteCurve(
+			vectors,
+			Math.max(radius * 2.4, Math.min(24, defaults.route.cornerRadius))
+		);
+		const tubularSegments = Math.min(480, Math.max(64, Math.ceil(curve.getLength() / 10)));
+		const geometry = new THREE.TubeGeometry(curve, tubularSegments, radius, 12, false);
+		const underlay = new THREE.Mesh(
+			new THREE.TubeGeometry(curve, tubularSegments, radius * 1.64, 12, false),
+			new THREE.MeshBasicMaterial({
+				color: '#071b1b',
+				depthTest: false,
+				depthWrite: false,
+				opacity: 0.42,
+				transparent: true
+			})
+		);
+		const material = new THREE.MeshBasicMaterial({
+			color: defaults.route.color,
+			depthTest: false,
+			depthWrite: false,
+			toneMapped: false
+		});
 		const route = new THREE.Mesh(geometry, material);
+		const highlight = new THREE.Mesh(
+			new THREE.TubeGeometry(curve, tubularSegments, Math.max(0.46, radius * 0.23), 8, false),
+			new THREE.MeshBasicMaterial({
+				color: '#e8fff9',
+				depthTest: false,
+				depthWrite: false,
+				opacity: 0.56,
+				transparent: true
+			})
+		);
+		underlay.renderOrder = 29;
 		route.renderOrder = 30;
+		highlight.renderOrder = 31;
+		this.addRouteObject(underlay);
 		this.addRouteObject(route);
+		this.addRouteObject(highlight);
+		this.scene.add(underlay);
 		this.scene.add(route);
+		this.scene.add(highlight);
+		this.addRouteEndpoints(floor, vectors, radius, defaults.route.color);
+		this.host.dataset.routeEndpointCount = '2';
 		this.host.dataset.routeAnimation = defaults.route.animation;
+		this.host.setAttribute('data-route-presentation-3d', 'rounded-ribbon');
 		this.host.dataset.routeWidth = String(defaults.route.lineWidth);
 		this.host.dataset.routeElevation = groundClearance(floor).toFixed(3);
 		this.host.dataset.floorPeak = floor.elements
@@ -801,17 +892,29 @@ export class WayfindingScene3d {
 			.reduce((peak: number, polygon): number => Math.max(peak, polygonHeight(floor, polygon, defaults)), 0)
 			.toFixed(3);
 		const markers: THREE.Mesh[] = [];
+
 		if (defaults.route.animation !== 'none') {
-			const markerGeometry = new THREE.SphereGeometry(radius * 1.32, 12, 8);
-			const markerMaterial = new THREE.MeshBasicMaterial({ color: '#fff7d6', depthTest: false });
-			const markerCount: number = defaults.route.animation === 'flow' ? 7 : 1;
+			const markerGeometry = new THREE.CapsuleGeometry(
+				Math.max(0.55, radius * 0.34),
+				Math.max(1.5, radius * 1.42),
+				5,
+				12
+			);
+			const markerMaterial = new THREE.MeshBasicMaterial({
+				color: '#f2fff9',
+				depthTest: false,
+				depthWrite: false
+			});
+			const markerCount: number = defaults.route.animation === 'flow' ? 6 : 1;
+
 			for (let index = 0; index < markerCount; index += 1) {
 				const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-				marker.renderOrder = 31;
+				marker.renderOrder = 32;
 				markers.push(marker);
 				this.addRouteObject(marker);
 				this.scene.add(marker);
 			}
+			this.host.setAttribute('data-route-flow-marker-3d', 'capsule');
 			this.routeAnimation = {
 				curve,
 				kind: defaults.route.animation,
@@ -821,6 +924,67 @@ export class WayfindingScene3d {
 			};
 		}
 		else delete this.host.dataset.routeProgress;
+	}
+
+	private addRouteEndpoints(
+		floor: WayfindingStudioFloor,
+		vectors: THREE.Vector3[],
+		radius: number,
+		color: string
+	): void {
+		const clearance = groundClearance(floor);
+		const start = vectors[0];
+		const arrival = vectors[vectors.length - 1];
+		const startRing = new THREE.Mesh(
+			new THREE.TorusGeometry(radius * 2.15, Math.max(1.25, radius * 0.34), 12, 36),
+			new THREE.MeshBasicMaterial({
+				color,
+				depthTest: false,
+				transparent: true,
+				opacity: 0.96
+			})
+		);
+
+		startRing.position.copy(start);
+		startRing.position.y = clearance + radius * 0.38;
+		startRing.rotation.x = Math.PI / 2;
+		startRing.renderOrder = 33;
+		this.addRouteObject(startRing);
+		this.scene.add(startRing);
+
+		const arrivalGroup = new THREE.Group();
+		const arrivalRing = new THREE.Mesh(
+			new THREE.TorusGeometry(radius * 2.7, Math.max(1.4, radius * 0.38), 12, 40),
+			new THREE.MeshBasicMaterial({
+				color,
+				depthTest: false,
+				transparent: true,
+				opacity: 0.96
+			})
+		);
+		const arrivalStem = new THREE.Mesh(
+			new THREE.CylinderGeometry(
+				Math.max(0.8, radius * 0.18),
+				Math.max(0.8, radius * 0.18),
+				radius * 1.5,
+				12
+			),
+			new THREE.MeshBasicMaterial({ color, depthTest: false })
+		);
+		const arrivalCore = new THREE.Mesh(
+			new THREE.SphereGeometry(radius * 1.05, 20, 14),
+			new THREE.MeshBasicMaterial({ color: '#fffdf2', depthTest: false })
+		);
+
+		arrivalRing.rotation.x = Math.PI / 2;
+		arrivalStem.position.y = radius * 0.55;
+		arrivalCore.position.y = radius * 1.35;
+		arrivalGroup.add(arrivalRing, arrivalStem, arrivalCore);
+		arrivalGroup.position.copy(arrival);
+		arrivalGroup.position.y = clearance + radius * 0.42;
+		arrivalGroup.renderOrder = 34;
+		this.addRouteObject(arrivalGroup);
+		this.scene.add(arrivalGroup);
 	}
 
 	private addDisposable(object: THREE.Object3D): void {
@@ -840,6 +1004,7 @@ export class WayfindingScene3d {
 			// makes subsequently recreated labels, icons, and logos disappear.
 			if (child instanceof THREE.Mesh && mesh.geometry) mesh.geometry.dispose();
 			const material: THREE.Material | THREE.Material[] | undefined = mesh.material;
+
 			for (const candidate of Array.isArray(material) ? material : material ? [material] : []) {
 				for (const value of Object.values(candidate)) if (value instanceof THREE.Texture) value.dispose();
 				candidate.dispose();
@@ -849,6 +1014,7 @@ export class WayfindingScene3d {
 
 	private disposeRoute(): void {
 		this.routeAnimation = undefined;
+
 		for (const object of this.routeObjects) this.disposeObject(object);
 		this.routeObjects.length = 0;
 		delete this.host.dataset.routeAnimation;
@@ -856,16 +1022,30 @@ export class WayfindingScene3d {
 		delete this.host.dataset.routeProgress;
 		delete this.host.dataset.routeWidth;
 		delete this.host.dataset.routeElevation;
+		delete this.host.dataset.routeEndpointCount;
 		delete this.host.dataset.floorPeak;
+		this.host.removeAttribute('data-route-presentation-3d');
+		this.host.removeAttribute('data-route-flow-marker-3d');
 	}
 
 	private disposeSceneContent(): void {
 		this.disposeRoute();
 		this.originAnimations.length = 0;
+		this.destinationLabelSprites.length = 0;
 		delete this.host.dataset.originAnimation3d;
 		delete this.host.dataset.originAnimationSpeed;
+		delete this.host.dataset.originCameraFacing;
 		delete this.host.dataset.originColor;
+		delete this.host.dataset.originGroundBeacon;
+		delete this.host.dataset.originMarker3d;
+		delete this.host.dataset.originScreenHeight;
+		delete this.host.dataset.destinationMarkerCount;
+		delete this.host.dataset.destinationMarkerStyle;
+		this.host.removeAttribute('data-destination-label-font-size-3d');
+		delete this.host.dataset.destinationLabelsHiddenByOverlay;
+		delete this.host.dataset.visibleDestinationLabelCount;
 		this.selectedPulse = undefined;
+
 		for (const object of this.disposableObjects) this.disposeObject(object);
 
 		this.disposableObjects.length = 0;
@@ -897,6 +1077,7 @@ export class WayfindingScene3d {
 				cameraState.targetY
 			].map((value) => value.toFixed(3)).join(',');
 		}
+		this.updateDestinationLabelVisibility();
 		this.renderer.render(this.scene, this.camera);
 	}
 
@@ -906,7 +1087,156 @@ export class WayfindingScene3d {
 		this.renderer.setSize(width, height, false);
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
+		this.collectScreenOverlayBounds();
+
+		for (const object of this.disposableObjects) {
+			if (object instanceof THREE.Sprite && typeof object.userData.screenPixelHeight === 'number') {
+				this.updateScreenSpaceSprite(object);
+			}
+		}
+
+		if (this.currentFloor && this.presentationMode === 'visitor') {
+			this.applyCameraState(
+				this.currentFloor.camera3d ?? this.defaultCameraState(this.currentFloor)
+			);
+		}
 		this.render();
+	}
+
+	private collectScreenOverlayBounds(): void {
+		const stage = this.host.closest('.stage');
+		const hostBounds = this.host.getBoundingClientRect();
+
+		if (!stage || hostBounds.width <= 0 || hostBounds.height <= 0) {
+			this.screenOverlayBounds = [];
+
+			return;
+		}
+		const padding = 6;
+
+		this.screenOverlayBounds = [
+			...stage.querySelectorAll<HTMLElement>(
+				'.stage-toolbar, .visitor-panel, .visitor-detail-card, .scene3d-camera-actions, .floor-navigator'
+			)
+		].flatMap((element) => {
+			const style = getComputedStyle(element);
+			const bounds = element.getBoundingClientRect();
+			const visible = style.display !== 'none'
+				&& style.visibility !== 'hidden'
+				&& Number(style.opacity) > 0;
+			const intersects = bounds.right > hostBounds.left
+				&& bounds.left < hostBounds.right
+				&& bounds.bottom > hostBounds.top
+				&& bounds.top < hostBounds.bottom;
+
+			if (!visible || !intersects || bounds.width <= 1 || bounds.height <= 1) return [];
+
+			return [{
+				bottom: Math.min(hostBounds.height, bounds.bottom - hostBounds.top + padding),
+				left: Math.max(0, bounds.left - hostBounds.left - padding),
+				right: Math.min(hostBounds.width, bounds.right - hostBounds.left + padding),
+				top: Math.max(0, bounds.top - hostBounds.top - padding)
+			}];
+		});
+	}
+
+	private updateScreenSpaceSprite(sprite: THREE.Sprite): void {
+		const pixelWidth = Number(sprite.userData.screenPixelWidth);
+		const pixelHeight = Number(sprite.userData.screenPixelHeight);
+		const viewportHeight = Math.max(1, this.host.clientHeight);
+		const projectionScale = Math.max(0.001, this.camera.projectionMatrix.elements[5] ?? 1);
+		const pixelToWorldScale = 2 / (viewportHeight * projectionScale);
+
+		sprite.scale.set(
+			Math.max(1, pixelWidth) * pixelToWorldScale,
+			Math.max(1, pixelHeight) * pixelToWorldScale,
+			1
+		);
+		sprite.userData.baseSelectionScale = sprite.scale.clone();
+
+		if (this.selectedPulse?.object === sprite) {
+			this.selectedPulse.baseScale.copy(sprite.scale);
+		}
+	}
+
+	private updateDestinationLabelVisibility(): void {
+		if (this.destinationLabelSprites.length === 0) {
+			this.host.dataset.visibleDestinationLabelCount = '0';
+
+			return;
+		}
+		const width = Math.max(1, this.host.clientWidth);
+		const height = Math.max(1, this.host.clientHeight);
+		const selectedElement = this.currentFloor?.elements.find((element) =>
+			element.id === this.selectedElementId
+		);
+		const selectedDestinationId = selectedElement && 'destinationId' in selectedElement
+			? selectedElement.destinationId
+			: undefined;
+		const candidates = this.destinationLabelSprites.map((sprite, index) => {
+			const projected = sprite.position.clone().project(this.camera);
+			const pixelWidth = Math.max(1, Number(sprite.userData.screenPixelWidth));
+			const pixelHeight = Math.max(1, Number(sprite.userData.screenPixelHeight));
+
+			return {
+				destinationId: String(sprite.userData.destinationId ?? ''),
+				height: pixelHeight,
+				index,
+				sprite,
+				width: pixelWidth,
+				x: (projected.x + 1) * width / 2,
+				y: (1 - projected.y) * height / 2,
+				z: projected.z
+			};
+		}).sort((left, right) => {
+			const leftSelected = left.destinationId === selectedDestinationId ? 1 : 0;
+			const rightSelected = right.destinationId === selectedDestinationId ? 1 : 0;
+
+			return rightSelected - leftSelected || left.index - right.index;
+		});
+		const occupied: Array<{ bottom: number; left: number; right: number; top: number }> = [
+			...this.screenOverlayBounds
+		];
+		let hiddenByOverlayCount = 0;
+		let visibleCount = 0;
+
+		for (const candidate of candidates) {
+			const padding = candidate.destinationId === selectedDestinationId ? 5 : 7;
+			const bounds = {
+				bottom: candidate.y + candidate.sprite.center.y * candidate.height + padding,
+				left: candidate.x - candidate.sprite.center.x * candidate.width - padding,
+				right: candidate.x + (1 - candidate.sprite.center.x) * candidate.width + padding,
+				top: candidate.y - (1 - candidate.sprite.center.y) * candidate.height - padding
+			};
+			const onScreen = candidate.z >= -1
+				&& candidate.z <= 1
+				&& bounds.right >= 0
+				&& bounds.left <= width
+				&& bounds.bottom >= 0
+				&& bounds.top <= height;
+			const overlapsOverlay = this.screenOverlayBounds.some((other) =>
+				bounds.left < other.right
+					&& bounds.right > other.left
+					&& bounds.top < other.bottom
+					&& bounds.bottom > other.top
+			);
+			const overlaps = overlapsOverlay || occupied.some((other) =>
+				bounds.left < other.right
+					&& bounds.right > other.left
+					&& bounds.top < other.bottom
+					&& bounds.bottom > other.top
+			);
+			candidate.sprite.visible = onScreen && !overlaps;
+
+			if (candidate.sprite.visible) {
+				occupied.push(bounds);
+				visibleCount += 1;
+			} else if (onScreen && overlapsOverlay) {
+				hiddenByOverlayCount += 1;
+			}
+		}
+		this.host.dataset.destinationLabelsHiddenByOverlay = String(hiddenByOverlayCount);
+		this.host.dataset.visibleDestinationLabelCount = String(visibleCount);
 	}
 
 	private startRendering(): void {
@@ -931,35 +1261,38 @@ export class WayfindingScene3d {
 	private updateOriginAnimations(now: number): void {
 		for (const animation of this.originAnimations) {
 			const phase: number = now * animation.speed / 24_000 + animation.phase;
-			if (animation.kind === 'bounce') {
-				animation.group.position.y = animation.baseY + Math.abs(Math.sin(phase)) * 18;
-				animation.group.scale.setScalar(1);
-			} else if (animation.kind === 'pulse') {
-				animation.group.position.y = animation.baseY;
-				animation.group.scale.setScalar(0.9 + (Math.sin(phase) + 1) * 0.16);
-			} else {
-				animation.group.position.y = animation.baseY;
-				animation.group.scale.setScalar(1);
-			}
+			animation.marker.root.position.y = animation.baseY;
+			updateOriginMarker3d(
+				animation.marker,
+				this.camera,
+				animation.kind,
+				phase,
+				this.reducedMotion,
+				this.host.clientHeight
+			);
 		}
 	}
 
 	private updateRouteAnimation(now: number): void {
 		const animation = this.routeAnimation;
+
 		if (!animation) return;
 		const elapsed: number = Math.max(0, now - animation.startedAt) / 1_000;
+
 		if (animation.kind === 'pulse') {
 			const scale: number = 0.82 + (Math.sin(elapsed * animation.speed / 8) + 1) * 0.28;
 			animation.markers[0].scale.setScalar(scale);
-			animation.markers[0].position.copy(animation.curve.getPointAt(0.98));
+			positionRouteFlowMarker(animation.markers[0], animation.curve, 0.98);
 			this.host.dataset.routeProgress = scale.toFixed(3);
+
 			return;
 		}
 		const progress: number = elapsed * animation.speed / 1_200;
 		this.host.dataset.routeProgress = (progress % 1).toFixed(3);
+
 		for (const [index, marker] of animation.markers.entries()) {
 			const position: number = (progress - index / animation.markers.length + 10) % 1;
-			marker.position.copy(animation.curve.getPointAt(position));
+			positionRouteFlowMarker(marker, animation.curve, position);
 		}
 	}
 

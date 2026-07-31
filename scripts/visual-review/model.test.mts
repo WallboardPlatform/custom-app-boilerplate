@@ -43,7 +43,7 @@ void describe('visual review model', (): void => {
 		);
 		fs.writeFileSync(
 			path.join(projectDirectory, 'preview', 'conformance.spec.ts'),
-			"import { registerPaginationConformance } from './conformance/pagination';\nregisterPaginationConformance();\n"
+			'import { registerPaginationConformance } from \'./conformance/pagination\';\nregisterPaginationConformance();\n'
 		);
 
 		const before: string = createVisualReviewSourceHash(projectDirectory);

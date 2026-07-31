@@ -18,7 +18,6 @@
 	],
 	"artifacts": [
 		"generation-brief.json",
-		"wayfinding-project.json",
 		"veszprem-downtown.wbwayfinding",
 		"datasource-contract.json",
 		"sample-destinations-datasource.json",

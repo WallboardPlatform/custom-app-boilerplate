@@ -5,6 +5,8 @@
 		"checkJs": false,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"noEmit": true,

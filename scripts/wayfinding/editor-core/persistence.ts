@@ -6,7 +6,10 @@ import {
 } from '../studio-project.mts';
 import type { PersistenceAdapter } from './types';
 
-const RECOVERY_KEY = 'wallboard-wayfinding-studio-v2-recovery';
+const RECOVERY_KEY = 'wallboard-wayfinding-studio-recovery';
+const PROJECT_TARGET_DATABASE = 'wallboard-wayfinding-studio';
+const PROJECT_TARGET_KEY = 'active-project-target';
+const PROJECT_TARGET_STORE = 'file-targets';
 
 interface FilePickerAcceptType {
 	accept: Record<string, string[]>;
@@ -28,6 +31,8 @@ interface WritableProjectFileHandle {
 	createWritable(): Promise<WritableFileStream>;
 	getFile(): Promise<File>;
 	name: string;
+	queryPermission?(descriptor: { mode: 'readwrite' }): Promise<'denied' | 'granted' | 'prompt'>;
+	requestPermission?(descriptor: { mode: 'readwrite' }): Promise<'denied' | 'granted' | 'prompt'>;
 }
 
 interface FileSystemWindow extends Window {
@@ -39,6 +44,106 @@ const fileTypes: FilePickerAcceptType[] = [{
 	accept: { 'application/json': ['.wbwayfinding', '.json'] },
 	description: 'Wallboard Wayfinding project'
 }];
+
+interface PersistedProjectTarget {
+	handle: WritableProjectFileHandle;
+	projectId: string;
+}
+
+const openProjectTargetDatabase = (): Promise<IDBDatabase | undefined> => {
+	if (typeof indexedDB === 'undefined') return Promise.resolve(undefined);
+
+	return new Promise((resolve) => {
+		const request = indexedDB.open(PROJECT_TARGET_DATABASE, 2);
+
+		request.addEventListener('upgradeneeded', (): void => {
+			const database = request.result;
+
+			if (!database.objectStoreNames.contains(PROJECT_TARGET_STORE)) {
+				database.createObjectStore(PROJECT_TARGET_STORE);
+			}
+		});
+		request.addEventListener('success', (): void => resolve(request.result), { once: true });
+		request.addEventListener('error', (): void => resolve(undefined), { once: true });
+		request.addEventListener('blocked', (): void => resolve(undefined), { once: true });
+	});
+};
+
+const loadProjectTarget = async (): Promise<PersistedProjectTarget | undefined> => {
+	const database = await openProjectTargetDatabase();
+
+	if (!database || !database.objectStoreNames.contains(PROJECT_TARGET_STORE)) {
+		database?.close();
+
+		return undefined;
+	}
+
+	return await new Promise((resolve) => {
+		const transaction = database.transaction(PROJECT_TARGET_STORE, 'readonly');
+		const request = transaction.objectStore(PROJECT_TARGET_STORE).get(PROJECT_TARGET_KEY);
+
+		request.addEventListener('success', (): void => {
+			resolve(request.result as PersistedProjectTarget | undefined);
+		}, { once: true });
+		request.addEventListener('error', (): void => resolve(undefined), { once: true });
+		transaction.addEventListener('complete', (): void => database.close(), { once: true });
+		transaction.addEventListener('abort', (): void => database.close(), { once: true });
+	});
+};
+
+const saveProjectTarget = async (target: PersistedProjectTarget): Promise<void> => {
+	const database = await openProjectTargetDatabase();
+
+	if (!database || !database.objectStoreNames.contains(PROJECT_TARGET_STORE)) {
+		database?.close();
+
+		return;
+	}
+
+	await new Promise<void>((resolve) => {
+		const transaction = database.transaction(PROJECT_TARGET_STORE, 'readwrite');
+
+		try {
+			transaction.objectStore(PROJECT_TARGET_STORE).put(target, PROJECT_TARGET_KEY);
+		} catch {
+			database.close();
+			resolve();
+
+			return;
+		}
+		transaction.addEventListener('complete', (): void => {
+			database.close();
+			resolve();
+		}, { once: true });
+		transaction.addEventListener('abort', (): void => {
+			database.close();
+			resolve();
+		}, { once: true });
+	});
+};
+
+const clearProjectTarget = async (): Promise<void> => {
+	const database = await openProjectTargetDatabase();
+
+	if (!database || !database.objectStoreNames.contains(PROJECT_TARGET_STORE)) {
+		database?.close();
+
+		return;
+	}
+
+	await new Promise<void>((resolve) => {
+		const transaction = database.transaction(PROJECT_TARGET_STORE, 'readwrite');
+		transaction.objectStore(PROJECT_TARGET_STORE).delete(PROJECT_TARGET_KEY);
+		transaction.addEventListener('complete', (): void => {
+			database.close();
+			resolve();
+		}, { once: true });
+		transaction.addEventListener('abort', (): void => {
+			database.close();
+			resolve();
+		}, { once: true });
+	});
+};
 
 const safeFileName = (name: string): string => {
 	const base: string = name.trim().replaceAll(/[^a-zA-Z0-9._-]+/g, '-').replaceAll(/^-+|-+$/g, '') || 'wayfinding-project';
@@ -73,6 +178,7 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 
 	public resetProjectTarget(): void {
 		this.fileHandle = undefined;
+		void clearProjectTarget();
 	}
 
 	public async openProjectFile(file: File): Promise<{
@@ -80,7 +186,7 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 		project: WayfindingStudioProject;
 		repairs: WayfindingStudioRepair[];
 	}> {
-		this.fileHandle = undefined;
+		this.resetProjectTarget();
 		const parsed = parseText(await file.text());
 
 		return { fileName: file.name, ...parsed };
@@ -92,15 +198,22 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 		return Promise.resolve();
 	}
 
-	public loadRecovery(): Promise<WayfindingStudioProject | undefined> {
+	public async loadRecovery(): Promise<WayfindingStudioProject | undefined> {
 		const stored: string | null = localStorage.getItem(RECOVERY_KEY);
 
-		if (!stored) return Promise.resolve(undefined);
+		if (!stored) return undefined;
 
 		try {
-			return Promise.resolve(parseText(stored).project);
+			const project = parseText(stored).project;
+			const target = await loadProjectTarget();
+
+			if (target?.projectId === project.projectId) {
+				this.fileHandle = target.handle;
+			}
+
+			return project;
 		} catch {
-			return Promise.resolve(undefined);
+			return undefined;
 		}
 	}
 
@@ -115,10 +228,13 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 			const [handle] = await browser.showOpenFilePicker({ excludeAcceptAllOption: false, types: fileTypes });
 
 			if (!handle) return undefined;
-			this.fileHandle = handle;
 			const file: File = await handle.getFile();
+			const parsed = parseText(await file.text());
 
-			return { fileName: file.name, ...parseText(await file.text()) };
+			this.fileHandle = handle;
+			await saveProjectTarget({ handle, projectId: parsed.project.projectId });
+
+			return { fileName: file.name, ...parsed };
 		}
 
 		return await new Promise((resolve, reject): void => {
@@ -155,9 +271,24 @@ export class BrowserPersistenceAdapter implements PersistenceAdapter {
 		const serialized: string = `${JSON.stringify(project, undefined, 2)}\n`;
 
 		if (this.fileHandle) {
+			const permission = await this.fileHandle.queryPermission?.({ mode: 'readwrite' });
+
+			if (permission === 'denied') {
+				throw new Error(`Wallboard no longer has permission to update ${this.fileHandle.name}. Use Save as to choose a writable file.`);
+			}
+
+			if (permission === 'prompt') {
+				const requested = await this.fileHandle.requestPermission?.({ mode: 'readwrite' });
+
+				if (requested !== 'granted') {
+					throw new Error(`Permission to update ${this.fileHandle.name} was not granted. Use Save as to choose another file.`);
+				}
+			}
+
 			const writable: WritableFileStream = await this.fileHandle.createWritable();
 			await writable.write(serialized);
 			await writable.close();
+			await saveProjectTarget({ handle: this.fileHandle, projectId: project.projectId });
 
 			return { fileName: this.fileHandle.name };
 		}

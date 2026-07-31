@@ -2,6 +2,8 @@ export type WayfindingNodeKind = 'route' | 'location' | 'transition';
 
 export type WayfindingEdgeKind = 'walk' | 'outdoor' | 'stairs' | 'elevator' | 'escalator' | 'shuttle';
 
+export type WayfindingAuthoringOwnership = 'generated' | 'manual';
+
 export type WayfindingTraversal = 'outdoor-path' | 'crossing' | 'indoor-corridor' | 'open-area' | 'portal' | 'transition';
 
 export type WayfindingReviewStatus = 'confirmed' | 'proposed';
@@ -15,23 +17,8 @@ export interface WayfindingRoutePoint extends WayfindingPoint {
 	levelId: string;
 }
 
-export type WayfindingWalkableMaskRun = [row: number, startColumn: number, endColumn: number];
-
-export interface WayfindingWalkableMaskDocument {
-	cellSize: number;
-	columns: number;
-	contractVersion: 1;
-	height: number;
-	mapId: string;
-	originX?: number;
-	originY?: number;
-	reviewStatus: WayfindingReviewStatus;
-	rows: number;
-	walkableRuns: WayfindingWalkableMaskRun[];
-	width: number;
-}
-
 export interface WayfindingNode {
+	authoringOwnership?: WayfindingAuthoringOwnership;
 	id: string;
 	levelId: string;
 	kind: WayfindingNodeKind;
@@ -42,6 +29,7 @@ export interface WayfindingNode {
 }
 
 export interface WayfindingEdge {
+	authoringOwnership?: WayfindingAuthoringOwnership;
 	id: string;
 	from: string;
 	to: string;
@@ -51,12 +39,11 @@ export interface WayfindingEdge {
 	corridorWidth?: number;
 	distanceMeters?: number;
 	geometry?: WayfindingPoint[];
-	reviewStatus?: WayfindingReviewStatus;
-	traversal?: WayfindingTraversal;
+	reviewStatus: WayfindingReviewStatus;
+	traversal: WayfindingTraversal;
 }
 
 export interface WayfindingGraphDocument {
-	contractVersion: 1 | 2;
 	graphId: string;
 	nodes: WayfindingNode[];
 	edges: WayfindingEdge[];

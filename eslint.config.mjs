@@ -21,8 +21,8 @@ export default tseslint.config(
 			'**/src/**/*.{ts,tsx}',
 			'scripts/**/*.mts',
 			'scripts/wayfinding/editor-core/**/*.ts',
-			'scripts/wayfinding/workbench/v2/**/*.{ts,tsx}',
-			'scripts/wayfinding/workbench/{playwright.v2.config,studio-v2.spec}.ts'
+			'scripts/wayfinding/workbench/app/**/*.{ts,tsx}',
+			'scripts/wayfinding/workbench/*.ts'
 		],
 
 		languageOptions: {
@@ -31,7 +31,7 @@ export default tseslint.config(
 				project: [
 					'./tsconfig.json',
 					'./tsconfig.scripts.json',
-					'./scripts/wayfinding/workbench/tsconfig.v2.json'
+					'./scripts/wayfinding/workbench/tsconfig.json'
 				],
 				tsconfigRootDir: process.cwd(),
 				ecmaVersion: 2020,

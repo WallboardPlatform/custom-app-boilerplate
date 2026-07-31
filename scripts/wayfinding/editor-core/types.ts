@@ -12,7 +12,7 @@ import type {
 	WayfindingPoint
 } from '../../../src/utils/wayfinding.js';
 
-export type EditorWorkspace = 'map' | 'route-edit' | 'route-preview' | 'visitor-preview';
+export type EditorWorkspace = 'map' | 'route-edit' | 'preview';
 export type EditorViewMode = '2d' | '3d';
 export type EditorPanelId = 'left' | 'right';
 export type EditorTool =
@@ -125,7 +125,12 @@ export type EditorCommand =
 	| { type: 'draft/clear' }
 	| { type: 'draft/set'; draft: EditorDraft }
 	| { type: 'element/add'; element: WayfindingStudioElement; floorId: string }
-	| { type: 'element/patch'; elementId: string; patch: Partial<WayfindingStudioElement> }
+	| {
+		type: 'element/patch';
+		elementId: string;
+		patch: Partial<WayfindingStudioElement>;
+		historyGroup?: string;
+	}
 	| { type: 'element/remove'; elementId: string }
 	| { type: 'floor/add'; floorId: string; name: string }
 	| { type: 'floor/remove'; floorId: string }
@@ -143,7 +148,7 @@ export type EditorCommand =
 	| { type: 'panel/toggle'; panelId: EditorPanelId; collapsed?: boolean }
 	| { type: 'project/load'; project: WayfindingStudioProject; fileName?: string; openedFrom: EditorDocumentState['openedFrom'] }
 	| { type: 'project/name'; name: string }
-	| { type: 'project/replace'; project: WayfindingStudioProject; label?: string }
+	| { type: 'project/replace'; project: WayfindingStudioProject; label?: string; historyGroup?: string }
 	| { type: 'selection/clear' }
 	| { type: 'selection/set'; selection: EditorSelection }
 	| { type: 'trace/patch'; patch: Partial<EditorTraceSettings> }

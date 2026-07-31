@@ -22,7 +22,6 @@ const pngDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAA
 const publishableProject = (): WayfindingStudioProject => {
 	const project = createWayfindingStudioProject('visitor-center');
 	project.name = 'Visitor Center';
-	project.delivery.guidance.targetMode = 'directory';
 	project.assets = [
 		{ dataUrl: pngDataUrl, id: 'floor-plan', kind: 'background', mimeType: 'image/png', name: 'Floor plan.png', naturalHeight: 720, naturalWidth: 1280 },
 		{ dataUrl: pngDataUrl, id: 'info-symbol', kind: 'icon', mimeType: 'image/png', name: 'Information.png', naturalHeight: 64, naturalWidth: 64 },
