@@ -148,7 +148,7 @@ export type EditorCommand =
 	| { type: 'panel/toggle'; panelId: EditorPanelId; collapsed?: boolean }
 	| { type: 'project/load'; project: WayfindingStudioProject; fileName?: string; openedFrom: EditorDocumentState['openedFrom'] }
 	| { type: 'project/name'; name: string }
-	| { type: 'project/replace'; project: WayfindingStudioProject; label?: string }
+	| { type: 'project/replace'; project: WayfindingStudioProject; label?: string; historyGroup?: string }
 	| { type: 'selection/clear' }
 	| { type: 'selection/set'; selection: EditorSelection }
 	| { type: 'trace/patch'; patch: Partial<EditorTraceSettings> }

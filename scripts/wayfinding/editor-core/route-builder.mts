@@ -1,7 +1,6 @@
 import {
 	erodeWalkableMask,
 	extractSkeletonNetwork,
-	retainAnchorNetworkCore,
 	skeletonizeWalkableMask
 } from '../centerline.mts';
 import {
@@ -24,7 +23,12 @@ export interface RouteBuildOptions {
 }
 
 export interface RouteBuildDiagnostic {
-	code: 'connector-missing' | 'network-disconnected';
+	code:
+		| 'connector-missing'
+		| 'door-location-misaligned'
+		| 'manual-segment-disconnected'
+		| 'network-disconnected'
+		| 'route-geometry-invalid';
 	elementId?: string;
 	message: string;
 	nodeId: string;
@@ -65,16 +69,11 @@ export interface RouteBuildDiff {
 	manualNodesPreserved: number;
 }
 
-const generatedPrefix = (floorId: string): string => `generated:${floorId}:`;
+const isGeneratedRouteEdge = (edge: WayfindingEdge): boolean =>
+	edge.authoringOwnership === 'generated';
 
-const isGeneratedRouteElement = (
-	element: Pick<WayfindingEdge | WayfindingNode, 'authoringOwnership' | 'id'>,
-	floorId: string
-): boolean => element.authoringOwnership === 'generated'
-	|| (
-		element.authoringOwnership === undefined
-		&& element.id.startsWith(generatedPrefix(floorId))
-	);
+const isGeneratedRouteNode = (node: WayfindingNode): boolean =>
+	node.authoringOwnership === 'generated';
 
 const pointInPolygon = (point: WayfindingPoint, polygon: readonly WayfindingPoint[]): boolean => {
 	let inside = false;
@@ -83,7 +82,7 @@ const pointInPolygon = (point: WayfindingPoint, polygon: readonly WayfindingPoin
 		const left = polygon[index];
 		const right = polygon[previous];
 		const crosses = (left.y > point.y) !== (right.y > point.y)
-			&& point.x < (right.x - left.x) * (point.y - left.y) / Math.max(0.000001, right.y - left.y) + left.x;
+			&& point.x < (right.x - left.x) * (point.y - left.y) / (right.y - left.y) + left.x;
 
 		if (crosses) inside = !inside;
 	}
@@ -93,36 +92,6 @@ const pointInPolygon = (point: WayfindingPoint, polygon: readonly WayfindingPoin
 
 const activeAt = (mask: Uint8Array, columns: number, rows: number, column: number, row: number): boolean =>
 	column >= 0 && row >= 0 && column < columns && row < rows && mask[row * columns + column] === 1;
-
-const nearestActiveIndex = (
-	mask: Uint8Array,
-	columns: number,
-	rows: number,
-	point: { column: number; row: number },
-	maximumRadius = 3
-): number | undefined => {
-	let nearestIndex: number | undefined;
-	let nearestDistance = Number.POSITIVE_INFINITY;
-	const minimumColumn = Math.max(0, point.column - maximumRadius);
-	const maximumColumn = Math.min(columns - 1, point.column + maximumRadius);
-	const minimumRow = Math.max(0, point.row - maximumRadius);
-	const maximumRow = Math.min(rows - 1, point.row + maximumRadius);
-
-	for (let row = minimumRow; row <= maximumRow; row += 1) {
-		for (let column = minimumColumn; column <= maximumColumn; column += 1) {
-			const index = row * columns + column;
-
-			if (mask[index] !== 1) continue;
-			const distance = (column - point.column) ** 2 + (row - point.row) ** 2;
-
-			if (distance >= nearestDistance) continue;
-			nearestDistance = distance;
-			nearestIndex = index;
-		}
-	}
-
-	return nearestIndex;
-};
 
 interface MaskPathQueueItem {
 	cost: number;
@@ -376,10 +345,11 @@ const connectorForPoint = (
 	rows: number,
 	cellSize: number
 ): SemanticConnector => {
-	const startIndex = nearestActiveIndex(mask, columns, rows, {
-		column: Math.max(0, Math.min(columns - 1, Math.floor(point.x / cellSize))),
-		row: Math.max(0, Math.min(rows - 1, Math.floor(point.y / cellSize)))
-	});
+	const column = Math.floor(point.x / cellSize);
+	const row = Math.floor(point.y / cellSize);
+	const startIndex = activeAt(mask, columns, rows, column, row)
+		? row * columns + column
+		: undefined;
 	const path = startIndex === undefined
 		? []
 		: turnAwarePathToSkeleton(mask, skeleton, columns, rows, startIndex);
@@ -399,6 +369,16 @@ const connectorForPoint = (
 		geometry
 	};
 };
+
+const pointToPolygonBoundaryDistance = (
+	point: WayfindingPoint,
+	polygon: readonly WayfindingPoint[]
+): number => polygon.reduce((minimum, start, index) =>
+		Math.min(
+			minimum,
+			pointToSegmentDistance(point, start, polygon[(index + 1) % polygon.length])
+		),
+	Number.POSITIVE_INFINITY);
 
 const rayPolygonBoundaryDistance = (
 	start: WayfindingPoint,
@@ -501,14 +481,163 @@ const removeCollinearPoints = (points: WayfindingPoint[]): WayfindingPoint[] => 
 	}
 
 	result.push(points[points.length - 1]);
+	const compacted: WayfindingPoint[] = [];
 
-	return result.filter((candidate, index) =>
-		index === 0
-			|| Math.hypot(
-				candidate.x - result[index - 1].x,
-				candidate.y - result[index - 1].y
-			) > 0.01
+	for (const candidate of result) {
+		const previous = compacted[compacted.length - 1];
+
+		if (
+			previous
+			&& Math.hypot(candidate.x - previous.x, candidate.y - previous.y) <= 0.01
+		) continue;
+		compacted.push(candidate);
+	}
+
+	return compacted;
+};
+
+const geometryLength = (points: readonly WayfindingPoint[]): number =>
+	points.slice(1).reduce((total, point, index) =>
+		total + Math.hypot(point.x - points[index].x, point.y - points[index].y), 0
 	);
+
+const retainShortestAnchorPaths = (
+	edges: readonly WayfindingEdge[],
+	rootIds: readonly string[],
+	anchorIds: ReadonlySet<string>
+): { edgeIds: Set<string>; nodeIds: Set<string> } => {
+	const adjacency = new Map<string, Array<{ edge: WayfindingEdge; nodeId: string; weight: number }>>();
+
+	for (const edge of edges) {
+		const reviewedGeometryPreference = edge.authoringOwnership === 'generated' ? 1 : 0.2;
+		const weight = Math.max(
+			0.001,
+			geometryLength(edge.geometry ?? []) * reviewedGeometryPreference
+		);
+		adjacency.set(edge.from, [
+			...(adjacency.get(edge.from) ?? []),
+			{ edge, nodeId: edge.to, weight }
+		]);
+
+		if (edge.bidirectional) {
+			adjacency.set(edge.to, [
+				...(adjacency.get(edge.to) ?? []),
+				{ edge, nodeId: edge.from, weight }
+			]);
+		}
+	}
+
+	for (const entries of adjacency.values()) {
+		entries.sort((left, right) => left.weight - right.weight || left.edge.id.localeCompare(right.edge.id));
+	}
+	const edgeIds = new Set<string>();
+	const nodeIds = new Set<string>();
+
+	for (const rootId of [...new Set(rootIds)].sort()) {
+		const costs = new Map<string, number>([[rootId, 0]]);
+		const previousByNodeId = new Map<string, { edgeId: string; nodeId: string }>();
+		const queue: Array<{ cost: number; nodeId: string }> = [{ cost: 0, nodeId: rootId }];
+
+		while (queue.length > 0) {
+			queue.sort((left, right) => left.cost - right.cost || left.nodeId.localeCompare(right.nodeId));
+			const current = queue.shift()!;
+
+			if (current.cost !== costs.get(current.nodeId)) continue;
+
+			for (const candidate of adjacency.get(current.nodeId) ?? []) {
+				const cost = current.cost + candidate.weight;
+				const existingCost = costs.get(candidate.nodeId);
+
+				if (existingCost !== undefined && cost >= existingCost - 0.000001) continue;
+				costs.set(candidate.nodeId, cost);
+				previousByNodeId.set(candidate.nodeId, {
+					edgeId: candidate.edge.id,
+					nodeId: current.nodeId
+				});
+				queue.push({ cost, nodeId: candidate.nodeId });
+			}
+		}
+		nodeIds.add(rootId);
+
+		for (const anchorId of [...anchorIds].sort()) {
+			if (!costs.has(anchorId)) continue;
+			let nodeId = anchorId;
+			nodeIds.add(nodeId);
+
+			while (nodeId !== rootId) {
+				const previous = previousByNodeId.get(nodeId);
+
+				if (!previous) break;
+				edgeIds.add(previous.edgeId);
+				nodeIds.add(previous.nodeId);
+				nodeId = previous.nodeId;
+			}
+		}
+	}
+
+	return { edgeIds, nodeIds };
+};
+
+const simplifyDoorConnector = (
+	points: WayfindingPoint[],
+	door: WayfindingStudioDoorElement,
+	direction: WayfindingPoint,
+	location: WayfindingStudioPolygonElement,
+	mask: Uint8Array,
+	columns: number,
+	rows: number,
+	cellSize: number
+): WayfindingPoint[] => {
+	if (points.length <= 2) return points;
+
+	const segmentStaysInPortal = (left: WayfindingPoint, right: WayfindingPoint): boolean => {
+		const length = Math.hypot(right.x - left.x, right.y - left.y);
+		const startsAtDoor = Math.hypot(left.x - door.point.x, left.y - door.point.y) <= 0.01;
+		const outwardAlignment = length > 0.001
+			? (
+				(right.x - left.x) * direction.x
+				+ (right.y - left.y) * direction.y
+			) / length
+			: 1;
+
+		if (
+			startsAtDoor
+			&& outwardAlignment >= 0.1
+			&& length <= Math.max(door.length * 1.25, cellSize * 4)
+		) return true;
+		const samples = Math.max(1, Math.ceil(length / Math.max(1, cellSize * 0.35)));
+
+		for (let sample = 0; sample <= samples; sample += 1) {
+			const ratio = sample / samples;
+			const point = {
+				x: left.x + (right.x - left.x) * ratio,
+				y: left.y + (right.y - left.y) * ratio
+			};
+
+			if (
+				!pointInPolygon(point, location.geometry)
+				&& pointMaskIndex(point, mask, columns, rows, cellSize) === undefined
+			) return false;
+		}
+
+		return true;
+	};
+	const simplified = [points[0]];
+	let index = 0;
+
+	while (index < points.length - 1) {
+		let nextIndex = index + 1;
+
+		for (let candidate = points.length - 1; candidate > nextIndex; candidate -= 1) {
+			if (!segmentStaysInPortal(points[index], points[candidate])) continue;
+			nextIndex = candidate;
+			break;
+		}
+		simplified.push(points[nextIndex]);
+		index = nextIndex;
+	}
+
+	return simplified;
 };
 
 const connectorForDoor = (
@@ -586,11 +715,11 @@ const connectorForDoor = (
 	];
 	const suffixPoints = suffix.slice(1)
 		.map((index) => pointForIndex(index, columns, cellSize));
-	const geometry = removeCollinearPoints([
+	const geometry = simplifyDoorConnector(removeCollinearPoints([
 		door.point,
 		...approachPoints,
 		...suffixPoints
-	]);
+	]), door, direction, location, mask, columns, rows, cellSize);
 
 	return {
 		anchorIndex: path[path.length - 1],
@@ -628,62 +757,6 @@ const polygonMask = (floor: WayfindingStudioFloor, cellSize: number): {
 	return { columns, mask, rows };
 };
 
-const documentMask = (floor: WayfindingStudioFloor, cellSize: number): {
-	columns: number;
-	mask: Uint8Array;
-	rows: number;
-} => {
-	const document = floor.walkableMask;
-
-	if (!document) return polygonMask(floor, cellSize);
-	const source = new Uint8Array(document.columns * document.rows);
-
-	for (const [row, startColumn, endColumn] of document.walkableRuns) {
-		if (row < 0 || row >= document.rows) continue;
-
-		for (
-			let column = Math.max(0, startColumn);
-			column <= Math.min(document.columns - 1, endColumn);
-			column += 1
-		) {
-			source[row * document.columns + column] = 1;
-		}
-	}
-	const columns = Math.max(1, Math.ceil(floor.width / cellSize));
-	const rows = Math.max(1, Math.ceil(floor.height / cellSize));
-	const mask = new Uint8Array(columns * rows);
-	const originX = document.originX ?? 0;
-	const originY = document.originY ?? 0;
-	const obstacles = floor.elements.filter(
-		(element): element is WayfindingStudioPolygonElement => element.type === 'obstacle'
-	);
-	const locations = floor.elements.filter(
-		(element): element is WayfindingStudioPolygonElement => element.type === 'location'
-	);
-
-	for (let row = 0; row < rows; row += 1) {
-		for (let column = 0; column < columns; column += 1) {
-			const point = {
-				x: Math.min(floor.width, (column + 0.5) * cellSize),
-				y: Math.min(floor.height, (row + 0.5) * cellSize)
-			};
-			const sourceColumn = Math.floor((point.x - originX) / document.cellSize);
-			const sourceRow = Math.floor((point.y - originY) / document.cellSize);
-			const allowed = sourceColumn >= 0
-				&& sourceRow >= 0
-				&& sourceColumn < document.columns
-				&& sourceRow < document.rows
-				&& source[sourceRow * document.columns + sourceColumn] === 1
-				&& !obstacles.some((area) => pointInPolygon(point, area.geometry))
-				&& !locations.some((area) => pointInPolygon(point, area.geometry));
-
-			mask[row * columns + column] = allowed ? 1 : 0;
-		}
-	}
-
-	return { columns, mask, rows };
-};
-
 const pointForIndex = (index: number, columns: number, cellSize: number): WayfindingPoint => ({
 	x: (index % columns + 0.5) * cellSize,
 	y: (Math.floor(index / columns) + 0.5) * cellSize
@@ -693,6 +766,13 @@ const edgeDistance = (points: readonly WayfindingPoint[], unitsPerMeter: number)
 	points.slice(1).reduce((total, point, index) =>
 		total + Math.hypot(point.x - points[index].x, point.y - points[index].y), 0
 	) / Math.max(0.1, unitsPerMeter);
+
+const calibratedEdgeDistance = (
+	points: readonly WayfindingPoint[],
+	unitsPerMeter: number | undefined
+): number | undefined => unitsPerMeter && unitsPerMeter > 0
+	? edgeDistance(points, unitsPerMeter)
+	: undefined;
 
 export const buildFloorRouteNetwork = (
 	sourceProject: WayfindingStudioProject,
@@ -706,23 +786,16 @@ export const buildFloorRouteNetwork = (
 	if (!floor) throw new Error(`Floor '${floorId}' does not exist.`);
 
 	const walkable = floor.elements.filter((element) => element.type === 'walkable');
-	const pedestrianSpaceSource = floor.pedestrianSpaceSource
-		?? (walkable.length > 0 ? 'polygons' : floor.walkableMask ? 'mask' : 'polygons');
-	const usesPaintedMask = pedestrianSpaceSource === 'mask'
-		&& Boolean(floor.walkableMask?.walkableRuns.length);
 
-	if (walkable.length === 0 && !usesPaintedMask) {
-		throw new Error('Draw, detect, or import pedestrian space before building routes.');
+	if (walkable.length === 0) {
+		throw new Error('Draw or detect pedestrian space before building routes.');
 	}
 
 	const cellSize = Math.max(3, Math.min(24, Math.round(
 		options.cellSize
-			?? (usesPaintedMask ? floor.walkableMask?.cellSize : undefined)
 			?? Math.max(floor.width, floor.height) / 220
 	)));
-	const { columns, mask, rows } = usesPaintedMask
-		? documentMask(floor, cellSize)
-		: polygonMask(floor, cellSize);
+	const { columns, mask, rows } = polygonMask(floor, cellSize);
 	const normalizedWalkableCells = mask.reduce((total, value) => total + value, 0);
 	const clearanceCells = Math.max(0, Math.min(4, Math.round(options.clearanceCells ?? 1)));
 	const clearanceMask = erodeWalkableMask(mask, columns, rows, clearanceCells);
@@ -736,13 +809,16 @@ export const buildFloorRouteNetwork = (
 	const routeableDestinationIds = new Set(project.destinations
 		.filter((destination) => destination.routeable !== false)
 		.map((destination) => destination.id));
-	const linkedDoorByLocationId = new Map<string, WayfindingStudioDoorElement>();
+	const linkedDoorsByLocationId = new Map<string, WayfindingStudioDoorElement[]>();
 
 	for (const door of floor.elements.filter(
 		(element): element is WayfindingStudioDoorElement => element.type === 'door'
 	)) {
-		if (!door.locationId || linkedDoorByLocationId.has(door.locationId)) continue;
-		linkedDoorByLocationId.set(door.locationId, door);
+		if (!door.locationId) continue;
+		linkedDoorsByLocationId.set(door.locationId, [
+			...(linkedDoorsByLocationId.get(door.locationId) ?? []),
+			door
+		]);
 	}
 	const semanticNodes = project.graph.nodes.filter((node) => {
 		if (node.levelId !== floorId || !node.semanticElementId) return false;
@@ -763,13 +839,94 @@ export const buildFloorRouteNetwork = (
 			&& Boolean(
 				element.destinationId
 				&& routeableDestinationIds.has(element.destinationId)
-				&& linkedDoorByLocationId.has(element.id)
+				&& linkedDoorsByLocationId.has(element.id)
 			);
 	});
 	const anchorIndexByNodeId = new Map<string, number>();
 	const approachDirectionByNodeId = new Map<string, WayfindingPoint>();
 	const connectorGeometryByNodeId = new Map<string, WayfindingPoint[]>();
 	const diagnostics: RouteBuildDiagnostic[] = [];
+	const sourceNodesById = new Map(project.graph.nodes.map((node) => [node.id, node]));
+	const edgeTouchesFloor = (edge: WayfindingEdge): boolean =>
+		sourceNodesById.get(edge.from)?.levelId === floorId
+		|| sourceNodesById.get(edge.to)?.levelId === floorId;
+	const manualFloorEdges = project.graph.edges.filter((edge) =>
+		edgeTouchesFloor(edge) && !isGeneratedRouteEdge(edge)
+	);
+	const manualEndpointIds = new Set(manualFloorEdges.flatMap((edge) => [edge.from, edge.to]));
+	const manualEndpointNodes = [...manualEndpointIds]
+		.map((nodeId) => sourceNodesById.get(nodeId))
+		.filter((node): node is WayfindingNode =>
+			Boolean(node)
+				&& node!.levelId === floorId
+				&& !node!.semanticElementId
+				&& !node!.locationId
+				&& node!.kind === 'route'
+		);
+	const manualAnchorIndexByNodeId = new Map<string, number>();
+	const manualConnectorGeometryByNodeId = new Map<string, WayfindingPoint[]>();
+	const portalEndpointAllowance = Math.max(12, cellSize * 2.5);
+	const manualEdgeIsContained = (edge: WayfindingEdge): boolean => {
+		const from = sourceNodesById.get(edge.from);
+		const to = sourceNodesById.get(edge.to);
+
+		if (!from || !to) return false;
+		const sourceGeometry = edge.geometry && edge.geometry.length >= 2
+			? edge.geometry
+			: [{ x: from.x, y: from.y }, { x: to.x, y: to.y }];
+		const forwardDistance = Math.hypot(sourceGeometry[0].x - from.x, sourceGeometry[0].y - from.y)
+			+ Math.hypot(
+				sourceGeometry[sourceGeometry.length - 1].x - to.x,
+				sourceGeometry[sourceGeometry.length - 1].y - to.y
+			);
+		const reverseDistance = Math.hypot(sourceGeometry[0].x - to.x, sourceGeometry[0].y - to.y)
+			+ Math.hypot(
+				sourceGeometry[sourceGeometry.length - 1].x - from.x,
+				sourceGeometry[sourceGeometry.length - 1].y - from.y
+			);
+		const geometry = reverseDistance < forwardDistance
+			? [...sourceGeometry].reverse()
+			: sourceGeometry;
+		const allowsPortalEndpoint = (node: WayfindingNode): boolean =>
+			Boolean(node.semanticElementId || node.locationId || node.kind !== 'route');
+
+		for (let index = 1; index < geometry.length; index += 1) {
+			const left = geometry[index - 1];
+			const right = geometry[index];
+			const distance = Math.hypot(right.x - left.x, right.y - left.y);
+			const steps = Math.max(1, Math.ceil(distance / Math.max(1, cellSize * 0.45)));
+
+			for (let step = 0; step <= steps; step += 1) {
+				const ratio = step / steps;
+				const point = {
+					x: left.x + (right.x - left.x) * ratio,
+					y: left.y + (right.y - left.y) * ratio
+				};
+
+				if (pointMaskIndex(point, mask, columns, rows, cellSize) !== undefined) continue;
+				const nearFromPortal = index === 1
+					&& allowsPortalEndpoint(from)
+					&& Math.hypot(point.x - from.x, point.y - from.y) <= portalEndpointAllowance;
+				const nearToPortal = index === geometry.length - 1
+					&& allowsPortalEndpoint(to)
+					&& Math.hypot(point.x - to.x, point.y - to.y) <= portalEndpointAllowance;
+
+				if (!nearFromPortal && !nearToPortal) return false;
+			}
+		}
+
+		return true;
+	};
+
+	for (const edge of manualFloorEdges) {
+		if (manualEdgeIsContained(edge)) continue;
+		diagnostics.push({
+			code: 'route-geometry-invalid',
+			message: `Reviewed route segment ${edge.id} leaves the reviewed walkable space or crosses a blocked area.`,
+			nodeId: edge.from,
+			severity: 'error'
+		});
+	}
 
 	for (const node of semanticNodes) {
 		const semanticElement = node.semanticElementId
@@ -778,20 +935,68 @@ export const buildFloorRouteNetwork = (
 		const associatedLocation = semanticElement?.type === 'location'
 			? semanticElement
 			: undefined;
-		const associatedDoor = associatedLocation
-			? linkedDoorByLocationId.get(associatedLocation.id)
-			: undefined;
-		const connector = associatedDoor && associatedLocation
-			? connectorForDoor(
-				associatedDoor,
-				associatedLocation,
-				mask,
-				rawSkeleton,
-				columns,
-				rows,
-				cellSize
-			)
+		const associatedDoors = associatedLocation
+			? linkedDoorsByLocationId.get(associatedLocation.id) ?? []
+			: [];
+		const alignedDoorCandidates = associatedLocation
+			? associatedDoors.flatMap((door) => {
+				const boundaryDistance = pointToPolygonBoundaryDistance(
+					door.point,
+					associatedLocation.geometry
+				);
+				const maximumBoundaryDistance = Math.max(
+					12,
+					door.length * 0.55,
+					cellSize * 2.5
+				);
+
+				if (boundaryDistance > maximumBoundaryDistance) return [];
+				const connector = connectorForDoor(
+					door,
+					associatedLocation,
+					mask,
+					rawSkeleton,
+					columns,
+					rows,
+					cellSize
+				);
+
+				return connector.anchorIndex === undefined
+					? []
+					: [{ boundaryDistance, connector, door }];
+			})
+			: [];
+		const selectedDoor = alignedDoorCandidates.sort((left, right) =>
+			geometryLength(left.connector.geometry) - geometryLength(right.connector.geometry)
+			|| left.boundaryDistance - right.boundaryDistance
+			|| left.door.id.localeCompare(right.door.id)
+		)[0];
+
+		if (associatedLocation && !selectedDoor) {
+			const hasAlignedDoor = associatedDoors.some((door) =>
+				pointToPolygonBoundaryDistance(door.point, associatedLocation.geometry)
+					<= Math.max(12, door.length * 0.55, cellSize * 2.5)
+			);
+			diagnostics.push({
+				code: hasAlignedDoor ? 'connector-missing' : 'door-location-misaligned',
+				elementId: associatedDoors[0]?.id ?? associatedLocation.id,
+				message: hasAlignedDoor
+					? `${associatedLocation.label ?? associatedLocation.id} has an entrance on its boundary, but the public side does not meet the reviewed walkable space. Extend the pedestrian area to the doorway.`
+					: `${associatedLocation.label ?? associatedLocation.id} has no entrance on its boundary. Move or replace its linked entrance before rebuilding routes.`,
+				nodeId: node.id,
+				severity: 'error'
+			});
+
+			continue;
+		}
+		const connector = selectedDoor
+			? selectedDoor.connector
 			: connectorForPoint(node, mask, rawSkeleton, columns, rows, cellSize);
+
+		if (selectedDoor) {
+			node.x = selectedDoor.door.point.x;
+			node.y = selectedDoor.door.point.y;
+		}
 		const anchorIndex = connector.anchorIndex;
 
 		if (anchorIndex === undefined) {
@@ -813,7 +1018,32 @@ export const buildFloorRouteNetwork = (
 		}
 	}
 
-	const network = extractSkeletonNetwork(networkMask, columns, rows, new Set(anchorIndexByNodeId.values()));
+	for (const node of manualEndpointNodes) {
+		const connector = connectorForPoint(node, mask, rawSkeleton, columns, rows, cellSize);
+
+		if (connector.anchorIndex === undefined) {
+			diagnostics.push({
+				code: 'manual-segment-disconnected',
+				message: `Reviewed route point ${node.id} is outside the reviewed walkable space. Move or remove the manual segment before rebuilding.`,
+				nodeId: node.id,
+				severity: 'error'
+			});
+
+			continue;
+		}
+		manualAnchorIndexByNodeId.set(node.id, connector.anchorIndex);
+		manualConnectorGeometryByNodeId.set(node.id, connector.geometry);
+	}
+
+	const network = extractSkeletonNetwork(
+		networkMask,
+		columns,
+		rows,
+		new Set([
+			...anchorIndexByNodeId.values(),
+			...manualAnchorIndexByNodeId.values()
+		])
+	);
 	const topologyPointCount = network.chains.reduce(
 		(total, chain) => total + chain.indices.length,
 		0
@@ -850,7 +1080,7 @@ export const buildFloorRouteNetwork = (
 			accessible: true,
 			authoringOwnership: 'generated',
 			bidirectional: true,
-			distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
+			distanceMeters: calibratedEdgeDistance(geometry, floor.unitsPerMeter),
 			from,
 			geometry,
 			id: `generated:${floorId}:edge:${chainIndex}`,
@@ -923,7 +1153,7 @@ export const buildFloorRouteNetwork = (
 			accessible: true,
 			authoringOwnership: 'generated',
 			bidirectional: true,
-			distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
+			distanceMeters: calibratedEdgeDistance(geometry, floor.unitsPerMeter),
 			from: node.id,
 			geometry,
 			id: `generated:${floorId}:connector:${node.id}`,
@@ -934,18 +1164,63 @@ export const buildFloorRouteNetwork = (
 		});
 	}
 
-	if (anchorIndexByNodeId.size >= 2) {
-		const core = retainAnchorNetworkCore(
-			[
-				...generatedNodes.map((node) => node.id),
-				...semanticNodes.map((node) => node.id)
-			],
-			generatedEdges,
-			new Set(semanticNodes
-				.filter((node) => anchorIndexByNodeId.has(node.id))
-				.map((node) => node.id))
+	for (const node of manualEndpointNodes) {
+		const anchorIndex = manualAnchorIndexByNodeId.get(node.id);
+		const generatedNodeId = anchorIndex === undefined ? undefined : nodeIdByIndex.get(anchorIndex);
+		const generatedNode = generatedNodeId ? generatedNodeById.get(generatedNodeId) : undefined;
+
+		if (!generatedNodeId || !generatedNode || generatedNodeId === node.id) continue;
+		const nodePoint = { x: node.x, y: node.y };
+		const generatedPoint = { x: generatedNode.x, y: generatedNode.y };
+		const connectorGeometry = manualConnectorGeometryByNodeId.get(node.id) ?? [];
+		const geometry = segmentContained(nodePoint, generatedPoint, mask, columns, rows, cellSize)
+			? [nodePoint, generatedPoint]
+			: removeCollinearPoints([
+				nodePoint,
+				...connectorGeometry.filter((point, index) =>
+					index > 0
+						|| Math.hypot(point.x - nodePoint.x, point.y - nodePoint.y) > 0.01
+				),
+				generatedPoint
+			]);
+
+		generatedEdges.push({
+			accessible: true,
+			authoringOwnership: 'generated',
+			bidirectional: true,
+			distanceMeters: calibratedEdgeDistance(geometry, floor.unitsPerMeter),
+			from: node.id,
+			geometry,
+			id: `generated:${floorId}:manual-connector:${node.id}`,
+			kind: 'walk',
+			reviewStatus: 'proposed',
+			to: generatedNodeId,
+			traversal: 'indoor-corridor'
+		});
+	}
+
+	if (anchorIndexByNodeId.size + manualAnchorIndexByNodeId.size >= 2) {
+		const connectedAnchorIds = new Set(semanticNodes
+			.filter((node) => anchorIndexByNodeId.has(node.id))
+			.map((node) => node.id));
+		const routeTargetIds = new Set([
+			...connectedAnchorIds,
+			...manualAnchorIndexByNodeId.keys()
+		]);
+		const originIds = semanticNodes
+			.filter((node) =>
+				connectedAnchorIds.has(node.id)
+					&& semanticElements.get(node.semanticElementId ?? '')?.type === 'origin'
+			)
+			.map((node) => node.id)
+			.sort();
+		const rootIds = originIds.length > 0 ? originIds : [[...routeTargetIds].sort()[0]];
+		const paths = retainShortestAnchorPaths(
+			[...generatedEdges, ...manualFloorEdges],
+			rootIds,
+			routeTargetIds
 		);
-		const retainedEdges = generatedEdges.filter((edge) => core.edgeIds.has(edge.id));
+		const retainedEdges = generatedEdges.filter((edge) => paths.edgeIds.has(edge.id));
 		const retainedNodeIds = new Set(retainedEdges.flatMap((edge) => [edge.from, edge.to]));
 
 		generatedEdges.splice(0, generatedEdges.length, ...retainedEdges);
@@ -956,28 +1231,20 @@ export const buildFloorRouteNetwork = (
 		);
 	}
 
-	const nodesById = new Map(project.graph.nodes.map((node) => [node.id, node]));
-	const edgeTouchesFloor = (edge: WayfindingEdge): boolean =>
-		nodesById.get(edge.from)?.levelId === floorId
-		|| nodesById.get(edge.to)?.levelId === floorId;
 	const generatedEdgesBefore = project.graph.edges.filter((edge) =>
-		edgeTouchesFloor(edge) && isGeneratedRouteElement(edge, floorId)
+		edgeTouchesFloor(edge) && isGeneratedRouteEdge(edge)
 	);
-	const manualFloorEdges = project.graph.edges.filter((edge) =>
-		edgeTouchesFloor(edge) && !isGeneratedRouteElement(edge, floorId)
-	);
-	const manualEndpointIds = new Set(manualFloorEdges.flatMap((edge) => [edge.from, edge.to]));
 	const generatedNodesBefore = project.graph.nodes.filter((node) =>
 		node.levelId === floorId
 		&& !node.semanticElementId
-		&& isGeneratedRouteElement(node, floorId)
+		&& isGeneratedRouteNode(node)
 		&& !manualEndpointIds.has(node.id)
 	);
 	const retainedNodes = project.graph.nodes
 		.filter((node) =>
 			node.levelId !== floorId
 			|| Boolean(node.semanticElementId)
-			|| !isGeneratedRouteElement(node, floorId)
+			|| !isGeneratedRouteNode(node)
 			|| manualEndpointIds.has(node.id)
 		)
 		.map((node) =>
@@ -988,7 +1255,7 @@ export const buildFloorRouteNetwork = (
 	const retainedNodeIds = new Set(retainedNodes.map((node) => node.id));
 	const retainedNodeById = new Map(retainedNodes.map((node) => [node.id, node]));
 	const retainedEdges = project.graph.edges.filter((edge) =>
-		!edgeTouchesFloor(edge) || !isGeneratedRouteElement(edge, floorId)
+		!edgeTouchesFloor(edge) || !isGeneratedRouteEdge(edge)
 	);
 	const retainedEdgeIds = new Set(retainedEdges.map((edge) => edge.id));
 	const nextGeneratedNodes = generatedNodes.filter((node) => !retainedNodeIds.has(node.id));
@@ -1006,7 +1273,7 @@ export const buildFloorRouteNetwork = (
 			return geometry
 				? {
 					...edge,
-					distanceMeters: edgeDistance(geometry, floor.unitsPerMeter ?? 10),
+					distanceMeters: calibratedEdgeDistance(geometry, floor.unitsPerMeter),
 					geometry
 				}
 				: edge;
@@ -1076,7 +1343,7 @@ export const buildFloorRouteNetwork = (
 			manualNodesPreserved: retainedNodes.filter((node) =>
 				node.levelId === floorId
 				&& !node.semanticElementId
-				&& !isGeneratedRouteElement(node, floorId)
+				&& !isGeneratedRouteNode(node)
 			).length
 		},
 		edges: nextGeneratedEdges.length,

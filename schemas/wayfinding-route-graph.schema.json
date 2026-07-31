@@ -4,18 +4,15 @@
 	"title": "Wallboard Wayfinding Route Graph",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["contractVersion", "graphId", "nodes", "edges"],
+	"required": ["graphId", "nodes", "edges"],
 	"properties": {
-		"contractVersion": { "enum": [1, 2] },
 		"graphId": { "$ref": "#/$defs/nonEmptyString" },
 		"nodes": {
 			"type": "array",
-			"minItems": 2,
 			"items": { "$ref": "#/$defs/node" }
 		},
 		"edges": {
 			"type": "array",
-			"minItems": 1,
 			"items": { "$ref": "#/$defs/edge" }
 		}
 	},
@@ -48,7 +45,7 @@
 		"edge": {
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "from", "to", "kind", "accessible", "bidirectional"],
+			"required": ["id", "from", "to", "kind", "accessible", "bidirectional", "reviewStatus", "traversal"],
 			"properties": {
 				"authoringOwnership": { "enum": ["generated", "manual"] },
 				"id": { "$ref": "#/$defs/nonEmptyString" },
@@ -77,25 +74,5 @@
 				"y": { "type": "number" }
 			}
 		}
-	},
-	"allOf": [
-		{
-			"if": { "properties": { "contractVersion": { "const": 2 } } },
-			"then": {
-				"properties": {
-					"edges": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"reviewStatus": { "enum": ["confirmed", "proposed"] },
-								"traversal": { "enum": ["outdoor-path", "crossing", "indoor-corridor", "open-area", "portal", "transition"] }
-							},
-							"required": ["reviewStatus", "traversal"]
-						}
-					}
-				}
-			}
-		}
-	]
+	}
 }

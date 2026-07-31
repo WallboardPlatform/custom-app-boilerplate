@@ -64,6 +64,8 @@ export interface PresentationMapItem {
 }
 
 export interface PresentationLabelPlacement {
+	displayText: string;
+	fontSize: number;
 	height: number;
 	item: PresentationMapItem;
 	width: number;
@@ -317,6 +319,37 @@ const placementBounds = (
 	top: y
 });
 
+const labelText = (item: PresentationMapItem): string =>
+	item.mapNumber ? `${item.mapNumber}  ${item.name}` : item.name;
+
+const glyphWidth = (character: string): number => {
+	if (/\s/u.test(character)) return 3.5;
+
+	if (/[ilI1|.,'`]/u.test(character)) return 3.9;
+
+	if (/[MW@%&]/u.test(character)) return 9.6;
+
+	if (/[A-Z0-9]/u.test(character)) return 7.6;
+
+	return 7;
+};
+
+const estimatedTextWidth = (value: string): number =>
+	[...value].reduce((width, character) => width + glyphWidth(character), 0);
+
+const fitLabelText = (value: string, maximumWidth: number): string => {
+	if (estimatedTextWidth(value) <= maximumWidth) return value;
+	const ellipsis = '…';
+	let result = '';
+
+	for (const character of value) {
+		if (estimatedTextWidth(`${result}${character}${ellipsis}`) > maximumWidth) break;
+		result += character;
+	}
+
+	return `${result.trimEnd()}${ellipsis}`;
+};
+
 export const layoutPresentationLabels = (
 	items: PresentationMapItem[],
 	scale: number,
@@ -334,17 +367,41 @@ export const layoutPresentationLabels = (
 	const occupied: PresentationBounds[] = [];
 	const placements: PresentationLabelPlacement[] = [];
 	const inverseScale = 1 / Math.max(0.25, scale);
-	const labelHeight = (detail === 'detailed' ? 42 : 32) * inverseScale;
+	const screenFontSize = detail === 'detailed' ? 14 : 13;
+	const labelHeight = (detail === 'detailed' ? 38 : 32) * inverseScale;
 	const markerGap = 16 * inverseScale;
-	const limit = detail === 'compact' ? (selected ? 1 : 0) : detail === 'standard' ? 8 : 16;
+	const markerCollisionRadius = 20 * inverseScale;
+	const markerBounds = items.map((item) => ({
+		anchor: item.anchor,
+		bounds: placementBounds(
+			item.anchor.x - markerCollisionRadius,
+			item.anchor.y - markerCollisionRadius,
+			markerCollisionRadius * 2,
+			markerCollisionRadius * 2
+		),
+		destinationId: item.destinationId
+	}));
+	const readyCount = items.filter((item) => item.presentation === 'ready').length;
+	const limit = detail === 'compact'
+		? (readyCount <= 6 ? 6 : selected ? 1 : 0)
+		: detail === 'standard'
+			? 8
+			: 16;
 	const viewportMargin = 12 * inverseScale;
 	const collisionPadding = 10 * inverseScale;
+	const horizontalPadding = 20;
+	const maximumLabelWidth = detail === 'detailed' ? 260 : 220;
 
 	for (const item of candidates) {
 		if (placements.length >= limit && item.destinationId !== selectedDestinationId) continue;
+		const fullText = labelText(item);
+		const displayText = fitLabelText(
+			fullText,
+			maximumLabelWidth - horizontalPadding
+		);
 		const width = Math.min(
-			240,
-			Math.max(88, item.name.length * 7.2 + (item.mapNumber ? 26 : 0))
+			maximumLabelWidth,
+			Math.max(88, estimatedTextWidth(displayText) + horizontalPadding)
 		) * inverseScale;
 		const offsets = [
 			{ x: markerGap, y: -labelHeight / 2 },
@@ -371,18 +428,42 @@ export const layoutPresentationLabels = (
 				&& bounds.top >= viewportMargin
 				&& bounds.bottom <= viewport.height - viewportMargin
 			);
+			const avoidsOtherMarkers = markerBounds.every((marker) =>
+				marker.destinationId === item.destinationId
+				|| Math.hypot(
+					marker.anchor.x - item.anchor.x,
+					marker.anchor.y - item.anchor.y
+				) <= markerCollisionRadius * 1.25
+				|| !intersects(paddedBounds, marker.bounds)
+			);
 
-			return insideViewport && occupied.every((existing) => !intersects(paddedBounds, existing));
+			return insideViewport
+				&& avoidsOtherMarkers
+				&& occupied.every((existing) => !intersects(paddedBounds, existing));
 		});
 
 		if (!offset && item.destinationId !== selectedDestinationId) continue;
 		const fallback = offset ?? offsets[0];
+		const unclampedX = item.anchor.x + fallback.x;
+		const unclampedY = item.anchor.y + fallback.y;
 		const placement = {
+			displayText,
+			fontSize: screenFontSize * inverseScale,
 			height: labelHeight,
 			item,
 			width,
-			x: item.anchor.x + fallback.x,
-			y: item.anchor.y + fallback.y
+			x: viewport
+				? Math.max(viewportMargin, Math.min(
+					viewport.width - viewportMargin - width,
+					unclampedX
+				))
+				: unclampedX,
+			y: viewport
+				? Math.max(viewportMargin, Math.min(
+					viewport.height - viewportMargin - labelHeight,
+					unclampedY
+				))
+				: unclampedY
 		};
 
 		occupied.push(placementBounds(

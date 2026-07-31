@@ -61,7 +61,29 @@ void test('continuous element controls merge into one undo step', (): void => {
 	assert.equal(element.type === 'logo' ? element.height : undefined, 60);
 });
 
-void test('loading a legacy-compatible project resets document history and keeps panel preferences', (): void => {
+void test('continuous project appearance sliders merge into one undo step', (): void => {
+	const project = createWayfindingStudioProject('continuous-project-control-history');
+	const originalDefaults = structuredClone(project.defaults);
+	const store = createEditorStore(createEditorState(project));
+
+	for (const fillOpacity of [0.7, 0.6, 0.5]) {
+		const next = structuredClone(store.getSnapshot().state.project);
+		assert.ok(next.defaults);
+		next.defaults.location.fillOpacity = fillOpacity;
+		store.dispatch({
+			type: 'project/replace',
+			historyGroup: 'room-opacity',
+			label: 'Update project settings',
+			project: next
+		});
+	}
+	store.undo();
+
+	assert.deepEqual(store.getSnapshot().state.project.defaults, originalDefaults);
+	assert.equal(store.getSnapshot().canUndo, false);
+});
+
+void test('loading a project resets document history and keeps panel preferences', (): void => {
 	const store = createEditorStore();
 	store.dispatch({ type: 'panel/toggle', panelId: 'left', collapsed: true });
 	const project = createWayfindingStudioProject('opened-project');
@@ -123,7 +145,9 @@ void test('floor removal keeps at least one floor and selects a valid remaining 
 			from: 'ground-node',
 			id: 'floor-connection',
 			kind: 'elevator',
-			to: 'gallery-node'
+			reviewStatus: 'confirmed',
+			to: 'gallery-node',
+			traversal: 'transition'
 		}
 	});
 	store.dispatch({ type: 'floor/select', floorId: 'level-1' });
@@ -338,7 +362,9 @@ void test('route graph mutations keep edges and nodes referentially consistent',
 					],
 					id: 'edge-a-b',
 					kind: 'walk',
-					to: 'node-b'
+					reviewStatus: 'confirmed',
+					to: 'node-b',
+					traversal: 'indoor-corridor'
 				}
 			}
 		],

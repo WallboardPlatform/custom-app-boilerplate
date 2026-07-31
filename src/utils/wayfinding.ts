@@ -17,22 +17,6 @@ export interface WayfindingRoutePoint extends WayfindingPoint {
 	levelId: string;
 }
 
-export type WayfindingWalkableMaskRun = [row: number, startColumn: number, endColumn: number];
-
-export interface WayfindingWalkableMaskDocument {
-	cellSize: number;
-	columns: number;
-	contractVersion: 1;
-	height: number;
-	mapId: string;
-	originX?: number;
-	originY?: number;
-	reviewStatus: WayfindingReviewStatus;
-	rows: number;
-	walkableRuns: WayfindingWalkableMaskRun[];
-	width: number;
-}
-
 export interface WayfindingNode {
 	authoringOwnership?: WayfindingAuthoringOwnership;
 	id: string;
@@ -55,12 +39,11 @@ export interface WayfindingEdge {
 	corridorWidth?: number;
 	distanceMeters?: number;
 	geometry?: WayfindingPoint[];
-	reviewStatus?: WayfindingReviewStatus;
-	traversal?: WayfindingTraversal;
+	reviewStatus: WayfindingReviewStatus;
+	traversal: WayfindingTraversal;
 }
 
 export interface WayfindingGraphDocument {
-	contractVersion: 1 | 2;
 	graphId: string;
 	nodes: WayfindingNode[];
 	edges: WayfindingEdge[];

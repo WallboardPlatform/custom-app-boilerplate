@@ -8,442 +8,511 @@
       "name": "veszprem-map.webp"
     }
   ],
-  "contractVersion": 1,
   "createdAt": "2026-07-22T15:29:44.062Z",
-  "delivery": {
-    "contractVersion": 1,
-    "projectId": "veszprem-downtown-wayfinding",
-    "source": {
-      "kind": "illustrated-map",
-      "presentation": "source-overlay",
-      "levels": 1,
-      "equivalentRedrawAllowed": true
-    },
-    "guidance": {
-      "targetMode": "highlight",
-      "allowFallback": true,
-      "stepFreeRequired": false
-    },
-    "evidence": {
-      "destinationMetadata": {
-        "status": "confirmed",
-        "provenance": "customer-provided",
-        "artifact": "VeszpremTerkep.png numbered landmark legend",
-        "review": {
-          "method": "source-authority",
-          "reviewerType": "authoritative-source",
-          "reviewedBy": "supplied tourism map"
-        }
-      },
-      "destinationAnchors": {
-        "status": "confirmed",
-        "provenance": "customer-provided",
-        "artifact": "map.svg hit geometry aligned to numbered symbols",
-        "review": {
-          "method": "source-authority",
-          "reviewerType": "authoritative-source",
-          "reviewedBy": "numbered symbols on supplied tourism map"
-        }
-      },
-      "currentLocationAnchors": {
-        "status": "confirmed",
-        "provenance": "customer-provided",
-        "artifact": "Tourinform current-location pin",
-        "review": {
-          "method": "source-authority",
-          "reviewerType": "authoritative-source",
-          "reviewedBy": "supplied tourism map"
-        }
-      },
-      "orientation": {
-        "status": "unavailable",
-        "provenance": "customer-provided"
-      },
-      "walkableSpace": {
-        "status": "unavailable",
-        "provenance": "image-analysis",
-        "independentFrom": [
-          "routeTopology"
-        ]
-      },
-      "routeTopology": {
-        "status": "unavailable",
-        "provenance": "ai-inferred"
-      },
-      "entranceApproaches": {
-        "status": "unavailable",
-        "provenance": "ai-inferred"
-      },
-      "levelTransitions": {
-        "status": "unavailable",
-        "provenance": "customer-provided"
-      },
-      "accessibility": {
-        "status": "unavailable",
-        "provenance": "customer-provided"
-      }
-    }
-  },
   "destinations": [
     {
       "mapNumber": "START",
       "id": "tourinform-veszprem",
       "name": "Tourinform Veszprém",
-      "englishName": "Tourist Information Centre",
       "category": "Visitor services",
       "description": "Current location shown by the red pin on the supplied map.",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Tourist Information Centre"
+        }
+      }
     },
     {
       "mapNumber": "01",
       "id": "hosok-kapuja",
       "name": "Hősök Kapuja",
-      "englishName": "Heroes' Gate",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Heroes' Gate"
+        }
+      }
     },
     {
       "mapNumber": "02",
       "id": "modern-keptar-vass-gyujtemeny",
       "name": "Modern Képtár - Vass László Gyűjtemény",
-      "englishName": "Modern Art Gallery",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Modern Art Gallery"
+        }
+      }
     },
     {
       "mapNumber": "03",
       "id": "tuztorony",
       "name": "Tűztorony",
-      "englishName": "Fire Lookout Tower",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Fire Lookout Tower"
+        }
+      }
     },
     {
       "mapNumber": "04",
       "id": "foton-audiovizualis-kozpont",
       "name": "FOTON Audiovizuális Központ",
-      "englishName": "FOTON Audiovisual Centre",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "FOTON Audiovisual Centre"
+        }
+      }
     },
     {
       "mapNumber": "05",
       "id": "csikasz-galeria",
       "name": "Csikász Galéria",
-      "englishName": "Csikász Gallery",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Csikász Gallery"
+        }
+      }
     },
     {
       "mapNumber": "06",
       "id": "dubniczay-palota",
       "name": "Dubniczay-palota",
-      "englishName": "Dubniczay Palace",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Dubniczay Palace"
+        }
+      }
     },
     {
       "mapNumber": "07",
       "id": "biro-giczey-haz",
       "name": "Bíró-Giczey Ház",
-      "englishName": "Bíró-Giczey House",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Bíró-Giczey House"
+        }
+      }
     },
     {
       "mapNumber": "08",
       "id": "szent-istvan-templom",
       "name": "Szent István Templom",
-      "englishName": "St. Stephen's Church",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "St. Stephen's Church"
+        }
+      }
     },
     {
       "mapNumber": "09",
       "id": "kormendy-haz",
       "name": "Körmendy Ház",
-      "englishName": "Körmendy House",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Körmendy House"
+        }
+      }
     },
     {
       "mapNumber": "10",
       "id": "szent-istvan-es-gizella-szobor",
       "name": "Szent István és Boldog Gizella szobra",
-      "englishName": "Statue of King St. Stephen and Queen Gizella",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Statue of King St. Stephen and Queen Gizella"
+        }
+      }
     },
     {
       "mapNumber": "11",
       "id": "benedek-hegy",
       "name": "Benedek-hegy",
-      "englishName": "Benedict Hill",
       "category": "Parks & viewpoints",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Benedict Hill"
+        }
+      }
     },
     {
       "mapNumber": "12",
       "id": "szent-gyorgy-kapolna",
       "name": "Szent György Kápolna",
-      "englishName": "St. George Chapel",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "St. George Chapel"
+        }
+      }
     },
     {
       "mapNumber": "13",
       "id": "szent-mihaly-foszekesegyhaz",
       "name": "Szent Mihály Főszékesegyház",
-      "englishName": "St. Michael's Basilica",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "St. Michael's Basilica"
+        }
+      }
     },
     {
       "mapNumber": "14",
       "id": "szentharomsag-szobor",
       "name": "Szentháromság-szobor",
-      "englishName": "Holy Trinity Statue",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Holy Trinity Statue"
+        }
+      }
     },
     {
       "mapNumber": "15",
       "id": "varkut",
       "name": "Várkút",
-      "englishName": "Castle Well",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Castle Well"
+        }
+      }
     },
     {
       "mapNumber": "16",
       "id": "gizella-kapolna",
       "name": "Gizella Kápolna",
-      "englishName": "Gisela Chapel",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Gisela Chapel"
+        }
+      }
     },
     {
       "mapNumber": "17",
       "id": "erseki-palota",
       "name": "Érseki Palota",
-      "englishName": "Archbishop's Palace",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Archbishop's Palace"
+        }
+      }
     },
     {
       "mapNumber": "18",
       "id": "szent-imre-templom",
       "name": "Szent Imre Templom",
-      "englishName": "Saint Emeric Church",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Saint Emeric Church"
+        }
+      }
     },
     {
       "mapNumber": "19",
       "id": "deak-ferenc-rendezvenykozpont",
       "name": "Deák Ferenc utcai Rendezvényközpont",
-      "englishName": "Deák Ferenc Street Events Centre",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Deák Ferenc Street Events Centre"
+        }
+      }
     },
     {
       "mapNumber": "20",
       "id": "auer-haz",
       "name": "Auer-ház",
-      "englishName": "Auer House",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Auer House"
+        }
+      }
     },
     {
       "mapNumber": "21",
       "id": "posa-haz",
       "name": "Pósa-ház",
-      "englishName": "Pósa House",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Pósa House"
+        }
+      }
     },
     {
       "mapNumber": "22",
       "id": "ruttner-haz-varborton",
       "name": "Ruttner-ház - Várbörtön kiállítás",
-      "englishName": "Ruttner House - Castle Prison Exhibition",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Ruttner House - Castle Prison Exhibition"
+        }
+      }
     },
     {
       "mapNumber": "23",
       "id": "code-digitalis-elmenykozpont",
       "name": "CODE - Digitális Élményközpont",
-      "englishName": "CODE Digital Experience Centre",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "CODE Digital Experience Centre"
+        }
+      }
     },
     {
       "mapNumber": "24",
       "id": "petofi-szinhaz",
       "name": "Veszprémi Petőfi Színház",
-      "englishName": "Petőfi Theatre of Veszprém",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Petőfi Theatre of Veszprém"
+        }
+      }
     },
     {
       "mapNumber": "25",
       "id": "hangvilla",
       "name": "Hangvilla Multifunkcionális Közösségi Tér",
-      "englishName": "Hangvilla Cultural Centre",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Hangvilla Cultural Centre"
+        }
+      }
     },
     {
       "mapNumber": "26",
       "id": "eotvos-karoly-megyei-konyvtar",
       "name": "Eötvös Károly Megyei Könyvtár",
-      "englishName": "Eötvös Károly County Library",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Eötvös Károly County Library"
+        }
+      }
     },
     {
       "mapNumber": "27",
       "id": "szent-miklos-szeg",
       "name": "Szent Miklós-szeg",
-      "englishName": "Ruins of Saint Nicholas Church",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Ruins of Saint Nicholas Church"
+        }
+      }
     },
     {
       "mapNumber": "28",
       "id": "laczko-dezso-muzeum",
       "name": "Laczkó Dezső Múzeum",
-      "englishName": "Laczkó Dezső Museum",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Laczkó Dezső Museum"
+        }
+      }
     },
     {
       "mapNumber": "29",
       "id": "bakonyi-haz",
       "name": "Bakonyi Ház",
-      "englishName": "Bakony House",
       "category": "Historic quarter",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Bakony House"
+        }
+      }
     },
     {
       "mapNumber": "30",
       "id": "egyetemi-rekortan-sportpalyak",
       "name": "Egyetemi Rekortán Sportpályák",
-      "englishName": "University Sports Courts",
       "category": "Sports & recreation",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "University Sports Courts"
+        }
+      }
     },
     {
       "mapNumber": "31",
       "id": "acticity",
       "name": "ActiCity Tánc- és Mozgásművészeti Központ",
-      "englishName": "ActiCity Dance and Movement Centre",
       "category": "Sports & recreation",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "ActiCity Dance and Movement Centre"
+        }
+      }
     },
     {
       "mapNumber": "32",
       "id": "digitalis-tudaskozpont",
       "name": "Digitális Tudásközpont",
-      "englishName": "Digital Knowledge Centre",
       "category": "Museums & culture",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Digital Knowledge Centre"
+        }
+      }
     },
     {
       "mapNumber": "33",
       "id": "gyarkert-kulturpark",
       "name": "Gyárkert KultúrPark",
-      "englishName": "Gyárkert Culture Park",
       "category": "Parks & viewpoints",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Gyárkert Culture Park"
+        }
+      }
     },
     {
       "mapNumber": "34",
       "id": "veszprem-arena",
       "name": "Veszprém Aréna Sport- és Rendezvénycsarnok",
-      "englishName": "Veszprém Arena",
       "category": "Sports & recreation",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Veszprém Arena"
+        }
+      }
     },
     {
       "mapNumber": "35",
       "id": "veszpremi-sportuszoda",
       "name": "Veszprémi Sportuszoda",
-      "englishName": "Veszprém Sports Swimming Pool",
       "category": "Sports & recreation",
       "description": "",
       "hours": "",
-      "status": ""
+      "status": "",
+      "translations": {
+        "en": {
+          "name": "Veszprém Sports Swimming Pool"
+        }
+      }
     }
   ],
   "floors": [
@@ -453,7 +522,7 @@
           "destinationId": "tourinform-veszprem",
           "floorId": "downtown",
           "id": "hit-tourinform-veszprem",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 372,
@@ -465,7 +534,7 @@
           "destinationId": "hosok-kapuja",
           "floorId": "downtown",
           "id": "hit-hosok-kapuja",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 357,
@@ -477,7 +546,7 @@
           "destinationId": "modern-keptar-vass-gyujtemeny",
           "floorId": "downtown",
           "id": "hit-modern-keptar-vass-gyujtemeny",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 287,
@@ -489,7 +558,7 @@
           "destinationId": "tuztorony",
           "floorId": "downtown",
           "id": "hit-tuztorony",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 270,
@@ -501,7 +570,7 @@
           "destinationId": "foton-audiovizualis-kozpont",
           "floorId": "downtown",
           "id": "hit-foton-audiovizualis-kozpont",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 238,
@@ -513,7 +582,7 @@
           "destinationId": "csikasz-galeria",
           "floorId": "downtown",
           "id": "hit-csikasz-galeria",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 211,
@@ -525,7 +594,7 @@
           "destinationId": "dubniczay-palota",
           "floorId": "downtown",
           "id": "hit-dubniczay-palota",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 195,
@@ -537,7 +606,7 @@
           "destinationId": "biro-giczey-haz",
           "floorId": "downtown",
           "id": "hit-biro-giczey-haz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 141,
@@ -549,7 +618,7 @@
           "destinationId": "szent-istvan-templom",
           "floorId": "downtown",
           "id": "hit-szent-istvan-templom",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 116,
@@ -561,7 +630,7 @@
           "destinationId": "kormendy-haz",
           "floorId": "downtown",
           "id": "hit-kormendy-haz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 93,
@@ -573,7 +642,7 @@
           "destinationId": "szent-istvan-es-gizella-szobor",
           "floorId": "downtown",
           "id": "hit-szent-istvan-es-gizella-szobor",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 112,
@@ -585,7 +654,7 @@
           "destinationId": "benedek-hegy",
           "floorId": "downtown",
           "id": "hit-benedek-hegy",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 117,
@@ -597,7 +666,7 @@
           "destinationId": "szent-gyorgy-kapolna",
           "floorId": "downtown",
           "id": "hit-szent-gyorgy-kapolna",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 133,
@@ -609,7 +678,7 @@
           "destinationId": "szent-mihaly-foszekesegyhaz",
           "floorId": "downtown",
           "id": "hit-szent-mihaly-foszekesegyhaz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 178,
@@ -621,7 +690,7 @@
           "destinationId": "szentharomsag-szobor",
           "floorId": "downtown",
           "id": "hit-szentharomsag-szobor",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 184,
@@ -633,7 +702,7 @@
           "destinationId": "varkut",
           "floorId": "downtown",
           "id": "hit-varkut",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 212,
@@ -645,7 +714,7 @@
           "destinationId": "gizella-kapolna",
           "floorId": "downtown",
           "id": "hit-gizella-kapolna",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 238,
@@ -657,7 +726,7 @@
           "destinationId": "erseki-palota",
           "floorId": "downtown",
           "id": "hit-erseki-palota",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 228,
@@ -669,7 +738,7 @@
           "destinationId": "szent-imre-templom",
           "floorId": "downtown",
           "id": "hit-szent-imre-templom",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 277,
@@ -681,7 +750,7 @@
           "destinationId": "deak-ferenc-rendezvenykozpont",
           "floorId": "downtown",
           "id": "hit-deak-ferenc-rendezvenykozpont",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 312,
@@ -693,7 +762,7 @@
           "destinationId": "auer-haz",
           "floorId": "downtown",
           "id": "hit-auer-haz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 473,
@@ -705,7 +774,7 @@
           "destinationId": "posa-haz",
           "floorId": "downtown",
           "id": "hit-posa-haz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 295,
@@ -717,7 +786,7 @@
           "destinationId": "ruttner-haz-varborton",
           "floorId": "downtown",
           "id": "hit-ruttner-haz-varborton",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 165,
@@ -729,7 +798,7 @@
           "destinationId": "code-digitalis-elmenykozpont",
           "floorId": "downtown",
           "id": "hit-code-digitalis-elmenykozpont",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 262,
@@ -741,7 +810,7 @@
           "destinationId": "petofi-szinhaz",
           "floorId": "downtown",
           "id": "hit-petofi-szinhaz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 393,
@@ -753,7 +822,7 @@
           "destinationId": "hangvilla",
           "floorId": "downtown",
           "id": "hit-hangvilla",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 481,
@@ -765,7 +834,7 @@
           "destinationId": "eotvos-karoly-megyei-konyvtar",
           "floorId": "downtown",
           "id": "hit-eotvos-karoly-megyei-konyvtar",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 370,
@@ -777,7 +846,7 @@
           "destinationId": "szent-miklos-szeg",
           "floorId": "downtown",
           "id": "hit-szent-miklos-szeg",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 418,
@@ -789,7 +858,7 @@
           "destinationId": "laczko-dezso-muzeum",
           "floorId": "downtown",
           "id": "hit-laczko-dezso-muzeum",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 534,
@@ -801,7 +870,7 @@
           "destinationId": "bakonyi-haz",
           "floorId": "downtown",
           "id": "hit-bakonyi-haz",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 574,
@@ -813,7 +882,7 @@
           "destinationId": "egyetemi-rekortan-sportpalyak",
           "floorId": "downtown",
           "id": "hit-egyetemi-rekortan-sportpalyak",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 530,
@@ -825,7 +894,7 @@
           "destinationId": "acticity",
           "floorId": "downtown",
           "id": "hit-acticity",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 535,
@@ -837,7 +906,7 @@
           "destinationId": "digitalis-tudaskozpont",
           "floorId": "downtown",
           "id": "hit-digitalis-tudaskozpont",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 505,
@@ -849,7 +918,7 @@
           "destinationId": "gyarkert-kulturpark",
           "floorId": "downtown",
           "id": "hit-gyarkert-kulturpark",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 798,
@@ -861,7 +930,7 @@
           "destinationId": "veszprem-arena",
           "floorId": "downtown",
           "id": "hit-veszprem-arena",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 1234,
@@ -873,7 +942,7 @@
           "destinationId": "veszpremi-sportuszoda",
           "floorId": "downtown",
           "id": "hit-veszpremi-sportuszoda",
-          "provenance": "imported",
+          "provenance": "customer-source",
           "status": "confirmed",
           "point": {
             "x": 1263,
@@ -890,13 +959,25 @@
       "backgroundAssetId": "background:downtown"
     }
   ],
+  "format": "wallboard-wayfinding-studio",
+  "formatVersion": 1,
   "graph": {
-    "contractVersion": 2,
     "edges": [],
     "graphId": "veszprem-downtown-wayfinding-graph",
     "nodes": []
   },
   "name": "Veszprem Downtown Wayfinding",
   "projectId": "veszprem-downtown-wayfinding",
-  "updatedAt": "2026-07-22T15:29:44.071Z"
+  "updatedAt": "2026-07-22T15:29:44.071Z",
+  "defaultLanguage": "hu",
+  "languages": [
+    {
+      "code": "hu",
+      "label": "Magyar"
+    },
+    {
+      "code": "en",
+      "label": "English"
+    }
+  ]
 }

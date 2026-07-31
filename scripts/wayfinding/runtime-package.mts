@@ -1,10 +1,9 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 
 import type { WayfindingGraphDocument } from '../../src/utils/wayfinding.js';
-import type { WayfindingGuidanceMode } from './project.mjs';
 import {
 	renderWayfindingFloorSvg,
-	validateWayfindingStudioDelivery,
+	validateWayfindingStudioPublish,
 	wayfindingStudioProjectDefaults,
 	type WayfindingRuntimeBundle,
 	type WayfindingStudioAsset,
@@ -71,17 +70,19 @@ export interface WayfindingMapDocument {
 }
 
 export interface WayfindingMapManifest {
-	contractVersion: 1;
+	capabilities: {
+		routing: boolean;
+		stepFreeRouting: boolean;
+	};
 	defaultLanguage: string;
-	deliveryMode: WayfindingGuidanceMode;
 	destinationsPath: 'data/destinations.json';
 	format: typeof WAYFINDING_MAP_FORMAT;
+	formatVersion: 1;
 	generatedAt: string;
 	graphPath: 'routes/graph.json';
 	mapPath: 'map.json';
 	projectId: string;
 	projectName: string;
-	sourceContractVersion: number;
 }
 
 export interface WayfindingMapPackage {
@@ -187,12 +188,8 @@ const publishedDestinations = (project: WayfindingStudioProject): WayfindingPubl
 	});
 };
 
-const runtimeGraph = (project: WayfindingStudioProject): WayfindingGraphDocument => project.delivery.guidance.targetMode === 'route'
-	? structuredClone(project.graph)
-	: { contractVersion: 2, edges: [], graphId: `${project.graph.graphId}:${project.delivery.guidance.targetMode}`, nodes: [] };
-
 const compileWayfindingMapPackage = (project: WayfindingStudioProject): WayfindingMapPackage => {
-	const errors = validateWayfindingStudioDelivery(project).filter((issue): boolean => issue.severity === 'error');
+	const errors = validateWayfindingStudioPublish(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
 	const publishedAssets: Array<WayfindingPublishedAsset & { bytes: Uint8Array }> = project.assets.map((asset) => ({
@@ -228,18 +225,22 @@ const compileWayfindingMapPackage = (project: WayfindingStudioProject): Wayfindi
 		};
 	});
 	const defaultLanguage: string = project.defaultLanguage ?? 'en';
+	const graph = structuredClone(project.graph);
+	const routing = graph.edges.length > 0;
 	const manifest: WayfindingMapManifest = {
-		contractVersion: 1,
+		capabilities: {
+			routing,
+			stepFreeRouting: routing && graph.edges.every((edge) => edge.accessible)
+		},
 		defaultLanguage,
-		deliveryMode: project.delivery.guidance.targetMode,
 		destinationsPath: 'data/destinations.json',
 		format: WAYFINDING_MAP_FORMAT,
+		formatVersion: 1,
 		generatedAt: project.updatedAt,
 		graphPath: 'routes/graph.json',
 		mapPath: 'map.json',
 		projectId: project.projectId,
-		projectName: project.name,
-		sourceContractVersion: project.contractVersion
+		projectName: project.name
 	};
 	const map: WayfindingMapDocument = {
 		assets: publishedAssets.map(({ bytes, ...asset }): WayfindingPublishedAsset => {
@@ -265,7 +266,7 @@ const compileWayfindingMapPackage = (project: WayfindingStudioProject): Wayfindi
 		assets: publishedAssets,
 		destinations: publishedDestinations(project),
 		floors,
-		graph: runtimeGraph(project),
+		graph,
 		manifest,
 		map
 	};
@@ -315,7 +316,7 @@ export const parseWayfindingMapPackage = (archive: Uint8Array): WayfindingMapPac
 	const entries: Record<string, Uint8Array> = unzipSync(archive);
 	const manifest = parseJson<WayfindingMapManifest>(entries, 'manifest.json');
 
-	if (manifest.format !== WAYFINDING_MAP_FORMAT || manifest.contractVersion !== 1) throw new Error('Unsupported published wayfinding map format.');
+	if (manifest.format !== WAYFINDING_MAP_FORMAT || manifest.formatVersion !== 1) throw new Error('Unsupported published wayfinding map format.');
 	const map = parseJson<WayfindingMapDocument>(entries, manifest.mapPath);
 	const destinationDocument = parseJson<{ Destinations?: { rows?: WayfindingPublishedDestination[] } }>(entries, manifest.destinationsPath);
 	const destinations: WayfindingPublishedDestination[] = destinationDocument.Destinations?.rows ?? [];
@@ -370,10 +371,11 @@ export const wayfindingMapPackageToRuntimeBundle = (archive: Uint8Array): Wayfin
 	return {
 		assets,
 		categories: structuredClone(published.map.categories),
-		contractVersion: 1,
 		defaultLanguage: published.map.defaultLanguage,
 		defaults: structuredClone(published.map.defaults),
 		destinations: { Destinations: { rows: structuredClone(published.destinations) } },
+		format: 'wallboard-wayfinding-runtime',
+		formatVersion: 1,
 		floors: published.floors.map((floor) => ({
 			backgroundAssetId: floor.backgroundAssetId,
 			camera3d: floor.camera3d ? structuredClone(floor.camera3d) : undefined,
@@ -389,11 +391,10 @@ export const wayfindingMapPackageToRuntimeBundle = (archive: Uint8Array): Wayfin
 		graph: structuredClone(published.graph),
 		languages: structuredClone(published.map.languages),
 		manifest: {
-			deliveryMode: published.manifest.deliveryMode,
+			capabilities: structuredClone(published.manifest.capabilities),
 			generatedAt: published.manifest.generatedAt,
 			projectId: published.manifest.projectId,
-			sourceContractVersion: published.manifest.sourceContractVersion,
-			targetMode: published.manifest.deliveryMode
+			projectName: published.manifest.projectName
 		}
 	};
 };

@@ -82,6 +82,8 @@ export const createEditorStore = (initialState: EditorState = createEditorState(
 				command.type,
 				command.type === 'element/patch' && command.historyGroup
 					? `${command.type}:${command.elementId}:${command.historyGroup}`
+					: command.type === 'project/replace' && command.historyGroup
+						? `${command.type}:${command.historyGroup}`
 					: undefined
 			);
 		},

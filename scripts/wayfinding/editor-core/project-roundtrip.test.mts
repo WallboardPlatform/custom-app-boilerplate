@@ -9,8 +9,6 @@ import {
 	type WayfindingStudioProject
 } from '../studio-project.mts';
 
-const clone = <Value, >(value: Value): Value => JSON.parse(JSON.stringify(value)) as Value;
-
 const buildComplexProject = (): WayfindingStudioProject => {
 	const project = createWayfindingStudioProject('roundtrip-campus');
 	const level0 = project.floors[0];
@@ -279,13 +277,10 @@ const buildComplexProject = (): WayfindingStudioProject => {
 		id: 'level-1',
 		name: 'Level 1',
 		order: 1,
-		pedestrianSpaceSource: 'polygons',
 		unitsPerMeter: 20,
 		width: 1920
 	});
-	project.delivery.source.levels = 2;
 	project.graph = {
-		contractVersion: 2,
 		edges: [
 			{
 				accessible: true,
@@ -381,20 +376,4 @@ void test('a complex authored project survives a complete file round trip withou
 	assert.equal(reopened.destinations[0]?.translations?.hu?.name, 'Egyetemi konyvtar');
 	assert.deepEqual(reopened.destinations[0]?.photoAssetIds, ['photo-library']);
 	assert.equal(reopened.defaults?.route.animation, 'flow');
-});
-
-void test('legacy English names migrate without mutating the file object passed by the caller', (): void => {
-	const source = buildComplexProject();
-	const legacy = clone(source) as WayfindingStudioProject & {
-		destinations: Array<WayfindingStudioProject['destinations'][number] & { englishName?: string }>;
-	};
-	delete legacy.destinations[0].translations;
-	legacy.destinations[0].englishName = 'Legacy Library';
-	const input = clone(legacy);
-	const parsed = parseWayfindingStudioProject(input);
-
-	assert.equal(parsed.destinations[0]?.translations?.en?.name, 'Legacy Library');
-	assert.equal('englishName' in parsed.destinations[0], false);
-	assert.equal(input.destinations[0]?.englishName, 'Legacy Library');
-	assert.equal(legacy.destinations[0]?.englishName, 'Legacy Library');
 });

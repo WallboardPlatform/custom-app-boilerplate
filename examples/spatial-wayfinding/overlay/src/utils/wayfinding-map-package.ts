@@ -19,17 +19,19 @@ interface PublishedFloorDescriptor extends Omit<RuntimeFloor, 'elements' | 'svg'
 }
 
 interface PublishedManifest {
-	contractVersion: 1;
+	capabilities: {
+		routing: boolean;
+		stepFreeRouting: boolean;
+	};
 	defaultLanguage: string;
-	deliveryMode: 'highlight' | 'route';
 	destinationsPath: string;
 	format: typeof FORMAT;
+	formatVersion: 1;
 	generatedAt: string;
 	graphPath: string;
 	mapPath: string;
 	projectId: string;
 	projectName: string;
-	sourceContractVersion: number;
 }
 
 interface PublishedMap {
@@ -91,7 +93,7 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 	const entries: Record<string, Uint8Array> = unzipSync(archive);
 	const manifest = parseJson<PublishedManifest>(entries, 'manifest.json');
 
-	if (manifest.format !== FORMAT || manifest.contractVersion !== 1) {
+	if (manifest.format !== FORMAT || manifest.formatVersion !== 1) {
 		throw new Error('This app does not support the selected published map version.');
 	}
 
@@ -125,20 +127,19 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 	return {
 		assets,
 		categories: map.categories,
-		contractVersion: 1,
 		defaultLanguage: map.defaultLanguage,
 		defaults: map.defaults,
 		destinations: { Destinations: { rows: destinationDocument.Destinations?.rows ?? [] } },
+		format: 'wallboard-wayfinding-runtime',
+		formatVersion: 1,
 		floors,
 		graph: parseJson<WayfindingGraphDocument>(entries, manifest.graphPath),
 		languages: map.languages,
 		manifest: {
-			deliveryMode: manifest.deliveryMode,
+			capabilities: manifest.capabilities,
 			generatedAt: manifest.generatedAt,
 			projectId: manifest.projectId,
-			projectName: manifest.projectName,
-			sourceContractVersion: manifest.sourceContractVersion,
-			targetMode: manifest.deliveryMode
+			projectName: manifest.projectName
 		}
 	};
 };

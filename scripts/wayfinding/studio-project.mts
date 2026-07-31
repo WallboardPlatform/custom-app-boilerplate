@@ -3,18 +3,11 @@ import {
 	type WayfindingEdge,
 	type WayfindingGraphDocument,
 	type WayfindingNode,
-	type WayfindingPoint,
-	type WayfindingWalkableMaskDocument
+	type WayfindingPoint
 } from '../../src/utils/wayfinding.js';
-import {
-	type WayfindingGuidanceMode,
-	type WayfindingProjectDocument
-} from './project.mjs';
-import { parseWayfindingSvg } from './model.mjs';
-import { validateWalkableMaskStructure, WayfindingWalkableMask } from './walkable-mask.mjs';
 
 export type WayfindingStudioElementStatus = 'confirmed' | 'proposed';
-export type WayfindingStudioProvenance = 'ai-draft' | 'customer-source' | 'imported' | 'reviewer-authored';
+export type WayfindingStudioProvenance = 'ai-draft' | 'customer-source' | 'reviewer-authored';
 export type WayfindingTransitionKind = 'elevator' | 'escalator' | 'stairs';
 export type WayfindingStudioFontFamily = 'monospace' | 'sans-serif' | 'serif';
 export type WayfindingStudioTextAnchor = 'end' | 'middle' | 'start';
@@ -34,7 +27,6 @@ export interface WayfindingStudioPolygonPresentation {
 }
 
 export type WayfindingStudioLocationColorMode = 'fixed' | 'inherited' | 'random';
-export type WayfindingStudioPedestrianSpaceSource = 'mask' | 'polygons';
 
 export interface WayfindingStudioProjectDefaults {
 	iconSize: number;
@@ -42,6 +34,7 @@ export interface WayfindingStudioProjectDefaults {
 		color: string;
 		fontFamily: WayfindingStudioFontFamily;
 		fontSize: number;
+		fontSize3d: number;
 		fontWeight: 400 | 600 | 700;
 		outlineColor: string;
 		outlineWidth: number;
@@ -178,10 +171,8 @@ export interface WayfindingStudioFloor {
 	id: string;
 	name: string;
 	order: number;
-	pedestrianSpaceSource?: WayfindingStudioPedestrianSpaceSource;
 	/** Floor-plan units per real-world metre. Absent means the floor is uncalibrated and route distances have no physical meaning. */
 	unitsPerMeter?: number;
-	walkableMask?: WayfindingWalkableMaskDocument;
 	width: number;
 }
 
@@ -207,12 +198,12 @@ export interface WayfindingStudioDestination extends Record<string, unknown> {
 export interface WayfindingStudioProject {
 	assets: WayfindingStudioAsset[];
 	categories?: string[];
-	contractVersion: 1;
 	createdAt: string;
 	defaultLanguage?: string;
 	defaults?: WayfindingStudioProjectDefaults;
-	delivery: WayfindingProjectDocument;
 	destinations: WayfindingStudioDestination[];
+	format: 'wallboard-wayfinding-studio';
+	formatVersion: 1;
 	floors: WayfindingStudioFloor[];
 	graph: WayfindingGraphDocument;
 	languages?: WayfindingStudioLanguage[];
@@ -229,7 +220,12 @@ export interface WayfindingStudioIssue {
 }
 
 export interface WayfindingStudioRepair {
-	code: 'clipped-polygon' | 'clamped-element' | 'clamped-graph-node' | 'clipped-edge';
+	code:
+		| 'clipped-polygon'
+		| 'clamped-element'
+		| 'clamped-graph-node'
+		| 'clipped-edge'
+		| 'removed-orphaned-managed-route-node';
 	elementIds: string[];
 	message: string;
 }
@@ -237,10 +233,11 @@ export interface WayfindingStudioRepair {
 export interface WayfindingRuntimeBundle {
 	assets: WayfindingStudioAsset[];
 	categories: string[];
-	contractVersion: 1;
 	defaultLanguage: string;
 	defaults: WayfindingStudioProjectDefaults;
 	destinations: { Destinations: { rows: WayfindingStudioDestination[] } };
+	format: 'wallboard-wayfinding-runtime';
+	formatVersion: 1;
 	floors: Array<{
 		backgroundAssetId?: string;
 		camera3d?: WayfindingStudioCamera3d;
@@ -256,11 +253,13 @@ export interface WayfindingRuntimeBundle {
 	graph: WayfindingGraphDocument;
 	languages: WayfindingStudioLanguage[];
 	manifest: {
-		deliveryMode: WayfindingGuidanceMode;
+		capabilities: {
+			routing: boolean;
+			stepFreeRouting: boolean;
+		};
 		generatedAt: string;
 		projectId: string;
-		sourceContractVersion: number;
-		targetMode: WayfindingGuidanceMode;
+		projectName: string;
 	};
 }
 
@@ -272,6 +271,7 @@ export const createWayfindingStudioProjectDefaults = (): WayfindingStudioProject
 		color: '#17201f',
 		fontFamily: 'sans-serif',
 		fontSize: 24,
+		fontSize3d: 16,
 		fontWeight: 600,
 		outlineColor: '#ffffff',
 		outlineWidth: 0
@@ -313,40 +313,20 @@ export const wayfindingStudioProjectDefaults = (project: WayfindingStudioProject
 	};
 };
 
-const evidenceItem = (
-	provenance: 'customer-provided' | 'ai-inferred' | 'image-analysis'
-): WayfindingProjectDocument['evidence']['accessibility'] => ({ provenance, status: 'unavailable' });
-
 export const createWayfindingStudioProject = (projectId = 'wayfinding-project'): WayfindingStudioProject => {
 	const timestamp: string = now();
 
 	return {
 		assets: [],
-		contractVersion: 1,
 		createdAt: timestamp,
 		defaultLanguage: 'en',
 		defaults: createWayfindingStudioProjectDefaults(),
-		delivery: {
-			contractVersion: 1,
-			evidence: {
-				accessibility: evidenceItem('customer-provided'),
-				currentLocationAnchors: evidenceItem('customer-provided'),
-				destinationAnchors: evidenceItem('ai-inferred'),
-				destinationMetadata: evidenceItem('customer-provided'),
-				entranceApproaches: evidenceItem('ai-inferred'),
-				levelTransitions: evidenceItem('ai-inferred'),
-				orientation: evidenceItem('customer-provided'),
-				routeTopology: evidenceItem('ai-inferred'),
-				walkableSpace: evidenceItem('image-analysis')
-			},
-			guidance: { allowFallback: true, stepFreeRequired: false, targetMode: 'highlight' },
-			projectId,
-			source: { equivalentRedrawAllowed: true, kind: 'floor-plan', levels: 1, presentation: 'source-overlay' }
-		},
 		categories: ['Accessibility', 'Dining', 'Events', 'Parking', 'Restrooms', 'Services', 'Shopping'],
 		destinations: [],
-		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, pedestrianSpaceSource: 'polygons', width: 1920 }],
-		graph: { contractVersion: 2, edges: [], graphId: `${projectId}-graph`, nodes: [] },
+		format: 'wallboard-wayfinding-studio',
+		formatVersion: 1,
+		floors: [{ elements: [], height: 1080, id: 'level-0', name: 'Level 0', order: 0, width: 1920 }],
+		graph: { edges: [], graphId: `${projectId}-graph`, nodes: [] },
 		languages: [{ code: 'en', label: 'English' }],
 		name: 'Wayfinding project',
 		projectId,
@@ -358,18 +338,15 @@ const isRecord = (value: unknown): value is Record<string, unknown> => value !==
 
 const assertWayfindingStudioProjectShape: (value: unknown) => asserts value is WayfindingStudioProject = (value: unknown): asserts value is WayfindingStudioProject => {
 	if (!isRecord(value)
-		|| value.contractVersion !== 1
+		|| value.format !== 'wallboard-wayfinding-studio'
+		|| value.formatVersion !== 1
 		|| !Array.isArray(value.assets)
 		|| !Array.isArray(value.destinations)
 		|| !Array.isArray(value.floors)
 		|| value.floors.some((floor: unknown): boolean => !isRecord(floor) || !Array.isArray(floor.elements))
 		|| !isRecord(value.graph)
 		|| !Array.isArray(value.graph.nodes)
-		|| !Array.isArray(value.graph.edges)
-		|| !isRecord(value.delivery)
-		|| !isRecord(value.delivery.source)
-		|| !isRecord(value.delivery.guidance)
-		|| !isRecord(value.delivery.evidence)) {
+		|| !Array.isArray(value.graph.edges)) {
 		throw new Error('The selected file is not a Wallboard Wayfinding Studio project.');
 	}
 };
@@ -395,31 +372,11 @@ export const parseWayfindingStudioProject = (value: unknown): WayfindingStudioPr
 		? project.defaultLanguage
 		: project.languages[0].code;
 
-	for (const destination of project.destinations) {
-		const legacyEnglishName: unknown = destination.englishName;
-
-		if (typeof legacyEnglishName === 'string' && legacyEnglishName.trim()) {
-			destination.translations = {
-				...(destination.translations ?? {}),
-				en: {
-					...(isRecord(destination.translations?.en) ? destination.translations.en : {}),
-					name: destination.translations?.en?.name || legacyEnglishName.trim()
-				}
-			};
-		}
-		delete destination.englishName;
-	}
 	project.defaults = wayfindingStudioProjectDefaults(project);
 
 	for (const floor of project.floors) {
 		if (floor.unitsPerMeter !== undefined && (!Number.isFinite(floor.unitsPerMeter) || floor.unitsPerMeter <= 0)) {
 			delete floor.unitsPerMeter;
-		}
-
-		if (floor.pedestrianSpaceSource !== 'mask' && floor.pedestrianSpaceSource !== 'polygons') {
-			floor.pedestrianSpaceSource = floor.elements.some((element): boolean => element.type === 'walkable')
-				? 'polygons'
-				: floor.walkableMask ? 'mask' : 'polygons';
 		}
 	}
 	const errors: WayfindingStudioIssue[] = validateWayfindingStudioProject(project).filter((issue): boolean => issue.severity === 'error');
@@ -485,6 +442,42 @@ export const repairWayfindingStudioProject = (value: unknown): { project: Wayfin
 	assertWayfindingStudioProjectShape(value);
 	const project: WayfindingStudioProject = JSON.parse(JSON.stringify(value)) as WayfindingStudioProject;
 	const repairs: WayfindingStudioRepair[] = [];
+	const semanticElementIds = new Set(
+		project.floors.flatMap((floor): string[] => floor.elements.map((element): string => element.id))
+	);
+	const recoverableManagedNodeIds = new Set(project.graph.nodes
+		.filter((node: WayfindingNode): boolean => Boolean(
+			node.semanticElementId
+			&& node.authoringOwnership !== 'manual'
+			&& node.id === managedNodeId(node.semanticElementId)
+			&& !semanticElementIds.has(node.semanticElementId)
+		))
+		.map((node: WayfindingNode): string => node.id));
+	const safelyGeneratedEdge = (edge: WayfindingEdge): boolean =>
+		edge.authoringOwnership === 'generated'
+		|| edge.id.startsWith('generated:')
+		|| edge.id.startsWith('semantic-transition:');
+	const unsafeConnectedEdge = project.graph.edges.find((edge: WayfindingEdge): boolean =>
+		(recoverableManagedNodeIds.has(edge.from) || recoverableManagedNodeIds.has(edge.to))
+		&& !safelyGeneratedEdge(edge)
+	);
+
+	if (!unsafeConnectedEdge && recoverableManagedNodeIds.size > 0) {
+		const removedEdgeIds = project.graph.edges
+			.filter((edge: WayfindingEdge): boolean =>
+				recoverableManagedNodeIds.has(edge.from) || recoverableManagedNodeIds.has(edge.to)
+			)
+			.map((edge: WayfindingEdge): string => edge.id);
+		project.graph.nodes = project.graph.nodes.filter((node: WayfindingNode): boolean => !recoverableManagedNodeIds.has(node.id));
+		project.graph.edges = project.graph.edges.filter((edge: WayfindingEdge): boolean =>
+			!recoverableManagedNodeIds.has(edge.from) && !recoverableManagedNodeIds.has(edge.to)
+		);
+		repairs.push({
+			code: 'removed-orphaned-managed-route-node',
+			elementIds: [...recoverableManagedNodeIds, ...removedEdgeIds],
+			message: `${recoverableManagedNodeIds.size === 1 ? 'Removed an' : `Removed ${recoverableManagedNodeIds.size}`} obsolete route ${recoverableManagedNodeIds.size === 1 ? 'anchor' : 'anchors'} left behind by deleted map content. No manual route work was changed.`
+		});
+	}
 
 	for (const floor of project.floors) {
 		for (const element of floor.elements) {
@@ -497,7 +490,7 @@ export const repairWayfindingStudioProject = (value: unknown): { project: Wayfin
 				repairs.push({
 					code: 'clipped-polygon',
 					elementIds: [element.id],
-					message: `Clipped '${element.id}' to the ${floor.name} boundary. Review its edge before delivery.`
+					message: `Clipped '${element.id}' to the ${floor.name} boundary. Review its edge before publishing.`
 				});
 			} else if ('point' in element && !pointInFloor(element.point, floor)) {
 				element.point = clampPointToFloor(element.point, floor);
@@ -541,74 +534,6 @@ export const repairWayfindingStudioProject = (value: unknown): { project: Wayfin
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
 
 	return { project, repairs };
-};
-
-export const migrateWayfindingArtifacts = (
-	delivery: WayfindingProjectDocument,
-	graph?: WayfindingGraphDocument,
-	destinations: WayfindingStudioDestination[] = []
-): WayfindingStudioProject => {
-	const project: WayfindingStudioProject = createWayfindingStudioProject(delivery.projectId);
-	project.delivery = structuredClone(delivery);
-	project.delivery.source.levels = Math.max(1, delivery.source.levels);
-	project.floors = Array.from({ length: project.delivery.source.levels }, (_, index: number): WayfindingStudioFloor => ({
-		elements: [],
-		height: 1080,
-		id: `level-${index}`,
-		name: `Level ${index}`,
-		order: index,
-		width: 1920
-	}));
-	project.graph = graph ? structuredClone(graph) : project.graph;
-	project.destinations = structuredClone(destinations);
-	project.name = delivery.projectId;
-
-	return project;
-};
-
-export const importAnnotatedWayfindingSvg = (
-	project: WayfindingStudioProject,
-	floorId: string,
-	svg: string,
-	status: WayfindingStudioElementStatus = 'proposed'
-): number => {
-	const floor: WayfindingStudioFloor | undefined = project.floors.find((candidate: WayfindingStudioFloor): boolean => candidate.id === floorId);
-
-	if (!floor) throw new Error(`Floor '${floorId}' does not exist.`);
-	const parsed = parseWayfindingSvg(svg);
-	floor.width = parsed.viewBox[2];
-	floor.height = parsed.viewBox[3];
-	let imported = 0;
-
-	for (const location of parsed.locations) {
-		const attributes = location.attributes;
-		const base = { destinationId: location.locationId, floorId, id: attributes.id || `imported-${location.locationId}`, provenance: 'imported' as const, status };
-
-		if (location.tag === 'circle' && Number.isFinite(Number(attributes.cx)) && Number.isFinite(Number(attributes.cy))) {
-			floor.elements.push({ ...base, point: { x: Number(attributes.cx), y: Number(attributes.cy) }, type: 'poi' });
-			imported += 1;
-		} else if (location.tag === 'rect' && ['x', 'y', 'width', 'height'].every((key: string): boolean => Number.isFinite(Number(attributes[key])))) {
-			const x: number = Number(attributes.x);
-			const y: number = Number(attributes.y);
-			const width: number = Number(attributes.width);
-			const height: number = Number(attributes.height);
-			floor.elements.push({ ...base, geometry: [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, { x, y: y + height }], type: 'location' });
-			imported += 1;
-		} else if (location.tag === 'polygon' && attributes.points) {
-			const geometry: WayfindingPoint[] = attributes.points.trim().split(/\s+/u).map((pair: string): WayfindingPoint => {
-				const [x, y] = pair.split(',').map(Number);
-
-				return { x, y };
-			}).filter((pointValue: WayfindingPoint): boolean => Number.isFinite(pointValue.x) && Number.isFinite(pointValue.y));
-
-			if (geometry.length >= 3) {
-				floor.elements.push({ ...base, geometry, type: 'location' });
-				imported += 1;
-			}
-		}
-	}
-
-	return imported;
 };
 
 const duplicateIds = (ids: string[]): string[] => [...new Set(ids.filter((id: string, index: number): boolean => ids.indexOf(id) !== index))];
@@ -659,17 +584,23 @@ const routeLeavesPolygonalPedestrianSpace = (
 	points: WayfindingPoint[],
 	corridorWidth: number,
 	walkableAreas: WayfindingStudioPolygonElement[],
-	obstacles: WayfindingStudioPolygonElement[]
+	obstacles: WayfindingStudioPolygonElement[],
+	endpointAllowance: { end: number; start: number } = { end: 0, start: 0 }
 ): boolean => {
 	const halfWidth: number = Math.max(0, corridorWidth / 2);
 	const step: number = Math.max(1, Math.min(8, corridorWidth > 0 ? corridorWidth / 2 : 4));
+	const segmentLengths: number[] = points.slice(1).map((point, index): number =>
+		Math.hypot(point.x - points[index].x, point.y - points[index].y)
+	);
+	const totalLength: number = segmentLengths.reduce((total, length): number => total + length, 0);
+	let traversedLength = 0;
 
 	for (let index = 1; index < points.length; index += 1) {
 		const start: WayfindingPoint = points[index - 1];
 		const end: WayfindingPoint = points[index];
 		const dx: number = end.x - start.x;
 		const dy: number = end.y - start.y;
-		const length: number = Math.hypot(dx, dy);
+		const length: number = segmentLengths[index - 1];
 		const sampleCount: number = Math.max(1, Math.ceil(length / step));
 		const normalX: number = length === 0 ? 0 : -dy / length;
 		const normalY: number = length === 0 ? 0 : dx / length;
@@ -677,14 +608,20 @@ const routeLeavesPolygonalPedestrianSpace = (
 		for (let sampleIndex = 0; sampleIndex <= sampleCount; sampleIndex += 1) {
 			const ratio: number = sampleIndex / sampleCount;
 			const center: WayfindingPoint = { x: start.x + dx * ratio, y: start.y + dy * ratio };
+			const routeDistance: number = traversedLength + length * ratio;
+			const nearAllowedEndpoint: boolean =
+				routeDistance <= endpointAllowance.start
+				|| totalLength - routeDistance <= endpointAllowance.end;
 
 			for (const offset of [0, -halfWidth, halfWidth]) {
 				if (!pointInPolygonalPedestrianSpace({
 					x: center.x + normalX * offset,
 					y: center.y + normalY * offset
-				}, walkableAreas, obstacles)) return true;
+				}, walkableAreas, obstacles) && !nearAllowedEndpoint) return true;
 			}
 		}
+
+		traversedLength += length;
 	}
 
 	return false;
@@ -704,10 +641,6 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 	}
 
 	if (project.floors.length === 0) issues.push({ code: 'missing-floor', elementIds: [], message: 'At least one floor is required.', severity: 'error' });
-
-	if (project.delivery.projectId !== project.projectId) issues.push({ code: 'delivery-project-id-mismatch', elementIds: [], message: `Delivery project id '${project.delivery.projectId}' does not match '${project.projectId}'.`, severity: 'error' });
-
-	if (project.delivery.source.levels !== project.floors.length) issues.push({ code: 'source-level-count-mismatch', elementIds: [], message: `Delivery metadata declares ${project.delivery.source.levels} level(s), but the project contains ${project.floors.length}.`, severity: 'error' });
 
 	if (project.defaults) {
 		const locationColor = project.defaults.locationColor;
@@ -750,8 +683,6 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 
 	for (const floor of project.floors) {
 		if (!(floor.width > 0) || !(floor.height > 0)) issues.push({ code: 'invalid-floor-size', elementIds: [floor.id], message: `Floor '${floor.id}' needs a positive coordinate size.`, severity: 'error' });
-
-		if (floor.pedestrianSpaceSource !== undefined && floor.pedestrianSpaceSource !== 'mask' && floor.pedestrianSpaceSource !== 'polygons') issues.push({ code: 'invalid-pedestrian-space-source', elementIds: [floor.id], message: `Floor '${floor.id}' has an invalid pedestrian-space source.`, severity: 'error' });
 
 		if (floor.backgroundAssetId && !assetIds.has(floor.backgroundAssetId)) issues.push({ code: 'missing-background', elementIds: [floor.id], message: `Floor '${floor.id}' references a missing background asset.`, severity: 'error' });
 
@@ -814,12 +745,6 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 				|| element.point.y + element.height / 2 > floor.height
 			)) issues.push({ code: 'invalid-media-bounds', elementIds: [element.id], message: `Media element '${element.id}' needs positive dimensions fully inside its floor.`, severity: 'error' });
 		}
-
-		if (floor.walkableMask) {
-			for (const message of validateWalkableMaskStructure(floor.walkableMask)) issues.push({ code: 'invalid-walkable-mask', elementIds: [floor.id], message: `Floor '${floor.id}' walkable mask: ${message}.`, severity: 'error' });
-
-			if (floor.walkableMask.width !== floor.width || floor.walkableMask.height !== floor.height) issues.push({ code: 'walkable-mask-size-mismatch', elementIds: [floor.id], message: `Floor '${floor.id}' walkable mask dimensions do not match the floor.`, severity: 'error' });
-		}
 	}
 
 	const connectionGroups = new Map<string, WayfindingStudioTransitionElement[]>();
@@ -866,18 +791,43 @@ export const validateWayfindingStudioProject = (project: WayfindingStudioProject
 	return issues;
 };
 
-export const validateWayfindingStudioDelivery = (project: WayfindingStudioProject): WayfindingStudioIssue[] => {
+export const validateWayfindingStudioPublish = (project: WayfindingStudioProject): WayfindingStudioIssue[] => {
 	const issues: WayfindingStudioIssue[] = validateWayfindingStudioProject(project);
 
-	if (project.delivery.guidance.targetMode === 'route') {
+	if (project.graph.edges.length > 0) {
 		const origins: WayfindingStudioOriginElement[] = project.floors.flatMap((floor): WayfindingStudioOriginElement[] => floor.elements.filter((element): element is WayfindingStudioOriginElement => element.type === 'origin'));
 		const destinations: WayfindingStudioDestination[] = project.destinations.filter((destination): boolean => destination.routeable !== false);
 		const elementsById = new Map(project.floors.flatMap((floor): Array<[string, WayfindingStudioElement]> => floor.elements.map((element): [string, WayfindingStudioElement] => [element.id, element])));
 
-		if (origins.length === 0) issues.push({ code: 'missing-route-origin', elementIds: [], message: 'Route delivery requires at least one authored origin.', severity: 'error' });
+		if (origins.length === 0) issues.push({ code: 'missing-route-origin', elementIds: [], message: 'Publishing directions requires at least one authored origin.', severity: 'error' });
 
-		if (destinations.length === 0) issues.push({ code: 'missing-route-destination', elementIds: [], message: 'Route delivery requires at least one routeable destination.', severity: 'error' });
+		if (destinations.length === 0) issues.push({ code: 'missing-route-destination', elementIds: [], message: 'Publishing directions requires at least one routeable destination.', severity: 'error' });
 		const routing = new WayfindingGraph(project.graph);
+		const routeDoorAllowance = (node: WayfindingNode): number => {
+			if (!node.semanticElementId) return 0;
+			const element: WayfindingStudioElement | undefined = elementsById.get(node.semanticElementId);
+
+			if (element?.type !== 'location') return 0;
+			const door: WayfindingStudioDoorElement | undefined = project.floors
+				.flatMap((floor): WayfindingStudioElement[] => floor.elements)
+				.filter((candidate): candidate is WayfindingStudioDoorElement =>
+					candidate.type === 'door' && candidate.locationId === element.id
+				)
+				.sort((left, right): number =>
+					Math.hypot(left.point.x - node.x, left.point.y - node.y)
+					- Math.hypot(right.point.x - node.x, right.point.y - node.y)
+				)[0];
+
+			if (!door) return 0;
+			const nodeToDoor: number = Math.hypot(door.point.x - node.x, door.point.y - node.y);
+
+			if (nodeToDoor > Math.max(2, door.length * 0.1)) return 0;
+
+			// A room anchor sits on the physical doorway while the authored public
+			// area commonly starts just beyond the wall stroke. Permit only that
+			// short threshold crossing; the remainder of the portal is validated.
+			return Math.max(8, Math.min(32, door.length / 2));
+		};
 
 		for (const destination of destinations) {
 			const destinationNode: WayfindingNode | undefined = routing.locationNode(destination.id);
@@ -896,14 +846,25 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 			}
 
 			for (const origin of origins) {
-				const originNodeId: string = managedNodeId(origin.id);
-				const route = routing.route(originNodeId, destinationNode.id);
+				const originNode = project.graph.nodes.find((node): boolean => node.semanticElementId === origin.id);
+
+				if (!originNode) {
+					issues.push({
+						code: 'missing-origin-node',
+						elementIds: [origin.id],
+						message: `You are here point '${origin.label}' has no graph anchor.`,
+						severity: 'error'
+					});
+
+					continue;
+				}
+				const route = routing.route(originNode.id, destinationNode.id);
 
 				if (!route) {
 					issues.push({ code: 'disconnected-route', elementIds: [origin.id, destination.id], message: `No route connects '${origin.label}' to '${destination.name}'.`, severity: 'error' });
 				}
 
-				if (project.delivery.guidance.stepFreeRequired && !routing.route(originNodeId, destinationNode.id, { profile: 'step-free' })) {
+				if (destination.accessible === true && !routing.route(originNode.id, destinationNode.id, { profile: 'step-free' })) {
 					issues.push({ code: 'disconnected-step-free-route', elementIds: [origin.id, destination.id], message: `No step-free route connects '${origin.label}' to '${destination.name}'.`, severity: 'error' });
 				}
 			}
@@ -918,37 +879,33 @@ export const validateWayfindingStudioDelivery = (project: WayfindingStudioProjec
 
 			if (!floor) continue;
 			const points: WayfindingPoint[] = edge.geometry?.length ? edge.geometry : [from, to];
-			const source: WayfindingStudioPedestrianSpaceSource = floor.pedestrianSpaceSource
-				?? (floor.elements.some((element): boolean => element.type === 'walkable') ? 'polygons' : 'mask');
+			const walkableAreas: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'walkable');
+			const obstacles: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
 
-			if (source === 'polygons') {
-				const walkableAreas: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'walkable');
-				const obstacles: WayfindingStudioPolygonElement[] = floor.elements.filter((element): element is WayfindingStudioPolygonElement => element.type === 'obstacle');
-
-				if (walkableAreas.length === 0) {
-					issues.push({ code: 'missing-route-pedestrian-area', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' requires an authored pedestrian area on floor '${floor.id}'.`, severity: 'error' });
-
-					continue;
-				}
-
-				const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? 0;
-
-				if (routeLeavesPolygonalPedestrianSpace(points, validationWidth, walkableAreas, obstacles)) {
-					issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the authored pedestrian area.`, severity: 'error' });
-				}
+			if (walkableAreas.length === 0) {
+				issues.push({ code: 'missing-route-pedestrian-area', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' requires an authored pedestrian area on floor '${floor.id}'.`, severity: 'error' });
 
 				continue;
 			}
 
-			if (!floor.walkableMask) {
-				issues.push({ code: 'missing-route-mask', elementIds: [edge.id, from.levelId], message: `Route edge '${edge.id}' requires a saved painted pedestrian mask for floor '${from.levelId}'.`, severity: 'error' });
+			const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? 0;
 
-				continue;
+			const endpointAllowance = edge.traversal === 'portal'
+				? {
+					end: routeDoorAllowance(to),
+					start: routeDoorAllowance(from)
+				}
+				: { end: 0, start: 0 };
+
+			if (routeLeavesPolygonalPedestrianSpace(
+				points,
+				validationWidth,
+				walkableAreas,
+				obstacles,
+				endpointAllowance
+			)) {
+				issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the authored pedestrian area.`, severity: 'error' });
 			}
-
-			const validationWidth: number = edge.traversal === 'portal' ? 0 : edge.corridorWidth ?? floor.walkableMask.cellSize;
-
-			if (new WayfindingWalkableMask(floor.walkableMask).outsideCorridor(points, validationWidth).length > 0) issues.push({ code: 'route-leaves-walkable-space', elementIds: [edge.id, floor.id], message: `Route edge '${edge.id}' leaves the painted walkable-space mask.`, severity: 'error' });
 		}
 	}
 
@@ -1039,21 +996,21 @@ export const renderWayfindingFloorSvg = (
 };
 
 export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject): WayfindingRuntimeBundle => {
-	const errors: WayfindingStudioIssue[] = validateWayfindingStudioDelivery(project).filter((issue): boolean => issue.severity === 'error');
+	const errors: WayfindingStudioIssue[] = validateWayfindingStudioPublish(project).filter((issue): boolean => issue.severity === 'error');
 
 	if (errors.length > 0) throw new Error(errors.map((issue): string => issue.message).join(' '));
-	const deliveryMode: WayfindingGuidanceMode = project.delivery.guidance.targetMode;
-	const runtimeGraph: WayfindingGraphDocument = deliveryMode === 'route'
-		? structuredClone(project.graph)
-		: { contractVersion: 2, edges: [], graphId: `${project.graph.graphId}:${deliveryMode}`, nodes: [] };
+	const runtimeGraph: WayfindingGraphDocument = structuredClone(project.graph);
+	const routing = runtimeGraph.edges.length > 0;
+	const stepFreeRouting = routing && runtimeGraph.edges.every((edge) => edge.accessible);
 
 	return {
 		assets: structuredClone(project.assets),
 		categories: structuredClone(project.categories ?? []),
-		contractVersion: 1,
 		defaultLanguage: project.defaultLanguage ?? 'en',
 		defaults: structuredClone(wayfindingStudioProjectDefaults(project)),
 		destinations: { Destinations: { rows: structuredClone(project.destinations) } },
+		format: 'wallboard-wayfinding-runtime',
+		formatVersion: 1,
 		floors: [...project.floors].sort((left, right): number => left.order - right.order).map((floor) => ({
 			backgroundAssetId: floor.backgroundAssetId,
 			camera3d: floor.camera3d ? structuredClone(floor.camera3d) : undefined,
@@ -1069,11 +1026,10 @@ export const createWayfindingRuntimeBundle = (project: WayfindingStudioProject):
 		graph: runtimeGraph,
 		languages: structuredClone(project.languages ?? [{ code: 'en', label: 'English' }]),
 		manifest: {
-			deliveryMode,
+			capabilities: { routing, stepFreeRouting },
 			generatedAt: project.updatedAt,
 			projectId: project.projectId,
-			sourceContractVersion: project.contractVersion,
-			targetMode: deliveryMode
+			projectName: project.name
 		}
 	};
 };
@@ -1088,12 +1044,48 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 		.map((element): [string, WayfindingStudioPolygonElement] => [element.id, element]));
 	const primaryDoorByLocationId = new Map<string, WayfindingStudioDoorElement>();
 	const canonicalNodeIdByManagedNodeId = new Map<string, string>();
+	const distanceToLocationBoundary = (
+		door: WayfindingStudioDoorElement,
+		location: WayfindingStudioPolygonElement
+	): number => location.geometry.reduce((minimum, start, index): number => {
+		const end: WayfindingPoint = location.geometry[(index + 1) % location.geometry.length];
+		const dx: number = end.x - start.x;
+		const dy: number = end.y - start.y;
+		const lengthSquared: number = dx * dx + dy * dy;
+		const ratio: number = lengthSquared <= Number.EPSILON
+			? 0
+			: Math.max(0, Math.min(1, (
+				(door.point.x - start.x) * dx + (door.point.y - start.y) * dy
+			) / lengthSquared));
+
+		return Math.min(
+			minimum,
+			Math.hypot(
+				door.point.x - (start.x + dx * ratio),
+				door.point.y - (start.y + dy * ratio)
+			)
+		);
+	}, Number.POSITIVE_INFINITY);
+	const doorsByLocationId = new Map<string, WayfindingStudioDoorElement[]>();
 
 	for (const door of elements.filter((element): element is WayfindingStudioDoorElement => element.type === 'door')) {
-		if (!door.locationId || primaryDoorByLocationId.has(door.locationId)) continue;
-		const location = locationById.get(door.locationId);
+		if (!door.locationId) continue;
+		doorsByLocationId.set(door.locationId, [
+			...(doorsByLocationId.get(door.locationId) ?? []),
+			door
+		]);
+	}
 
-		if (location?.destinationId) primaryDoorByLocationId.set(location.id, door);
+	for (const [locationId, doors] of doorsByLocationId) {
+		const location = locationById.get(locationId);
+
+		if (!location?.destinationId) continue;
+		const primaryDoor = [...doors].sort((left, right): number =>
+			distanceToLocationBoundary(left, location) - distanceToLocationBoundary(right, location)
+			|| left.id.localeCompare(right.id)
+		)[0];
+
+		if (primaryDoor) primaryDoorByLocationId.set(location.id, primaryDoor);
 	}
 
 	for (const element of elements) {
@@ -1113,10 +1105,9 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 					managedNodeId(element.id),
 					managedNodeId(primaryDoor.locationId!)
 				);
-
-				continue;
 			}
-			managedNodes.push({ id: managedNodeId(element.id), kind: 'route', levelId: element.floorId, semanticElementId: element.id, x: element.point.x, y: element.point.y });
+
+			continue;
 		} else if (element.type === 'location' && element.destinationId) {
 			const door: WayfindingStudioDoorElement | undefined = primaryDoorByLocationId.get(element.id);
 			const anchor: WayfindingPoint = door?.point ?? element.geometry[0] ?? { x: 0, y: 0 };
@@ -1169,7 +1160,6 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 
 	project.graph = {
 		...project.graph,
-		contractVersion: 2,
 		edges: [...retainedEdges.filter((edge: WayfindingEdge): boolean => !previousManagedIds.has(edge.from) || managedNodes.some((node): boolean => node.id === edge.from))
 			.filter((edge: WayfindingEdge): boolean => !previousManagedIds.has(edge.to) || managedNodes.some((node): boolean => node.id === edge.to)), ...transitionEdges],
 		nodes: [...manualNodes, ...managedNodes]
@@ -1178,6 +1168,4 @@ export const synchronizeWayfindingStudioGraph = (project: WayfindingStudioProjec
 
 export const touchWayfindingStudioProject = (project: WayfindingStudioProject): void => {
 	project.updatedAt = now();
-	project.delivery.projectId = project.projectId;
-	project.delivery.source.levels = project.floors.length;
 };

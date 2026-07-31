@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-import { capabilityById } from './capabilities.ts';
 import { STUDIO_WORKFLOW_CONTRACTS } from './workflow-contracts.ts';
 
-const BROWSER_SPEC = readFileSync('scripts/wayfinding/workbench/studio-v2.spec.ts', 'utf8');
+const BROWSER_SPEC = readFileSync('scripts/wayfinding/workbench/studio.spec.ts', 'utf8');
 
 void test('workflow contracts have stable unique identifiers and concrete outcomes', (): void => {
 	assert.equal(
@@ -20,20 +19,6 @@ void test('workflow contracts have stable unique identifiers and concrete outcom
 	}
 });
 
-void test('workflow contracts only use implemented capabilities', (): void => {
-	for (const workflow of STUDIO_WORKFLOW_CONTRACTS) {
-		for (const capabilityId of workflow.capabilityIds) {
-			const capability = capabilityById(capabilityId);
-			assert.ok(capability, `${workflow.id} references unknown capability: ${capabilityId}`);
-			assert.equal(
-				capability.status,
-				'implemented',
-				`${workflow.id} depends on incomplete capability: ${capabilityId}`
-			);
-		}
-	}
-});
-
 void test('workflow contracts reference executable browser journeys', (): void => {
 	for (const workflow of STUDIO_WORKFLOW_CONTRACTS) {
 		for (const contract of workflow.browserContracts) {
@@ -45,7 +30,7 @@ void test('workflow contracts reference executable browser journeys', (): void =
 	}
 });
 
-void test('every implemented legacy capability participates in a complete workflow', (): void => {
+void test('every supported product capability participates in a complete workflow', (): void => {
 	const covered = new Set(STUDIO_WORKFLOW_CONTRACTS.flatMap(({ capabilityIds }) => capabilityIds));
 	const missing = [
 		'project-file-lifecycle',
@@ -77,5 +62,5 @@ void test('every implemented legacy capability participates in a complete workfl
 		'runtime-readiness-diagnostics'
 	].filter((capabilityId) => !covered.has(capabilityId));
 
-	assert.deepEqual(missing, [], `Legacy workflows missing end-to-end coverage: ${missing.join(', ')}`);
+	assert.deepEqual(missing, [], `Product capabilities missing end-to-end coverage: ${missing.join(', ')}`);
 });

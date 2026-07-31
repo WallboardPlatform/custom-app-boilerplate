@@ -10,7 +10,7 @@ import {
 	buildPolygonAuthoring,
 	buildRouteEdgeAuthoring,
 	type AuthoringIdFactory
-} from '../workbench/v2/canvas/authoring.ts';
+} from '../workbench/app/canvas/authoring.ts';
 
 const deterministicIds = (): AuthoringIdFactory => {
 	const counts = new Map<string, number>();

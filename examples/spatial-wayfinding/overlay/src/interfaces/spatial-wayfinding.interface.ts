@@ -187,19 +187,21 @@ export interface RuntimeFloor {
 export interface WayfindingRuntimeBundle {
 	assets: RuntimeAsset[];
 	categories: string[];
-	contractVersion: 1;
 	defaultLanguage: string;
 	defaults: RuntimeProjectDefaults;
 	destinations: { Destinations: { rows: RuntimeDestination[] } };
+	format: 'wallboard-wayfinding-runtime';
+	formatVersion: 1;
 	floors: RuntimeFloor[];
 	graph: WayfindingGraphDocument;
 	languages: Array<{ code: string; label: string }>;
 	manifest: {
-		deliveryMode: 'highlight' | 'route';
+		capabilities: {
+			routing: boolean;
+			stepFreeRouting: boolean;
+		};
 		generatedAt: string;
 		projectId: string;
 		projectName: string;
-		sourceContractVersion: number;
-		targetMode: 'highlight' | 'route';
 	};
 }

@@ -28,7 +28,13 @@
       "naturalWidth": 640
     }
   ],
-  "contractVersion": 1,
+  "categories": [
+    "Visitor services",
+    "Learning",
+    "Culture",
+    "Events",
+    "Food"
+  ],
   "createdAt": "2026-07-25T00:00:00.000Z",
   "defaultLanguage": "en",
   "defaults": {
@@ -75,66 +81,6 @@
       "fillOpacity": 0.28
     }
   },
-  "delivery": {
-    "contractVersion": 1,
-    "evidence": {
-      "accessibility": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "currentLocationAnchors": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "destinationAnchors": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "destinationMetadata": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "entranceApproaches": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "levelTransitions": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "orientation": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "routeTopology": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      },
-      "walkableSpace": {
-        "provenance": "reviewer-authored",
-        "status": "confirmed"
-      }
-    },
-    "guidance": {
-      "allowFallback": true,
-      "stepFreeRequired": false,
-      "targetMode": "route"
-    },
-    "projectId": "northline-spatial-wayfinding",
-    "source": {
-      "equivalentRedrawAllowed": true,
-      "kind": "floor-plan",
-      "levels": 1,
-      "presentation": "source-overlay"
-    }
-  },
-  "categories": [
-    "Visitor services",
-    "Learning",
-    "Culture",
-    "Events",
-    "Food"
-  ],
   "destinations": [
     {
       "id": "welcome-center",
@@ -516,6 +462,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -531,6 +478,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -546,6 +494,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -561,6 +510,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -576,6 +526,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -591,6 +542,7 @@
           },
           "fontSize": 30,
           "fontWeight": 700,
+          "textAnchor": "middle",
           "color": "#15302b",
           "floorId": "ground",
           "provenance": "reviewer-authored",
@@ -699,13 +651,13 @@
       "id": "ground",
       "name": "Ground floor",
       "order": 0,
-      "pedestrianSpaceSource": "polygons",
       "width": 1200,
       "unitsPerMeter": 13
     }
   ],
+  "format": "wallboard-wayfinding-studio",
+  "formatVersion": 1,
   "graph": {
-    "contractVersion": 2,
     "graphId": "northline-campus-graph",
     "nodes": [
       {

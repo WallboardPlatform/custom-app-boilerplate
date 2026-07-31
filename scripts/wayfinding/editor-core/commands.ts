@@ -171,10 +171,6 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 
 				if (!floor || floor.elements.some((element): boolean => element.id === command.element.id)) return;
 				floor.elements.push(structuredClone(command.element));
-
-				if (command.element.type === 'walkable' || command.element.type === 'obstacle') {
-					floor.pedestrianSpaceSource = 'polygons';
-				}
 			});
 
 		case 'element/patch':
@@ -206,7 +202,6 @@ export const applyEditorCommand = (state: EditorState, command: EditorCommand): 
 					id: command.floorId,
 					name: command.name,
 					order: project.floors.length,
-					pedestrianSpaceSource: 'polygons',
 					width: base?.width ?? 1920
 				});
 			});

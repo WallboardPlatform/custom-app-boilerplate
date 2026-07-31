@@ -5,7 +5,7 @@ import {
 	createWayfindingMapPackage,
 	WAYFINDING_MAP_PACKAGE_EXTENSION
 } from './runtime-package.mjs';
-import { createWayfindingRuntimeBundle, validateWayfindingStudioDelivery } from './studio-project.mjs';
+import { createWayfindingRuntimeBundle, validateWayfindingStudioPublish } from './studio-project.mjs';
 import { parseWayfindingStudioProjectSource } from './schema.mjs';
 
 const argument = (name: string): string | undefined => {
@@ -20,7 +20,7 @@ const outputDirectory: string | undefined = argument('output');
 if (!projectPath) throw new Error('Usage: npm run wayfinding:studio:export -- --project <project.wbwayfinding> [--output <directory>]');
 
 const project = parseWayfindingStudioProjectSource(fs.readFileSync(path.resolve(projectPath), 'utf8'));
-const issues = validateWayfindingStudioDelivery(project);
+const issues = validateWayfindingStudioPublish(project);
 const errors = issues.filter((issue): boolean => issue.severity === 'error');
 
 if (errors.length > 0) {

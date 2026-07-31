@@ -1,1369 +1,3350 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { expect, test, type Page } from '@playwright/test';
+import { unzipSync } from 'fflate';
 
-import { expect, test, type Locator } from '@playwright/test';
 import {
 	createWayfindingStudioProject,
 	synchronizeWayfindingStudioGraph,
-	type WayfindingStudioDoorElement,
-	type WayfindingStudioElement,
 	type WayfindingStudioPolygonElement,
 	type WayfindingStudioProject
 } from '../studio-project.mts';
-import { buildFloorRouteNetwork } from '../editor-core/route-builder.mts';
-import {
-	inspectRouteGeometry,
-	measureRouteNetwork
-} from './v2/route-geometry';
+import { createComplexConcourseFixture } from '../editor-core/fixtures/complex-concourse.mts';
+import { PANEL_WIDTH_STORAGE_KEY } from './app/panel-preferences';
 
-const createRouteTestProject = (): WayfindingStudioProject => {
-	const project: WayfindingStudioProject = createWayfindingStudioProject('route-clear-test');
+const RECOVERY_KEY = 'wallboard-wayfinding-studio-recovery';
+const LOGO_DATA_URL = 'data:image/svg+xml;base64,'
+	+ Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="12" fill="#0f766e"/><path d="M20 40h40M40 20v40" stroke="white" stroke-width="8"/></svg>').toString('base64');
+const PHOTO_DATA_URL = 'data:image/svg+xml;base64,'
+	+ Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240"><rect width="480" height="240" fill="#d7eee9"/><circle cx="240" cy="120" r="72" fill="#0f766e"/></svg>').toString('base64');
+const TRACE_DATA_URL = 'data:image/svg+xml;base64,'
+	+ Buffer.from(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="192" height="108">'
+		+ '<rect width="192" height="108" fill="#f8fafc"/>'
+		+ '<rect x="30" y="20" width="60" height="55" fill="#f59e0b"/>'
+		+ '<rect x="105" y="20" width="55" height="55" fill="#14b8a6"/>'
+		+ '</svg>'
+	).toString('base64');
+
+const createTestProject = (): WayfindingStudioProject => {
+	const project = createWayfindingStudioProject('studio-test');
 	const floor = project.floors[0];
-	floor.unitsPerMeter = 20;
-	floor.pedestrianSpaceSource = 'polygons';
-	floor.elements = [
-		{ floorId: floor.id, geometry: [{ x: 40, y: 40 }, { x: 840, y: 40 }, { x: 840, y: 480 }, { x: 40, y: 480 }], id: 'main-walkable', provenance: 'reviewer-authored', status: 'confirmed', type: 'walkable' },
-		{ floorId: floor.id, geometry: [{ x: 260, y: 235 }, { x: 340, y: 235 }, { x: 340, y: 320 }, { x: 260, y: 320 }], id: 'blocked-island', provenance: 'reviewer-authored', status: 'confirmed', type: 'obstacle' },
-		{ facingDegrees: 0, floorId: floor.id, id: 'lobby-screen', label: 'Lobby screen', point: { x: 120, y: 200 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'confirmed', type: 'origin' },
-		{ destinationId: 'meeting-room', floorId: floor.id, geometry: [{ x: 500, y: 120 }, { x: 760, y: 120 }, { x: 760, y: 360 }, { x: 500, y: 360 }], id: 'meeting-room-shape', label: 'Meeting room', provenance: 'reviewer-authored', status: 'confirmed', type: 'location' },
-		{ angle: 0, floorId: floor.id, id: 'meeting-room-door', length: 36, locationId: 'meeting-room-shape', point: { x: 500, y: 240 }, provenance: 'reviewer-authored', status: 'confirmed', type: 'door' }
+	project.name = 'Northline Test Center';
+	project.languages = [
+		{ code: 'en', label: 'English' },
+		{ code: 'hu', label: 'Magyar' }
 	];
-	project.destinations = [{ floor: floor.id, id: 'meeting-room', name: 'Meeting room', routeable: true }];
-	synchronizeWayfindingStudioGraph(project);
-	project.graph.edges = [{
+	project.categories = ['Dining', 'Services'];
+	project.assets = [
+		{
+			dataUrl: LOGO_DATA_URL,
+			id: 'asset-information-logo',
+			kind: 'logo',
+			mimeType: 'image/svg+xml',
+			name: 'Visitor information logo',
+			naturalHeight: 80,
+			naturalWidth: 80
+		},
+		{
+			dataUrl: PHOTO_DATA_URL,
+			id: 'asset-information-photo',
+			kind: 'photo',
+			mimeType: 'image/svg+xml',
+			name: 'Visitor information interior',
+			naturalHeight: 240,
+			naturalWidth: 480
+		}
+	];
+	project.destinations = [{
 		accessible: true,
-		bidirectional: true,
-		from: 'semantic:lobby-screen',
-		geometry: [{ x: 120, y: 200 }, { x: 300, y: 140 }, { x: 500, y: 240 }],
-		id: 'lobby-to-meeting',
-		kind: 'walk',
-		reviewStatus: 'confirmed',
-		to: 'semantic:meeting-room-shape',
-		traversal: 'indoor-corridor'
+		category: 'Services',
+		description: 'Visitor information and assistance.',
+		floor: floor.id,
+		hours: '09:00-18:00',
+		id: 'destination-information',
+		logoAssetId: 'asset-information-logo',
+		mapNumber: 'A-12',
+		name: 'Visitor information',
+		phone: '+1 555 0100',
+		photoAssetIds: ['asset-information-photo'],
+		routeable: true,
+		status: 'open',
+		translations: {
+			hu: {
+				description: 'Informacio es segitseg latogatoknak.',
+				name: 'Informacio'
+			}
+		},
+		website: 'https://example.com/visitor-information'
 	}];
+	floor.elements = [
+		{
+			floorId: floor.id,
+			geometry: [
+				{ x: 150, y: 160 },
+				{ x: 1770, y: 160 },
+				{ x: 1770, y: 900 },
+				{ x: 150, y: 900 }
+			],
+			id: 'walkable-main',
+			label: 'Main concourse',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'walkable'
+		},
+		{
+			destinationId: 'destination-information',
+			floorId: floor.id,
+			geometry: [
+				{ x: 1300, y: 220 },
+				{ x: 1680, y: 220 },
+				{ x: 1680, y: 520 },
+				{ x: 1300, y: 520 }
+			],
+			id: 'location-information',
+			label: 'Visitor information',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			defaultLanguage: 'en',
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'You are here',
+			point: { x: 320, y: 650 },
+			provenance: 'reviewer-authored',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		},
+		{
+			category: 'Services',
+			destinationId: 'destination-information',
+			floorId: floor.id,
+			id: 'poi-information',
+			label: 'Visitor information point',
+			point: { x: 1180, y: 540 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'poi'
+		},
+		{
+			angle: 90,
+			floorId: floor.id,
+			id: 'door-information',
+			length: 42,
+			locationId: 'location-information',
+			point: { x: 1300, y: 430 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'door'
+		},
+		{
+			assetId: 'asset-information-logo',
+			floorId: floor.id,
+			height: 120,
+			id: 'logo-information',
+			point: { x: 980, y: 260 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'logo',
+			width: 120
+		}
+	];
+	project.graph = {
+		edges: [{
+			accessible: true,
+			authoringOwnership: 'manual',
+			bidirectional: true,
+			from: 'route-origin',
+			geometry: [
+				{ x: 320, y: 650 },
+				{ x: 900, y: 650 },
+				{ x: 1300, y: 430 }
+			],
+			id: 'route-main',
+			kind: 'walk',
+			reviewStatus: 'confirmed',
+			to: 'route-destination',
+			traversal: 'indoor-corridor'
+		}],
+		graphId: 'studio-test-graph',
+		nodes: [
+			{
+				authoringOwnership: 'manual',
+				id: 'route-origin',
+				kind: 'route',
+				levelId: floor.id,
+				semanticElementId: 'origin-main',
+				x: 320,
+				y: 650
+			},
+			{
+				authoringOwnership: 'manual',
+				id: 'route-destination',
+				kind: 'location',
+				levelId: floor.id,
+				locationId: 'destination-information',
+				semanticElementId: 'location-information',
+				x: 1300,
+				y: 430
+			}
+		]
+	};
+
+	return project;
+};
+
+const createLongContentTestProject = (): WayfindingStudioProject => {
+	const project = createTestProject();
+	const destination = project.destinations[0];
+	project.name = 'Northline International Medical and Research Campus';
+	project.floors[0].name = 'Ground floor - Main visitor services and outpatient reception';
+	project.categories = ['Visitor services, accessibility, admissions, and campus assistance'];
+	destination.category = project.categories[0];
+	destination.name = 'International visitor information, accessibility, and admissions assistance';
+	destination.description = 'A fully staffed visitor service point for international guests, step-free arrival support, admissions guidance, campus orientation, and accessible onward travel.';
+	destination.translations = {
+		hu: {
+			description: 'Nemzetkozi vendegszolgalat, akadalymentes erkezesi segitseg, felveteli tajekoztatas es reszletes kampuszorientacio.',
+			name: 'Nemzetkozi latogatoi informacio, akadalymentesseg es felveteli segitseg'
+		}
+	};
+
+	return project;
+};
+
+const createMultiFloorTestProject = (): WayfindingStudioProject => {
+	const project = createTestProject();
+	const ground = project.floors[0];
+	const groundId = ground.id;
+	ground.name = 'Ground floor';
+	project.floors.push({
+		elements: [
+			{
+				accessible: true,
+				connectionId: 'lift-main',
+				floorId: 'first',
+				id: 'lift-first',
+				kind: 'elevator',
+				label: 'Main elevator',
+				point: { x: 360, y: 650 },
+				provenance: 'reviewer-authored',
+				status: 'confirmed',
+				type: 'transition'
+			},
+			{
+				destinationId: 'destination-gallery',
+				floorId: 'first',
+				geometry: [
+					{ x: 1300, y: 220 },
+					{ x: 1680, y: 220 },
+					{ x: 1680, y: 520 },
+					{ x: 1300, y: 520 }
+				],
+				id: 'location-gallery',
+				label: 'Sky gallery',
+				provenance: 'reviewer-authored',
+				status: 'confirmed',
+				type: 'location'
+			}
+		],
+		height: 1080,
+		id: 'first',
+		name: 'First floor',
+		order: 1,
+		width: 1920
+	});
+	ground.elements.push({
+		accessible: true,
+		connectionId: 'lift-main',
+		floorId: groundId,
+		id: 'lift-ground',
+		kind: 'elevator',
+		label: 'Main elevator',
+		point: { x: 1120, y: 650 },
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'transition'
+	});
+	project.destinations.push({
+		accessible: true,
+		category: 'Services',
+		description: 'Exhibitions above the concourse.',
+		floor: 'first',
+		id: 'destination-gallery',
+		name: 'Sky gallery',
+		routeable: true,
+		status: 'open'
+	});
+	project.graph.nodes = [];
+	project.graph.edges = [];
+	synchronizeWayfindingStudioGraph(project);
+	project.graph.edges.push(
+		{
+			accessible: true,
+			authoringOwnership: 'manual',
+			bidirectional: true,
+			from: 'semantic:origin-main',
+			geometry: [{ x: 320, y: 650 }, { x: 1120, y: 650 }],
+			id: 'ground-to-lift',
+			kind: 'walk',
+			reviewStatus: 'confirmed',
+			to: 'semantic:lift-ground',
+			traversal: 'indoor-corridor'
+		},
+		{
+			accessible: true,
+			authoringOwnership: 'manual',
+			bidirectional: true,
+			from: 'semantic:lift-first',
+			geometry: [{ x: 360, y: 650 }, { x: 1300, y: 430 }],
+			id: 'lift-to-gallery',
+			kind: 'walk',
+			reviewStatus: 'confirmed',
+			to: 'semantic:location-gallery',
+			traversal: 'indoor-corridor'
+		}
+	);
+
+	return project;
+};
+
+const createTraceTestProject = (): WayfindingStudioProject => {
+	const project = createWayfindingStudioProject('studio-trace');
+	const floor = project.floors[0];
+	project.name = 'Smart trace test';
+	project.assets = [{
+		dataUrl: TRACE_DATA_URL,
+		id: 'trace-background',
+		kind: 'background',
+		mimeType: 'image/svg+xml',
+		name: 'Trace floor plan',
+		naturalHeight: 108,
+		naturalWidth: 192
+	}];
+	floor.backgroundAssetId = 'trace-background';
 
 	return project;
 };
 
 const createAutomaticRouteTestProject = (): WayfindingStudioProject => {
-	const project: WayfindingStudioProject = createWayfindingStudioProject('automatic-route-test');
+	const project = createWayfindingStudioProject('studio-automatic-route');
 	const floor = project.floors[0];
+	project.name = 'Automatic route test';
 	floor.unitsPerMeter = 20;
-	floor.pedestrianSpaceSource = 'polygons';
 	floor.width = 900;
 	floor.height = 600;
-	floor.walkableMask = {
-		cellSize: 20,
-		columns: 45,
-		contractVersion: 1,
-		height: 600,
-		mapId: 'automatic-route-test:stale-painted-mask',
-		reviewStatus: 'proposed',
-		rows: 30,
-		walkableRuns: [[0, 0, 0]],
-		width: 900
-	};
 	floor.elements = [
 		{
 			floorId: floor.id,
-			geometry: [{ x: 50, y: 80 }, { x: 850, y: 80 }, { x: 850, y: 520 }, { x: 50, y: 520 }],
-			id: 'main-walkable',
+			geometry: [
+				{ x: 50, y: 80 },
+				{ x: 850, y: 80 },
+				{ x: 850, y: 520 },
+				{ x: 50, y: 520 }
+			],
+			id: 'walkable-main',
 			provenance: 'reviewer-authored',
-			status: 'proposed',
+			status: 'confirmed',
 			type: 'walkable'
 		},
 		{
-			destinationId: 'meeting-room',
+			destinationId: 'destination-meeting',
 			floorId: floor.id,
-			geometry: [{ x: 650, y: 180 }, { x: 840, y: 180 }, { x: 840, y: 420 }, { x: 650, y: 420 }],
-			id: 'meeting-room-shape',
+			geometry: [
+				{ x: 650, y: 180 },
+				{ x: 840, y: 180 },
+				{ x: 840, y: 420 },
+				{ x: 650, y: 420 }
+			],
+			id: 'location-meeting',
 			label: 'Meeting room',
-			provenance: 'reviewer-authored',
-			status: 'proposed',
-			type: 'location'
-		},
-		{
-			destinationId: 'storage-room',
-			floorId: floor.id,
-			geometry: [{ x: 360, y: 180 }, { x: 540, y: 180 }, { x: 540, y: 420 }, { x: 360, y: 420 }],
-			id: 'storage-room-shape',
-			label: 'Storage room',
-			provenance: 'reviewer-authored',
-			status: 'proposed',
-			type: 'location'
-		},
-		{ angle: 90, floorId: floor.id, id: 'meeting-room-door', length: 36, point: { x: 650, y: 300 }, provenance: 'reviewer-authored', status: 'proposed', type: 'door' },
-		{ facingDegrees: 0, floorId: floor.id, id: 'lobby-screen', label: 'Lobby screen', point: { x: 100, y: 300 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'proposed', type: 'origin' }
-	];
-	project.destinations = [
-		{ floor: floor.id, id: 'meeting-room', name: 'Meeting room', routeable: true },
-		{ floor: floor.id, id: 'storage-room', name: 'Storage room', routeable: true }
-	];
-	synchronizeWayfindingStudioGraph(project);
-
-	return project;
-};
-
-const create3dTestProject = (): WayfindingStudioProject => {
-	const project: WayfindingStudioProject = createWayfindingStudioProject('three-dimensional-preview');
-	const floor = project.floors[0];
-	floor.unitsPerMeter = 20;
-	project.defaults!.route.animation = 'flow';
-	project.defaults!.route.animationSpeed = 120;
-	project.defaults!.route.lineWidth = 13;
-	project.assets.push({
-		dataUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Ccircle cx="32" cy="32" r="24" fill="%2318826f"/%3E%3Cpath d="M19 34h26v6H19zM29 18h6v26h-6z" fill="white"/%3E%3C/svg%3E',
-		id: 'builtin:test-information',
-		kind: 'icon',
-		mimeType: 'image/svg+xml',
-		name: 'Test information',
-		naturalHeight: 64,
-		naturalWidth: 64
-	});
-	floor.width = 900;
-	floor.height = 600;
-	floor.elements = [
-		{ facingDegrees: 0, floorId: floor.id, id: 'gallery-screen', label: 'Gallery screen', point: { x: 100, y: 300 }, provenance: 'reviewer-authored', screenId: 'screen-1', status: 'confirmed', type: 'origin' },
-		{
-			destinationId: 'exhibition-hall',
-			floorId: floor.id,
-			geometry: [{ x: 220, y: 150 }, { x: 680, y: 150 }, { x: 680, y: 470 }, { x: 220, y: 470 }],
-			id: 'exhibition-hall-shape',
-			label: 'Exhibition hall',
-			presentation: { extrusionHeight: 52, fillColor: '#e18b4f', fillOpacity: 0.9 },
 			provenance: 'reviewer-authored',
 			status: 'confirmed',
 			type: 'location'
 		},
-		{ assetId: 'builtin:test-information', floorId: floor.id, height: 64, id: 'information-icon', point: { x: 418, y: 226 }, provenance: 'reviewer-authored', status: 'confirmed', type: 'icon', width: 64 }
+		{
+			destinationId: 'destination-storage',
+			floorId: floor.id,
+			geometry: [
+				{ x: 360, y: 180 },
+				{ x: 540, y: 180 },
+				{ x: 540, y: 420 },
+				{ x: 360, y: 420 }
+			],
+			id: 'location-storage',
+			label: 'Storage room',
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'location'
+		},
+		{
+			angle: 90,
+			floorId: floor.id,
+			id: 'door-meeting',
+			length: 36,
+			locationId: 'location-meeting',
+			point: { x: 650, y: 300 },
+			provenance: 'reviewer-authored',
+			status: 'confirmed',
+			type: 'door'
+		},
+		{
+			defaultLanguage: 'en',
+			facingDegrees: 0,
+			floorId: floor.id,
+			id: 'origin-main',
+			label: 'You are here',
+			point: { x: 100, y: 300 },
+			provenance: 'reviewer-authored',
+			screenId: 'screen-main',
+			status: 'confirmed',
+			type: 'origin'
+		}
 	];
-	project.destinations = [{ floor: floor.id, id: 'exhibition-hall', name: 'Exhibition hall', routeable: true }];
+	project.destinations = [
+		{
+			floor: floor.id,
+			id: 'destination-meeting',
+			name: 'Meeting room',
+			routeable: true
+		},
+		{
+			floor: floor.id,
+			id: 'destination-storage',
+			name: 'Storage room',
+			routeable: true
+		}
+	];
 	synchronizeWayfindingStudioGraph(project);
-	project.graph.edges = [{
-		accessible: true,
-		bidirectional: true,
-		from: 'semantic:gallery-screen',
-		geometry: [{ x: 100, y: 300 }, { x: 220, y: 310 }, { x: 450, y: 310 }],
-		id: 'gallery-to-exhibition',
-		kind: 'walk',
-		reviewStatus: 'confirmed',
-		to: 'semantic:exhibition-hall-shape',
-		traversal: 'indoor-corridor'
-	}];
 
 	return project;
 };
 
-test.beforeEach(async ({ page }) => {
-	await page.addInitScript((): void => {
-		Object.defineProperty(window, 'showOpenFilePicker', { configurable: true, value: undefined });
-		Object.defineProperty(window, 'showSaveFilePicker', { configurable: true, value: undefined });
-	});
-});
+const createRouteProfileTestProject = (): WayfindingStudioProject => {
+	const project = createTestProject();
+	const floorId = project.floors[0].id;
+	project.graph = {
+		edges: [
+			{
+				accessible: false,
+				authoringOwnership: 'manual',
+				bidirectional: true,
+				from: 'route-origin',
+				geometry: [
+					{ x: 320, y: 650 },
+					{ x: 1300, y: 430 }
+				],
+				id: 'route-direct-stairs',
+				kind: 'stairs',
+				reviewStatus: 'confirmed',
+				to: 'route-destination',
+				traversal: 'transition'
+			},
+			{
+				accessible: true,
+				authoringOwnership: 'manual',
+				bidirectional: true,
+				from: 'route-origin',
+				geometry: [
+					{ x: 320, y: 650 },
+					{ x: 560, y: 250 }
+				],
+				id: 'route-step-free-west',
+				kind: 'walk',
+				reviewStatus: 'confirmed',
+				to: 'route-step-free-west',
+				traversal: 'indoor-corridor'
+			},
+			{
+				accessible: true,
+				authoringOwnership: 'manual',
+				bidirectional: true,
+				from: 'route-step-free-west',
+				geometry: [
+					{ x: 560, y: 250 },
+					{ x: 1040, y: 250 }
+				],
+				id: 'route-step-free-north',
+				kind: 'walk',
+				reviewStatus: 'confirmed',
+				to: 'route-step-free-east',
+				traversal: 'indoor-corridor'
+			},
+			{
+				accessible: true,
+				authoringOwnership: 'manual',
+				bidirectional: true,
+				from: 'route-step-free-east',
+				geometry: [
+					{ x: 1040, y: 250 },
+					{ x: 1300, y: 430 }
+				],
+				id: 'route-step-free-east',
+				kind: 'walk',
+				reviewStatus: 'confirmed',
+				to: 'route-destination',
+				traversal: 'indoor-corridor'
+			}
+		],
+		graphId: 'studio-profile-graph',
+		nodes: [
+			{
+				authoringOwnership: 'manual',
+				id: 'route-origin',
+				kind: 'route',
+				levelId: floorId,
+				semanticElementId: 'origin-main',
+				x: 320,
+				y: 650
+			},
+			{
+				authoringOwnership: 'manual',
+				id: 'route-step-free-west',
+				kind: 'route',
+				levelId: floorId,
+				x: 560,
+				y: 250
+			},
+			{
+				authoringOwnership: 'manual',
+				id: 'route-step-free-east',
+				kind: 'route',
+				levelId: floorId,
+				x: 1040,
+				y: 250
+			},
+			{
+				authoringOwnership: 'manual',
+				id: 'route-destination',
+				kind: 'location',
+				levelId: floorId,
+				locationId: 'destination-information',
+				semanticElementId: 'location-information',
+				x: 1300,
+				y: 430
+			}
+		]
+	};
 
-const mapPointAtCanvasPosition = async (canvas: Locator, position: { x: number; y: number }): Promise<{ x: number; y: number }> => canvas.evaluate(
-	(element, canvasPosition): { x: number; y: number } => ({
-		x: (canvasPosition.x - Number(element.dataset.viewOffsetX)) / Number(element.dataset.viewScale),
-		y: (canvasPosition.y - Number(element.dataset.viewOffsetY)) / Number(element.dataset.viewScale)
-	}),
-	position
-);
-
-const clickMapPoint = async (canvas: Locator, point: { x: number; y: number }): Promise<void> => {
-	const position = await canvas.evaluate(
-		(element, mapPoint): { x: number; y: number } => ({
-			x: Number(element.dataset.viewOffsetX) + mapPoint.x * Number(element.dataset.viewScale),
-			y: Number(element.dataset.viewOffsetY) + mapPoint.y * Number(element.dataset.viewScale)
-		}),
-		point
-	);
-	await canvas.click({ position });
+	return project;
 };
 
-test('authors, refines, and exports a portable semantic project', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
+const openEditor = async (page: Page, project: WayfindingStudioProject = createTestProject()): Promise<void> => {
+	await page.addInitScript(({ key, serialized }) => {
+		localStorage.setItem(key, serialized);
+	}, { key: RECOVERY_KEY, serialized: JSON.stringify(project) });
 	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Wayfinding Studio' })).toBeVisible();
-	await expect(page.locator('#studio-version')).toHaveText('Editor v0.16');
-	await expect(page.locator('.workspace-switcher button')).toHaveText(['Map', 'Route edit', 'Route preview', 'Visitor preview']);
-	await expect(page.locator('#studio-floor')).toHaveValue('level-0');
-
-	const canvas = page.locator('#stage');
-	const authoredRoomCenter = await mapPointAtCanvasPosition(canvas, { x: 330, y: 405 });
-	await page.locator('[data-tool="location"]').click();
-	await canvas.click({ position: { x: 230, y: 320 } });
-	await canvas.click({ position: { x: 430, y: 320 } });
-	await canvas.click({ position: { x: 430, y: 490 } });
-	await canvas.click({ position: { x: 230, y: 490 } });
-	await page.locator('#semantic-finish').click();
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-	await page.locator('[data-tool="select"]').click();
-	await canvas.dblclick({ position: { x: 330, y: 320 } });
-
-	await canvas.hover({ position: { x: 330, y: 400 } });
-	await page.mouse.wheel(0, -120);
-
-	await page.locator('[data-tool="origin"]').click();
-	await canvas.click({ position: { x: 160, y: 520 } });
-	await expect(page.locator('#route-start option')).toHaveCount(1);
-	await expect(page.locator('#route-destination option')).toHaveCount(1);
-
-	await page.locator('#studio-add-floor').click();
-	await expect(page.locator('#studio-floor option')).toHaveCount(2);
-	await page.locator('#studio-delete-floor').click();
-	await expect(page.locator('#studio-floor option')).toHaveCount(1);
-	await page.locator('[data-tool="select"]').click();
-	await clickMapPoint(canvas, authoredRoomCenter);
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-
-	const screenshotPath: string = testInfo.outputPath('authored-studio.png');
-	await page.screenshot({ fullPage: true, path: screenshotPath });
-	await testInfo.attach('authored-studio', { contentType: 'image/png', path: screenshotPath });
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-project-name').fill('Visitor Center / Ground Floor');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	expect(download.suggestedFilename()).toBe('Visitor Center - Ground Floor.wbwayfinding');
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { floors: Array<{ elements: Array<{ geometry?: unknown[]; type: string }> }> };
-	expect(project.floors[0].elements.map((element): string => element.type)).toEqual(['location', 'origin']);
-	expect(project.floors[0].elements[0].geometry).toHaveLength(5);
-	expect(errors).toEqual([]);
-});
-
-test('keeps first-time guidance and authoring controls cohesive at the sidebar width', async ({ page }) => {
-	await page.goto('/');
-	await expect(page.locator('#project-onboarding')).toBeVisible();
-	await expect(page.locator('.layer-panel')).not.toHaveAttribute('open', '');
-
-	await page.locator('.project-defaults > summary').click();
-	await page.locator('.builtin-icon-picker > summary').click();
-	await page.locator('.layer-panel > summary').click();
-
-	const overflowingControls = await page.locator(
-		'.project-defaults button, .project-defaults input, .project-defaults select, .builtin-icon span, .layer-actions button, #autosave-status, #mask-status'
-	).evaluateAll((elements): string[] => elements
-		.filter((element): boolean => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1)
-		.map((element): string => `${element.tagName.toLowerCase()}#${element.id}.${element.className}:${element.textContent?.trim() ?? ''}`));
-	expect(overflowingControls).toEqual([]);
-	await expect(page.locator('.builtin-icon[title="Place Restroom"] span')).toHaveText('Restroom');
-	await expect(page.locator('.layer-actions button')).toHaveText(['Show all', 'Hide all']);
-
-	const canvas = page.locator('#stage');
-	await page.locator('[data-tool="location"]').click();
-	await canvas.click({ position: { x: 220, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 440 } });
-	await canvas.click({ position: { x: 220, y: 440 } });
-	await page.locator('#semantic-finish').click();
-	await expect(page.locator('#project-onboarding')).toBeHidden();
-
-	await page.locator('#workspace-route-edit').click();
-	await expect(page.locator('.authoring-tools button')).toHaveText(['Edit network', 'Draw segment', 'Place endpoint']);
-	await expect(page.locator('.route-editor-step h3')).toHaveText([
-		'1. Confirm pedestrian space',
-		'2. Build routes',
-		'3. Manual adjustments'
-	]);
-});
-
-test('expands the map workspace and provides a focused visitor preview', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => {
-		if (message.type() === 'error') errors.push(message.text());
-	});
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	const project: WayfindingStudioProject = createRouteTestProject();
-	project.languages = [
-		{ code: 'en', label: 'English' },
-		{ code: 'hu', label: 'Hungarian' }
-	];
-	project.defaultLanguage = 'en';
-	project.destinations[0] = {
-		...project.destinations[0],
-		accessible: true,
-		category: 'Meeting rooms',
-		description: 'Weekly team briefings and visitor presentations.',
-		hours: '08:00 - 18:00',
-		mapNumber: 'G-12',
-		phone: '+1 972 555 0100',
-		status: 'Open',
-		translations: {
-			hu: {
-				// Accented glyphs are deliberate: Hungarian is a shipped runtime language, so the
-				// preview must prove descender and diacritic ink clearance, not ASCII-folded text.
-				description: 'Heti csapategyeztetések és látogatói bemutatók őszig.',
-				name: 'Tárgyaló'
-			}
-		},
-		website: 'https://example.com/meeting-room'
-	};
-	const projectPath: string = testInfo.outputPath('visitor-preview-project.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(project));
-
-	await page.goto('/');
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await expect(page.locator('#shortcut-help')).toHaveCount(1);
-	await expect(page.locator('.stage-footer > #shortcut-help')).toBeVisible();
-	await expect(page.locator('.controls > .panel-rail > #toggle-left-panel')).toBeVisible();
-	await expect(page.locator('.review > .panel-rail > #toggle-right-panel')).toBeVisible();
-
-	const stage = page.locator('.stage-shell');
-	const canvas = page.locator('#stage');
-	const initialBounds = await stage.boundingBox();
-	const readViewport = async (): Promise<{ centerX: number; centerY: number; scale: number }> => canvas.evaluate((element): { centerX: number; centerY: number; scale: number } => {
-		const bounds = element.getBoundingClientRect();
-		const scale = Number(element.dataset.viewScale);
-		const offsetX = Number(element.dataset.viewOffsetX);
-		const offsetY = Number(element.dataset.viewOffsetY);
-		return {
-			centerX: (bounds.width / 2 - offsetX) / scale,
-			centerY: (bounds.height / 2 - offsetY) / scale,
-			scale
-		};
-	});
-	const initialViewport = await readViewport();
-	await page.locator('#toggle-left-panel').click();
-	await expect(page.locator('body')).toHaveAttribute('data-left-panel', 'closed');
-	await expect(page.locator('.controls')).toBeVisible();
-	await expect(page.locator('.controls > .panel-rail')).toBeVisible();
-	await expect(page.locator('.controls > :not(.panel-rail)').first()).toBeHidden();
-	await page.locator('#toggle-right-panel').click();
-	await expect(page.locator('body')).toHaveAttribute('data-right-panel', 'closed');
-	await expect(page.locator('.review')).toBeVisible();
-	await expect(page.locator('.review > .panel-rail')).toBeVisible();
-	await expect(page.locator('.review > :not(.panel-rail)').first()).toBeHidden();
+	await expect(page.getByRole('dialog', { name: 'Restore unsaved local work?' })).toBeVisible();
+	await page.getByRole('button', { name: 'Restore work' }).click();
+	await expect(page.getByText(project.name).first()).toBeVisible();
+	await expect(page.locator('.map-transform')).toBeVisible();
 	await page.waitForTimeout(220);
-	const expandedBounds = await stage.boundingBox();
-	expect((expandedBounds?.width ?? 0)).toBeGreaterThan(initialBounds?.width ?? 0);
-	const expandedViewport = await readViewport();
-	expect(expandedViewport.scale).toBeCloseTo(initialViewport.scale, 6);
-	expect(expandedViewport.centerX).toBeCloseTo(initialViewport.centerX, 6);
-	expect(expandedViewport.centerY).toBeCloseTo(initialViewport.centerY, 6);
-	await page.locator('#toggle-left-panel').click();
-	await page.locator('#toggle-right-panel').click();
+};
 
-	await page.locator('#workspace-runtime-preview').click();
-	await expect(page.locator('body')).toHaveAttribute('data-workspace', 'runtime-preview');
-	await expect(page.locator('#runtime-preview')).toBeVisible();
-	await expect(page.locator('.controls')).toBeHidden();
-	await expect(page.locator('.review')).toBeHidden();
-	await page.locator('#runtime-preview-search').fill('weekly');
-	await expect(page.locator('.runtime-preview-result')).toHaveCount(1);
-	await expect(page.locator('.runtime-preview-result')).toContainText('Meeting room');
-	await page.locator('.runtime-preview-result').click();
-	await expect(page.locator('#runtime-preview-details')).toBeVisible();
-	await expect(page.locator('#runtime-preview-name')).toHaveText('Meeting room');
-	await expect(page.locator('#runtime-preview-description')).toContainText('Weekly team briefings');
-	await expect(page.locator('#runtime-preview-facts')).toContainText('G-12');
-	await expect(page.locator('#runtime-preview-facts')).toContainText('+1 972 555 0100');
-	await expect(page.locator('#runtime-preview-facts')).toContainText('Step-free access verified');
-	await expect(page.locator('#runtime-preview-facts a[href="https://example.com/meeting-room"]')).toBeVisible();
-	await expect(page.locator('#runtime-preview-route')).toBeVisible();
-	await expect(page.locator('#runtime-preview-route')).toContainText('m');
-	await expect(page.locator('#runtime-preview-route')).toContainText('min walk');
-	await expect(page.locator('.runtime-preview-result')).toContainText('Meeting rooms / G-12 / Open');
+const mapTransform = (page: Page): Promise<string | null> =>
+	page.locator('.map-transform').getAttribute('style');
 
-	await page.locator('#runtime-preview-search').clear();
-	await page.locator('#runtime-preview-language').selectOption('hu');
-	await expect(page.locator('#runtime-preview-name')).toHaveText('Tárgyaló');
-	await expect(page.locator('#runtime-preview-description')).toContainText('csapategyeztetések és látogatói');
+const cameraView = (page: Page): Promise<{
+	centerX: number;
+	centerY: number;
+	scale: number;
+}> => page.locator('.canvas-viewport').evaluate((viewport) => {
+	const map = viewport.querySelector<HTMLElement>('.map-transform');
 
-	await page.locator('#runtime-preview-icons').uncheck();
-	await page.locator('#runtime-preview-labels').uncheck();
-	await expect(canvas).toHaveAttribute('data-runtime-icons-visible', 'false');
-	await expect(canvas).toHaveAttribute('data-runtime-labels-visible', 'false');
-	const previewScreenshotPath: string = testInfo.outputPath('visitor-preview.png');
-	await page.screenshot({ fullPage: true, path: previewScreenshotPath });
-	await testInfo.attach('visitor-preview', { contentType: 'image/png', path: previewScreenshotPath });
-	const closeHitTarget = await page.locator('#runtime-preview-details-close').evaluate((element: HTMLElement): string | undefined => {
-		const bounds = element.getBoundingClientRect();
-		return document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)?.id;
-	});
-	expect(closeHitTarget).toBe('runtime-preview-details-close');
-	await page.locator('#runtime-preview-details-close').click();
-	await expect(page.locator('#runtime-preview-details')).toBeHidden();
-	expect(errors).toEqual([]);
+	if (!map) throw new Error('Expected the 2D map transform.');
+	const transform = new DOMMatrix(getComputedStyle(map).transform);
+
+	return {
+		centerX: (viewport.clientWidth / 2 - transform.e) / transform.a,
+		centerY: (viewport.clientHeight / 2 - transform.f) / transform.d,
+		scale: transform.a
+	};
 });
 
-test('persists configurable visitor-position animation and exposes the extended symbol set', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	const projectPath: string = testInfo.outputPath('origin-animation-project.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
+const composedEditorCameraView = (page: Page): Promise<{
+	centerX: number;
+	centerY: number;
+	scale: number;
+}> => page.locator('.canvas-viewport').evaluate((viewport) => {
+	const map = viewport.querySelector<HTMLElement>('.map-transform');
+	const workbench = viewport.closest<HTMLElement>('.workbench');
 
-	await page.goto('/');
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('.project-defaults > summary').click();
-	await page.locator('#default-origin-color').fill('#8f3db4');
-	await page.locator('#default-origin-color').dispatchEvent('change');
-	await page.locator('#default-origin-speed').fill('92');
-	await page.locator('#default-origin-speed').blur();
-	await page.locator('#default-origin-animation-2d').selectOption('pulse');
-	await page.locator('#default-origin-animation-3d').selectOption('pulse');
-	await expect(page.locator('#stage')).toHaveAttribute('data-origin-animation-2d', 'pulse');
-	await page.locator('#view-3d').click();
-	await expect(page.locator('#stage-3d')).toHaveAttribute('data-origin-animation-3d', 'pulse');
+	if (!map || !workbench) throw new Error('Expected the composed 2D editor.');
+	const transform = new DOMMatrix(getComputedStyle(map).transform);
+	const compact = innerWidth <= 1_240;
+	const leftInset = compact && !workbench.classList.contains('left-collapsed') ? 426 : 64;
+	const rightInset = compact && !workbench.classList.contains('right-collapsed') ? 394 : 64;
+	const topInset = 68;
+	const bottomInset = 64;
+	const center = {
+		x: leftInset + (viewport.clientWidth - leftInset - rightInset) / 2,
+		y: topInset + (viewport.clientHeight - topInset - bottomInset) / 2
+	};
 
-	await page.locator('#view-2d').click();
-	await page.locator('.builtin-icon-picker > summary').click();
-	for (const label of ['Payment terminal', 'Entrance', 'Wi-Fi', 'Pets allowed', 'Luggage storage']) {
-		await expect(page.locator(`.builtin-icon[title="Place ${label}"]`)).toBeVisible();
+	return {
+		centerX: (center.x - transform.e) / transform.a,
+		centerY: (center.y - transform.f) / transform.d,
+		scale: transform.a
+	};
+});
+
+const openProjectSettings = async (page: Page): Promise<void> => {
+	await page.locator('.document-context').click();
+	await expect(page.getByLabel('Project name')).toBeVisible();
+};
+
+const openPreviewSimulation = async (page: Page): Promise<void> => {
+	const drawer = page.locator('#preview-simulation-drawer');
+
+	if (!await drawer.isVisible()) await page.getByRole('button', { name: 'Simulation' }).click();
+	await expect(drawer).toBeVisible();
+};
+
+const panelLayoutProblems = (page: Page): Promise<string[]> => page.evaluate(() => {
+	const visible = (element: Element): boolean => {
+		const style = getComputedStyle(element);
+		const bounds = element.getBoundingClientRect();
+
+		return element.checkVisibility({
+			checkOpacity: true,
+			checkVisibilityCSS: true
+		})
+			&& !element.closest('details:not([open])')
+			&& style.display !== 'none'
+			&& style.visibility !== 'hidden'
+			&& Number(style.opacity) > 0
+			&& bounds.width > 1
+			&& bounds.height > 1
+			&& bounds.right > 0
+			&& bounds.bottom > 0
+			&& bounds.left < innerWidth
+			&& bounds.top < innerHeight;
+	};
+	const label = (element: Element): string => {
+		const html = element as HTMLElement;
+		const name = html.getAttribute('aria-label')
+			?? html.getAttribute('title')
+			?? html.textContent?.trim().replace(/\s+/gu, ' ').slice(0, 44)
+			?? '';
+
+		return `${element.tagName.toLocaleLowerCase()}.${html.className || '-'}:${name}`;
+	};
+	const intersectionArea = (left: DOMRect, right: DOMRect): number =>
+		Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left))
+		* Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+	const clippedBounds = (element: Element, root: Element): DOMRect => {
+		const bounds = element.getBoundingClientRect();
+		let left = bounds.left;
+		let top = bounds.top;
+		let right = bounds.right;
+		let bottom = bounds.bottom;
+		let ancestor = element.parentElement;
+
+		while (ancestor) {
+			if (ancestor === root || /(auto|clip|hidden|scroll)/u.test(
+				`${getComputedStyle(ancestor).overflow} ${getComputedStyle(ancestor).overflowX} ${getComputedStyle(ancestor).overflowY}`
+			)) {
+				const clip = ancestor.getBoundingClientRect();
+				left = Math.max(left, clip.left);
+				top = Math.max(top, clip.top);
+				right = Math.min(right, clip.right);
+				bottom = Math.min(bottom, clip.bottom);
+			}
+
+			if (ancestor === root) break;
+			ancestor = ancestor.parentElement;
+		}
+
+		return new DOMRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
+	};
+	const problems: string[] = [];
+	const roots = [...document.querySelectorAll('.panel-shell, .visitor-panel, .visitor-detail-card')].filter(visible);
+
+	for (const root of roots) {
+		const rootBounds = root.getBoundingClientRect();
+		const controls = [...root.querySelectorAll('button, input, select, textarea, summary')]
+			.filter(visible)
+			.filter((element) => {
+				const bounds = element.getBoundingClientRect();
+
+				return bounds.bottom > rootBounds.top && bounds.top < rootBounds.bottom;
+			});
+
+		for (const control of controls) {
+			const bounds = control.getBoundingClientRect();
+
+			if (bounds.left < rootBounds.left - 1 || bounds.right > rootBounds.right + 1) {
+				problems.push(`escapes ${label(root)} -> ${label(control)}`);
+			}
+		}
+
+		for (let leftIndex = 0; leftIndex < controls.length; leftIndex += 1) {
+			for (let rightIndex = leftIndex + 1; rightIndex < controls.length; rightIndex += 1) {
+				const left = controls[leftIndex];
+				const right = controls[rightIndex];
+
+				if (left.contains(right) || right.contains(left)) continue;
+
+				if (intersectionArea(clippedBounds(left, root), clippedBounds(right, root)) <= 1) continue;
+				problems.push(`overlap ${label(left)} <> ${label(right)}`);
+			}
+		}
 	}
 
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const saved = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	expect(saved.defaults?.origin).toEqual({
-		animation2d: 'pulse',
-		animation3d: 'pulse',
-		animationSpeed: 92,
-		color: '#8f3db4'
-	});
-	expect(errors).toEqual([]);
+	for (const toast of [...document.querySelectorAll('.toast')].filter(visible)) {
+		for (const root of roots) {
+			if (intersectionArea(toast.getBoundingClientRect(), root.getBoundingClientRect()) > 1) {
+				problems.push(`toast covers ${label(root)}`);
+			}
+		}
+	}
+
+	return problems;
 });
 
-test('saves back to an opened project file handle and keeps Save as separate', async ({ page }) => {
-	const projectText: string = JSON.stringify(createRouteTestProject());
-	await page.addInitScript((value: string): void => {
-		const createHandle = (name: string, storageKey: string) => ({
-			createWritable: async () => ({
-				close: async (): Promise<void> => undefined,
-				write: async (data: Blob | string): Promise<void> => {
-					localStorage.setItem(storageKey, typeof data === 'string' ? data : await data.text());
+const editorSurfaceProblems = async (page: Page): Promise<string[]> => [
+	...await panelLayoutProblems(page),
+	...await page.evaluate(() => {
+		const visible = (element: Element): boolean => {
+			const bounds = element.getBoundingClientRect();
+			const style = getComputedStyle(element);
+
+			return element.checkVisibility({
+				checkOpacity: true,
+				checkVisibilityCSS: true
+			})
+				&& style.display !== 'none'
+				&& style.visibility !== 'hidden'
+				&& Number(style.opacity) > 0
+				&& bounds.width > 1
+				&& bounds.height > 1
+				&& bounds.right > 0
+				&& bounds.bottom > 0
+				&& bounds.left < innerWidth
+				&& bounds.top < innerHeight;
+		};
+		const label = (element: Element): string => {
+			const html = element as HTMLElement;
+			const name = html.getAttribute('aria-label')
+				?? html.getAttribute('title')
+				?? html.textContent?.trim().replace(/\s+/gu, ' ').slice(0, 44)
+				?? '';
+
+			return `${element.tagName.toLocaleLowerCase()}.${html.className || '-'}:${name}`;
+		};
+		const accessibleName = (element: Element): string => {
+			const html = element as HTMLElement;
+			const labelledBy = html.getAttribute('aria-labelledby');
+			const explicit = html.getAttribute('aria-label')?.trim()
+				|| html.getAttribute('title')?.trim()
+				|| (labelledBy
+					? labelledBy.split(/\s+/gu)
+						.map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+						.join(' ')
+						.trim()
+					: '');
+
+			return explicit || html.textContent?.trim() || '';
+		};
+		const parseColor = (value: string): [number, number, number, number] | undefined => {
+			const channels = value.match(/[\d.]+/gu)?.map(Number);
+
+			if (!channels || channels.length < 3) return undefined;
+
+			return [channels[0], channels[1], channels[2], channels[3] ?? 1];
+		};
+		const effectiveBackground = (element: Element): [number, number, number, number] | undefined => {
+			let current: Element | null = element;
+
+			while (current) {
+				const color = parseColor(getComputedStyle(current).backgroundColor);
+
+				if (color && color[3] > 0.96) return color;
+				current = current.parentElement;
+			}
+
+			return [255, 255, 255, 1];
+		};
+		const luminance = (color: [number, number, number, number]): number => {
+			const channels = color.slice(0, 3).map((value) => {
+				const normalized = value / 255;
+
+				return normalized <= 0.03928
+					? normalized / 12.92
+					: ((normalized + 0.055) / 1.055) ** 2.4;
+			});
+
+			return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+		};
+		const contrast = (
+			foreground: [number, number, number, number],
+			background: [number, number, number, number]
+		): number => {
+			const foregroundLuminance = luminance(foreground);
+			const backgroundLuminance = luminance(background);
+
+			return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+				/ (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+		};
+		const problems: string[] = [];
+
+		for (const control of [...document.querySelectorAll('button, input, select, textarea, summary')].filter(visible)) {
+			const bounds = control.getBoundingClientRect();
+			const html = control as HTMLInputElement;
+			const scrollContainer = Boolean(control.closest('.panel-scroll, .visitor-results, .visitor-panel'));
+
+			if (
+				!scrollContainer
+				&& (
+					bounds.left < -1
+					|| bounds.top < -1
+					|| bounds.right > innerWidth + 1
+					|| bounds.bottom > innerHeight + 1
+				)
+			) problems.push(`viewport clipping ${label(control)}`);
+
+			if (control.matches('button, summary') && !accessibleName(control)) {
+				problems.push(`unnamed action ${label(control)}`);
+			}
+
+			if (
+				control.matches('input:not([type="hidden"]), select, textarea')
+				&& !html.labels?.length
+				&& !html.getAttribute('aria-label')
+				&& !html.getAttribute('aria-labelledby')
+			) problems.push(`unlabelled field ${label(control)}`);
+
+			if (
+				control.matches('button, summary')
+				&& !html.closest('.app-bar')
+				&& (bounds.width < 28 || bounds.height < 28)
+			) problems.push(`small target ${label(control)} ${Math.round(bounds.width)}x${Math.round(bounds.height)}`);
+		}
+
+		const contrastTargets = [
+			...document.querySelectorAll(
+				'.panel-shell button, .panel-shell summary, .panel-shell label > span,'
+				+ '.visitor-panel button, .visitor-panel label > span, .visitor-results__summary,'
+				+ '.app-bar button, .status-bar button'
+			)
+		].filter(visible).filter((element) => Boolean(element.textContent?.trim()));
+
+		for (const element of contrastTargets) {
+			if ((element as HTMLButtonElement).disabled) continue;
+			const style = getComputedStyle(element);
+			const foreground = parseColor(style.color);
+			const background = effectiveBackground(element);
+
+			if (!foreground || !background || foreground[3] < 0.96) continue;
+			const fontSize = Number.parseFloat(style.fontSize);
+			const fontWeight = Number.parseInt(style.fontWeight, 10);
+			const threshold = fontSize >= 18 || (fontSize >= 14 && fontWeight >= 700) ? 3 : 4.5;
+			const ratio = contrast(foreground, background);
+
+			if (ratio + 0.05 < threshold) {
+				problems.push(`contrast ${label(element)} ${ratio.toFixed(2)}:${threshold.toFixed(1)}`);
+			}
+		}
+
+		return problems;
+	})
+];
+
+test('project context and command palette switch workspaces without moving the map', async ({ page }) => {
+	await openEditor(page);
+	const before = await mapTransform(page);
+
+	await expect(page.locator('.document-context')).toContainText('Northline Test Center');
+	await page.getByRole('button', { name: 'Search commands' }).click();
+	await expect(page.getByRole('dialog', { name: 'Commands' })).toBeVisible();
+	await page.getByRole('searchbox', { name: 'Search commands' }).fill('route edit');
+	await page.getByRole('option', { name: /Open route editor/ }).click();
+
+	await expect(page.getByRole('button', { name: 'Route edit' })).toHaveAttribute('aria-pressed', 'true');
+	expect(await mapTransform(page)).toBe(before);
+});
+
+test('keeps Preview camera composition out of the authoring camera', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	const authoringTransform = await mapTransform(page);
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	await expect.poll(async () => await mapTransform(page)).not.toBe(authoringTransform);
+
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	await expect.poll(async () => await mapTransform(page)).toBe(authoringTransform);
+
+	const view = await cameraView(page);
+	await expect(page.locator('.status-bar')).toContainText(`${Math.round(view.scale * 100)}%`);
+});
+
+test('fits authoring content inside the space not covered by editor overlays', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Fit', exact: true }).click();
+
+	const layout = await page.evaluate(() => {
+		const map = document.querySelector('.map-transform')?.getBoundingClientRect();
+		const leftPanel = document.querySelector('.left-panel')?.getBoundingClientRect();
+		const toolRail = document.querySelector('.tool-rail')?.getBoundingClientRect();
+		const toolbar = document.querySelector('.stage-toolbar')?.getBoundingClientRect();
+		const viewport = document.querySelector('.canvas-viewport')?.getBoundingClientRect();
+
+		if (!map || !leftPanel || !toolRail || !toolbar || !viewport) {
+			throw new Error('Expected editor fit surfaces.');
+		}
+
+		return {
+			map: { bottom: map.bottom, left: map.left, right: map.right, top: map.top },
+			protected: {
+				left: Math.max(leftPanel.right, toolRail.right),
+				top: toolbar.bottom
+			},
+			viewport: { bottom: viewport.bottom, right: viewport.right }
+		};
+	});
+
+	expect(layout.map.left).toBeGreaterThanOrEqual(layout.protected.left + 8);
+	expect(layout.map.top).toBeGreaterThanOrEqual(layout.protected.top + 8);
+	expect(layout.map.right).toBeLessThanOrEqual(layout.viewport.right - 8);
+	expect(layout.map.bottom).toBeLessThanOrEqual(layout.viewport.bottom - 8);
+});
+
+test('uses mutually exclusive overlay drawers in compact editor layouts', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	const workbench = page.locator('.workbench');
+
+	await expect(workbench).not.toHaveClass(/left-collapsed/u);
+	await expect(workbench).toHaveClass(/right-collapsed/u);
+	await page.getByRole('button', { name: 'Open inspector panel' }).click();
+	await expect(workbench).toHaveClass(/left-collapsed/u);
+	await expect(workbench).not.toHaveClass(/right-collapsed/u);
+	await expect.poll(async () => {
+		const map = await page.locator('.map-transform').boundingBox();
+		const inspector = await page.locator('.right-panel').boundingBox();
+
+		return Boolean(map && inspector && map.x + map.width <= inspector.x - 8);
+	}).toBe(true);
+	await page.getByRole('button', { name: 'Open project panel' }).click();
+	await expect(workbench).not.toHaveClass(/left-collapsed/u);
+	await expect(workbench).toHaveClass(/right-collapsed/u);
+	await expect.poll(async () => {
+		const map = await page.locator('.map-transform').boundingBox();
+		const projectPanel = await page.locator('.left-panel').boundingBox();
+
+		return Boolean(map && projectPanel && map.x >= projectPanel.x + projectPanel.width + 8);
+	}).toBe(true);
+});
+
+test('guides a first-time author from an empty project into floor-plan setup', async ({ page }, testInfo) => {
+	await page.goto('/');
+	await expect(page.getByText('Add a floor plan', { exact: true })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Map', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	const emptyScreenshotPath = testInfo.outputPath('empty-project.png');
+	await page.screenshot({ path: emptyScreenshotPath });
+	await testInfo.attach('empty-project', {
+		contentType: 'image/png',
+		path: emptyScreenshotPath
+	});
+
+	const chooserPromise = page.waitForEvent('filechooser');
+	await page.getByRole('button', { name: 'Choose image', exact: true }).click();
+	const chooser = await chooserPromise;
+	await expect(page.getByRole('button', { name: 'Project', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await chooser.setFiles({
+		buffer: Buffer.from(
+			'<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">'
+			+ '<rect width="640" height="360" fill="#eef6f3"/>'
+			+ '<path d="M80 80h480v200H80z" fill="none" stroke="#0f766e" stroke-width="12"/>'
+			+ '</svg>'
+		),
+		mimeType: 'image/svg+xml',
+		name: 'first-floor-plan.svg'
+	});
+
+	await expect(page.getByText('Loaded first-floor-plan.svg')).toBeVisible();
+	await expect(page.getByText('Add a floor plan', { exact: true })).toHaveCount(0);
+	await expect(page.locator('#Background image')).toHaveCount(1);
+});
+
+const clickMapPoint = async (
+	page: Page,
+	point: { x: number; y: number },
+	options?: { clickCount?: number }
+): Promise<void> => {
+	const map = page.locator('.map-transform');
+	const bounds = await map.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.mouse.click(
+		bounds!.x + point.x / 1920 * bounds!.width,
+		bounds!.y + point.y / 1080 * bounds!.height,
+		{ clickCount: options?.clickCount ?? 1 }
+	);
+};
+
+const moveMapPointer = async (
+	page: Page,
+	point: { x: number; y: number }
+): Promise<void> => {
+	const map = page.locator('.map-transform');
+	const bounds = await map.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.mouse.move(
+		bounds!.x + point.x / 1920 * bounds!.width,
+		bounds!.y + point.y / 1080 * bounds!.height
+	);
+};
+
+const dragMapPath = async (
+	page: Page,
+	points: Array<{ x: number; y: number }>
+): Promise<void> => {
+	const map = page.locator('.map-transform');
+	const bounds = await map.boundingBox();
+	expect(bounds).not.toBeNull();
+	expect(points.length).toBeGreaterThan(1);
+	const viewportPoint = (point: { x: number; y: number }): { x: number; y: number } => ({
+		x: bounds!.x + point.x / 1920 * bounds!.width,
+		y: bounds!.y + point.y / 1080 * bounds!.height
+	});
+	const first = viewportPoint(points[0]);
+	await page.mouse.move(first.x, first.y);
+	await page.mouse.down();
+
+	for (const point of points.slice(1)) {
+		const next = viewportPoint(point);
+		await page.mouse.move(next.x, next.y, { steps: 3 });
+	}
+	await page.mouse.up();
+};
+
+const dragLocatorBy = async (
+	page: Page,
+	locator: ReturnType<Page['locator']>,
+	delta: { x: number; y: number }
+): Promise<void> => {
+	const bounds = await locator.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(
+		bounds!.x + bounds!.width / 2 + delta.x,
+		bounds!.y + bounds!.height / 2 + delta.y,
+		{ steps: 5 }
+	);
+	await page.mouse.up();
+};
+
+test('opens into a map-first object workspace with direct selection actions', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+
+	await expect(projectPanel.getByRole('button', { name: 'Objects', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(projectPanel.getByPlaceholder('Search objects')).toBeVisible();
+	await expect(projectPanel.locator('.object-browser')).not.toContainText(/confirmed/iu);
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
+	await expect(page.getByLabel('Selection actions')).toBeVisible();
+	await expect(page.getByLabel('Selection actions')).toContainText('Visitor information');
+
+	const locationsBefore = await page.locator('#Locations polygon').count();
+	await page.getByLabel('Selection actions').getByRole('button', { name: /Duplicate/ }).click();
+	await expect(page.locator('#Locations polygon')).toHaveCount(locationsBefore + 1);
+	await page.getByLabel('Selection actions').getByRole('button', { name: 'Deselect' }).click();
+	await expect(page.getByLabel('Selection actions')).toHaveCount(0);
+});
+
+test('synchronizes layer visibility, selection, keyboard deletion, and undo', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.locator('details.panel-section')
+		.filter({ hasText: 'Layer visibility' })
+		.locator('summary')
+		.click();
+	await projectPanel.getByRole('button', { name: 'Hide all' }).click();
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toHaveCount(0);
+	await expect(page.locator('[data-editor-element-id="origin-main"]')).toHaveCount(0);
+	await expect(projectPanel.locator('.layer-list input:checked')).toHaveCount(0);
+
+	await projectPanel.getByRole('button', { name: 'Show all' }).click();
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toBeVisible();
+	await expect(page.locator('[data-editor-element-id="origin-main"]')).toBeVisible();
+	await projectPanel.getByRole('button', { name: 'Show only You are here' }).click();
+	await expect(page.locator('[data-editor-element-id="origin-main"]')).toBeVisible();
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toHaveCount(0);
+
+	await projectPanel.getByRole('button', { name: 'Show all' }).click();
+	await page.locator('[data-editor-element-id="location-information"]').click();
+	await page.keyboard.press('Delete');
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toHaveCount(0);
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toBeVisible();
+});
+
+test('switches every project workspace to its owned workflow', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	const expectations = [
+		{ tab: 'Project', content: 'File and identity' },
+		{ tab: 'Directory', content: 'Languages and categories' },
+		{ tab: 'Assets', content: 'Reusable assets' },
+		{ tab: 'Style', content: 'Map and visitor styling' },
+		{ tab: 'Objects', content: 'Select and manage' }
+	] as const;
+
+	for (const expectation of expectations) {
+		const tab = projectPanel.getByRole('button', { name: expectation.tab, exact: true });
+		await tab.click();
+		await expect(tab).toHaveAttribute('aria-pressed', 'true');
+		await expect(projectPanel.getByText(expectation.content, { exact: true })).toBeVisible();
+	}
+});
+
+test('edits project directory registries and localized destination content end to end', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+
+	await projectPanel.getByRole('button', { name: 'Directory', exact: true }).click();
+	await expect(projectPanel.getByText('Languages and categories')).toBeVisible();
+	await projectPanel.getByLabel('Code').fill('de');
+	await projectPanel.getByLabel('Language').fill('Deutsch');
+	await projectPanel.getByRole('button', { name: 'Add language', exact: true }).click();
+	await expect(projectPanel.getByText('Deutsch', { exact: true })).toBeVisible();
+	await projectPanel.getByLabel('New category').fill('Guest services');
+	await projectPanel.getByRole('button', { name: 'Add category', exact: true }).click();
+	await expect(projectPanel.getByRole('button', { name: 'Rename Guest services' })).toBeVisible();
+
+	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
+	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Deutsch', exact: true }).click();
+	await page.getByLabel('Name in Deutsch').fill('Gasteinformation');
+	await page.getByLabel('Name in Deutsch').press('Enter');
+	await page.getByLabel('Description in Deutsch').fill('Information und Hilfe fur Gaste.');
+	await page.getByLabel('Description in Deutsch').blur();
+	await page.getByLabel('Category').selectOption('Guest services');
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('de');
+	await page.getByRole('button', { name: 'Open Gasteinformation in the directory' }).click();
+	await expect(page.locator('.visitor-detail').getByText('Gasteinformation', { exact: true })).toBeVisible();
+	await expect(page.getByText('Information und Hilfe fur Gaste.', { exact: true })).toBeVisible();
+});
+
+test('presents destination marker and imagery as clear visual choices', async ({ page }) => {
+	const project = createTestProject();
+	project.assets.push({
+		dataUrl: LOGO_DATA_URL,
+		id: 'asset-information-icon',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Information desk icon',
+		naturalHeight: 80,
+		naturalWidth: 80
+	});
+	await openEditor(page, project);
+	await page.locator('[data-editor-element-id="location-information"]').click({ force: true });
+
+	const markerHeading = page.getByText('Map marker', { exact: true });
+	const imageryHeading = page.getByText('Destination imagery', { exact: true });
+	const visitorHeading = page.getByText('Visitor content', { exact: true });
+	await expect(markerHeading).toBeVisible();
+	await expect(imageryHeading).toBeVisible();
+	await expect(visitorHeading).toBeVisible();
+
+	const markerBounds = await markerHeading.boundingBox();
+	const imageryBounds = await imageryHeading.boundingBox();
+	const visitorBounds = await visitorHeading.boundingBox();
+	expect(markerBounds!.y).toBeLessThan(imageryBounds!.y);
+	expect(imageryBounds!.y).toBeLessThan(visitorBounds!.y);
+
+	const symbolChoice = page.getByRole('button', {
+		name: 'Use Information desk icon as the location symbol'
+	});
+	await symbolChoice.click();
+	await expect(symbolChoice).toHaveAttribute('aria-pressed', 'true');
+
+	const noLogo = page.getByRole('radio', { name: 'No logo' });
+	await noLogo.click();
+	await expect(noLogo).toHaveAttribute('aria-checked', 'true');
+
+	const selectedPhoto = page.getByRole('button', {
+		name: 'Remove Visitor information interior from visitor photos'
+	});
+	await selectedPhoto.click();
+	await expect(page.getByText('Visitor photos · 0 selected', { exact: true })).toBeVisible();
+	await expect(page.getByRole('button', {
+		name: 'Add Visitor information interior to visitor photos'
+	})).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('applies project appearance defaults to newly authored rooms', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+
+	await projectPanel.getByRole('button', { name: 'Style', exact: true }).click();
+	await projectPanel.getByLabel('New room colors').selectOption('fixed');
+	await projectPanel.locator('.project-defaults input[type="color"]').first().fill('#2563eb');
+	await projectPanel.getByLabel('Room opacity').fill('64');
+	await projectPanel.getByLabel('Room opacity').blur();
+	await projectPanel.getByLabel('Room 3D height').fill('32');
+	await projectPanel.getByLabel('Room 3D height').blur();
+
+	await page.getByRole('button', { name: /Draw room or area/ }).click();
+	await clickMapPoint(page, { x: 500, y: 300 });
+	await clickMapPoint(page, { x: 760, y: 300 });
+	await clickMapPoint(page, { x: 760, y: 520 });
+	await clickMapPoint(page, { x: 500, y: 520 });
+	await page.keyboard.press('Enter');
+
+	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
+	await expect(page.getByLabel('Fill color')).toHaveValue('#2563eb');
+	await expect(page.getByLabel('3D height', { exact: true })).toHaveValue('32');
+});
+
+test('persists configured origin and route appearance across 2D and 3D previews', async ({ page }) => {
+	test.setTimeout(90_000);
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+
+	await projectPanel.getByRole('button', { name: 'Style', exact: true }).click();
+	const markerColor = projectPanel.getByLabel('Marker color');
+	await markerColor.fill('#8f3db4');
+	await markerColor.dispatchEvent('change');
+	await projectPanel.getByLabel('Animation speed').first().fill('92');
+	await projectPanel.getByLabel('Animation speed').first().blur();
+	await projectPanel.getByLabel('2D animation').selectOption('pulse');
+	await projectPanel.getByLabel('3D animation').selectOption('pulse');
+	const routeColor = projectPanel.getByLabel('Route color');
+	await routeColor.fill('#e11d48');
+	await routeColor.dispatchEvent('change');
+	await projectPanel.getByLabel('Route width').fill('11');
+	await projectPanel.getByLabel('Route width').blur();
+	await projectPanel.getByLabel('Corner rounding').fill('24');
+	await projectPanel.getByLabel('Corner rounding').blur();
+	await projectPanel.getByRole('slider', { name: '3D destination label size' }).fill('14');
+	await projectPanel.getByRole('combobox', { name: 'Animation', exact: true }).selectOption('pulse');
+	await projectPanel.getByRole('slider', { name: 'Route animation speed', exact: true }).fill('88');
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	const origin = page.locator('.visitor-origin-marker');
+	await expect(origin).toHaveAttribute('data-origin-animation-2d', 'pulse');
+	await expect(origin).toHaveAttribute('data-animation-speed', '92');
+	await expect(origin).toHaveAttribute('style', /#8f3db4/u);
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	const route = page.locator('.route-overlay .simulated-route');
+	await expect(route).toHaveClass(/pulsing/u);
+	await expect(route).toHaveAttribute('style', /stroke: (?:#e11d48|rgb\(225, 29, 72\))/u);
+	await expect(route).toHaveAttribute('style', /stroke-width: 11px/u);
+
+	await page.getByRole('button', { name: '3D' }).click();
+	const host = page.locator('.scene3d-host');
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	await expect(host).toHaveAttribute('data-origin-animation-3d', 'pulse');
+	await expect(host).toHaveAttribute('data-origin-animation-speed', '92');
+	await expect(host).toHaveAttribute('data-origin-camera-facing', 'true');
+	await expect(host).toHaveAttribute('data-origin-color', '#8f3db4');
+	await expect(host).toHaveAttribute('data-origin-ground-beacon', 'true');
+	await expect(host).toHaveAttribute('data-origin-marker-3d', 'upright-pin');
+	await expect(host).toHaveAttribute('data-origin-screen-height', '46');
+	await expect(host).toHaveAttribute('data-route-animation', 'pulse');
+	await expect(host).toHaveAttribute('data-route-width', '11');
+	await expect(host).toHaveAttribute('data-route-presentation-3d', 'rounded-ribbon');
+	await expect(host).toHaveAttribute('data-route-flow-marker-3d', 'capsule');
+	await expect(host).toHaveAttribute('data-destination-marker-style', 'compact-3d');
+	await expect(host).toHaveAttribute('data-destination-label-font-size-3d', '14');
+});
+
+test('uploads, reuses, assigns, and previews project assets end to end', async ({ page }) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+
+	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	await expect(projectPanel.locator('.wb-studio-upload')).toHaveCount(1);
+	await expect(projectPanel.getByRole('radiogroup', { name: 'Image purpose' }).getByRole('radio')).toHaveCount(3);
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
+	await projectPanel.getByLabel('Upload photo').setInputFiles({
+		buffer: Buffer.from(
+			'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">'
+			+ '<rect width="320" height="180" fill="#dbeafe"/>'
+			+ '<path d="M40 140 120 55l55 60 35-35 70 60z" fill="#2563eb"/>'
+			+ '</svg>'
+		),
+		mimeType: 'image/svg+xml',
+		name: 'northline-atrium.svg'
+	});
+	await expect(projectPanel.getByText('northline-atrium.svg', { exact: true })).toBeVisible();
+
+	const iconsBefore = await page.locator('#Icons image').count();
+	await projectPanel.getByRole('button', { name: 'Wi-Fi', exact: true }).click();
+	await clickMapPoint(page, { x: 1040, y: 500 });
+	await expect(page.locator('#Icons image')).toHaveCount(iconsBefore + 1);
+	const placedIcon = page.locator('#Icons image').last();
+	const placedIconCenter = {
+		x: Number(await placedIcon.getAttribute('x')) + Number(await placedIcon.getAttribute('width')) / 2,
+		y: Number(await placedIcon.getAttribute('y')) + Number(await placedIcon.getAttribute('height')) / 2
+	};
+	expect(placedIconCenter.x).toBeCloseTo(1040, 1);
+	expect(placedIconCenter.y).toBeCloseTo(500, 1);
+
+	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
+	await page.getByRole('button', {
+		name: 'Add northline-atrium.svg to visitor photos'
+	}).click();
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	await expect(page.locator('.visitor-detail__hero')).toBeVisible();
+	await expect(page.locator('.visitor-detail__gallery img')).toHaveCount(1);
+});
+
+test('provides a searchable route graph navigator and direct diagnostics', async ({ page }, testInfo) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	const routePanel = page.locator('.left-panel');
+	await routePanel.getByRole('button', { name: 'Edit', exact: true }).click();
+
+	await expect(routePanel.getByText('Route network health')).toBeVisible();
+	await routePanel.locator('.route-advanced-list > summary').click();
+	await expect(routePanel.getByPlaceholder('Find a junction or segment')).toBeVisible();
+	await routePanel.getByPlaceholder('Find a junction or segment').fill('route-main');
+	await routePanel.locator('.route-object-main').filter({ hasText: 'route-main' }).click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-kind', 'graph-edge');
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'route-main');
+	await expect(page.getByLabel('Selection actions')).toBeVisible();
+	const screenshotPath = testInfo.outputPath('route-network-editor.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('route-network-editor', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('explains route repairs with destination names instead of internal graph IDs', async ({ page }) => {
+	const project = createTestProject();
+	const floor = project.floors[0];
+	project.destinations.push({
+		floor: floor.id,
+		id: 'destination-library',
+		name: 'Library',
+		routeable: true
+	});
+	floor.elements.push({
+		destinationId: 'destination-library',
+		floorId: floor.id,
+		geometry: [
+			{ x: 220, y: 220 },
+			{ x: 440, y: 220 },
+			{ x: 440, y: 420 },
+			{ x: 220, y: 420 }
+		],
+		id: 'location-library',
+		provenance: 'reviewer-authored',
+		status: 'confirmed',
+		type: 'location'
+	});
+	project.graph.nodes.push({
+		authoringOwnership: 'generated',
+		id: 'semantic:location-library',
+		kind: 'location',
+		levelId: floor.id,
+		locationId: 'destination-library',
+		semanticElementId: 'location-library',
+		x: 330,
+		y: 420
+	});
+
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.locator('.left-panel').getByRole('button', { name: 'Edit', exact: true }).click();
+	const diagnostics = page.locator('.route-diagnostics');
+
+	await expect(diagnostics).toContainText(
+		'Library is not connected. Open Build to link its entrance, or draw a connection from this endpoint.'
+	);
+	await expect(diagnostics).not.toContainText('semantic:');
+	const diagnosticText = diagnostics.locator('.route-diagnostic-main span').filter({
+		hasText: 'Library is not connected'
+	});
+	await expect(diagnosticText).toBeVisible();
+	expect(await diagnosticText.evaluate((element) =>
+		element.scrollWidth <= element.clientWidth + 1
+			&& element.scrollHeight <= element.clientHeight + 1
+			&& getComputedStyle(element).whiteSpace !== 'nowrap'
+	)).toBe(true);
+});
+
+test('keeps the visible map focus stable across panel, workspace, and undo interactions', async ({ page }) => {
+	await openEditor(page);
+	const viewport = page.locator('.canvas-viewport');
+	const bounds = await viewport.boundingBox();
+	expect(bounds).not.toBeNull();
+	await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+	await page.mouse.wheel(0, -450);
+	const zoomed = await mapTransform(page);
+	const zoomedView = await composedEditorCameraView(page);
+
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await expect(page.locator('.left-panel')).toHaveCSS('transform', /matrix/);
+	await page.waitForTimeout(220);
+	const expandedView = await composedEditorCameraView(page);
+	expect(expandedView.scale).toBeCloseTo(zoomedView.scale, 5);
+	expect(expandedView.centerX).toBeCloseTo(zoomedView.centerX, 2);
+	expect(expandedView.centerY).toBeCloseTo(zoomedView.centerY, 2);
+	const expandedTransform = await mapTransform(page);
+	expect(expandedTransform).not.toBe(zoomed);
+
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	expect(await mapTransform(page)).toBe(expandedTransform);
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	expect(await mapTransform(page)).toBe(expandedTransform);
+
+	await openProjectSettings(page);
+	await page.waitForTimeout(220);
+	const settingsView = await composedEditorCameraView(page);
+	expect(settingsView.scale).toBeCloseTo(expandedView.scale, 5);
+	expect(settingsView.centerX).toBeCloseTo(expandedView.centerX, 2);
+	expect(settingsView.centerY).toBeCloseTo(expandedView.centerY, 2);
+	const settingsTransform = await mapTransform(page);
+	await page.getByLabel('Project name').fill('Northline Edited');
+	await page.getByLabel('Project name').blur();
+	expect(await mapTransform(page)).toBe(settingsTransform);
+	await page.getByRole('button', { name: /Undo/ }).click();
+	expect(await mapTransform(page)).toBe(settingsTransform);
+});
+
+test('visitor preview provides a clean localized directory and route experience', async ({ page }, testInfo) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await expect(page.getByLabel('Visitor map directory')).toBeVisible();
+	await expect(page.locator('.route-network-line')).toHaveCount(0);
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
+
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
+	await expect(page.getByRole('button', { name: 'Open Informacio in the directory' })).toBeVisible();
+	await page.getByRole('button', { name: 'Open Informacio in the directory' }).click();
+	await expect(page.locator('.visitor-detail')).toContainText('Informacio es segitseg latogatoknak.');
+	await expect(page.locator('.visitor-detail')).toContainText('09:00-18:00');
+	await expect(page.locator('.visitor-detail')).toContainText('+1 555 0100');
+	await expect(page.locator('.visitor-detail')).toContainText('Step-free');
+	await expect(page.locator('.visitor-detail')).toContainText('A-12');
+	await expect(page.locator('.visitor-detail__hero')).toBeVisible();
+	await expect(page.locator('.visitor-detail__identity img')).toBeVisible();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	await expect(page.locator('.simulated-route-casing')).toHaveCSS('fill', 'none');
+	const detailBounds = await page.locator('.visitor-detail').boundingBox();
+	expect(detailBounds).not.toBeNull();
+	expect(detailBounds!.height).toBeGreaterThanOrEqual(220);
+	await expect(page.locator('.visitor-results')).toBeHidden();
+	const mapBounds = await page.locator('.canvas-viewport').boundingBox();
+	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+	const detailCardBounds = await page.locator('.visitor-detail-card').boundingBox();
+	expect(mapBounds).not.toBeNull();
+	expect(directoryBounds).not.toBeNull();
+	expect(detailCardBounds).not.toBeNull();
+	expect(mapBounds!.width).toBeGreaterThan((page.viewportSize()?.width ?? 0) * 0.65);
+	expect(directoryBounds!.width).toBeLessThanOrEqual(420);
+	expect(detailCardBounds!.x + detailCardBounds!.width).toBeLessThan(directoryBounds!.x);
+	const screenshotPath = testInfo.outputPath('visitor-route-2d.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('visitor-route-2d', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+
+	await page.getByRole('button', { name: 'Directory' }).click();
+	await page.getByPlaceholder('Search destinations').fill('not present');
+	await expect(page.getByText('No matches')).toBeVisible();
+});
+
+test('docks destination guidance away from the selected map location', async ({ page }) => {
+	const project = createTestProject();
+	const floor = project.floors[0];
+	const location = floor.elements.find((element) => element.id === 'location-information');
+	const door = floor.elements.find((element) => element.id === 'door-information');
+	const destinationNode = project.graph.nodes.find((node) => node.id === 'route-destination');
+	const routeEdge = project.graph.edges.find((edge) => edge.id === 'route-main');
+
+	if (location?.type !== 'location' || door?.type !== 'door' || !destinationNode || !routeEdge) {
+		throw new Error('Destination docking fixture is incomplete.');
+	}
+	location.geometry = [
+		{ x: 180, y: 220 },
+		{ x: 560, y: 220 },
+		{ x: 560, y: 520 },
+		{ x: 180, y: 520 }
+	];
+	door.point = { x: 560, y: 430 };
+	destinationNode.x = 560;
+	destinationNode.y = 430;
+	routeEdge.geometry = [
+		{ x: 320, y: 650 },
+		{ x: 720, y: 650 },
+		{ x: 560, y: 430 }
+	];
+
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+
+	const mapBounds = await page.locator('.canvas-viewport').boundingBox();
+	const destinationBounds = await page.locator(
+		'[data-visitor-destination-id="destination-information"].visitor-map-destination'
+	).boundingBox();
+	const detailBounds = await page.locator('.visitor-detail-card').boundingBox();
+
+	expect(mapBounds).not.toBeNull();
+	expect(destinationBounds).not.toBeNull();
+	expect(detailBounds).not.toBeNull();
+	expect(detailBounds!.x).toBeGreaterThan(mapBounds!.x + mapBounds!.width / 2);
+	expect(
+		detailBounds!.x >= destinationBounds!.x + destinationBounds!.width
+			|| destinationBounds!.x >= detailBounds!.x + detailBounds!.width
+			|| detailBounds!.y >= destinationBounds!.y + destinationBounds!.height
+			|| destinationBounds!.y >= detailBounds!.y + detailBounds!.height
+	).toBe(true);
+	await expect.poll(async () => {
+		const floorBounds = await page.locator('.map-transform').boundingBox();
+		const currentDetailBounds = await page.locator('.visitor-detail-card').boundingBox();
+
+		if (!floorBounds || !currentDetailBounds) return false;
+
+		return floorBounds.x + floorBounds.width <= currentDetailBounds.x;
+	}).toBe(true);
+
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	await expect(page.locator('.scene3d-host')).toHaveAttribute('data-ready', 'true');
+	const cameraControls = page.getByLabel('3D camera controls');
+	await expect(cameraControls).toBeVisible();
+	const cameraBounds = await cameraControls.boundingBox();
+	const threeDimensionalDetailBounds = await page.locator('.visitor-detail-card').boundingBox();
+	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+
+	expect(cameraBounds).not.toBeNull();
+	expect(threeDimensionalDetailBounds).not.toBeNull();
+	expect(directoryBounds).not.toBeNull();
+
+	for (const overlayBounds of [threeDimensionalDetailBounds!, directoryBounds!]) {
+		expect(
+			cameraBounds!.x + cameraBounds!.width <= overlayBounds.x
+				|| overlayBounds.x + overlayBounds.width <= cameraBounds!.x
+				|| cameraBounds!.y + cameraBounds!.height <= overlayBounds.y
+				|| overlayBounds.y + overlayBounds.height <= cameraBounds!.y
+		).toBe(true);
+	}
+});
+
+test('fits the visitor map beside the open directory instead of hiding destinations underneath it', async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 720 });
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Preview' }).click();
+
+	await expect.poll(async () => {
+		const floorBounds = await page.locator('.map-transform').boundingBox();
+		const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+
+		if (!floorBounds || !directoryBounds) return false;
+
+		return floorBounds.x + floorBounds.width <= directoryBounds.x;
+	}).toBe(true);
+});
+
+test('keeps the destination picker open beside left-side guidance at Full HD', async ({ page }) => {
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+
+	const detail = page.locator('.visitor-detail-card');
+	const directory = page.locator('.visitor-panel');
+	await expect(detail).toBeVisible();
+	await expect(page.locator('.visitor-results')).toBeVisible();
+	await expect(page.getByPlaceholder('Search destinations')).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Open Visitor information in the directory' }))
+		.toHaveClass(/active/u);
+	const detailBounds = await detail.boundingBox();
+	const directoryBounds = await directory.boundingBox();
+	const floorBounds = await page.locator('.map-transform').boundingBox();
+
+	expect(detailBounds).not.toBeNull();
+	expect(directoryBounds).not.toBeNull();
+	expect(floorBounds).not.toBeNull();
+	expect(detailBounds!.x).toBeLessThan(32);
+	expect(detailBounds!.x + detailBounds!.width)
+		.toBeLessThan(directoryBounds!.x - 16);
+	expect(directoryBounds!.x).toBeGreaterThan(1920 * 0.7);
+	expect(floorBounds!.x).toBeGreaterThan(detailBounds!.x + detailBounds!.width + 16);
+	expect(floorBounds!.x + floorBounds!.width).toBeLessThan(directoryBounds!.x);
+
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	const sceneBounds = await page.locator('.scene3d-host').boundingBox();
+	expect(sceneBounds).not.toBeNull();
+	expect(sceneBounds!.x).toBeGreaterThanOrEqual(detailBounds!.x + detailBounds!.width);
+	expect(sceneBounds!.x + sceneBounds!.width).toBeLessThanOrEqual(directoryBounds!.x + 1);
+	expect(sceneBounds!.width).toBeGreaterThan(900);
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+});
+
+test('assigns a destination symbol and opens the same destination directly from the map', async ({ page }) => {
+	const project = createTestProject();
+	project.assets.push({
+		dataUrl: LOGO_DATA_URL,
+		id: 'asset-information-symbol',
+		kind: 'icon',
+		mimeType: 'image/svg+xml',
+		name: 'Information symbol',
+		naturalHeight: 80,
+		naturalWidth: 80
+	});
+	await openEditor(page, project);
+	await page.locator('[data-editor-element-id="location-information"]').click({ force: true });
+	await page.getByRole('button', { name: 'Use Information symbol as the location symbol' }).click();
+	await page.getByRole('button', { name: 'Preview' }).click();
+
+	const mapDestination = page.getByLabel('Open Visitor information on the map');
+	await expect(mapDestination).toBeVisible();
+	await expect(mapDestination.locator('.visitor-marker-logo')).toHaveAttribute('href', LOGO_DATA_URL);
+	await mapDestination.click({ force: true });
+	await expect(page.locator('.visitor-detail-card')).toContainText('Visitor information');
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	await expect(page.locator('.scene3d-host')).toHaveAttribute('data-camera-facing-media-count', '1');
+});
+
+test('reports route metrics only after calibration and clears guidance without editing the project', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	await expect(page.getByText(/Distance unavailable - calibrate the map scale/)).toBeVisible();
+	await page.getByRole('button', { name: /Clear directions/ }).click();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
+	await expect(page.locator('.visitor-detail')).toContainText('Visitor information');
+
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	await openProjectSettings(page);
+	const scale = page.getByLabel('Map scale');
+	await scale.fill('20');
+	await scale.blur();
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await expect(page.getByText('52 m', { exact: true })).toBeVisible();
+	await expect(page.getByText('1 min', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: /Clear directions/ }).click();
+
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	await openProjectSettings(page);
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.getByLabel('Map scale')).toHaveValue('');
+});
+
+test('explains an unreachable room and opens the exact entrance tool from Preview', async ({ page }) => {
+	const project = createTestProject();
+	project.floors[0].elements = project.floors[0].elements.filter(
+		(element) => element.id !== 'door-information'
+	);
+	project.graph.edges = [];
+
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+
+	await expect(page.getByText('This room has no linked entrance')).toBeVisible();
+	await expect(page.getByText(/Add a public entrance on this room boundary/u)).toBeVisible();
+	await page.getByRole('button', { name: 'Add entrance' }).click();
+	await expect(page.getByRole('button', { name: 'Map', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByRole('button', { name: 'Place door (D)' })).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.locator('.selected-polygon')).toHaveCount(1);
+});
+
+test('visitor 3D preserves localized discovery, floor transitions, and route guidance', async ({ page }, testInfo) => {
+	test.setTimeout(90_000);
+	await openEditor(page, createMultiFloorTestProject());
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: '3D' }).click();
+	const host = page.locator('.scene3d-host');
+
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	await expect(host).toHaveAttribute('data-poi-count', '1');
+	await expect(host).toHaveAttribute('data-transition-count', '1');
+	await expect(host).toHaveAttribute('data-destination-marker-count', '1');
+	await expect(host).toHaveAttribute('data-destination-marker-style', 'compact-3d');
+	await expect(host).toHaveAttribute('data-destination-label-count', '1');
+	await expect(host).toHaveAttribute('data-destination-label-font-size-3d', '16');
+	await expect(host).toHaveAttribute('data-visible-destination-label-count', '1');
+	await expect(host).toHaveAttribute('data-origin-camera-facing', 'true');
+	await expect(host).toHaveAttribute('data-origin-ground-beacon', 'true');
+	await expect(host).toHaveAttribute('data-origin-marker-3d', 'upright-pin');
+	await expect(host).toHaveAttribute('data-origin-screen-height', '46');
+
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
+	await expect(host).toHaveAttribute('data-destination-label-texts', /A-12 {2}Informacio/u);
+
+	await page.getByRole('button', { name: /Sky gallery/ }).click();
+	await expect.poll(async () =>
+		Number(await host.getAttribute('data-route-points') ?? 0)
+	).toBeGreaterThan(1);
+	await expect(page.locator('.visitor-journey__floor')).toHaveCount(2);
+
+	await page.locator('.visitor-journey__floor').filter({ hasText: 'First floor' }).click();
+	await expect(page.locator('.visitor-detail-card')).toContainText('Sky gallery');
+	await expect(host).toHaveAttribute('data-transition-count', '1');
+	await expect(host).toHaveAttribute('data-destination-marker-count', '1');
+	await expect(host).toHaveAttribute('data-destination-label-count', '1');
+	await expect(host).toHaveAttribute('data-visible-destination-label-count', '1');
+	await expect.poll(async () =>
+		Number(await host.getAttribute('data-route-points') ?? 0)
+	).toBeGreaterThan(1);
+	await expect(host).toHaveAttribute('data-route-endpoint-count', '2');
+	await expect(host).toHaveAttribute('data-route-presentation-3d', 'rounded-ribbon');
+	await expect(host).toHaveAttribute('data-route-flow-marker-3d', 'capsule');
+	const sceneBounds = await host.boundingBox();
+	const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+	expect(sceneBounds).not.toBeNull();
+	expect(directoryBounds).not.toBeNull();
+	expect(sceneBounds!.width).toBeGreaterThan((page.viewportSize()?.width ?? 0) * 0.65);
+	expect(directoryBounds!.width).toBeLessThanOrEqual(420);
+	const screenshotPath = testInfo.outputPath('visitor-route-3d.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('visitor-route-3d', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+
+	await page.setViewportSize({ width: 1080, height: 1920 });
+	await page.waitForTimeout(220);
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	await expect(page.getByLabel('3D camera controls')).toBeVisible();
+	const portraitDetailBounds = await page.locator('.visitor-detail-card').boundingBox();
+	const portraitSceneBounds = await host.boundingBox();
+	expect(portraitDetailBounds).not.toBeNull();
+	expect(portraitSceneBounds).not.toBeNull();
+	expect(portraitDetailBounds!.width).toBeGreaterThan(1080 * 0.9);
+	expect(portraitSceneBounds!.y + portraitSceneBounds!.height)
+		.toBeLessThanOrEqual(portraitDetailBounds!.y + 1);
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	const portraitScreenshotPath = testInfo.outputPath('visitor-route-3d-portrait.png');
+	await page.screenshot({ path: portraitScreenshotPath });
+	await testInfo.attach('visitor-route-3d-portrait', {
+		contentType: 'image/png',
+		path: portraitScreenshotPath
+	});
+
+	await page.setViewportSize({ width: 800, height: 480 });
+	await page.waitForTimeout(220);
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	const compactDetailBounds = await page.locator('.visitor-detail-card').boundingBox();
+	const compactSceneBounds = await host.boundingBox();
+	const compactCameraBounds = await page.getByLabel('3D camera controls').boundingBox();
+	expect(compactDetailBounds).not.toBeNull();
+	expect(compactSceneBounds).not.toBeNull();
+	expect(compactCameraBounds).not.toBeNull();
+	expect(compactSceneBounds!.height).toBeGreaterThan(120);
+	expect(
+		compactSceneBounds!.y + compactSceneBounds!.height,
+		'compact route guidance must not cover the 3D map viewport'
+	).toBeLessThanOrEqual(compactDetailBounds!.y - 8);
+	expect(
+		compactCameraBounds!.y + compactCameraBounds!.height,
+		'compact route guidance must not cover the 3D camera actions'
+	).toBeLessThanOrEqual(compactDetailBounds!.y - 8);
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	const compactScreenshotPath = testInfo.outputPath('visitor-route-3d-compact.png');
+	await page.screenshot({ path: compactScreenshotPath });
+	await testInfo.attach('visitor-route-3d-compact', {
+		contentType: 'image/png',
+		path: compactScreenshotPath
+	});
+});
+
+test('supports keyboard-safe dialogs and mode semantics', async ({ page }) => {
+	await openEditor(page);
+	await expect(page.getByRole('button', { name: 'Map', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: 'Help' }).click();
+	await expect(page.getByRole('dialog', { name: 'Wayfinding Studio help' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Close shortcuts' })).toBeFocused();
+	await expect(page.getByRole('tabpanel')).toContainText('Build trustworthy guidance');
+	await page.getByRole('tab', { name: 'Controls' }).click();
+	await expect(page.getByRole('tabpanel')).toContainText('Save project');
+	await page.keyboard.press('Escape');
+	await expect(page.getByRole('dialog', { name: 'Wayfinding Studio help' })).toHaveCount(0);
+});
+
+test('keeps the workbench contained at a compact desktop viewport', async ({ page }, testInfo) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	const workbench = page.locator('.workbench');
+	const stage = page.locator('.stage');
+	const appBar = page.locator('.app-bar');
+	await expect(workbench).toHaveCSS('overflow', 'hidden');
+	const stageBounds = await stage.boundingBox();
+	const appBarBounds = await appBar.boundingBox();
+	expect(stageBounds).not.toBeNull();
+	expect(appBarBounds).not.toBeNull();
+	expect(stageBounds!.width).toBeGreaterThan(450);
+	expect(appBarBounds!.x + appBarBounds!.width).toBeLessThanOrEqual(1024);
+	await expect(workbench).toHaveClass(/compact-layout/u);
+	await expect(workbench).toHaveClass(/right-collapsed/u);
+	const screenshotPath = testInfo.outputPath('compact-workbench.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('compact-workbench', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('persists both desktop panel widths across reloads', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await openEditor(page);
+	const leftPanel = page.locator('.left-panel');
+	const rightPanel = page.locator('.right-panel');
+	const leftBefore = await leftPanel.boundingBox();
+	const rightBefore = await rightPanel.boundingBox();
+
+	expect(leftBefore).not.toBeNull();
+	expect(rightBefore).not.toBeNull();
+	await page.getByRole('separator', { name: 'Resize left panel' }).focus();
+	await page.keyboard.press('ArrowRight');
+	await page.keyboard.press('ArrowRight');
+	await page.getByRole('separator', { name: 'Resize right panel' }).focus();
+	await page.keyboard.press('ArrowLeft');
+	await page.keyboard.press('ArrowLeft');
+	await expect.poll(async () => page.evaluate((key) => {
+		const value = JSON.parse(localStorage.getItem(key) ?? 'null') as { left?: number } | null;
+
+		return value?.left ?? 0;
+	}, PANEL_WIDTH_STORAGE_KEY)).toBeGreaterThan(leftBefore!.width);
+	const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null') as {
+		left: number;
+		right: number;
+	}, PANEL_WIDTH_STORAGE_KEY);
+
+	expect(stored.left).toBeGreaterThan(leftBefore!.width);
+	expect(stored.right).toBeGreaterThan(rightBefore!.width);
+	await page.reload();
+	await expect(page.locator('.workbench')).toBeVisible();
+	const restore = page.getByRole('dialog', { name: 'Restore unsaved local work?' });
+
+	if (await restore.isVisible()) await restore.getByRole('button', { name: 'Restore work' }).click();
+	await expect.poll(async () => (await leftPanel.boundingBox())?.width).toBeCloseTo(stored.left, 0);
+	await expect.poll(async () => (await rightPanel.boundingBox())?.width).toBeCloseTo(stored.right, 0);
+});
+
+test('keeps dense editor and visitor panels collision-free', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.locator('.left-panel').getByRole('button', { name: 'Edit', exact: true }).click();
+	await page.locator('.route-advanced-list > summary').click();
+	await page.locator('.route-object-main').filter({ hasText: 'route-main' }).click();
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.getByRole('button', { name: 'Map', exact: true }).click();
+	await openProjectSettings(page);
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	expect(await panelLayoutProblems(page)).toEqual([]);
+
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await page.waitForTimeout(250);
+	expect(await panelLayoutProblems(page)).toEqual([]);
+});
+
+test('keeps every editor field type compact, polished, and consistently scoped', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	const observedTypes = new Set<string>();
+
+	for (const tabName of ['Project', 'Directory', 'Assets', 'Style']) {
+		await projectPanel.getByRole('button', { name: tabName, exact: true }).click();
+		await projectPanel.locator('details').evaluateAll((details) => {
+			for (const detail of details) {
+				if (detail instanceof HTMLDetailsElement) detail.open = true;
+			}
+		});
+		const metrics = await projectPanel.evaluate((panel) => {
+			const visible = (element: Element): boolean => {
+				const bounds = element.getBoundingClientRect();
+				const style = getComputedStyle(element);
+
+				return style.display !== 'none'
+					&& style.visibility !== 'hidden'
+					&& bounds.width > 1
+					&& bounds.height > 1;
+			};
+			const controls = [...panel.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+				'input, select, textarea'
+			)];
+
+			return controls.map((control) => {
+				const bounds = control.getBoundingClientRect();
+				const type = control instanceof HTMLInputElement ? control.type : control.tagName.toLocaleLowerCase();
+
+				return {
+					height: bounds.height,
+					type,
+					visible: visible(control)
+				};
+			});
+		});
+
+		for (const metric of metrics) {
+			observedTypes.add(metric.type);
+
+			if (!metric.visible) continue;
+
+			if (metric.type === 'checkbox') {
+				expect(metric.height, `${tabName} checkbox height`).toBe(16);
+			} else if (metric.type === 'range') {
+				expect(metric.height, `${tabName} range height`).toBe(24);
+			} else if (metric.type === 'textarea') {
+				expect(metric.height, `${tabName} textarea height`).toBeGreaterThanOrEqual(76);
+			} else if (metric.type !== 'file') {
+				expect(metric.height, `${tabName} ${metric.type} height`).toBe(32);
+			}
+		}
+		expect(await panelLayoutProblems(page), `${tabName} control layout`).toEqual([]);
+	}
+	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).first().click();
+	const inspectorMetrics = await page.locator('.right-panel').evaluate((panel) =>
+		[...panel.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+			'input, select, textarea'
+		)].map((control) => ({
+			height: control.getBoundingClientRect().height,
+			type: control instanceof HTMLInputElement ? control.type : control.tagName.toLocaleLowerCase()
+		}))
+	);
+
+	for (const metric of inspectorMetrics) {
+		observedTypes.add(metric.type);
+
+		if (metric.type === 'textarea') expect(metric.height).toBeGreaterThanOrEqual(76);
+	}
+	expect([...observedTypes].sort()).toEqual(expect.arrayContaining([
+		'checkbox',
+		'color',
+		'file',
+		'range',
+		'select',
+		'text',
+		'textarea'
+	]));
+	await projectPanel.getByRole('button', { name: 'Project', exact: true }).click();
+	const focusedField = projectPanel.getByLabel('Project name');
+	await focusedField.focus();
+	await expect(focusedField).toHaveCSS('border-color', 'rgb(15, 128, 109)');
+	expect(await focusedField.evaluate((field) => getComputedStyle(field).boxShadow)).not.toBe('none');
+	const fileInputs = projectPanel.locator('input[type="file"]');
+
+	for (let index = 0; index < await fileInputs.count(); index += 1) {
+		await expect(fileInputs.nth(index)).toBeHidden();
+	}
+});
+
+test('keeps every core workflow first-class across the desktop viewport matrix', async ({ page }, testInfo) => {
+	test.setTimeout(120_000);
+	const consoleProblems: string[] = [];
+	page.on('console', (message) => {
+		if (message.type() === 'error' || message.type() === 'warning') {
+			consoleProblems.push(`${message.type()}: ${message.text()}`);
+		}
+	});
+	page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.stack ?? error.message}`));
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	const viewports = [
+		{ width: 1024, height: 720 },
+		{ width: 1280, height: 720 },
+		{ width: 1440, height: 900 },
+		{ width: 1920, height: 1080 }
+	] as const;
+
+	for (const viewport of viewports) {
+		await page.setViewportSize(viewport);
+		await page.waitForTimeout(180);
+		await page.getByRole('button', { name: 'Map', exact: true }).click();
+		const projectPanel = page.locator('.left-panel');
+
+		for (const tabName of ['Project', 'Directory', 'Assets', 'Style', 'Objects'] as const) {
+			await projectPanel.getByRole('button', { name: tabName, exact: true }).click();
+			expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} ${tabName}`).toEqual([]);
+			expect(consoleProblems, `${viewport.width}x${viewport.height} ${tabName} console`).toEqual([]);
+		}
+
+		await page.getByRole('button', { name: 'Route edit' }).click();
+		await projectPanel.getByRole('button', { name: 'Edit', exact: true }).click();
+		expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} Routing`).toEqual([]);
+		expect(consoleProblems, `${viewport.width}x${viewport.height} Routing console`).toEqual([]);
+
+		await page.getByRole('button', { name: 'Preview' }).click();
+		await openPreviewSimulation(page);
+		await page.getByLabel('Preview language').selectOption('hu');
+		await page.getByRole('button', { name: 'Open Informacio in the directory' }).click();
+		await expect(page.locator('.visitor-filter-sheet')).toHaveCount(0);
+
+		if (viewport.width <= 1480) {
+			await expect.poll(async () =>
+				(await page.locator('.visitor-panel').boundingBox())?.width ?? Number.POSITIVE_INFINITY
+			).toBeLessThan(260);
+		}
+
+		if (viewport.width > 980) {
+			await expect.poll(async () => {
+				const mapBounds = await page.locator('.map-transform').boundingBox();
+				const detailBounds = await page.locator('.visitor-detail-card').boundingBox();
+
+				if (!mapBounds || !detailBounds || detailBounds.x >= viewport.width / 2) return true;
+
+				return mapBounds.x > detailBounds.x + detailBounds.width + 16;
+			}, {
+				message: `${viewport.width}x${viewport.height} guidance must not hide the fitted map`
+			}).toBe(true);
+		}
+		expect(await editorSurfaceProblems(page), `${viewport.width}x${viewport.height} Preview`).toEqual([]);
+		expect(consoleProblems, `${viewport.width}x${viewport.height} Preview console`).toEqual([]);
+
+		const screenshotPath = testInfo.outputPath(`quality-${viewport.width}x${viewport.height}.png`);
+		await page.screenshot({ path: screenshotPath });
+		await testInfo.attach(`quality-${viewport.width}x${viewport.height}`, {
+			contentType: 'image/png',
+			path: screenshotPath
+		});
+	}
+
+	expect(consoleProblems).toEqual([]);
+});
+
+test('keeps the visitor map first-class across published display sizes', async ({ page }, testInfo) => {
+	test.setTimeout(120_000);
+	await page.setViewportSize({ width: 1280, height: 720 });
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	const displaySizes = [
+		{ width: 800, height: 480 },
+		{ width: 1280, height: 720 },
+		{ width: 1920, height: 1080 },
+		{ width: 1080, height: 1920 },
+		{ width: 3840, height: 2160 }
+	] as const;
+
+	for (const viewport of displaySizes) {
+		await page.setViewportSize(viewport);
+		await page.waitForTimeout(220);
+		await expect(page.locator('.visitor-detail-card')).toContainText('Visitor information');
+		await expect(page.getByLabel('Open Visitor information on the map')).toBeVisible();
+		expect(
+			await editorSurfaceProblems(page),
+			`${viewport.width}x${viewport.height} published preview`
+		).toEqual([]);
+		const canvasBounds = await page.locator('.canvas-viewport').boundingBox();
+		const mapBounds = await page.locator('.map-transform').boundingBox();
+		const detailBounds = await page.locator('.visitor-detail-card').boundingBox();
+		const directoryBounds = await page.locator('.visitor-panel').boundingBox();
+
+		expect(canvasBounds).not.toBeNull();
+		expect(mapBounds).not.toBeNull();
+		expect(detailBounds).not.toBeNull();
+		expect(directoryBounds).not.toBeNull();
+
+		if (viewport.height > viewport.width * 1.45) {
+			expect(mapBounds!.y, `${viewport.width}x${viewport.height} portrait map placement`)
+				.toBeLessThan(detailBounds!.y);
+			expect(
+				detailBounds!.width,
+				`${viewport.width}x${viewport.height} portrait guidance width`
+			).toBeGreaterThan(viewport.width * 0.9);
+			expect(
+				detailBounds!.y - (mapBounds!.y + mapBounds!.height),
+				`${viewport.width}x${viewport.height} portrait map-to-guidance gap`
+			).toBeLessThan(viewport.height * 0.12);
+		}
+
+		if (viewport.width >= 1_180 && viewport.width > viewport.height && detailBounds!.x < viewport.width / 2) {
+			expect(
+				mapBounds!.x,
+				`${viewport.width}x${viewport.height} map must remain visible beside left-side guidance`
+			).toBeGreaterThan(detailBounds!.x + detailBounds!.width + 16);
+		}
+		expect(canvasBounds!.width).toBeGreaterThan(viewport.width * 0.7);
+
+		if (viewport.width === 800 && viewport.height === 480) {
+			const routeBounds = await page.locator('.simulated-route').boundingBox();
+
+			expect(routeBounds).not.toBeNull();
+			expect(
+				routeBounds!.y + routeBounds!.height,
+				'compact destination sheet must not cover the active route'
+			).toBeLessThan(detailBounds!.y);
+		}
+
+		if (viewport.width >= 3000) {
+			expect(detailBounds!.width).toBeGreaterThan(550);
+			expect(directoryBounds!.width).toBeGreaterThan(300);
+			expect(directoryBounds!.height).toBeGreaterThan(60);
+			await expect(page.locator('.visitor-results')).toBeVisible();
+			const openDirectoryBounds = await page.locator('.visitor-panel').boundingBox();
+
+			expect(openDirectoryBounds).not.toBeNull();
+			expect(openDirectoryBounds!.width).toBeGreaterThan(600);
+		}
+		const screenshotPath = testInfo.outputPath(`published-${viewport.width}x${viewport.height}.png`);
+		await page.screenshot({ path: screenshotPath });
+		await testInfo.attach(`published-${viewport.width}x${viewport.height}`, {
+			contentType: 'image/png',
+			path: screenshotPath
+		});
+	}
+});
+
+test('keeps long localized project and destination content collision-free', async ({ page }, testInfo) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page, createLongContentTestProject());
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Directory', exact: true }).click();
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	await projectPanel.getByRole('button', { name: 'Objects', exact: true }).click();
+	await projectPanel.getByRole('button', { name: 'Visitor information', exact: true }).click();
+	await expect(page.getByLabel('Name', { exact: true })).toHaveValue(
+		'International visitor information, accessibility, and admissions assistance'
+	);
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await openPreviewSimulation(page);
+	await page.getByLabel('Preview language').selectOption('hu');
+	await page.getByRole('button', { name: /Open Nemzetkozi latogatoi informacio.*in the directory/u }).click();
+	expect(await editorSurfaceProblems(page)).toEqual([]);
+	const screenshotPath = testInfo.outputPath('long-localized-preview.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('long-localized-preview', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('shows inline loading-safe validation for unsupported uploads', async ({ page }, testInfo) => {
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
+	const input = projectPanel.getByLabel('Upload photo');
+	await input.setInputFiles({
+		buffer: Buffer.from('not an image'),
+		mimeType: 'text/plain',
+		name: 'notes.txt'
+	});
+
+	await expect(projectPanel.getByRole('alert')).toContainText('Choose a PNG, JPEG, WebP, SVG');
+	await expect(projectPanel.locator('.wb-studio-upload--error')).toBeVisible();
+	await expect(projectPanel.locator('.wb-studio-button').filter({ hasText: /^Upload photo$/u })).toBeEnabled();
+	const screenshotPath = testInfo.outputPath('upload-validation.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('upload-validation', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('keeps upload controls coherent while an image is loading', async ({ page }, testInfo) => {
+	await page.addInitScript(() => {
+		HTMLImageElement.prototype.decode = async function decode(): Promise<void> {
+			await new Promise((resolve) => setTimeout(resolve, 450));
+		};
+	});
+	await openEditor(page);
+	const projectPanel = page.locator('.left-panel');
+	await projectPanel.getByRole('button', { name: 'Assets', exact: true }).click();
+	await projectPanel.getByRole('radio', { name: /Gallery photo/u }).click();
+	const upload = projectPanel.locator('.wb-studio-upload');
+	await projectPanel.getByLabel('Upload photo').setInputFiles({
+		buffer: Buffer.from(
+			'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">'
+			+ '<rect width="320" height="180" fill="#dbeafe"/>'
+			+ '</svg>'
+		),
+		mimeType: 'image/svg+xml',
+		name: 'visitor-lounge.svg'
+	});
+	await expect(upload).toHaveAttribute('aria-busy', 'true');
+	await expect(upload.getByRole('button', { name: 'Reading...' })).toBeDisabled();
+	const screenshotPath = testInfo.outputPath('upload-loading.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('upload-loading', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+	await expect(upload).toHaveAttribute('aria-busy', 'false');
+	await expect(projectPanel.getByText('visitor-lounge.svg', { exact: true })).toBeVisible();
+});
+
+test('renders a non-empty 3D scene and saves and restores its floor camera', async ({ page }, testInfo) => {
+	test.setTimeout(90_000);
+	await page.setViewportSize({ width: 1920, height: 1080 });
+	await openEditor(page);
+	await page.getByRole('button', { name: '3D' }).click();
+	const canvas = page.getByLabel('Rotatable 3D map preview');
+	const host = page.locator('.scene3d-host');
+	await expect(canvas).toBeVisible();
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	const stageBounds = await page.locator('.stage').boundingBox();
+	const editorSceneBounds = await host.boundingBox();
+	expect(stageBounds).not.toBeNull();
+	expect(editorSceneBounds).not.toBeNull();
+	expect(editorSceneBounds!.width).toBeGreaterThan(stageBounds!.width * 0.88);
+	expect(editorSceneBounds!.width / editorSceneBounds!.height).toBeGreaterThan(1.25);
+	const before = await canvas.screenshot();
+	expect(new Set(before).size).toBeGreaterThan(20);
+	await page.getByRole('button', { name: 'Fit', exact: true }).click();
+	await page.waitForTimeout(250);
+	const screenshotPath = testInfo.outputPath('authoring-3d.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('authoring-3d', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+	const initialCamera = await host.getAttribute('data-camera-state');
+	await dragLocatorBy(page, canvas, { x: 84, y: 24 });
+	await expect(host).not.toHaveAttribute('data-camera-state', initialCamera ?? '');
+	await page.getByRole('button', { name: 'Fit', exact: true }).click();
+	const initialCameraValues = (initialCamera ?? '').split(',').map(Number);
+	await expect.poll(async () => {
+		const currentCameraValues = (await host.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+
+		return Math.max(...initialCameraValues.map((value, index) =>
+			Math.abs(value - currentCameraValues[index])
+		));
+	}).toBeLessThan(0.25);
+	await dragLocatorBy(page, canvas, { x: 84, y: 24 });
+	await page.waitForTimeout(1_200);
+	await page.getByRole('button', { name: 'Save view' }).click();
+	await expect(page.getByRole('button', { name: /Undo/ })).toBeEnabled();
+	await page.getByRole('button', { name: 'Reset view' }).click();
+	await page.waitForTimeout(100);
+	const savedCamera = await host.getAttribute('data-camera-state');
+	await dragLocatorBy(page, canvas, { x: -62, y: 36 });
+	await expect(host).not.toHaveAttribute('data-camera-state', savedCamera ?? '');
+	await page.waitForTimeout(1_200);
+	await page.getByRole('button', { name: 'Reset view' }).click();
+	const savedCameraValues = (savedCamera ?? '').split(',').map(Number);
+	await expect.poll(async () => {
+		const currentCameraValues = (await host.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+
+		return Math.max(...savedCameraValues.map((value, index) =>
+			Math.abs(value - currentCameraValues[index])
+		));
+	}).toBeLessThan(0.25);
+	await dragLocatorBy(page, canvas, { x: 72, y: -28 });
+	let previousCameraValues = (await host.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+	await expect.poll(async () => {
+		await page.waitForTimeout(220);
+		const currentCameraValues = (await host.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+		const movement = Math.max(...previousCameraValues.map((value, index) =>
+			Math.abs(value - currentCameraValues[index])
+		));
+
+		previousCameraValues = currentCameraValues;
+
+		return movement;
+	}, { timeout: 12_000 }).toBeLessThan(0.05);
+	const editorCameraBeforePreview = await host.getAttribute('data-camera-state');
+	expect(editorCameraBeforePreview).not.toBeNull();
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await expect(canvas).toBeVisible();
+	await dragLocatorBy(page, canvas, { x: -96, y: 42 });
+	await page.waitForTimeout(320);
+	await expect(host).not.toHaveAttribute('data-camera-state', editorCameraBeforePreview ?? '');
+	await page.getByRole('button', { name: /Visitor information/ }).click();
+	await expect(canvas).toBeVisible();
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.locator('.left-panel .panel-nav').getByRole('button', { name: 'Build', exact: true }).click();
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	await expect(canvas).toBeVisible();
+	const editorCameraValues = (editorCameraBeforePreview ?? '').split(',').map(Number);
+	await expect.poll(async () => {
+		const currentCameraValues = (await host.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+
+		return Math.max(...editorCameraValues.map((value, index) =>
+			Math.abs(value - currentCameraValues[index])
+		));
+	}).toBeLessThan(0.25);
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	await expect(page.getByRole('button', { name: '2D', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByRole('button', { name: '3D', exact: true })).toHaveAttribute('aria-disabled', 'true');
+	await expect(page.getByRole('button', { name: '3D', exact: true })).toHaveAttribute(
+		'title',
+		/geometry are edited precisely in 2D/u
+	);
+});
+
+test('keeps compact 3D maps and camera actions outside active overlay drawers', async ({ page }) => {
+	await page.setViewportSize({ width: 1024, height: 720 });
+	await openEditor(page);
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	const host = page.locator('.scene3d-host');
+	const controls = page.getByLabel('3D camera controls');
+
+	await expect(host).toHaveAttribute('data-ready', 'true');
+	await expect.poll(async () => {
+		const scene = await host.boundingBox();
+		const panel = await page.locator('.left-panel').boundingBox();
+		const inspectorHandle = await page.getByRole('button', {
+			name: 'Open inspector panel'
+		}).boundingBox();
+		const cameraActions = await controls.boundingBox();
+
+		return Boolean(
+			scene
+			&& panel
+			&& inspectorHandle
+			&& cameraActions
+			&& scene.x >= panel.x + panel.width + 8
+			&& scene.x + scene.width <= inspectorHandle.x - 8
+			&& cameraActions.x + cameraActions.width <= inspectorHandle.x - 8
+		);
+	}).toBe(true);
+
+	await page.getByRole('button', { name: 'Open inspector panel' }).click();
+	await expect.poll(async () => {
+		const scene = await host.boundingBox();
+		const panel = await page.locator('.right-panel').boundingBox();
+		const projectHandle = await page.getByRole('button', {
+			name: 'Open project panel'
+		}).boundingBox();
+		const cameraActions = await controls.boundingBox();
+
+		return Boolean(
+			scene
+			&& panel
+			&& projectHandle
+			&& cameraActions
+			&& scene.x >= projectHandle.x + projectHandle.width + 8
+			&& scene.x + scene.width <= panel.x - 8
+			&& cameraActions.x >= projectHandle.x + projectHandle.width + 8
+			&& cameraActions.x + cameraActions.width <= panel.x - 8
+		);
+	}).toBe(true);
+});
+
+test('keeps the 3D entry point discoverable while explaining an unmet quality gate', async ({ page }) => {
+	const project = createWayfindingStudioProject('empty-3d-quality-gate');
+	project.name = 'Empty 3D quality gate';
+	await openEditor(page, project);
+
+	const threeDimensional = page.getByRole('button', { name: '3D', exact: true });
+	await expect(threeDimensional).toBeVisible();
+	await expect(threeDimensional).toHaveAttribute('aria-disabled', 'true');
+	await expect(threeDimensional).toHaveAttribute('title', /Add at least one room or destination area/u);
+});
+
+test('authors, reshapes, inserts, and removes room vertices without moving the camera', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const viewport = page.locator('.canvas-viewport');
+	const viewportBounds = await viewport.boundingBox();
+	expect(viewportBounds).not.toBeNull();
+	await page.mouse.move(
+		viewportBounds!.x + viewportBounds!.width / 2,
+		viewportBounds!.y + viewportBounds!.height / 2
+	);
+	await page.mouse.wheel(0, -300);
+	const cameraBefore = await mapTransform(page);
+
+	await page.getByRole('button', { name: /Draw room or area/ }).click();
+	await clickMapPoint(page, { x: 420, y: 260 });
+	await clickMapPoint(page, { x: 720, y: 260 });
+	await clickMapPoint(page, { x: 720, y: 500 });
+	await clickMapPoint(page, { x: 420, y: 500 });
+	await page.keyboard.press('Enter');
+
+	await expect(page.locator('.polygon-vertex')).toHaveCount(4);
+	await expect(page.locator('.selected-polygon')).toHaveCount(1);
+	await expect(page.getByRole('button', { name: 'Add vertex' })).toBeVisible();
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.getByRole('button', { name: 'Add vertex' }).click();
+	await expect(page.locator('.polygon-vertex')).toHaveCount(5);
+	await expect(page.getByRole('button', { name: 'Remove point' })).toBeVisible();
+	await page.getByRole('button', { name: 'Remove point' }).click();
+	await expect(page.locator('.polygon-vertex')).toHaveCount(4);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await expect(page.locator('.polygon-midpoint')).toHaveCount(4);
+	await page.locator('.polygon-midpoint').first().click({ force: true });
+	await expect(page.locator('.polygon-vertex')).toHaveCount(5);
+	await page.getByRole('button', { name: 'Remove point' }).click();
+	await expect(page.locator('.polygon-vertex')).toHaveCount(4);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	const firstVertex = page.locator('.polygon-vertex').first();
+	const firstVertexX = await firstVertex.getAttribute('cx');
+	await dragLocatorBy(page, firstVertex, { x: 34, y: 18 });
+	await expect(firstVertex).not.toHaveAttribute('cx', firstVertexX ?? '');
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.locator('.polygon-edge-hit').first().dblclick({ force: true });
+	await expect(page.locator('.polygon-vertex')).toHaveCount(5);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.locator('.polygon-vertex.active').press('Delete');
+	await expect(page.locator('.polygon-vertex')).toHaveCount(4);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.locator('.polygon-vertex')).toHaveCount(5);
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.locator('.polygon-vertex')).toHaveCount(4);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('nudges and duplicates selected map objects without moving the camera', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const cameraBefore = await mapTransform(page);
+	const origin = page.locator('#origin-main circle');
+	const originX = Number(await origin.getAttribute('cx'));
+	const originHit = page.locator('[data-editor-element-id="origin-main"]');
+
+	await originHit.click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'origin-main');
+	await page.keyboard.press('ArrowRight');
+	await expect(origin).toHaveAttribute('cx', String(originX + 1));
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.locator('[data-editor-element-id="location-information"]').click({ force: true });
+	await page.keyboard.press('Control+d');
+	await expect(page.locator('#Locations polygon')).toHaveCount(2);
+	await expect(page.locator('#Locations polygon[data-wayfinding-location-id]')).toHaveCount(2);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('rotates doors and origins directly on the canvas', async ({ page }, testInfo) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const cameraBefore = await mapTransform(page);
+
+	await page.locator('[data-editor-element-id="door-information"]').click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'door-information');
+	const connectedRoom = page.getByLabel('Connected room');
+	await expect(connectedRoom).toHaveValue('location-information');
+	await connectedRoom.selectOption('');
+	await expect(page.getByText('This door will not be used for directions until a room is connected.')).toBeVisible();
+	await connectedRoom.selectOption('location-information');
+	await expect(page.getByText('Ready to terminate routes at this public entrance.')).toBeVisible();
+	const doorInspectorScreenshot = testInfo.outputPath('door-inspector.png');
+	await page.screenshot({ path: doorInspectorScreenshot });
+	await testInfo.attach('door-inspector', {
+		contentType: 'image/png',
+		path: doorInspectorScreenshot
+	});
+	const doorHandle = page.locator('[data-transform-handle="direction"]');
+	await expect(doorHandle).toBeVisible();
+	const doorX2 = await page.locator('#door-information').getAttribute('x2');
+	await dragLocatorBy(page, doorHandle, { x: 46, y: -38 });
+	await expect(page.locator('#door-information')).not.toHaveAttribute('x2', doorX2 ?? '');
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.locator('[data-editor-element-id="origin-main"]').click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'origin-main');
+	const originHandle = page.locator('[data-transform-handle="direction"]');
+	await expect(originHandle).toBeVisible();
+	const facingBefore = await page.locator('#origin-main').getAttribute('data-facing-degrees');
+	await dragLocatorBy(page, originHandle, { x: 52, y: 18 });
+	await expect(page.locator('#origin-main')).not.toHaveAttribute('data-facing-degrees', facingBefore ?? '');
+	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('places an entrance on a room boundary and links it for routing', async ({ page }) => {
+	await openEditor(page, createAutomaticRouteTestProject());
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const room = page.locator('[data-editor-element-id="location-storage"]');
+	const roomBounds = await room.boundingBox();
+
+	expect(roomBounds).not.toBeNull();
+	await room.click({ force: true });
+	await page.keyboard.press('d');
+	await page.mouse.click(
+		roomBounds!.x + 2,
+		roomBounds!.y + roomBounds!.height / 2
+	);
+
+	await expect(page.locator('#Doors > *')).toHaveCount(2);
+	await expect(page.getByLabel('Connected room')).toHaveValue('location-storage');
+	await expect(page.getByText('Entrance snapped to Storage room and linked for routing.')).toBeVisible();
+	await expect(page.getByText('Ready to terminate routes at this public entrance.')).toBeVisible();
+});
+
+test('authors and edits POIs, floor connections, and labels with discoverable keyboard tools', async ({ page }) => {
+	const reactiveWarnings: string[] = [];
+	page.on('console', (message) => {
+		if (
+			message.type() === 'warning'
+			&& message.text().includes('computations created outside a `createRoot`')
+		) reactiveWarnings.push(message.text());
+	});
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+
+	await page.keyboard.press('p');
+	await clickMapPoint(page, { x: 860, y: 700 });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-kind', 'element');
+	await page.getByLabel('Name', { exact: true }).fill('Coffee kiosk');
+	await page.getByLabel('Name', { exact: true }).blur();
+	await page.getByLabel('Description', { exact: true }).fill('Fresh coffee beside the main concourse.');
+	await page.getByLabel('Description', { exact: true }).blur();
+	await expect(page.locator('#POIs > *')).toHaveCount(2);
+
+	await page.keyboard.press('t');
+	await clickMapPoint(page, { x: 1060, y: 700 });
+	await page.getByLabel('Connection type').selectOption('elevator');
+	await page.getByLabel('Map label').fill('Main lift');
+	await page.getByLabel('Map label').blur();
+	await expect(page.locator('#Transitions > *')).toHaveCount(1);
+
+	await page.keyboard.press('l');
+	await clickMapPoint(page, { x: 960, y: 820 });
+	await page.getByLabel('Displayed text').fill('North concourse');
+	await page.getByLabel('Displayed text').blur();
+	await expect(page.locator('#Labels')).toContainText('North concourse');
+
+	const preview = page.getByRole('button', { name: 'Preview' });
+	await preview.click();
+	await expect(preview).toHaveAttribute('aria-pressed', 'true');
+	await page.getByRole('button', { name: 'Open Coffee kiosk in the directory' }).click();
+	await expect(page.locator('.visitor-detail')).toContainText('Fresh coffee beside the main concourse.');
+	expect(reactiveWarnings).toEqual([]);
+});
+
+test('resizes map media proportionally with a direct manipulation handle', async ({ page }) => {
+	await openEditor(page);
+	const cameraBefore = await mapTransform(page);
+	const media = page.locator('#logo-information');
+	const initialWidth = Number(await media.getAttribute('width'));
+	const initialHeight = Number(await media.getAttribute('height'));
+	expect(Number(await media.getAttribute('x')) + initialWidth / 2).toBeCloseTo(980, 1);
+	expect(Number(await media.getAttribute('y')) + initialHeight / 2).toBeCloseTo(260, 1);
+
+	await page.locator('[data-editor-element-id="logo-information"]').click({ force: true });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'logo-information');
+	await expect(page.getByLabel('Image scale')).toHaveValue('120');
+	await page.getByLabel('Image scale').fill('180');
+	await expect(media).toHaveAttribute('width', '180');
+	await expect(media).toHaveAttribute('height', '180');
+	const resizeHandle = page.locator('[data-transform-handle="media-resize"]');
+	await expect(resizeHandle).toBeVisible();
+	await dragLocatorBy(page, resizeHandle, { x: 80, y: 34 });
+
+	const resizedWidth = Number(await media.getAttribute('width'));
+	const resizedHeight = Number(await media.getAttribute('height'));
+	expect(resizedWidth).toBeGreaterThan(initialWidth);
+	expect(resizedHeight).toBeGreaterThan(initialHeight);
+	expect(resizedWidth / resizedHeight).toBeCloseTo(initialWidth / initialHeight, 2);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+	await page.getByLabel('Image rotation').fill('35');
+	await expect(media).toHaveAttribute('transform', /rotate\(35 980 260\)/u);
+	const rotateHandle = page.locator('[data-transform-handle="media-rotate"]');
+	await expect(rotateHandle).toBeVisible();
+	await dragLocatorBy(page, rotateHandle, { x: 48, y: 22 });
+	await expect(media).toHaveAttribute('transform', /rotate\(/u);
+});
+
+test('authors a manual route segment in route edit mode', async ({ page }) => {
+	await openEditor(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	await page.getByRole('button', { name: /Draw route segment/ }).click();
+
+	await clickMapPoint(page, { x: 520, y: 760 });
+	await moveMapPointer(page, { x: 860, y: 805 });
+	await expect(page.locator('.draft-route-line')).toBeVisible();
+	expect((await page.locator('.draft-route-line').getAttribute('points'))?.trim().split(/\s+/u)).toHaveLength(2);
+	await page.keyboard.down('Shift');
+	await moveMapPointer(page, { x: 860, y: 805 });
+	const constrainedPoint = (await page.locator('.draft-route-line').getAttribute('points'))
+		?.trim()
+		.split(/\s+/u)
+		.at(-1)
+		?.split(',')
+		.map(Number);
+	expect(constrainedPoint?.[1]).toBeCloseTo(760, 0);
+	await clickMapPoint(page, { x: 860, y: 805 });
+	await page.keyboard.up('Shift');
+	await clickMapPoint(page, { x: 1120, y: 620 });
+	await page.keyboard.press('Enter');
+
+	await expect(page.locator('.route-network-line')).toHaveCount(2);
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.locator('.route-network-line')).toHaveCount(1);
+});
+
+test('route Build explains every missing prerequisite and opens the required tool', async ({ page }) => {
+	const project = createWayfindingStudioProject('route-build-requirements');
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+
+	await expect(page.getByRole('button', { name: 'Build route network' })).toBeDisabled();
+	const requirements = page.getByLabel('Route build requirements');
+	await expect(requirements.getByRole('button', { name: /Define pedestrian space/ })).toBeVisible();
+	await expect(requirements.getByRole('button', { name: /Add a starting point/ })).toBeVisible();
+	await expect(requirements.getByRole('button', { name: /Add a routeable destination/ })).toBeVisible();
+	await requirements.getByRole('button', { name: /Define pedestrian space/ }).click();
+	await expect(page.getByRole('button', { name: 'Space', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByRole('button', { name: 'Draw polygon' })).toHaveClass(/active/u);
+});
+
+test('builds a route network from authored pedestrian space and linked doors', async ({ page }, testInfo) => {
+	const project = createAutomaticRouteTestProject();
+	project.graph.nodes = [];
+	project.graph.edges = [];
+	project.destinations.push({
+		floor: project.floors[0].id,
+		id: 'destination-directory-only',
+		name: 'Directory-only destination',
+		routeable: true
+	});
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Build route network' })).toBeEnabled();
+	await expect(page.getByText(/1 entrance-ready destination will be connected/u)).toBeVisible();
+	await expect(page.getByText(/1 mapped room needs a linked public entrance/u)).toBeVisible();
+	await expect(page.getByText(/1 directory-only entry will be skipped/u)).toBeVisible();
+	const readinessScreenshot = testInfo.outputPath('route-build-ready.png');
+	await page.screenshot({ path: readinessScreenshot });
+	await testInfo.attach('route-build-ready', {
+		contentType: 'image/png',
+		path: readinessScreenshot
+	});
+	await page.getByRole('button', { name: 'Build route network' }).click();
+
+	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
+	const builtNetworkScreenshot = testInfo.outputPath('route-network-built.png');
+	await page.screenshot({ path: builtNetworkScreenshot });
+	await testInfo.attach('route-network-built', {
+		contentType: 'image/png',
+		path: builtNetworkScreenshot
+	});
+	const edgeCount = await page.locator('.route-network-line').count();
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Meeting room in the directory' }).click();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	const routePreviewScreenshot = testInfo.outputPath('route-preview-built.png');
+	await page.screenshot({ path: routePreviewScreenshot });
+	await testInfo.attach('route-preview-built', {
+		contentType: 'image/png',
+		path: routePreviewScreenshot
+	});
+	const routePathCommands = (await page.locator('.route-overlay .simulated-route').getAttribute('d'))
+		?.match(/[MLQ]/gu) ?? [];
+	expect(routePathCommands.length).toBeGreaterThan(2);
+
+	await page.getByRole('button', { name: 'Clear directions' }).click();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(0);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await expect(page.locator('.route-network-line')).toHaveCount(edgeCount);
+});
+
+test('rebuilds the maintained campus map without route artifacts', async ({ page }, testInfo) => {
+	const project = JSON.parse(await readFile(
+		'examples/spatial-wayfinding/source/campus.wbwayfinding',
+		'utf8'
+	)) as WayfindingStudioProject;
+	project.graph = {
+		...project.graph,
+		edges: [],
+		nodes: []
+	};
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+	await page.getByRole('button', { name: 'Build route network' }).click();
+
+	await expect(page.locator('.route-build-report')).toContainText('6/6');
+	await expect(page.locator('.route-build-report')).toContainText('routeable destinations ready');
+	await expect(page.locator('.route-network-line')).toHaveCount(10);
+	const networkScreenshot = testInfo.outputPath('campus-route-network.png');
+	await page.screenshot({ path: networkScreenshot });
+	await testInfo.attach('campus-route-network', {
+		contentType: 'image/png',
+		path: networkScreenshot
+	});
+
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Welcome Center in the directory' }).click();
+	await expect(page.locator('.route-overlay .simulated-route')).toHaveCount(1);
+	await expect(page.locator('.visitor-journey__instructions li')).toHaveCount(3);
+	await expect(page.locator('.visitor-journey__instructions')).not.toContainText('In 1 m');
+	const previewScreenshot = testInfo.outputPath('campus-route-preview.png');
+	await page.screenshot({ path: previewScreenshot });
+	await testInfo.attach('campus-route-preview', {
+		contentType: 'image/png',
+		path: previewScreenshot
+	});
+});
+
+test('rebuilds a complex concourse through the user workflow without stale loops or obstacle crossings', async ({
+	page
+}, testInfo) => {
+	const project = createComplexConcourseFixture();
+	const obstacles = project.floors[0].elements
+		.filter((element): element is WayfindingStudioPolygonElement => element.type === 'obstacle')
+		.map((element) => element.geometry);
+	await openEditor(page, project);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Build', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Rebuild route network' })).toBeEnabled();
+	await page.getByRole('button', { name: 'Rebuild route network' }).click();
+
+	const confirmation = page.getByRole('dialog', { name: 'Review route build changes' });
+	await expect(confirmation).toBeVisible();
+	await expect(confirmation).toContainText('3 →');
+	await expect(confirmation).toContainText('0 points · 1 segments');
+	await expect(confirmation).toContainText('11/11');
+	await confirmation.getByRole('button', { name: 'Apply rebuild' }).click();
+
+	await expect(page.locator('.route-build-report')).toContainText('11/11');
+	await expect(page.locator('.route-build-report')).toContainText('routeable destinations ready');
+	await expect(page.locator('.route-build-diagnostics')).toHaveCount(0);
+	await expect(page.locator('.route-network-line')).not.toHaveCount(0);
+
+	const renderedEdges = await page.locator('.route-network-line').evaluateAll((lines) =>
+		lines.map((line) => ({
+			id: line.getAttribute('data-route-edge-id') ?? '',
+			points: (line.getAttribute('points') ?? '').trim().split(/\s+/u).map((value) => {
+				const [x, y] = value.split(',').map(Number);
+
+				return { x, y };
+			})
+		}))
+	);
+	expect(renderedEdges.some((edge) => edge.id.includes(':stale-edge-'))).toBe(false);
+	expect(renderedEdges.some((edge) => edge.id === 'manual-reviewed-edge')).toBe(true);
+
+	const pointInPolygon = (
+		point: { x: number; y: number },
+		polygon: readonly { x: number; y: number }[]
+	): boolean => {
+		let inside = false;
+
+		for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+			const left = polygon[index];
+			const right = polygon[previous];
+
+			if (
+				(left.y > point.y) !== (right.y > point.y)
+				&& point.x < (right.x - left.x) * (point.y - left.y)
+					/ (right.y - left.y) + left.x
+			) inside = !inside;
+		}
+
+		return inside;
+	};
+
+	for (const edge of renderedEdges) {
+		for (let index = 1; index < edge.points.length; index += 1) {
+			const start = edge.points[index - 1];
+			const end = edge.points[index];
+			const length = Math.hypot(end.x - start.x, end.y - start.y);
+			const samples = Math.max(1, Math.ceil(length / 2));
+
+			for (let sample = 1; sample < samples; sample += 1) {
+				const ratio = sample / samples;
+				const point = {
+					x: start.x + (end.x - start.x) * ratio,
+					y: start.y + (end.y - start.y) * ratio
+				};
+
+				expect(
+					obstacles.some((obstacle) => pointInPolygon(point, obstacle)),
+					`${edge.id} crossed blocked space at ${point.x},${point.y}`
+				).toBe(false);
+			}
+		}
+	}
+
+	const networkScreenshot = testInfo.outputPath('complex-concourse-route-network.png');
+	await page.screenshot({ path: networkScreenshot });
+	await testInfo.attach('complex-concourse-route-network', {
+		contentType: 'image/png',
+		path: networkScreenshot
+	});
+});
+
+test('inserts, drags, and removes route bends without replacing the edge or moving the camera', async ({ page }) => {
+	await openEditor(page);
+	const cameraBefore = await mapTransform(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	await clickMapPoint(page, { x: 700, y: 650 });
+	await expect(page.locator('.graph-edge-point')).toHaveCount(1);
+	await expect(page.locator('.graph-node-handle.endpoint')).toHaveCount(2);
+	await expect(page.getByRole('button', { name: 'Add bend' })).toBeVisible();
+
+	await page.getByRole('button', { name: 'Add bend' }).click();
+	await expect(page.locator('.graph-edge-point')).toHaveCount(2);
+	await page.getByRole('button', { name: 'Remove point' }).click();
+	await expect(page.locator('.graph-edge-point')).toHaveCount(1);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await expect(page.locator('.graph-midpoint')).toHaveCount(2);
+	await page.locator('.graph-midpoint').first().click({ force: true });
+	await expect(page.locator('.graph-edge-point')).toHaveCount(2);
+	await page.getByRole('button', { name: 'Remove point' }).click();
+	await expect(page.locator('.graph-edge-point')).toHaveCount(1);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await clickMapPoint(page, { x: 700, y: 650 }, { clickCount: 2 });
+	await expect(page.locator('.graph-edge-point')).toHaveCount(2);
+	const activePoint = page.locator('.graph-edge-point.active');
+	const beforeX = await activePoint.getAttribute('cx');
+	await dragLocatorBy(page, activePoint, { x: 42, y: -24 });
+	await expect(activePoint).not.toHaveAttribute('cx', beforeX ?? '');
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-kind', 'graph-edge');
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'route-main');
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-geometry-index', '1');
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selected-edge-geometry-length', '4');
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.keyboard.press('Delete');
+	await expect(page.locator('.graph-edge-point')).toHaveCount(1);
+	await expect(page.locator('.graph-edge-hit[data-route-edge-id="route-main"]')).toHaveCount(1);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('places, moves, and removes route junctions without moving the camera', async ({ page }) => {
+	await openEditor(page);
+	const cameraBefore = await mapTransform(page);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	const nodesBefore = await page.locator('.graph-node-handle').count();
+
+	await page.getByRole('button', { name: 'Place junction' }).click();
+	await clickMapPoint(page, { x: 820, y: 520 });
+	await expect(page.locator('.graph-node-handle')).toHaveCount(nodesBefore + 1);
+	const activeNode = page.locator('.graph-node-handle.active');
+	await expect(activeNode).toHaveCount(1);
+	const beforeX = await activeNode.getAttribute('cx');
+	await dragLocatorBy(page, activeNode, { x: 46, y: -20 });
+	await expect(activeNode).not.toHaveAttribute('cx', beforeX ?? '');
+	expect(await mapTransform(page)).toBe(cameraBefore);
+
+	await page.keyboard.press('Delete');
+	await expect(page.locator('.graph-node-handle')).toHaveCount(nodesBefore);
+	expect(await mapTransform(page)).toBe(cameraBefore);
+});
+
+test('switches between standard and step-free route profiles on the authored graph', async ({ page }) => {
+	await openEditor(page, createRouteProfileTestProject());
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: 'Open Visitor information in the directory' }).click();
+	const route = page.locator('.route-overlay .simulated-route');
+	await expect(route).toHaveCount(1);
+	await expect(route).toHaveAttribute('d', 'M 320 650 L 1300 430');
+	const standardPath = await route.getAttribute('d');
+
+	await openPreviewSimulation(page);
+	await page.getByRole('button', { name: /Step-free/ }).click();
+	await expect(route).not.toHaveAttribute('d', standardPath ?? '');
+	await expect(route).toHaveAttribute(
+		'd',
+		/^M 320 650 .*Q 560 250 .*Q 1040 250 .*L 1300 430$/u
+	);
+	await expect(page.getByRole('button', { name: /Step-free/ })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('saves back to an opened project file and reserves Save as for a new handle', async ({ page }) => {
+	const project = createTestProject();
+	await page.addInitScript((serialized): void => {
+		const createHandle = (
+			name: string,
+			storageKey: string
+		): {
+			createWritable: () => Promise<{
+				close: () => Promise<void>;
+				write: (data: string) => Promise<void>;
+			}>;
+			getFile: () => Promise<File>;
+			name: string;
+		} => ({
+			createWritable: () => Promise.resolve({
+				close: () => Promise.resolve(),
+				write: (data: string) => {
+					localStorage.setItem(storageKey, data);
+
+					return Promise.resolve();
 				}
 			}),
-			getFile: async (): Promise<File> => new File([value], name, { type: 'application/json' }),
-			name,
-			queryPermission: async (): Promise<PermissionState> => 'granted',
-			requestPermission: async (): Promise<PermissionState> => 'granted'
+			getFile: () => Promise.resolve(new File([serialized], name, { type: 'application/json' })),
+			name
 		});
 		Object.defineProperty(window, 'showOpenFilePicker', {
 			configurable: true,
-			value: async () => [createHandle('opened-map.wbwayfinding', 'opened-map-write')]
+			value: (): Promise<ReturnType<typeof createHandle>[]> =>
+				Promise.resolve([createHandle('opened-map.wbwayfinding', 'opened-map-write')])
 		});
 		Object.defineProperty(window, 'showSaveFilePicker', {
 			configurable: true,
-			value: async () => createHandle('copied-map.wbwayfinding', 'copied-map-write')
+			value: (): Promise<ReturnType<typeof createHandle>> =>
+				Promise.resolve(createHandle('copied-map.wbwayfinding', 'copied-map-write'))
 		});
-	}, projectText);
+	}, JSON.stringify(project));
 	await page.goto('/');
-	await page.locator('#studio-open-project').click();
-	await expect(page.locator('#project-context-source')).toHaveText('Project file: opened-map.wbwayfinding');
-	await page.locator('#studio-project-name').fill('Updated opened project');
-	await page.locator('#studio-export-project').click();
-	await expect.poll(async (): Promise<string | null> => page.evaluate(() => localStorage.getItem('opened-map-write'))).not.toBeNull();
-	const savedName: string = await page.evaluate((): string => JSON.parse(localStorage.getItem('opened-map-write') as string).name as string);
-	expect(savedName).toBe('Updated opened project');
-	await expect(page.locator('#project-context-portable')).toHaveText('Saved to opened-map.wbwayfinding');
+	await openProjectSettings(page);
+	await page.getByRole('button', { name: 'Open', exact: true }).click();
+	await expect(page.getByText('Opened opened-map.wbwayfinding', { exact: true })).toBeVisible();
+	await page.getByLabel('Project name').fill('Updated opened project');
+	await page.getByLabel('Project name').blur();
+	await page.getByRole('button', { name: 'Save (Ctrl+S)' }).click();
+	await expect.poll(async () => page.evaluate(() => localStorage.getItem('opened-map-write'))).not.toBeNull();
+	await expect(page.getByText(/Saved to opened-map\.wbwayfinding/)).toBeVisible();
 
-	await page.locator('#studio-save-as').click();
-	await expect.poll(async (): Promise<string | null> => page.evaluate(() => localStorage.getItem('copied-map-write'))).not.toBeNull();
-	await expect(page.locator('#project-context-portable')).toHaveText('Saved to copied-map.wbwayfinding');
+	await page.getByRole('button', { name: 'Save as' }).click();
+	await expect.poll(async () => page.evaluate(() => localStorage.getItem('copied-map-write'))).not.toBeNull();
+	await expect(page.getByText(/Saved to copied-map\.wbwayfinding/)).toBeVisible();
 });
 
-test('moves, inserts, and deletes polygon points above overlapping semantic layers', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
+test('restored recovery keeps the opened file target and Ctrl+S updates that file', async ({ page }) => {
+	const project = createTestProject();
+	project.name = 'Recovery file target';
 	await page.goto('/');
+	await page.evaluate(async (serialized): Promise<void> => {
+		const directory = await navigator.storage.getDirectory();
+		const handle = await directory.getFileHandle('recovery-target.wbwayfinding', { create: true });
+		const writable = await handle.createWritable();
+		await writable.write(serialized);
+		await writable.close();
+		Object.defineProperty(window, 'showOpenFilePicker', {
+			configurable: true,
+			value: (): Promise<FileSystemFileHandle[]> => Promise.resolve([handle])
+		});
+	}, JSON.stringify(project));
+	await openProjectSettings(page);
+	await page.getByRole('button', { name: 'Open', exact: true }).click();
+	await expect(page.getByText('Opened recovery-target.wbwayfinding', { exact: true })).toBeVisible();
+	await page.getByLabel('Project name').fill('Recovered file update');
+	await page.getByLabel('Project name').blur();
+	await expect.poll(() => page.evaluate((key) => {
+		const stored = localStorage.getItem(key);
 
-	const canvas = page.locator('#stage');
-	await page.locator('[data-tool="location"]').click();
-	for (const position of [{ x: 220, y: 280 }, { x: 440, y: 280 }, { x: 440, y: 460 }, { x: 220, y: 460 }]) await canvas.click({ position });
-	await page.locator('#semantic-finish').click();
-
-	await page.locator('#workspace-route-edit').click();
-	await page.locator('#polygon-pedestrian-tools [data-tool="walkable"]').click();
-	for (const position of [{ x: 220, y: 280 }, { x: 350, y: 280 }, { x: 350, y: 380 }, { x: 220, y: 380 }]) await canvas.click({ position });
-	await page.keyboard.press('Enter');
-
-	await page.locator('#workspace-map').click();
-	await page.locator('[data-tool="select"]').click();
-	await canvas.click({ position: { x: 420, y: 430 } });
-	const selection = page.locator('#semantic-editor');
-	await expect(selection.getByRole('heading', { name: 'Room / area' })).toBeVisible();
-	await expect(selection).toContainText('4 points');
-
-	const bounds = await canvas.boundingBox();
-	expect(bounds).not.toBeNull();
-	await page.mouse.move((bounds?.x ?? 0) + 220, (bounds?.y ?? 0) + 280);
-	await page.mouse.down();
-	await page.mouse.move((bounds?.x ?? 0) + 195, (bounds?.y ?? 0) + 250, { steps: 4 });
-	await page.mouse.up();
-	await expect(selection).toContainText('Point 1 of 4 selected');
-
-	await selection.getByRole('button', { name: 'Add point on edge' }).click();
-	await canvas.click({ position: { x: 330, y: 460 } });
-	await expect(selection).toContainText('Point 4 of 5 selected');
-	await selection.getByRole('button', { name: 'Delete selected point' }).click();
-	await expect(selection).toContainText('4 points');
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as {
-		floors: Array<{ elements: Array<{ geometry?: Array<{ x: number; y: number }>; type: string }> }>;
-	};
-	const location = project.floors[0].elements.find((element): boolean => element.type === 'location');
-	const walkable = project.floors[0].elements.find((element): boolean => element.type === 'walkable');
-	expect(location?.geometry).toHaveLength(4);
-	expect(walkable?.geometry).toHaveLength(4);
-	expect(location?.geometry?.[0]).not.toEqual(walkable?.geometry?.[0]);
-	expect(errors).toEqual([]);
-});
-
-test('draws freehand areas, authors exclusions, and explains portable save state', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
-	await page.locator('#drawing-mode-lasso').click();
-	await page.locator('#workspace-route-edit').click();
-	await page.locator('#polygon-pedestrian-tools [data-tool="walkable"]').click();
-	const canvas = page.locator('#stage');
-	const bounds = await canvas.boundingBox();
-	expect(bounds).not.toBeNull();
-	const trace = async (positions: Array<{ x: number; y: number }>): Promise<void> => {
-		await page.mouse.move((bounds?.x ?? 0) + positions[0].x, (bounds?.y ?? 0) + positions[0].y);
-		await page.mouse.down();
-		for (const position of positions.slice(1)) await page.mouse.move((bounds?.x ?? 0) + position.x, (bounds?.y ?? 0) + position.y, { steps: 3 });
-		await page.mouse.up();
-	};
-	await trace([{ x: 180, y: 250 }, { x: 470, y: 250 }, { x: 470, y: 500 }, { x: 180, y: 500 }, { x: 180, y: 250 }]);
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Walkable area');
-	await page.locator('#polygon-pedestrian-tools [data-tool="obstacle"]').click();
-	await trace([{ x: 290, y: 335 }, { x: 365, y: 335 }, { x: 365, y: 415 }, { x: 290, y: 415 }, { x: 290, y: 335 }]);
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Blocked area');
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	expect(project.floors[0].elements.filter((element): boolean => element.type === 'walkable')).toHaveLength(1);
-	expect(project.floors[0].elements.filter((element): boolean => element.type === 'obstacle')).toHaveLength(1);
-	await expect(page.locator('#project-context-portable')).toHaveText('Saved to Wayfinding project.wbwayfinding');
-	await page.locator('#studio-project-name').fill('Edited after download');
-	await expect(page.locator('#project-context-portable')).toHaveText('Unsaved file changes');
-	expect(errors).toEqual([]);
-});
-
-test('detects a flat room, controls all layer visibility, and starts a clean project', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	await page.locator('#image-file').setInputFiles({
-		name: 'flat-room.svg',
-		mimeType: 'image/svg+xml',
-		buffer: Buffer.from(`
-			<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
-				<rect width="800" height="600" fill="#f8f6ef"/>
-				<path d="M150 120H650V480H430V450H370V480H150Z" fill="#9ed7cd" stroke="#173b35" stroke-width="10"/>
-			</svg>
-		`)
-	});
-	await page.locator('#drawing-mode-smart').click();
-	await expect(page.locator('#drawing-mode-help')).toContainText('click inside a flat-color region');
-	await page.locator('[data-tool="location"]').click();
-	const canvas = page.locator('#stage');
-	const bounds = await canvas.boundingBox();
-	expect(bounds).not.toBeNull();
-	await canvas.click({ position: { x: (bounds?.width ?? 0) / 2, y: (bounds?.height ?? 0) / 2 } });
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-	await expect(page.locator('#semantic-editor')).toContainText(/\d+ points/u);
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const detectedProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	const detectedRoom = detectedProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioPolygonElement => element.type === 'location');
-	expect(detectedRoom?.geometry).toHaveLength(8);
-	expect(detectedRoom?.presentation?.fillColor).toBe('#9ed7cd');
-
-	const layerToggles = page.locator('[data-layer]');
-	await expect(layerToggles).toHaveCount(10);
-	const layerPanel = page.locator('.layer-panel');
-	await expect(layerPanel).not.toHaveAttribute('open', '');
-	await layerPanel.locator('> summary').click();
-	await expect(layerPanel).toHaveAttribute('open', '');
-	await page.locator('#hide-all-layers').click();
-	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).not.toBeChecked();
-	await page.locator('#show-all-layers').click();
-	for (let index = 0; index < await layerToggles.count(); index += 1) await expect(layerToggles.nth(index)).toBeChecked();
-	await expect(page.locator('#object-explorer-panel')).toHaveAttribute('open', '');
-	await page.locator('#object-explorer-panel > summary').click();
-	await expect(page.locator('#object-explorer-panel')).not.toHaveAttribute('open', '');
-	await page.locator('#object-explorer-panel > summary').click();
-	await expect(page.locator('#object-explorer-panel')).toHaveAttribute('open', '');
-	expect(await page.locator('#cursor-position').evaluate((element): boolean => element.parentElement?.classList.contains('stage-shell') ?? false)).toBe(true);
-
-	await page.locator('#studio-new-project').click();
-	await expect(page.locator('#confirm-dialog')).toBeVisible();
-	await page.locator('#confirm-accept').click();
-	await expect(page.locator('#project-context-source')).toHaveText('New browser draft');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
-	await expect(page.locator('#studio-project-name')).toHaveValue('Wayfinding project');
-	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
-	await expect(page.locator('#coverage-status')).toContainText('New project ready');
-	expect(errors).toEqual([]);
-});
-
-test('detect area does not escape through an opening narrower than its configured minimum', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	await page.locator('#image-file').setInputFiles({
-		name: 'narrow-opening.svg',
-		mimeType: 'image/svg+xml',
-		buffer: Buffer.from(`
-			<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
-				<rect width="800" height="600" fill="#f8f6ef"/>
-				<rect x="100" y="120" width="250" height="360" fill="#9ed7cd"/>
-				<rect x="354" y="120" width="346" height="360" fill="#9ed7cd"/>
-				<rect x="350" y="298" width="4" height="4" fill="#9ed7cd"/>
-			</svg>
-		`)
-	});
-	await page.locator('#drawing-mode-smart').click();
-	await page.locator('[data-tool="location"]').click();
-	await expect(page.locator('#detect-opening')).toBeVisible();
-	await expect(page.locator('#detect-opening')).toHaveValue('5');
-	const canvas = page.locator('#stage');
-	const view = await canvas.evaluate((element: HTMLCanvasElement): { offsetX: number; offsetY: number; scale: number } => ({
-		offsetX: Number(element.dataset.viewOffsetX),
-		offsetY: Number(element.dataset.viewOffsetY),
-		scale: Number(element.dataset.viewScale)
-	}));
-	await canvas.click({ position: { x: view.offsetX + 220 * view.scale, y: view.offsetY + 300 * view.scale } });
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	const room = project.floors[0].elements.find((element): element is WayfindingStudioPolygonElement => element.type === 'location');
-	expect(Math.max(...(room?.geometry ?? []).map((point): number => point.x))).toBeLessThan(400);
-	expect(errors).toEqual([]);
-});
-
-test('builds routes from authored walkable areas and auto-links a nearby door', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	const projectPath: string = testInfo.outputPath('automatic-route-test.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createAutomaticRouteTestProject()));
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('#workspace-route-edit').click();
-	await expect(page.locator('[data-pedestrian-source="polygons"]')).toHaveClass(/active/u);
-	await expect(page.locator('#polygon-pedestrian-tools')).toBeVisible();
-	await expect(page.locator('#mask-pedestrian-tools')).toBeHidden();
-	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(2);
-	await expect(page.locator('#route-destination option')).toHaveCount(2);
-	await expect(page.locator('#route-destination option', { hasText: 'Storage room' })).toHaveAttribute('disabled', '');
-	await expect(page.locator('#route-destination option', { hasText: 'Storage room' })).toContainText('needs linked door');
-	await page.locator('#route-build').click();
-	await expect(page.locator('#route-setup-checklist li[data-ready="false"]')).toHaveCount(0);
-	await expect(page.locator('#edge-summary')).not.toHaveText('0 route segments');
-	await expect(page.locator('#route-result')).toContainText('ready to simulate');
-	await expect(page.locator('#route-result')).toContainText('1/2 routeable rooms');
-	await expect(page.locator('#route-result')).toContainText('1 room still needs a linked door');
-	await page.locator('#workspace-route-preview').click();
-	await expect(page.locator('[data-tool="select"]').first()).toHaveClass(/active/u);
-	await page.locator('#route-simulate').click();
-	await expect(page.locator('#route-result')).toContainText('min');
-	const screenshotPath: string = testInfo.outputPath('automatic-route-studio.png');
-	await page.screenshot({ fullPage: true, path: screenshotPath });
-	await testInfo.attach('automatic-route-studio', { contentType: 'image/png', path: screenshotPath });
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const builtProject = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	const door = builtProject.floors[0].elements.find((element: WayfindingStudioElement): element is WayfindingStudioDoorElement => element.type === 'door');
-	expect(door?.locationId).toBe('meeting-room-shape');
-	expect(builtProject.floors[0].pedestrianSpaceSource).toBe('polygons');
-	expect(builtProject.floors[0].walkableMask?.mapId).toBe('automatic-route-test:stale-painted-mask');
-	expect(builtProject.floors[0].walkableMask?.walkableRuns).toEqual([[0, 0, 0]]);
-	expect(builtProject.graph.edges.length).toBeGreaterThan(0);
-	const roomNode = builtProject.graph.nodes.find((node): boolean => node.semanticElementId === 'meeting-room-shape');
-	expect(roomNode).toMatchObject({ x: door?.point.x, y: door?.point.y });
-	const roomApproach = builtProject.graph.edges.find((edge): boolean => edge.id.startsWith('approach:') && edge.from === roomNode?.id);
-	expect(roomApproach).toBeDefined();
-	const approachGeometry = roomApproach?.geometry ?? [];
-	expect(approachGeometry[0]).toEqual(door?.point);
-	expect(approachGeometry.length).toBeGreaterThan(1);
-	expect(approachGeometry[1].x).toBeLessThan(door?.point.x ?? Number.NEGATIVE_INFINITY);
-	expect(Math.abs(approachGeometry[1].y - (door?.point.y ?? 0))).toBeLessThanOrEqual(10);
-	expect(approachGeometry.every((point): boolean => point.x >= 50 && point.x <= 850 && point.y >= 80 && point.y <= 520)).toBe(true);
-	const comparisonProject = createAutomaticRouteTestProject();
-	const comparisonFloor = comparisonProject.floors[0];
-	const comparisonDoor = comparisonFloor.elements.find(
-		(element): element is WayfindingStudioDoorElement => element.type === 'door'
-	);
-
-	if (comparisonDoor) comparisonDoor.locationId = 'meeting-room-shape';
-	synchronizeWayfindingStudioGraph(comparisonProject);
-	const currentBuild = buildFloorRouteNetwork(comparisonProject, comparisonFloor.id, {
-		cellSize: 4,
-		clearanceCells: 1
-	});
-	const legacyQuality = measureRouteNetwork(builtProject.graph.edges, builtProject.graph.nodes);
-	const currentQuality = measureRouteNetwork(
-		currentBuild.project.graph.edges,
-		currentBuild.project.graph.nodes
-	);
-	const misleadingIssueCodes = new Set(['backtracking', 'short-zigzag', 'zero-length-segment']);
-	const legacyMisleadingIssues = builtProject.graph.edges.flatMap((edge) =>
-		inspectRouteGeometry(edge, builtProject.graph.nodes)
-	).filter((issue) => misleadingIssueCodes.has(issue.code));
-	const currentMisleadingIssues = currentBuild.project.graph.edges.flatMap((edge) =>
-		inspectRouteGeometry(edge, currentBuild.project.graph.nodes)
-	).filter((issue) => misleadingIssueCodes.has(issue.code));
-
-	await testInfo.attach('legacy-vs-current-route-quality.json', {
-		body: Buffer.from(JSON.stringify({
-			current: {
-				...currentQuality,
-				edges: currentBuild.project.graph.edges.length,
-				misleadingIssues: currentMisleadingIssues.length
-			},
-			fixture: 'automatic-route-test',
-			legacy: {
-				...legacyQuality,
-				edges: builtProject.graph.edges.length,
-				misleadingIssues: legacyMisleadingIssues.length
-			}
-		}, null, 2)),
-		contentType: 'application/json'
-	});
-	expect(currentQuality.score).toBeGreaterThanOrEqual(legacyQuality.score);
-	expect(currentMisleadingIssues.length).toBeLessThanOrEqual(legacyMisleadingIssues.length);
-	expect(errors).toEqual([]);
-});
-
-test('prompts for an icon or logo image before placement', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	const iconPath: string = testInfo.outputPath('marker.png');
-	fs.writeFileSync(iconPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n1EAAAAASUVORK5CYII=', 'base64'));
-	const chooserPromise = page.waitForEvent('filechooser');
-	await page.locator('[data-tool="logo"]').click();
-	const chooser = await chooserPromise;
-	await chooser.setFiles(iconPath);
-	await expect(page.locator('#media-asset-state')).toHaveAttribute('data-ready', 'true');
-	await expect(page.locator('#media-asset-summary')).toContainText('marker.png stays selected');
-	await page.locator('#stage').click({ position: { x: 330, y: 380 } });
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Logo');
-	expect(errors).toEqual([]);
-});
-
-test('opens the maintained Veszprem highlight project with embedded artwork', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	await page.locator('#studio-project-file').setInputFiles(path.resolve('examples', 'veszprem-wayfinding', 'veszprem-downtown.wbwayfinding'));
-	await expect(page.locator('#studio-floor')).toHaveValue('downtown');
-	await expect(page.locator('#route-destination option')).toHaveCount(36);
-	await expect(page.locator('#studio-validation')).toContainText('RUNTIME EXPORT READY');
-	const centerPixel = await page.locator('#stage').evaluate((canvas: HTMLCanvasElement): number[] => {
-		const context = canvas.getContext('2d');
-		return context ? [...context.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data] : [];
-	});
-	expect(centerPixel).toHaveLength(4);
-	expect(centerPixel.slice(0, 3)).not.toEqual([247, 245, 239]);
-	const screenshotPath: string = testInfo.outputPath('veszprem-studio.png');
-	await page.screenshot({ fullPage: true, path: screenshotPath });
-	await testInfo.attach('veszprem-studio', { contentType: 'image/png', path: screenshotPath });
-	expect(errors).toEqual([]);
-});
-
-test('opens recoverable projects with a visible repair report and allows selecting the same file again', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	const project: WayfindingStudioProject = createWayfindingStudioProject('recoverable-browser-project');
-	project.name = 'Recovered field project';
-	project.floors[0].width = 100;
-	project.floors[0].height = 80;
-	project.floors[0].elements.push({
-		floorId: 'level-0',
-		geometry: [{ x: 10, y: 10 }, { x: 125, y: 10 }, { x: 125, y: 70 }, { x: 10, y: 70 }],
-		id: 'walkable-7',
-		provenance: 'reviewer-authored',
-		status: 'confirmed',
-		type: 'walkable'
-	});
-	const projectPath: string = testInfo.outputPath('recoverable-project.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(project));
-
-	await page.goto('/');
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await expect(page.locator('#project-context-name')).toContainText('Recovered field project');
-	await expect(page.locator('#studio-notice')).toContainText('automatic repair');
-	await expect(page.locator('#studio-notice')).toContainText('walkable-7');
-	await expect(page.locator('#project-context-portable')).toHaveText('Not saved to file');
-
-	await page.locator('#studio-open-project').click();
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await expect(page.locator('#studio-notice')).toContainText('automatic repair');
-	expect(errors).toEqual([]);
-});
-
-test('reports route distance only for a calibrated floor', async ({ page }, testInfo) => {
-	await page.goto('/');
-	const projectPath: string = testInfo.outputPath('route-scale-test.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	const scale = page.locator('#studio-floor-units-per-meter');
-	await expect(scale).toHaveValue('20');
-
-	const canvas = page.locator('#stage');
-	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
-		const bounds: DOMRect = element.getBoundingClientRect();
-		return { height: bounds.height, width: bounds.width };
-	});
-	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
-	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
-	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
-	const clickDestination = async (): Promise<void> => {
-		await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
-	};
-
-	await page.locator('#workspace-route-preview').click();
-	await clickDestination();
-	// 20 units per metre must divide the raw map distance rather than report map units as metres.
-	const calibrated: string = await page.locator('#route-result').innerText();
-	const reportedMeters: number = Number(/(\d+) m,/.exec(calibrated)?.[1]);
-	expect(reportedMeters).toBeGreaterThan(0);
-	expect(reportedMeters).toBeLessThan(60);
-
-	await page.locator('#workspace-map').click();
-	await scale.fill('');
-	await page.locator('#workspace-route-preview').click();
-	await clickDestination();
-	await expect(page.locator('#route-result')).toContainText('Set the floor scale');
-	await expect(page.locator('#route-result')).not.toContainText(' m,');
-	await page.locator('#workspace-runtime-preview').click();
-	await page.locator('.runtime-preview-result').first().click();
-	await expect(page.locator('#runtime-preview-name')).toBeVisible();
-	await expect(page.locator('#runtime-preview-route')).toBeHidden();
-});
-
-test('clears a simulated route without changing the authored project', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	const projectPath: string = testInfo.outputPath('route-clear-test.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('#workspace-route-edit').click();
-	await expect(page.locator('#edge-summary')).toHaveText('1 route segment');
-	await expect(page.locator('#edge-list button')).toContainText('Lobby screen to Meeting room');
-	await page.locator('#edge-list button').click();
-	await expect(page.locator('#selected-edge h2')).toHaveText('Route segment');
-	await expect(page.locator('#selected-edge').getByLabel('Segment type')).toHaveValue('indoor');
-	await expect(page.locator('#selected-edge')).toContainText('Advanced segment settings');
-
-	await page.locator('#workspace-route-preview').click();
-	const clearRoute = page.locator('#route-clear');
-	const inspectRoute = page.locator('#route-inspect');
-	await expect(clearRoute).toBeDisabled();
-	await expect(inspectRoute).toBeDisabled();
-	const canvas = page.locator('#stage');
-	await expect(canvas).toHaveAttribute('data-route-network-visible', 'false');
-	await page.locator('#route-preview-network').check();
-	await expect(canvas).toHaveAttribute('data-route-network-visible', 'true');
-	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
-		const bounds: DOMRect = element.getBoundingClientRect();
-		return { height: bounds.height, width: bounds.width };
-	});
-	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
-	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
-	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
-	await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
-	await expect(page.locator('#route-result')).toContainText('min');
-	await expect(page.locator('#route-result')).toContainText('1 network segment');
-	await expect(canvas).toHaveAttribute('data-preview-route-point-count', '3');
-	await expect(clearRoute).toBeEnabled();
-	await expect(inspectRoute).toBeEnabled();
-	await inspectRoute.click();
-	await expect(page.locator('#workspace-route-edit')).toHaveAttribute('aria-pressed', 'true');
-	await expect(page.locator('#selected-edge')).toContainText('Lobby screen to Meeting room');
-	await expect(canvas).toHaveAttribute('data-preview-route-point-count', '3');
-	await page.locator('#workspace-route-preview').click();
-	await clearRoute.click();
-	await expect(clearRoute).toBeDisabled();
-	await expect(page.locator('#route-result')).toContainText('Route preview cleared');
-	expect(errors).toEqual([]);
-});
-
-test('renders, rotates, selects, and saves a nonblank 3D floor preview', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	const projectPath: string = testInfo.outputPath('three-dimensional-preview.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(create3dTestProject()));
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('#view-3d').click();
-	const preview = page.locator('#stage-3d');
-	const webglCanvas = preview.locator('canvas');
-	await expect(preview).toBeVisible();
-	await expect(webglCanvas).toBeVisible();
-	await expect(page.locator('#view-3d')).toHaveAttribute('aria-pressed', 'true');
-	await expect(preview).toHaveAttribute('data-media-count', '1');
-	await expect(preview).toHaveAttribute('data-rendered-media-count', '1');
-	await expect(preview).toHaveAttribute('data-ready-media-count', '1');
-	await page.waitForTimeout(250);
-
-	const pixelEvidence = await webglCanvas.evaluate((canvas: HTMLCanvasElement): { colors: number; opaqueSamples: number } => {
-		const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true }) ?? canvas.getContext('webgl', { preserveDrawingBuffer: true });
-		if (!gl) return { colors: 0, opaqueSamples: 0 };
-		gl.finish();
-		const colors = new Set<string>();
-		let opaqueSamples = 0;
-		const pixel = new Uint8Array(4);
-		for (let row = 1; row <= 12; row += 1) {
-			for (let column = 1; column <= 12; column += 1) {
-				gl.readPixels(Math.floor(canvas.width * column / 13), Math.floor(canvas.height * row / 13), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-				colors.add(`${pixel[0]},${pixel[1]},${pixel[2]}`);
-				if (pixel[3] > 0) opaqueSamples += 1;
-			}
-		}
-		return { colors: colors.size, opaqueSamples };
-	});
-	expect(pixelEvidence.opaqueSamples).toBeGreaterThan(100);
-	expect(pixelEvidence.colors).toBeGreaterThan(3);
-
-	const bounds = await webglCanvas.boundingBox();
-	expect(bounds).not.toBeNull();
-	await page.mouse.click((bounds?.x ?? 0) + (bounds?.width ?? 0) / 2, (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2);
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-	await expect(page.locator('#semantic-editor').getByLabel('Fill color')).toHaveValue('#e18b4f');
-	await expect(page.locator('#semantic-editor').getByLabel('3D visual height')).toHaveValue('52');
-	const fillColor = page.locator('#semantic-editor').getByLabel('Fill color');
-	await fillColor.fill('#d17a45');
-	await fillColor.blur();
-	await expect(page.locator('#undo')).toBeEnabled();
-	await page.locator('#workspace-route-preview').click();
-	await page.mouse.click((bounds?.x ?? 0) + (bounds?.width ?? 0) / 2, (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2);
-	await expect(page.locator('#route-result')).toContainText('min');
-	await expect(preview).toHaveAttribute('data-route-animation', 'flow');
-	await expect(preview).toHaveAttribute('data-route-width', '13');
-	// The walking route must stay on the pedestrian plane instead of climbing onto extruded room tops.
-	const routeElevation: number = Number(await preview.getAttribute('data-route-elevation'));
-	const floorPeak: number = Number(await preview.getAttribute('data-floor-peak'));
-	expect(floorPeak).toBeGreaterThan(0);
-	expect(routeElevation).toBeGreaterThan(0);
-	expect(routeElevation).toBeLessThan(floorPeak);
-	const firstProgress: string | null = await preview.getAttribute('data-route-progress');
-	await expect.poll(async (): Promise<string | null> => preview.getAttribute('data-route-progress')).not.toBe(firstProgress);
-	const routeScreenshotPath: string = testInfo.outputPath('three-dimensional-route-preview.png');
-	await preview.screenshot({ path: routeScreenshotPath });
-	await testInfo.attach('three-dimensional-route-preview', { contentType: 'image/png', path: routeScreenshotPath });
-	await page.locator('#view-2d').click();
-	await expect(page.locator('#stage')).toBeVisible();
-	await page.locator('#undo').click();
-	await page.locator('#view-3d').click();
-	await expect(webglCanvas).toBeVisible();
-	await page.locator('#workspace-map').click();
-
-	await page.mouse.move((bounds?.x ?? 0) + (bounds?.width ?? 0) * 0.58, (bounds?.y ?? 0) + (bounds?.height ?? 0) * 0.5);
-	await page.mouse.down();
-	await page.mouse.move((bounds?.x ?? 0) + (bounds?.width ?? 0) * 0.72, (bounds?.y ?? 0) + (bounds?.height ?? 0) * 0.4, { steps: 6 });
-	await page.mouse.up();
-	await page.locator('#save-3d-view').click();
-	const screenshotPath: string = testInfo.outputPath('three-dimensional-preview.png');
-	await preview.screenshot({ path: screenshotPath });
-	await testInfo.attach('three-dimensional-preview', { contentType: 'image/png', path: screenshotPath });
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const saved = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	expect(saved.floors[0].camera3d?.distance).toBeGreaterThan(0);
-	expect(saved.floors[0].camera3d?.pitchDegrees).toBeGreaterThanOrEqual(5);
-	expect(errors).toEqual([]);
-});
-
-test('autosaves authored geometry and restores it after a reload', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	await expect(page.locator('#autosave-status')).toHaveText('AUTOSAVE');
-	const stageBoundsBeforeSave = await page.locator('.stage-shell').boundingBox();
-
-	const canvas = page.locator('#stage');
-	const authoredRoomCenter = await mapPointAtCanvasPosition(canvas, { x: 320, y: 360 });
-	await page.locator('[data-tool="location"]').click();
-	for (const position of [{ x: 220, y: 280 }, { x: 420, y: 280 }, { x: 420, y: 440 }, { x: 220, y: 440 }]) await canvas.click({ position });
-	await page.locator('#semantic-finish').click();
-	await page.locator('#semantic-editor').getByLabel('Name', { exact: true }).fill('Recovered room');
-	await expect(page.locator('#autosave-status')).toHaveText('SAVED', { timeout: 5000 });
-	await expect(page.locator('#autosave-status')).toHaveAttribute('data-detail', /^SAVED /u);
-	expect(await page.locator('.stage-shell').boundingBox()).toEqual(stageBoundsBeforeSave);
+		return stored ? (JSON.parse(stored) as { name?: string }).name : undefined;
+	}, RECOVERY_KEY)).toBe('Recovered file update');
 
 	await page.reload();
-	await expect(page.locator('#local-recovery')).toBeVisible();
-	await expect(page.locator('#local-recovery-summary')).toContainText('Wayfinding project');
-	await page.locator('#restore-autosave').click();
-	await expect(page.locator('#local-recovery')).toBeHidden();
-	await expect(page.locator('#coverage-status')).toContainText('Restored local work');
-	await page.locator('[data-tool="select"]').click();
-	await clickMapPoint(canvas, authoredRoomCenter);
-	await expect(page.locator('#semantic-editor').getByRole('heading', { name: 'Room / area' })).toBeVisible();
-	await expect(page.locator('#semantic-editor').getByLabel('Name', { exact: true })).toHaveValue('Recovered room');
-	expect(errors).toEqual([]);
+	const recoveryDialog = page.getByRole('dialog', { name: 'Restore unsaved local work?' });
+	await expect(recoveryDialog).toBeVisible();
+	await recoveryDialog.getByRole('button', { name: 'Restore work' }).click();
+	await page.getByRole('button', { name: 'Save (Ctrl+S)' }).click();
+	await expect(page.getByText(/Saved to recovery-target\.wbwayfinding/)).toBeVisible();
+	await expect.poll(() => page.evaluate(async (): Promise<string | undefined> => {
+		const directory = await navigator.storage.getDirectory();
+		const handle = await directory.getFileHandle('recovery-target.wbwayfinding');
+		const stored = JSON.parse(await (await handle.getFile()).text()) as { name?: string };
+
+		return stored.name;
+	})).toBe('Recovered file update');
 });
 
-test('keeps specialist delivery controls out of the authoring path and supports reversible deletion', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
+test('discards, autosaves, restores, and replaces local recovery without resurrecting stale work', async ({ page }) => {
+	const recovery = createTestProject();
+	recovery.name = 'Discard this recovery';
+	await page.addInitScript(({ key, serialized }) => {
+		if (sessionStorage.getItem('wayfinding-recovery-seeded') === 'true') return;
+		localStorage.setItem(key, serialized);
+		sessionStorage.setItem('wayfinding-recovery-seeded', 'true');
+	}, { key: RECOVERY_KEY, serialized: JSON.stringify(recovery) });
 	await page.goto('/');
+	const recoveryDialog = page.getByRole('dialog', { name: 'Restore unsaved local work?' });
+	await expect(recoveryDialog).toBeVisible();
+	await recoveryDialog.getByRole('button', { name: 'Discard' }).click();
+	await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), RECOVERY_KEY)).toBeNull();
 
-	await expect(page.locator('[data-tool="select"]')).toHaveClass(/active/u);
-	await expect(page.locator('#tool-title')).toHaveText('Select & move');
-	await expect(page.locator('#reviewer-id')).not.toBeVisible();
-	await expect(page.getByText('Destination details', { exact: true })).not.toBeVisible();
-	await expect(page.getByText('Delivery checks', { exact: true })).not.toBeVisible();
-	await expect(page.locator('#studio-export-project')).toBeVisible();
-	await expect(page.locator('#workspace-map')).toHaveAttribute('aria-pressed', 'true');
+	await openProjectSettings(page);
+	await page.getByLabel('Project name').fill('Autosaved concourse');
+	await page.getByLabel('Project name').blur();
+	await expect.poll(() => page.evaluate((key) => {
+		const stored = localStorage.getItem(key);
 
-	const canvas = page.locator('#stage');
-	await page.locator('[data-tool="location"]').click();
-	await canvas.click({ position: { x: 220, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 440 } });
-	await canvas.click({ position: { x: 220, y: 440 } });
-	await page.locator('#semantic-finish').click();
-	await expect(page.locator('#delete-selection')).toBeEnabled();
+		return stored ? (JSON.parse(stored) as { name?: string }).name : undefined;
+	}, RECOVERY_KEY)).toBe('Autosaved concourse');
 
-	await page.locator('[data-tool="select"]').click();
-	await page.locator('#delete-selection').click();
-	await expect(page.locator('#undo')).toBeEnabled();
-	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
+	await page.reload();
+	await expect(recoveryDialog).toBeVisible();
+	await recoveryDialog.getByRole('button', { name: 'Restore work' }).click();
+	await expect(page.locator('.document-context')).toContainText('Autosaved concourse');
 
-	await page.locator('#undo').click();
-	await canvas.click({ position: { x: 320, y: 360 } });
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-	await expect(page.locator('#redo')).toBeEnabled();
+	await openProjectSettings(page);
+	await page.getByLabel('Project name').fill('Recovery that must not return');
+	await page.getByLabel('Project name').blur();
+	await expect.poll(() => page.evaluate((key) => {
+		const stored = localStorage.getItem(key);
 
-	await page.locator('#redo').click();
-	await canvas.click({ position: { x: 320, y: 360 } });
-	await expect(page.locator('#semantic-editor')).toContainText('Select an authored');
-	expect(errors).toEqual([]);
+		return stored ? (JSON.parse(stored) as { name?: string }).name : undefined;
+	}, RECOVERY_KEY)).toBe('Recovery that must not return');
+	await page.getByRole('button', { name: 'Search commands' }).click();
+	await page.getByRole('searchbox', { name: 'Search commands' }).fill('Create a new project');
+	await page.getByRole('option', { name: 'Create a new project' }).click();
+	await page.getByRole('dialog', { name: 'Replace unsaved work?' })
+		.getByRole('button', { name: 'Create project' })
+		.click();
+	await expect(page.locator('.document-context')).toContainText('Wayfinding project');
+	await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), RECOVERY_KEY)).toBeNull();
+
+	await page.reload();
+	await expect(recoveryDialog).toHaveCount(0);
+	await expect(page.locator('.document-context')).toContainText('Wayfinding project');
 });
 
-test('edits room and POI descriptions with discoverable keyboard authoring', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-
-	await page.keyboard.press('?');
-	await expect(page.locator('#shortcut-dialog')).toBeVisible();
-	await expect(page.locator('#shortcut-dialog')).toContainText('Hold to pan');
-	await expect(page.locator('#shortcut-dialog')).toContainText('Save to the opened file');
-	await page.locator('#shortcut-close').click();
-
-	const canvas = page.locator('#stage');
-	await page.keyboard.press('r');
-	await expect(page.locator('[data-tool="location"]')).toHaveClass(/active/u);
-	await canvas.click({ position: { x: 220, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 280 } });
-	await canvas.click({ position: { x: 420, y: 440 } });
-	await canvas.click({ position: { x: 220, y: 440 } });
-	await page.keyboard.press('Enter');
-	const selection = page.locator('#semantic-editor');
-	await expect(selection.getByRole('heading', { name: 'Room / area' })).toBeVisible();
-	await selection.getByLabel('Name', { exact: true }).fill('Visitor services');
-	await selection.getByLabel('Description').fill('Maps, tickets, and local assistance for visitors.');
-	await selection.getByLabel('Category').fill('Services');
-
-	await selection.getByRole('heading', { name: 'Room / area' }).click();
-	await page.keyboard.press('p');
-	await canvas.click({ position: { x: 520, y: 360 } });
-	await expect(selection.getByRole('heading', { name: 'Point of interest' })).toBeVisible();
-	await selection.getByLabel('Name', { exact: true }).fill('Information desk');
-	await selection.getByLabel('Description').fill('Staffed help desk near the main entrance.');
-	await selection.getByLabel('Category').fill('Information');
-	await selection.getByRole('heading', { name: 'Point of interest' }).click();
-	await page.keyboard.press('l');
-	await canvas.click({ position: { x: 600, y: 300 } });
-	await expect(selection.getByRole('heading', { name: 'Text label' })).toBeVisible();
-	await selection.getByLabel('Text', { exact: true }).fill('Main entrance');
-	await selection.getByLabel('Font family').selectOption('serif');
-	await selection.getByLabel('Font size').fill('36');
-	await selection.getByLabel('Weight').selectOption('700');
-	await selection.getByLabel('Text color').fill('#264653');
-	await selection.getByLabel('Alignment').selectOption('middle');
-	await selection.getByLabel('Outline color').fill('#ffffff');
-	await selection.getByLabel('Outline width').fill('2');
-
+test('publishes a portable wbmap package instead of an internal runtime JSON', async ({ page }) => {
+	await openEditor(page);
 	const downloadPromise = page.waitForEvent('download');
-	await page.keyboard.press('Control+s');
+
+	await page.getByRole('button', { name: 'Publish map' }).click();
 	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as { destinations: Array<{ category?: string; description?: string; name: string }>; floors: Array<{ elements: Array<Record<string, unknown>> }> };
-	expect(project.destinations).toEqual(expect.arrayContaining([
-		expect.objectContaining({ category: 'Services', description: 'Maps, tickets, and local assistance for visitors.', name: 'Visitor services' }),
-		expect.objectContaining({ category: 'Information', description: 'Staffed help desk near the main entrance.', name: 'Information desk' })
+	expect(download.suggestedFilename()).toBe('Northline-Test-Center.wbmap');
+
+	const path = await download.path();
+	expect(path).not.toBeNull();
+	const entries = unzipSync(new Uint8Array(await readFile(path)));
+	expect(Object.keys(entries)).toEqual(expect.arrayContaining([
+		'manifest.json',
+		'map.json',
+		'data/destinations.json',
+		'routes/graph.json',
+		'floors/level-0.scene.json',
+		'floors/level-0.svg'
 	]));
-	expect(project.floors[0].elements).toEqual(expect.arrayContaining([
-		expect.objectContaining({ color: '#264653', fontFamily: 'serif', fontSize: 36, fontWeight: 700, outlineColor: '#ffffff', outlineWidth: 2, text: 'Main entrance', textAnchor: 'middle', type: 'label' })
-	]));
-	expect(errors).toEqual([]);
+	await expect(page.getByText('Published map downloaded.', { exact: true })).toBeVisible();
 });
 
-test('keeps polygon drafts reversible and exposes authored objects with project defaults', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-
-	await page.locator('.project-defaults > summary').click();
-	await page.locator('#default-location-opacity').fill('58');
-	await page.locator('#default-location-opacity').blur();
-	await page.locator('#default-location-height').fill('31');
-	await page.locator('#default-location-height').blur();
-	await page.locator('[data-location-color-mode="random"]').click();
-
-	const canvas = page.locator('#stage');
-	await page.locator('#drawing-mode-points').click();
-	await expect(page.locator('#trace-assist')).toBeHidden();
-	await page.locator('[data-tool="location"]').click();
-	await canvas.click({ position: { x: 220, y: 280 } });
-	await canvas.click({ position: { x: 430, y: 280 } });
-	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '2');
-	await page.locator('#undo').click();
-	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '1');
-	await page.locator('#redo').click();
-	await expect(canvas).toHaveAttribute('data-semantic-draft-point-count', '2');
-	await canvas.click({ position: { x: 430, y: 450 } });
-	await canvas.click({ position: { x: 220, y: 450 } });
-	await page.locator('#semantic-finish').click();
-
-	await expect(page.locator('#object-count')).toHaveText('1 item');
-	await expect(page.locator('.object-group-heading')).toContainText('Rooms and areas (1)');
-	await expect(page.locator('.object-item')).toHaveClass(/active/u);
-	await page.locator('.object-item').click();
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Room / area');
-
-	await page.locator('#project-language-code').fill('hu');
-	await page.locator('#project-language-label').fill('Hungarian');
-	await page.locator('#project-language-add').click();
-	await expect(page.locator('#project-language-list')).toContainText('Hungarian');
-	const translations = page.locator('.translation-editor');
-	await translations.locator('summary').click();
-	await translations.getByLabel('Name', { exact: true }).fill('Latogatoi szolgaltatasok');
-	await translations.getByLabel('Description', { exact: true }).fill('Terkep, jegyek es helyi segitseg.');
-	await page.locator('#project-category-name').fill('Visitor services');
-	await page.locator('#project-category-add').click();
-	await expect(page.locator('#project-category-list input').last()).toHaveValue('Visitor services');
-	await page.locator('.builtin-icon-picker > summary').click();
-	await page.locator('.builtin-icon[title="Place Information"]').click();
-	await expect(page.locator('#media-asset-state')).toContainText('Information stays selected');
-	await canvas.click({ position: { x: 610, y: 360 } });
-
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	const location = project.floors[0].elements.find((element): element is WayfindingStudioPolygonElement => element.type === 'location');
-	const icon = project.floors[0].elements.find((element): boolean => element.type === 'icon');
-	expect(project.defaults?.location.fillOpacity).toBe(0.58);
-	expect(project.defaults?.location.extrusionHeight).toBe(31);
-	expect(project.defaults?.locationColor.mode).toBe('random');
-	expect(project.languages).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'hu', label: 'Hungarian' })]));
-	expect(project.destinations).toEqual(expect.arrayContaining([
-		expect.objectContaining({
-			translations: expect.objectContaining({
-				hu: expect.objectContaining({ description: 'Terkep, jegyek es helyi segitseg.', name: 'Latogatoi szolgaltatasok' })
-			})
-		})
-	]));
-	expect(project.categories).toContain('Visitor services');
-	expect(location?.presentation?.fillOpacity).toBe(0.58);
-	expect(location?.presentation?.extrusionHeight).toBe(31);
-	expect(location?.presentation?.fillColor).toMatch(/^#[0-9a-f]{6}$/u);
-	expect(icon).toEqual(expect.objectContaining({ assetId: 'builtin:information', type: 'icon' }));
-	expect(project.assets).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'builtin:information', mimeType: 'image/svg+xml' })]));
-	expect(errors).toEqual([]);
-});
-
-test('preserves the viewport through undo and supports temporary preview panning', async ({ page }) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	await page.goto('/');
-	const canvas = page.locator('#stage');
-
-	await canvas.hover({ position: { x: 500, y: 320 } });
-	await page.mouse.wheel(0, -480);
-	const before = await canvas.evaluate((element: HTMLCanvasElement): Record<string, string | undefined> => ({
-		offsetX: element.dataset.viewOffsetX,
-		offsetY: element.dataset.viewOffsetY,
-		scale: element.dataset.viewScale
-	}));
-	await page.locator('[data-tool="label"]').click();
-	await canvas.click({ position: { x: 520, y: 340 } });
-	await page.locator('#undo').click();
-	await expect.poll(async (): Promise<Record<string, string | undefined>> => canvas.evaluate((element: HTMLCanvasElement): Record<string, string | undefined> => ({
-		offsetX: element.dataset.viewOffsetX,
-		offsetY: element.dataset.viewOffsetY,
-		scale: element.dataset.viewScale
-	}))).toEqual(before);
-
-	await page.locator('#workspace-route-preview').click();
-	const panBefore: string | null = await canvas.getAttribute('data-view-offset-x');
-	const bounds = await canvas.boundingBox();
-	expect(bounds).not.toBeNull();
-	await page.keyboard.down('Space');
-	await page.mouse.move((bounds?.x ?? 0) + 20, (bounds?.y ?? 0) + 20);
-	await page.mouse.down();
-	await page.mouse.move((bounds?.x ?? 0) + 90, (bounds?.y ?? 0) + 55, { steps: 4 });
-	await page.mouse.up();
-	await page.keyboard.up('Space');
-	await expect(canvas).not.toHaveAttribute('data-view-offset-x', panBefore ?? '');
-	expect(errors).toEqual([]);
-});
-
-test('inserts, drags, and deletes individual route bends without replacing the segment', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
-	const projectPath: string = testInfo.outputPath('route-point-editing.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
-	await page.goto('/');
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('#workspace-route-edit').click();
-
-	const canvas = page.locator('#stage');
-	const canvasPosition = async (point: { x: number; y: number }): Promise<{ x: number; y: number }> => canvas.evaluate(
-		(element: HTMLCanvasElement, imagePoint): { x: number; y: number } => ({
-			x: Number(element.dataset.viewOffsetX) + imagePoint.x * Number(element.dataset.viewScale),
-			y: Number(element.dataset.viewOffsetY) + imagePoint.y * Number(element.dataset.viewScale)
-		}),
-		point
-	);
-	const insertionPosition = await canvasPosition({ x: 400, y: 190 });
-	await canvas.dblclick({ position: insertionPosition });
-	await expect(canvas).toHaveAttribute('data-selected-edge-vertex-index', '2');
-	await expect(page.locator('[data-selected-point]')).toHaveText('Bend 3 of 4');
-
-	const canvasBounds = await canvas.boundingBox();
-	expect(canvasBounds).not.toBeNull();
-	const dragTarget = await canvasPosition({ x: 420, y: 230 });
-	await page.mouse.move((canvasBounds?.x ?? 0) + insertionPosition.x, (canvasBounds?.y ?? 0) + insertionPosition.y);
-	await page.mouse.down();
-	await page.mouse.move((canvasBounds?.x ?? 0) + dragTarget.x, (canvasBounds?.y ?? 0) + dragTarget.y, { steps: 4 });
-	await page.mouse.up();
-
-	const editedDownloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const editedDownload = await editedDownloadPromise;
-	const editedPath: string = await editedDownload.path() as string;
-	const editedProject = JSON.parse(fs.readFileSync(editedPath, 'utf8')) as WayfindingStudioProject;
-	const editedEdge = editedProject.graph.edges.find((edge): boolean => edge.id === 'lobby-to-meeting');
-	expect(editedEdge?.geometry).toHaveLength(4);
-	expect(editedEdge?.geometry?.[2]).toEqual(expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
-	expect(Math.abs((editedEdge?.geometry?.[2].y ?? 0) - 230)).toBeLessThan(3);
-
+test('explains publish blockers and opens the affected map object', async ({ page }) => {
+	await openEditor(page);
+	await page.locator('[data-editor-element-id="door-information"]').click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'door-information');
 	await page.keyboard.press('Delete');
-	await expect(page.locator('[data-selected-point]')).toHaveText('No route point selected');
-	const cleanedDownloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const cleanedDownload = await cleanedDownloadPromise;
-	const cleanedPath: string = await cleanedDownload.path() as string;
-	const cleanedProject = JSON.parse(fs.readFileSync(cleanedPath, 'utf8')) as WayfindingStudioProject;
-	expect(cleanedProject.graph.edges.find((edge): boolean => edge.id === 'lobby-to-meeting')?.geometry).toHaveLength(3);
-	expect(cleanedProject.graph.edges).toHaveLength(1);
-	expect(errors).toEqual([]);
+	await expect(page.locator('[data-editor-element-id="door-information"]')).toHaveCount(0);
+	const publishChecks = page.locator('.right-panel details.panel-section')
+		.filter({
+			has: page.locator('summary strong').filter({ hasText: /^Publish checks \(/u })
+		});
+
+	await publishChecks.scrollIntoViewIfNeeded();
+	await expect(publishChecks.locator('summary')).toContainText(/Publish checks \([1-9]\d*\)/u);
+	await publishChecks.locator('summary').click();
+	await expect(publishChecks).toContainText('This destination needs a linked entrance.');
+
+	await page.getByRole('button', { name: 'Publish map' }).click();
+	const dialog = page.getByRole('dialog', { name: 'Map is not ready to publish' });
+	await expect(dialog).toBeVisible();
+	await expect(dialog).toContainText('needs a linked entrance');
+	await dialog.getByRole('button', { name: /Open affected item/ }).click();
+	await expect(dialog).toHaveCount(0);
+	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
 });
 
-test('rotates a door while placing it and persists animated route appearance', async ({ page }, testInfo) => {
-	const errors: string[] = [];
-	page.on('console', (message): void => { if (message.type() === 'error') errors.push(message.text()); });
-	page.on('pageerror', (error): void => { errors.push(error.message); });
+test('opens a portable project through the standard file input', async ({ page }) => {
+	const project = createTestProject();
+	project.name = 'Portable project import';
 	await page.goto('/');
-	const canvas = page.locator('#stage');
-	const bounds = await canvas.boundingBox();
-	expect(bounds).not.toBeNull();
-
-	await page.locator('[data-tool="door"]').click();
-	await page.mouse.move((bounds?.x ?? 0) + 360, (bounds?.y ?? 0) + 320);
-	await page.mouse.down();
-	await page.mouse.move((bounds?.x ?? 0) + 410, (bounds?.y ?? 0) + 385, { steps: 5 });
-	await page.mouse.up();
-	await expect(page.locator('#semantic-editor h2')).toHaveText('Door');
-
-	const doorDownloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const doorDownload = await doorDownloadPromise;
-	const doorDownloadPath: string = await doorDownload.path() as string;
-	const doorProject = JSON.parse(fs.readFileSync(doorDownloadPath, 'utf8')) as WayfindingStudioProject;
-	const placedDoor = doorProject.floors[0].elements.find((element): element is WayfindingStudioDoorElement => element.type === 'door');
-	expect(Math.abs(placedDoor?.angle ?? 0)).toBeGreaterThan(20);
-
-	const projectPath: string = testInfo.outputPath('animated-route-project.wbwayfinding');
-	fs.writeFileSync(projectPath, JSON.stringify(createRouteTestProject()));
-	await page.locator('#studio-open-project').click();
-	await page.locator('#studio-project-file').setInputFiles(projectPath);
-	await page.locator('.project-defaults > summary').click();
-	await page.locator('#default-route-animation').selectOption('flow');
-	await page.locator('#default-route-speed').fill('120');
-	await page.locator('#default-route-speed').dispatchEvent('input');
-	await page.locator('#default-route-color').fill('#1a73e8');
-	await page.locator('#default-route-color').dispatchEvent('input');
-	await page.locator('#default-route-width').fill('11');
-	await page.locator('#default-route-width').blur();
-	await page.locator('#workspace-route-preview').click();
-	await expect(page.locator('.route-preview-style')).toHaveCount(0);
-
-	const canvasSize = await canvas.evaluate((element: HTMLCanvasElement): { height: number; width: number } => {
-		const rect: DOMRect = element.getBoundingClientRect();
-		return { height: rect.height, width: rect.width };
+	await openProjectSettings(page);
+	await page.locator('[data-project-input]').setInputFiles({
+		buffer: Buffer.from(JSON.stringify(project)),
+		mimeType: 'application/json',
+		name: 'portable-project.wbwayfinding'
 	});
-	const routeScale: number = Math.min(canvasSize.width / 1920, canvasSize.height / 1080) * 0.96;
-	const routeOffsetX: number = (canvasSize.width - 1920 * routeScale) / 2;
-	const routeOffsetY: number = (canvasSize.height - 1080 * routeScale) / 2;
-	await canvas.click({ position: { x: routeOffsetX + 630 * routeScale, y: routeOffsetY + 240 * routeScale } });
-	await expect(canvas).toHaveAttribute('data-route-animation', 'flow');
-	await expect(page.locator('#route-result')).toContainText('min');
 
-	const downloadPromise = page.waitForEvent('download');
-	await page.locator('#studio-export-project').click();
-	const download = await downloadPromise;
-	const downloadPath: string = await download.path() as string;
-	const project = JSON.parse(fs.readFileSync(downloadPath, 'utf8')) as WayfindingStudioProject;
-	expect(project.defaults?.route).toEqual(expect.objectContaining({
-		animation: 'flow',
-		animationSpeed: 120,
-		color: '#1a73e8',
-		lineWidth: 11
-	}));
-	expect(errors).toEqual([]);
+	await expect(page.getByText('Opened portable-project.wbwayfinding', { exact: true })).toBeVisible();
+	await expect(page.getByLabel('Project name')).toHaveValue('Portable project import');
+	await expect(page.getByText('Portable project import', { exact: true }).first()).toBeVisible();
+});
+
+test('fits a maintained routed project inside the unobscured desktop stage', async ({ page }, testInfo) => {
+	await page.goto('/');
+	await openProjectSettings(page);
+	await page.locator('[data-project-input]').setInputFiles({
+		buffer: await readFile('examples/spatial-wayfinding/source/campus.wbwayfinding'),
+		mimeType: 'application/json',
+		name: 'campus.wbwayfinding'
+	});
+	await page.getByRole('button', { name: 'Objects', exact: true }).click();
+	await expect(page.getByText('Northline Campus Wayfinding', { exact: true }).first()).toBeVisible();
+	await page.getByRole('button', { name: 'Fit', exact: true }).click();
+
+	const stage = await page.locator('.stage').boundingBox();
+	const leftPanel = await page.locator('.left-panel').boundingBox();
+	const rightPanel = await page.locator('.right-panel').boundingBox();
+	const map = await page.locator('.map-transform').boundingBox();
+
+	expect(stage).not.toBeNull();
+	expect(leftPanel).not.toBeNull();
+	expect(rightPanel).not.toBeNull();
+	expect(map).not.toBeNull();
+	expect(stage!.x).toBeGreaterThanOrEqual(leftPanel!.x + leftPanel!.width - 1);
+	expect(stage!.x + stage!.width).toBeLessThanOrEqual(rightPanel!.x + 1);
+	expect(map!.x).toBeGreaterThanOrEqual(stage!.x);
+	expect(map!.x + map!.width).toBeLessThanOrEqual(stage!.x + stage!.width);
+	await expect(page.getByRole('button', { name: 'Entrance — Welcome Center', exact: true })).toBeVisible();
+	const screenshotPath = testInfo.outputPath('routed-project-desktop.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('routed-project-desktop', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+});
+
+test('reports recoverable geometry repairs and accepts the same project file again', async ({ page }, testInfo) => {
+	const project = createTestProject();
+	const location = project.floors[0].elements.find((element) => element.id === 'location-information');
+
+	if (!location || !('geometry' in location)) throw new Error('Expected location fixture.');
+	location.geometry[0] = { x: -120, y: 220 };
+	const projectFile = {
+		buffer: Buffer.from(JSON.stringify(project)),
+		mimeType: 'application/json',
+		name: 'recoverable-project.wbwayfinding'
+	};
+	await page.goto('/');
+	await openProjectSettings(page);
+	const input = page.locator('[data-project-input]');
+
+	await input.setInputFiles(projectFile);
+	const repairDialog = page.getByRole('dialog', { name: 'Project opened with repairs' });
+	await expect(repairDialog).toContainText('Clipped');
+	await expect(repairDialog.locator('.repair-report-list li')).toHaveCount(1);
+	const screenshotPath = testInfo.outputPath('repair-report.png');
+	await page.screenshot({ path: screenshotPath });
+	await testInfo.attach('repair-report', {
+		contentType: 'image/png',
+		path: screenshotPath
+	});
+	await repairDialog.getByRole('button', { name: 'Continue reviewing' }).click();
+	await expect(page.locator('[data-editor-element-id="location-information"]')).toBeVisible();
+
+	await input.setInputFiles(projectFile);
+	await expect(repairDialog).toBeVisible();
+	await expect(repairDialog).toContainText('recoverable-project.wbwayfinding');
+	await repairDialog.getByRole('button', { name: 'Continue reviewing' }).click();
+
+	const staleGraphProject = createTestProject();
+	staleGraphProject.graph.nodes.push({
+		id: 'semantic:deleted-location',
+		kind: 'location',
+		levelId: staleGraphProject.floors[0].id,
+		locationId: 'deleted-destination',
+		semanticElementId: 'deleted-location',
+		x: 320,
+		y: 220
+	});
+	await input.setInputFiles({
+		buffer: Buffer.from(JSON.stringify(staleGraphProject)),
+		mimeType: 'application/json',
+		name: 'stale-route-anchor.wbwayfinding'
+	});
+	await expect(repairDialog).toBeVisible();
+	await expect(repairDialog).toContainText('Removed an obsolete route anchor');
+	await expect(repairDialog).toContainText('No manual route work was changed');
+	await repairDialog.getByRole('button', { name: 'Continue reviewing' }).click();
+	await expect(page.locator('.toast.danger')).toHaveCount(0);
+});
+
+test('presents a continuous multi-floor visitor journey with an explicit transition', async ({ page }) => {
+	await openEditor(page, createMultiFloorTestProject());
+	await page.getByRole('button', { name: 'Preview' }).click();
+	await page.getByRole('button', { name: /Sky gallery/ }).click();
+
+	await expect(page.locator('.visitor-journey__floor')).toHaveCount(2);
+	await expect(page.locator('.visitor-journey')).toContainText('Ground floor');
+	await expect(page.locator('.visitor-journey')).toContainText('First floor');
+	await expect(page.locator('.visitor-journey__transition')).toContainText('Take the elevator to First floor');
+	await page.locator('.visitor-journey__floor').filter({ hasText: 'First floor' }).click();
+	await openPreviewSimulation(page);
+	await expect(page.locator('.visitor-panel').getByLabel('Visible floor')).toHaveValue('first');
+});
+
+test('authors, calibrates, illustrates, reorders, and deletes floors without losing the active floor', async ({ page }) => {
+	await openEditor(page, createMultiFloorTestProject());
+	await openProjectSettings(page);
+	await page.getByRole('combobox', { name: 'Current floor' }).selectOption('first');
+	await page.getByLabel('Floor name').fill('Sky level');
+	await page.getByLabel('Floor name').blur();
+	await page.getByLabel('Map scale').fill('24');
+	await page.getByLabel('Map scale').blur();
+	await page.locator('#floor-background-input').setInputFiles({
+		buffer: Buffer.from(
+			'<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">'
+			+ '<rect width="640" height="360" fill="#eef6f3"/>'
+			+ '<path d="M80 80h480v200H80z" fill="none" stroke="#0f766e" stroke-width="12"/>'
+			+ '</svg>'
+		),
+		mimeType: 'image/svg+xml',
+		name: 'sky-level.svg'
+	});
+	await expect(page.getByText('Loaded sky-level.svg')).toBeVisible();
+	await expect(page.getByRole('combobox', { name: 'Current floor' }).locator('option:checked')).toHaveText('Sky level');
+	await page.getByRole('button', { name: 'Move earlier' }).click();
+
+	await expect(page.getByRole('combobox', { name: 'Current floor' })).toHaveValue('first');
+	const floorOptions = page.getByRole('combobox', { name: 'Current floor' }).locator('option');
+	await expect(floorOptions.nth(0)).toHaveAttribute('value', 'first');
+	await expect(floorOptions.nth(1)).toHaveAttribute('value', 'level-0');
+
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(floorOptions.nth(0)).toHaveAttribute('value', 'level-0');
+	await expect(floorOptions.nth(1)).toHaveAttribute('value', 'first');
+	await expect(page.getByLabel('Floor name')).toHaveValue('Sky level');
+	await expect(page.getByLabel('Map scale')).toHaveValue('24');
+
+	await page.getByRole('button', { name: 'Add floor' }).click();
+	await expect(floorOptions).toHaveCount(3);
+	const addedFloorId = await page.getByRole('combobox', { name: 'Current floor' }).inputValue();
+	expect(addedFloorId).not.toBe('first');
+	await page.getByLabel('Floor name').fill('Annex');
+	await page.getByLabel('Floor name').blur();
+	await page.getByRole('button', { name: 'Delete', exact: true }).click();
+	const dialog = page.getByRole('dialog', { name: 'Delete Annex?' });
+	await expect(dialog).toContainText('every object authored on it will be removed');
+	await dialog.getByRole('button', { name: 'Delete floor' }).click();
+	await expect(floorOptions).toHaveCount(2);
+	await expect(page.getByRole('combobox', { name: 'Current floor' })).not.toHaveValue(addedFloorId);
+
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(floorOptions).toHaveCount(3);
+	await page.getByRole('combobox', { name: 'Current floor' }).selectOption(addedFloorId);
+	await expect(page.getByLabel('Floor name')).toHaveValue('Annex');
+});
+
+test('authors and reshapes a freehand pedestrian space inside the route workspace', async ({ page }) => {
+	await openEditor(page);
+	const existingWalkableAreas = page.locator('[data-editor-element-id^="walkable-"]');
+	await expect(existingWalkableAreas).toHaveCount(0);
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await expect(existingWalkableAreas).toHaveCount(1);
+	await page.getByRole('button', { name: /Draw a freehand pedestrian area/ }).click();
+	await dragMapPath(page, [
+		{ x: 520, y: 620 },
+		{ x: 700, y: 560 },
+		{ x: 920, y: 570 },
+		{ x: 1090, y: 690 },
+		{ x: 880, y: 760 },
+		{ x: 630, y: 740 },
+		{ x: 520, y: 620 }
+	]);
+
+	const authoredArea = page.locator('[data-editor-element-id^="walkable-"]');
+	await expect(authoredArea).toHaveCount(2);
+	await expect(page.locator('.selected-polygon')).toHaveCount(1);
+	const firstVertex = page.locator('.polygon-vertex').first();
+	const firstVertexX = await firstVertex.getAttribute('cx');
+	await dragLocatorBy(page, firstVertex, { x: 26, y: 14 });
+	await expect(firstVertex).not.toHaveAttribute('cx', firstVertexX ?? '');
+	await expect(page.getByText('Map object', { exact: true })).toBeVisible();
+});
+
+test('snaps a freehand outline to visible floor-plan edges', async ({ page }) => {
+	await openEditor(page, createTraceTestProject());
+	await page.getByRole('button', { name: /Draw a freehand room outline/ }).click();
+	await expect(page.getByRole('checkbox', { name: /Follow floor-plan edges/ })).toBeChecked();
+	await page.getByRole('button', { name: 'Close project panel' }).click();
+	await page.waitForTimeout(220);
+	const path = [
+		{ x: 270, y: 225 },
+		{ x: 870, y: 225 },
+		{ x: 870, y: 720 },
+		{ x: 270, y: 720 },
+		{ x: 270, y: 225 }
+	];
+	const map = page.locator('.map-transform');
+	const bounds = await map.boundingBox();
+	expect(bounds).not.toBeNull();
+	const viewportPoint = (point: { x: number; y: number }): { x: number; y: number } => ({
+		x: bounds!.x + point.x / 1920 * bounds!.width,
+		y: bounds!.y + point.y / 1080 * bounds!.height
+	});
+	const first = viewportPoint(path[0]);
+	await page.mouse.move(first.x, first.y);
+	await page.mouse.down();
+
+	for (const point of path.slice(1)) {
+		const next = viewportPoint(point);
+		await page.mouse.move(next.x, next.y, { steps: 3 });
+	}
+	const draftPoints = (await page.locator('.draft-line').getAttribute('points') ?? '')
+		.trim()
+		.split(/\s+/u);
+	expect(draftPoints.length).toBeGreaterThanOrEqual(4);
+	await page.mouse.up();
+
+	const points = (await page.locator('.selected-polygon').getAttribute('points') ?? '')
+		.trim()
+		.split(/\s+/u)
+		.map((pair) => pair.split(',').map(Number));
+	expect(points.length).toBeGreaterThanOrEqual(4);
+	expect(points.some(([x]) => Math.abs(x - 300) <= 12)).toBe(true);
+	expect(points.some(([x]) => Math.abs(x - 900) <= 12)).toBe(true);
+	expect(points.some(([, y]) => Math.abs(y - 200) <= 12)).toBe(true);
+	expect(points.some(([, y]) => Math.abs(y - 750) <= 12)).toBe(true);
+});
+
+test('smart trace converts a real floor-plan region into editable project geometry', async ({ page }) => {
+	await openEditor(page, createTraceTestProject());
+	await page.getByRole('button', { name: /Detect an area from the floor plan/ }).click();
+	await clickMapPoint(page, { x: 520, y: 420 });
+
+	const tracedArea = page.locator('[data-editor-element-id^="location-"]');
+	await expect(tracedArea).toHaveCount(1);
+	await tracedArea.click({ force: true });
+	await expect(page.getByText('Destination details', { exact: true })).toBeVisible();
+	await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(/Location/);
+});
+
+test('route-space detection cannot inherit the destination trace target', async ({ page }) => {
+	await openEditor(page, createTraceTestProject());
+	await page.getByRole('button', { name: /Detect an area from the floor plan/ }).click();
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await page.getByRole('button', { name: 'Detect from image', exact: true }).click();
+	await clickMapPoint(page, { x: 520, y: 420 });
+
+	await expect(page.locator('[data-editor-element-id^="walkable-"]')).toHaveCount(1);
+	await expect(page.locator('[data-editor-element-id^="location-"]')).toHaveCount(0);
+	await expect(page.getByText('Walkable area', { exact: true }).first()).toBeVisible();
+});
+
+test('keeps pedestrian areas behind map objects and route graph interactions', async ({ page }) => {
+	await openEditor(page);
+
+	const authoringOverlay = page.locator('.authoring-overlay');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(0);
+	await expect(authoringOverlay.locator('[data-editor-element-id="door-information"]')).toHaveCount(1);
+	await authoringOverlay.locator('[data-editor-element-id="door-information"]').click();
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'door-information');
+
+	await page.getByRole('button', { name: 'Route edit' }).click();
+	await expect(page.getByRole('button', { name: 'Space', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(1);
+	await expect(authoringOverlay.locator('.graph-edge-hit')).toHaveCount(0);
+	await authoringOverlay.locator('[data-editor-element-id="walkable-main"]').click({ force: true });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-id', 'walkable-main');
+
+	await page.getByRole('button', { name: 'Edit', exact: true }).click();
+	await expect(page.locator('.canvas-viewport')).not.toHaveAttribute('data-selection-id', 'walkable-main');
+	await expect(authoringOverlay.locator('[data-editor-element-id="walkable-main"]')).toHaveCount(0);
+	await expect(authoringOverlay.locator('.graph-edge-hit')).toHaveCount(1);
+	await clickMapPoint(page, { x: 900, y: 650 });
+	await expect(page.locator('.canvas-viewport')).toHaveAttribute('data-selection-kind', 'graph-edge');
+	await expect(page.locator('.left-panel')).toContainText('Only route geometry is selectable here');
+	expect(await panelLayoutProblems(page)).toEqual([]);
 });
