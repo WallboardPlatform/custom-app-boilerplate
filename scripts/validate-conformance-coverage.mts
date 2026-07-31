@@ -20,6 +20,14 @@ interface SuiteRequirement {
 	mechanisms: string[];
 	/** Declaring any of these capabilities requires the suite. */
 	capabilities: string[];
+	/**
+	 * Requires the suite whenever the fixture names a scenario matching this.
+	 *
+	 * Some obligations follow from what an app renders rather than from what it declares. Nothing in
+	 * the vocabulary says "has an empty state" -- every data-bound app does -- and a trigger read
+	 * from the fixture cannot be sidestepped by leaving a label off the manifest.
+	 */
+	scenarioPattern?: RegExp;
 	/** Why the suite is mandatory for this kind of app. */
 	because: string;
 }
@@ -38,6 +46,14 @@ const REQUIREMENTS: SuiteRequirement[] = [
 		mechanisms: ['content-paging', 'manual-paging'],
 		capabilities: [],
 		because: 'a pager that drops a record shows a board that looks entirely correct and is wrong'
+	},
+	{
+		suite: 'empty-state',
+		register: 'registerEmptyStateConformance',
+		mechanisms: [],
+		capabilities: [],
+		scenarioPattern: /'(empty[a-z-]*)'/,
+		because: 'a blank surface reads as a broken player rather than as "no data", and empty copy is routinely left at a size nobody can read from the floor'
 	},
 	{
 		suite: 'status-indicator',
@@ -79,6 +95,12 @@ const readSpecs = (exampleDirectory: string): string => {
 		.join('\n');
 };
 
+const readFixture = (exampleDirectory: string): string => {
+	const fixturePath: string = path.join(exampleDirectory, 'overlay', 'preview', 'fixture.ts');
+
+	return fs.existsSync(fixturePath) ? fs.readFileSync(fixturePath, 'utf8') : '';
+};
+
 const problems: string[] = [];
 const satisfied: string[] = [];
 const used = new Set<string>();
@@ -94,11 +116,16 @@ for (const entry of fs.readdirSync(examplesDirectory, { withFileTypes: true })) 
 	const mechanisms: string[] = manifest.mechanisms ?? [];
 	const capabilities: string[] = manifest.capabilities ?? [];
 	const specs: string = readSpecs(path.join(examplesDirectory, entry.name));
+	const fixture: string = readFixture(path.join(examplesDirectory, entry.name));
 
 	for (const requirement of REQUIREMENTS) {
+		const scenarioMatch: RegExpMatchArray | null = requirement.scenarioPattern
+			? fixture.match(requirement.scenarioPattern)
+			: null;
 		const triggeredBy: string[] = [
 			...requirement.mechanisms.filter((id: string): boolean => mechanisms.includes(id)),
-			...requirement.capabilities.filter((id: string): boolean => capabilities.includes(id))
+			...requirement.capabilities.filter((id: string): boolean => capabilities.includes(id)),
+			...(scenarioMatch ? [`the '${scenarioMatch[1]}' scenario`] : [])
 		];
 
 		if (triggeredBy.length === 0) {

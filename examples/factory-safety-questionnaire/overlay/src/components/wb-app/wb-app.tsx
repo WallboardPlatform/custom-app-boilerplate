@@ -329,7 +329,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<p class={`${style['lead']} wb-factory-safety-secondary`}>{settings().introText}</p>
 							<Show
 								when={questions().length > 0}
-								fallback={<div class={style['empty-state']}>No active safety questions are available.</div>}
+								fallback={<div class={style['empty-state']} data-preview-id="questionnaire-empty">No active safety questions are available.</div>}
 							>
 								<button class={style['primary-button']} type="button" onClick={(): void => session.navigate('identity')}>
 									Start safety check <span aria-hidden="true">-&gt;</span>

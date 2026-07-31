@@ -11,31 +11,88 @@
 		"Scenes without a title are ignored and disabled scenes never enter rotation.",
 		"The fictional Northline Arts content is synthetic and contains no customer data."
 	],
-	"app": { "mode": "new", "name": "CuratedStoryline", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "CuratedStoryline",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "The editorial composition must remain room-readable on landscape exhibition displays and portrait lobby screens."
 	},
 	"surfaces": [
-		{ "id": "app-default", "width": 1920, "height": 1080, "role": "primary", "purpose": "Landscape exhibition display with an index rail and full editorial scene.", "minimumContentCoverage": { "width": 92, "height": 86 } },
-		{ "id": "wide-low", "width": 1536, "height": 432, "role": "required", "purpose": "Wide information band that keeps the primary scene while removing supporting copy before reducing the title.", "minimumContentCoverage": { "width": 95, "height": 87 } },
-		{ "id": "portrait", "width": 1080, "height": 1920, "role": "required", "purpose": "Portrait lobby display with a horizontal index and stacked accent field.", "minimumContentCoverage": { "width": 88, "height": 85 } },
-		{ "id": "square", "width": 600, "height": 600, "role": "fallback", "purpose": "Compact square placement that preserves collection identity, title, and operational detail.", "minimumContentCoverage": { "width": 92, "height": 87 } }
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Landscape exhibition display with an index rail and full editorial scene.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 86
+			}
+		},
+		{
+			"id": "wide-low",
+			"width": 1536,
+			"height": 432,
+			"role": "required",
+			"purpose": "Wide information band that keeps the primary scene while removing supporting copy before reducing the title.",
+			"minimumContentCoverage": {
+				"width": 95,
+				"height": 87
+			}
+		},
+		{
+			"id": "portrait",
+			"width": 1080,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Portrait lobby display with a horizontal index and stacked accent field.",
+			"minimumContentCoverage": {
+				"width": 88,
+				"height": 85
+			}
+		},
+		{
+			"id": "square",
+			"width": 600,
+			"height": 600,
+			"role": "fallback",
+			"purpose": "Compact square placement that preserves collection identity, title, and operational detail.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 87
+			}
+		}
 	],
-	"data": { "mode": "static", "bindings": [] },
+	"data": {
+		"mode": "static",
+		"bindings": []
+	},
 	"ownership": [
 		{
 			"id": "nested-story-content",
 			"area": "content",
 			"owner": "setting",
-			"targets": ["customContent", "collection-identity", "ordered-scenes", "publication-state", "scene-composition"],
+			"targets": [
+				"customContent",
+				"collection-identity",
+				"ordered-scenes",
+				"publication-state",
+				"scene-composition"
+			],
 			"rationale": "An app-specific editor owns the complete nested collection because it is manual instance content that does not fit a flat sidebar."
 		},
 		{
 			"id": "playback-controls",
 			"area": "behavior",
 			"owner": "setting",
-			"targets": ["rotationSeconds", "showProgress", "motionPreset"],
+			"targets": [
+				"rotationSeconds",
+				"showProgress",
+				"motionPreset"
+			],
 			"rationale": "Operators can change simple playback choices directly in the standard sidebar."
 		},
 		{
@@ -59,18 +116,32 @@
 			"id": "editorial-layout",
 			"area": "presentation",
 			"owner": "locked",
-			"targets": ["landscape-composition", "portrait-composition", "type-hierarchy", "accent-geometry"],
+			"targets": [
+				"landscape-composition",
+				"portrait-composition",
+				"type-hierarchy",
+				"accent-geometry"
+			],
 			"rationale": "The generated app owns responsive layout and enforces signage readability."
 		}
 	],
 	"experience": {
 		"mode": "passive",
 		"views": [
-			{ "id": "story", "purpose": "Show one enabled editorial scene and its collection context." },
-			{ "id": "empty", "purpose": "Explain that no scenes are published without exposing broken controls or sample content." }
+			{
+				"id": "story",
+				"purpose": "Show one enabled editorial scene and its collection context."
+			},
+			{
+				"id": "empty",
+				"purpose": "Explain that no scenes are published without exposing broken controls or sample content."
+			}
 		],
 		"inputs": [],
-		"session": { "reset": "none", "expectation": "The passive storyline rotates continuously and immediately adopts editor configuration updates." }
+		"session": {
+			"reset": "none",
+			"expectation": "The passive storyline rotates continuously and immediately adopts editor configuration updates."
+		}
 	},
 	"outputs": [],
 	"rendering": {
@@ -82,7 +153,10 @@
 		"default": "subtle",
 		"presetProperty": "motionPreset",
 		"transition": "fade",
-		"techniques": ["fade", "progress"],
+		"techniques": [
+			"fade",
+			"progress"
+		],
 		"rationale": "A restrained reveal distinguishes scene changes; Off removes decorative motion while preserving rotation."
 	},
 	"media": [],
@@ -93,39 +167,115 @@
 		"fallback": "Use the bundled fictional identity until the operator saves a replacement through the custom editor."
 	},
 	"presentation": {
-		"themes": ["dark", "light", "custom"],
+		"themes": [
+			"dark",
+			"light",
+			"custom"
+		],
 		"density": "sparse",
 		"viewingDistance": "room",
 		"textRoles": [
-			{ "role": "primary", "selectors": [".wb-curated-storyline-title", ".wb-curated-storyline-collection-title"] },
-			{ "role": "secondary", "selectors": [".wb-curated-storyline-body", ".wb-curated-storyline-detail"] },
-			{ "role": "metadata", "selectors": [".wb-curated-storyline-label"] }
+			{
+				"role": "primary",
+				"selectors": [
+					".wb-curated-storyline-title",
+					".wb-curated-storyline-collection-title"
+				]
+			},
+			{
+				"role": "secondary",
+				"selectors": [
+					".wb-curated-storyline-body",
+					".wb-curated-storyline-detail"
+				]
+			},
+			{
+				"role": "metadata",
+				"selectors": [
+					".wb-curated-storyline-label"
+				]
+			}
 		]
 	},
-	"cadence": { "mode": "rotation", "intervalProperty": "rotationSeconds" },
+	"cadence": {
+		"mode": "rotation",
+		"intervalProperty": "rotationSeconds"
+	},
 	"settings": [
-		{ "property": "customContent", "purpose": "Opens the structured editor and stores collection identity plus ordered scenes.", "effect": "story-content" },
-		{ "property": "rotationSeconds", "purpose": "Sets the duration of each enabled scene." },
-		{ "property": "showProgress", "purpose": "Shows or hides the published scene index." },
-		{ "property": "motionPreset", "purpose": "Selects Off or Subtle scene transitions.", "effect": "motion-preset" },
-		{ "property": "themePreset", "purpose": "Selects the coordinated Dark, Light, or Custom palette.", "effect": "theme-preset" },
-		{ "property": "backgroundColor", "purpose": "Sets the Custom theme outer ground." },
-		{ "property": "surfaceColor", "purpose": "Sets the Custom theme story surface." },
-		{ "property": "textColor", "purpose": "Sets the Custom theme primary text." },
-		{ "property": "mutedTextColor", "purpose": "Sets the Custom theme secondary text." },
-		{ "property": "coralColor", "purpose": "Sets the Custom coral scene accent." },
-		{ "property": "cobaltColor", "purpose": "Sets the Custom cobalt scene accent." },
-		{ "property": "sunColor", "purpose": "Sets the Custom sun scene accent." },
-		{ "property": "mintColor", "purpose": "Sets the Custom mint scene accent." }
+		{
+			"property": "customContent",
+			"purpose": "Opens the structured editor and stores collection identity plus ordered scenes.",
+			"effect": "story-content"
+		},
+		{
+			"property": "rotationSeconds",
+			"purpose": "Sets the duration of each enabled scene."
+		},
+		{
+			"property": "showProgress",
+			"purpose": "Shows or hides the published scene index."
+		},
+		{
+			"property": "motionPreset",
+			"purpose": "Selects Off or Subtle scene transitions.",
+			"effect": "motion-preset"
+		},
+		{
+			"property": "themePreset",
+			"purpose": "Selects the coordinated Dark, Light, or Custom palette.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Sets the Custom theme outer ground."
+		},
+		{
+			"property": "surfaceColor",
+			"purpose": "Sets the Custom theme story surface."
+		},
+		{
+			"property": "textColor",
+			"purpose": "Sets the Custom theme primary text."
+		},
+		{
+			"property": "mutedTextColor",
+			"purpose": "Sets the Custom theme secondary text."
+		},
+		{
+			"property": "coralColor",
+			"purpose": "Sets the Custom coral scene accent."
+		},
+		{
+			"property": "cobaltColor",
+			"purpose": "Sets the Custom cobalt scene accent."
+		},
+		{
+			"property": "sunColor",
+			"purpose": "Sets the Custom sun scene accent."
+		},
+		{
+			"property": "mintColor",
+			"purpose": "Sets the Custom mint scene accent."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "scene-title",
 			"role": "primary",
-			"source": { "type": "setting", "properties": ["customContent"] },
-			"selectors": [".wb-curated-storyline-title"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"customContent"
+				]
+			},
+			"selectors": [
+				".wb-curated-storyline-title"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 46, "maximumLines": 5 },
+			"limits": {
+				"minimumFontSize": 46,
+				"maximumLines": 5
+			},
 			"fallback": "Preserve complete whole-word lines above 46px and reject scene titles that cannot remain room-readable.",
 			"rationale": "Scene titles are the primary reading target and vary by composition.",
 			"evidenceScenario": "long-copy"
@@ -133,10 +283,20 @@
 		{
 			"id": "scene-body",
 			"role": "secondary",
-			"source": { "type": "setting", "properties": ["customContent"] },
-			"selectors": [".wb-curated-storyline-body"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"customContent"
+				]
+			},
+			"selectors": [
+				".wb-curated-storyline-body"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 26, "maximumLines": 6 },
+			"limits": {
+				"minimumFontSize": 26,
+				"maximumLines": 6
+			},
 			"fallback": "Use the full bounded copy area and keep a 26px room-reading floor.",
 			"rationale": "Supporting copy remains complete without shrinking into interface-scale text.",
 			"evidenceScenario": "long-copy"
@@ -144,10 +304,20 @@
 		{
 			"id": "collection-title",
 			"role": "primary",
-			"source": { "type": "setting", "properties": ["customContent"] },
-			"selectors": [".wb-curated-storyline-collection-title"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"customContent"
+				]
+			},
+			"selectors": [
+				".wb-curated-storyline-collection-title"
+			],
 			"strategy": "ellipsis",
-			"limits": { "minimumFontSize": 28, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 28,
+				"maximumLines": 1
+			},
 			"fallback": "Keep the collection title on one line and reserve the scene title as the dominant reading target.",
 			"rationale": "The collection title establishes context without competing with the active scene.",
 			"evidenceScenario": "long-copy"
@@ -155,10 +325,20 @@
 		{
 			"id": "scene-label",
 			"role": "metadata",
-			"source": { "type": "setting", "properties": ["customContent"] },
-			"selectors": [".wb-curated-storyline-label"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"customContent"
+				]
+			},
+			"selectors": [
+				".wb-curated-storyline-label"
+			],
 			"strategy": "ellipsis",
-			"limits": { "minimumFontSize": 20, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 20,
+				"maximumLines": 1
+			},
 			"fallback": "Keep the scene label concise and ellipsize only pathological operator input.",
 			"rationale": "The scene label supports orientation without destabilizing the primary composition.",
 			"evidenceScenario": "long-copy"
@@ -166,46 +346,108 @@
 		{
 			"id": "scene-detail",
 			"role": "secondary",
-			"source": { "type": "setting", "properties": ["customContent"] },
-			"selectors": [".wb-curated-storyline-detail"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"customContent"
+				]
+			},
+			"selectors": [
+				".wb-curated-storyline-detail"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 22, "maximumLines": 2 },
+			"limits": {
+				"minimumFontSize": 22,
+				"maximumLines": 2
+			},
 			"fallback": "Use two complete lines before rejecting detail copy that cannot remain room-readable.",
 			"rationale": "Operational detail may vary in length but must remain visible at room-reading size.",
 			"evidenceScenario": "long-copy"
 		}
 	],
 	"states": [
-		{ "scenario": "wide-low", "expectation": "Supporting copy yields before the primary title and detail become smaller than their room-readable floors." },
-		{ "scenario": "portrait", "expectation": "The index becomes horizontal, copy remains in the upper field, and the accent geometry fills the lower field." },
-		{ "scenario": "square", "expectation": "The compact composition keeps collection identity, title, and detail without dashboard cards or clipped glyphs." },
-		{ "scenario": "quote", "expectation": "The quote composition uses serif display type and retains complete attribution and supporting context." },
-		{ "scenario": "schedule", "expectation": "The schedule composition promotes time and place without resembling a dashboard card." },
-		{ "scenario": "long-copy", "expectation": "Long collection and scene copy remains contained, unclipped, and above declared font floors." },
-		{ "scenario": "empty", "expectation": "No enabled scenes produces an intentional unpublished state with no sample story leakage." },
-		{ "scenario": "custom-theme", "expectation": "All semantic surfaces and scene accents change coherently under the Custom palette." }
+		{
+			"scenario": "wide-low",
+			"expectation": "Supporting copy yields before the primary title and detail become smaller than their room-readable floors."
+		},
+		{
+			"scenario": "portrait",
+			"expectation": "The index becomes horizontal, copy remains in the upper field, and the accent geometry fills the lower field."
+		},
+		{
+			"scenario": "square",
+			"expectation": "The compact composition keeps collection identity, title, and detail without dashboard cards or clipped glyphs."
+		},
+		{
+			"scenario": "quote",
+			"expectation": "The quote composition uses serif display type and retains complete attribution and supporting context."
+		},
+		{
+			"scenario": "schedule",
+			"expectation": "The schedule composition promotes time and place without resembling a dashboard card."
+		},
+		{
+			"scenario": "long-copy",
+			"expectation": "Long collection and scene copy remains contained, unclipped, and above declared font floors."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "No enabled scenes produces an intentional unpublished state with no sample story leakage."
+		},
+		{
+			"scenario": "custom-theme",
+			"expectation": "All semantic surfaces and scene accents change coherently under the Custom palette."
+		}
 	],
 	"behaviors": [
 		{
 			"id": "custom-editor-round-trip",
 			"expectation": "The app-specific editor loads nested content, reorders and edits scenes, saves only customContent, and preserves unrelated configuration.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "runtime-structured-update",
 			"expectation": "A complete nested content update changes the mounted collection and active scene without a datasource or remount.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "published-scene-rotation",
 			"expectation": "Rotation follows editor order and skips every disabled scene.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "custom-editor", "source": "packaged", "path": "src/editor-assets/custom-settings-editor/index.html", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "custom-editor",
+			"source": "packaged",
+			"path": "src/editor-assets/custom-settings-editor/index.html",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "creative-led",

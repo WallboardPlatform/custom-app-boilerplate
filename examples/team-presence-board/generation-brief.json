@@ -607,6 +607,13 @@
 			"evidence": {
 				"testFile": "preview/conformance.spec.ts"
 			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [

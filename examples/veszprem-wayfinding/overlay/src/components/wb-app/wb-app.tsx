@@ -777,7 +777,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							</div>
 
 							<div class={style['destination-list']} data-destination-count={filteredDestinations().length} data-preview-allow-overflow>
-								<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']}>{settings().emptyStateText}</div>}>
+								<Show when={filteredDestinations().length > 0} fallback={<div class={style['empty-state']} data-preview-id="destinations-empty">{settings().emptyStateText}</div>}>
 									<For each={filteredDestinations()}>{(destination: Destination): JSX.Element => (
 										<button type="button" data-destination-id={destination.id} data-mapped={Boolean(locationCenter(destination.id))} onClick={(): void => { selectDestination(destination); }}>
 											<small data-wide={destination.mapNumber.length > 2}>{destination.mapNumber || '•'}</small>
