@@ -11,7 +11,11 @@
 		"The final page may contain fewer than eight agents and must remain visually balanced.",
 		"Bundled names, timestamps, identifiers, and metrics are synthetic and preserve only the supplied datasource shape."
 	],
-	"app": { "mode": "new", "name": "Call Center Agent Status", "version": "1" },
+	"app": {
+		"mode": "new",
+		"name": "Call Center Agent Status",
+		"version": "1"
+	},
 	"surfaceStrategy": {
 		"mode": "adaptive",
 		"rationale": "Agent availability must remain scannable in full-screen walls, wide bands, portrait boards, and compact supervisor placements."
@@ -23,7 +27,10 @@
 			"height": 1080,
 			"role": "primary",
 			"purpose": "Two-column eight-agent supervisor roster.",
-			"minimumContentCoverage": { "width": 90, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 90,
+				"height": 88
+			}
 		},
 		{
 			"id": "wide-low",
@@ -31,7 +38,10 @@
 			"height": 432,
 			"role": "required",
 			"purpose": "Wide two-row agent band.",
-			"minimumContentCoverage": { "width": 92, "height": 84 }
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 84
+			}
 		},
 		{
 			"id": "portrait",
@@ -39,7 +49,10 @@
 			"height": 1920,
 			"role": "fallback",
 			"purpose": "Portrait two-column agent wall.",
-			"minimumContentCoverage": { "width": 88, "height": 90 }
+			"minimumContentCoverage": {
+				"width": 88,
+				"height": 90
+			}
 		},
 		{
 			"id": "square",
@@ -47,52 +60,125 @@
 			"height": 600,
 			"role": "fallback",
 			"purpose": "Compact two-column status grid.",
-			"minimumContentCoverage": { "width": 86, "height": 86 }
+			"minimumContentCoverage": {
+				"width": 86,
+				"height": 86
+			}
 		}
 	],
 	"data": {
 		"mode": "bound",
-		"bindings": [{ "property": "agentData", "source": "existing", "contract": "EXISTING" }]
+		"bindings": [
+			{
+				"property": "agentData",
+				"source": "existing",
+				"contract": "EXISTING"
+			}
+		]
 	},
 	"settings": [
-		{ "property": "titleText", "purpose": "Dashboard title." },
-		{ "property": "subtitleText", "purpose": "Operational context line." },
-		{ "property": "emptyStateText", "purpose": "Message shown when no valid agents exist." },
-		{ "property": "pageDurationSeconds", "purpose": "Seconds each eight-agent page remains visible." },
+		{
+			"property": "titleText",
+			"purpose": "Dashboard title."
+		},
+		{
+			"property": "subtitleText",
+			"purpose": "Operational context line."
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when no valid agents exist."
+		},
+		{
+			"property": "pageDurationSeconds",
+			"purpose": "Seconds each eight-agent page remains visible."
+		},
 		{
 			"property": "themePreset",
 			"purpose": "Selects the coordinated Light, Dark, or Custom color scheme.",
 			"effect": "theme-preset"
 		},
-		{ "property": "fontFamily", "purpose": "Display typeface." },
-		{ "property": "backgroundColor", "purpose": "Root canvas color." },
-		{ "property": "surfaceColor", "purpose": "Agent card color." },
-		{ "property": "primaryTextColor", "purpose": "Primary text color." },
-		{ "property": "secondaryTextColor", "purpose": "Supporting text color." },
-		{ "property": "readyColor", "purpose": "Ready and available state color." },
-		{ "property": "busyColor", "purpose": "Talking and busy state color." },
-		{ "property": "acwColor", "purpose": "After-call work state color." },
-		{ "property": "awayColor", "purpose": "Not-ready and auxiliary state color." },
-		{ "property": "offlineColor", "purpose": "Logged-out state color." },
-		{ "property": "unknownColor", "purpose": "Unrecognized state color." }
+		{
+			"property": "fontFamily",
+			"purpose": "Display typeface."
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Root canvas color."
+		},
+		{
+			"property": "surfaceColor",
+			"purpose": "Agent card color."
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Primary text color."
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Supporting text color."
+		},
+		{
+			"property": "readyColor",
+			"purpose": "Ready and available state color."
+		},
+		{
+			"property": "busyColor",
+			"purpose": "Talking and busy state color."
+		},
+		{
+			"property": "acwColor",
+			"purpose": "After-call work state color."
+		},
+		{
+			"property": "awayColor",
+			"purpose": "Not-ready and auxiliary state color."
+		},
+		{
+			"property": "offlineColor",
+			"purpose": "Logged-out state color."
+		},
+		{
+			"property": "unknownColor",
+			"purpose": "Unrecognized state color."
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "dashboard-title",
-			"source": { "type": "setting", "properties": ["titleText"] },
-			"selectors": [".agent-header__title h1"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"titleText"
+				]
+			},
+			"selectors": [
+				".agent-header__title h1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "At the readable minimum, keep one line and ellipsize the remaining tail.",
 			"rationale": "The configurable dashboard title anchors the board and must adapt before competing with the live summary.",
 			"evidenceScenario": "long-labels"
 		},
 		{
 			"id": "agent-name",
-			"source": { "type": "datasource", "properties": ["agentData"] },
-			"selectors": [".agent-identity strong"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"agentData"
+				]
+			},
+			"selectors": [
+				".agent-identity strong"
+			],
 			"strategy": "ellipsis",
-			"limits": { "maximumLines": 1 },
+			"limits": {
+				"maximumLines": 1
+			},
 			"fallback": "Ellipsize the name after reserving space for state and duration; expose the full value through the element title.",
 			"rationale": "Fixed-height roster lanes require stable identity, state, and metric alignment across all agents.",
 			"evidenceScenario": "long-labels"
@@ -111,11 +197,26 @@
 			"scenario": "mixed-states",
 			"expectation": "Ready, busy, ACW, away, offline, and unknown states remain visually distinct."
 		},
-		{ "scenario": "second-page", "expectation": "An uneven final page remains balanced after timed pagination." },
-		{ "scenario": "empty", "expectation": "An explicit empty state replaces missing agent records." },
-		{ "scenario": "long-labels", "expectation": "Long names and statuses remain contained in the agent card." },
-		{ "scenario": "unknown-state", "expectation": "An unrecognized state receives the neutral fallback treatment." },
-		{ "scenario": "invalid-rows", "expectation": "Rows without names are skipped without shifting valid cards." },
+		{
+			"scenario": "second-page",
+			"expectation": "An uneven final page remains balanced after timed pagination."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "An explicit empty state replaces missing agent records."
+		},
+		{
+			"scenario": "long-labels",
+			"expectation": "Long names and statuses remain contained in the agent card."
+		},
+		{
+			"scenario": "unknown-state",
+			"expectation": "An unrecognized state receives the neutral fallback treatment."
+		},
+		{
+			"scenario": "invalid-rows",
+			"expectation": "Rows without names are skipped without shifting valid cards."
+		},
 		{
 			"scenario": "live-datasource-update",
 			"expectation": "Updated state and metrics appear without rebuilding the app."
@@ -125,22 +226,52 @@
 		{
 			"id": "status-normalization",
 			"expectation": "Known status aliases map to stable semantic visual tones.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "eight-agent-pagination",
 			"expectation": "Pages contain at most eight alphabetically sorted agents and advance on schedule.",
-			"evidence": { "testFile": "preview/behavior.spec.ts" }
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
 		},
 		{
 			"id": "live-update",
 			"expectation": "Datasource refreshes replace visible agent state and metrics in place.",
-			"evidence": { "scenario": "live-datasource-update" }
+			"evidence": {
+				"scenario": "live-datasource-update"
+			}
+		},
+		{
+			"id": "status-indicator-conformance",
+			"expectation": "Every agent card states its status in words as well as in colour, and that text stays legible against the card tint.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
 		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
 	],
 	"visualDirection": {
 		"source": "reference-led",
@@ -153,7 +284,9 @@
 			"Two-column horizontal roster lanes keep identity and state adjacent to compact handling metrics.",
 			"Pagination is a segmented progress rail rather than a numeric top-right fraction."
 		],
-		"avoid": ["Four-by-two dark cards with large unused centers."]
+		"avoid": [
+			"Four-by-two dark cards with large unused centers."
+		]
 	},
 	"visualReview": {
 		"intent": "A disciplined operations wall where state color is fast to scan but never overwhelms names and metrics.",

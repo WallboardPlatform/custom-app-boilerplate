@@ -6,7 +6,7 @@
 		"directory-search",
 		"on-screen-keyboard",
 		"multi-source-merge",
-		"content-paging",
+		"manual-paging",
 		"dense-table-board"
 	],
 	"capabilities": [

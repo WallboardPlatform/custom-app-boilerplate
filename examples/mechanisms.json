@@ -10,7 +10,8 @@
 		"platform-media-cache": "Media resolved through the platform cache from a setting or row.",
 		"packaged-media": "Media bundled with the app and listed in the resource list.",
 		"idle-screensaver": "An attract state after inactivity, with its own branding and reset behaviour.",
-		"multi-timezone": "Several places shown at once, each in its own local time."
+		"multi-timezone": "Several places shown at once, each in its own local time.",
+		"manual-paging": "Pages a viewer steps through by hand, stopping at the last page rather than wrapping."
 	},
 	"capability": {
 		"on-screen-keyboard": "Touch text entry bound to a field.",
@@ -63,6 +64,7 @@
 		"status-wall": "call-center-agent-status",
 		"ultra-wide-marquee": "market-rotation-ticker",
 		"accessible-reach": "interactive-document-viewer",
-		"presence-binding": "team-presence-board"
+		"presence-binding": "team-presence-board",
+		"manual-paging": "donor-directory"
 	}
 }

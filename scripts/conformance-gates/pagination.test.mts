@@ -36,6 +36,10 @@ interface PagerOptions {
 	step?: number;
 	/** Let the page index run past the last page instead of wrapping, modelling a runaway pager. */
 	noWrap?: boolean;
+	/** Viewer-driven pager that stops at the last page rather than wrapping. */
+	manual?: boolean;
+	/** Make every second step back a no-op, modelling a manual pager that strands the viewer. */
+	retreatDrift?: boolean;
 }
 
 let browser: Browser;
@@ -47,20 +51,45 @@ const buildTarget = (options: PagerOptions): PaginationConformanceTarget => {
 	}).filter((unused: string, index: number): boolean => index !== options.dropIndex);
 	const pages: number = options.phantomPages ?? Math.ceil(keys.length / options.perPage);
 	let index = 0;
+	let retreats = 0;
 
 	return {
 		name: 'synthetic pager',
+		traversal: options.manual ? 'manual' : 'rotating',
 		open: async (): Promise<void> => {
 			index = 0;
+			retreats = 0;
 			await page.setContent('<body><main id="pager"></main></body>');
 		},
 		advance: (): Promise<void> => {
 			const next: number = index + (options.step ?? 1);
 
-			index = options.noWrap ? next : next % Math.max(pages, 1);
+			if (options.manual) {
+				index = Math.min(next, pages - 1);
+			} else {
+				index = options.noWrap ? next : next % Math.max(pages, 1);
+			}
 
 			return Promise.resolve();
 		},
+		retreat: options.manual
+			? (): Promise<void> => {
+				retreats += 1;
+
+				/*
+				 * A skipped page would be hidden by the clamp at zero: overshooting still lands on the
+				 * first page, so the walk looks reversible. Stalling is the failure that survives -- the
+				 * viewer presses back and stays where they were.
+				 */
+				const stalled: boolean = Boolean(options.retreatDrift) && retreats % 2 === 0;
+
+				if (!stalled) {
+					index = Math.max(0, index - 1);
+				}
+
+				return Promise.resolve();
+			}
+			: undefined,
 		pageCount: (): Promise<number> => Promise.resolve(pages),
 		pageIndex: (): Promise<number> => Promise.resolve(index),
 		visibleKeys: (): Promise<string[]> => {
@@ -139,6 +168,56 @@ void describe('pagination conformance gate', (): void => {
 		assert.ok(
 			await rejects((): Promise<void> => assertCycleReturnsToStart(target, page)),
 			'a drifting cycle must fail the return-to-start assertion'
+		);
+	});
+
+	void it('accepts a manual pager walked forward and back', async (): Promise<void> => {
+		const target: PaginationConformanceTarget = buildTarget({ records: 9, perPage: 3, manual: true });
+
+		await assertNoEmptyPage(target, page);
+		await assertCycleReturnsToStart(target, page);
+		await assertEveryRecordShownOncePerCycle(target, page);
+	});
+
+	void it('rejects a manual pager that drops a record', async (): Promise<void> => {
+		// The defect the suite exists for, on the traversal it previously could not describe: two
+		// examples were excluded from this suite because it only understood a rotating board.
+		const target: PaginationConformanceTarget = buildTarget({
+			records: 9,
+			perPage: 3,
+			manual: true,
+			dropIndex: 4
+		});
+
+		assert.ok(
+			await rejects((): Promise<void> => assertEveryRecordShownOncePerCycle(target, page)),
+			'a dropped record must fail on a manual pager too'
+		);
+	});
+
+	void it('rejects a manual pager that loses its place on the way back', async (): Promise<void> => {
+		const target: PaginationConformanceTarget = buildTarget({
+			records: 12,
+			perPage: 3,
+			manual: true,
+			retreatDrift: true
+		});
+
+		assert.ok(
+			await rejects((): Promise<void> => assertCycleReturnsToStart(target, page)),
+			'a reverse walk that skips a page must fail'
+		);
+	});
+
+	void it('rejects manual traversal that supplies no way back', async (): Promise<void> => {
+		const target: PaginationConformanceTarget = {
+			...buildTarget({ records: 9, perPage: 3, manual: true }),
+			retreat: undefined
+		};
+
+		assert.ok(
+			await rejects((): Promise<void> => assertCycleReturnsToStart(target, page)),
+			'manual traversal without retreat must fail rather than pass vacuously'
 		);
 	});
 

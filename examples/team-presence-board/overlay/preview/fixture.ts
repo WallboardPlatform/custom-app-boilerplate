@@ -52,8 +52,8 @@ const denseUsers: PresenceRecord[] = DENSE_NAMES.map((name: string, index: numbe
 		displayName: name,
 		givenName: parts[0],
 		surname: parts[1],
-		mail: `${localPart}@example.com`,
-		userPrincipalName: `${localPart}@example.com`,
+		mail: `${localPart}@example.invalid`,
+		userPrincipalName: `${localPart}@example.invalid`,
 		jobTitle: 'Team Member',
 		department: 'Company',
 		officeLocation: 'North Office',
@@ -129,7 +129,7 @@ const longNameUsers: PresenceRecord[] = [
 ];
 
 const liveUpdateUsers: PresenceRecord[] = offlineSafeUsers.map((user: PresenceRecord): PresenceRecord => {
-	return user.mail === 'ava.winter@example.com'
+	return user.mail === 'ava.winter@example.invalid'
 		? overrideUser(user, { availability: 'Busy', activity: 'InAMeeting' })
 		: user;
 });
@@ -150,7 +150,7 @@ export const previewScenarios: PreviewScenario[] = [
 			'team-presence-compact-trio',
 			{
 				users: offlineSafeUsers.map((user: PresenceRecord): PresenceRecord => {
-					return user.mail === 'ava.winter@example.com'
+					return user.mail === 'ava.winter@example.invalid'
 						? overrideUser(user, { displayName: 'Ava Alexandrina Konstantinovna Winter-Sample' })
 						: user;
 				})

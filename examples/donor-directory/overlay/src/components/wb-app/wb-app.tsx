@@ -729,6 +729,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-effective-entries={entriesPerColumn()}
 			data-selected-category={searchActive() ? ALL_CATEGORY_KEY : selectedCategoryKey()}
 			data-page-index={clampDirectoryPageIndex(pageIndex(), pageCount())}
+			data-page-count={pageCount()}
 			data-search-query={searchQuery()}
 			data-donor-status={donorState().status}
 			data-category-status={categoryState().status}
