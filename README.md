@@ -77,9 +77,8 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Identity/brief/datasource/legacy/package gates | `npm run validate:package` |
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
-| Author a manual-first wayfinding package | `npm run wayfinding:studio` |
-| Publish a wayfinding map package | `npm run wayfinding:studio:export -- --project venue.wbwayfinding --output published-map` |
-| Republish the spatial example | `npm run wayfinding:example:publish` |
+| Author and publish a wayfinding map | [Wayfinding Studio](https://wayfinding.wallboard.info) |
+| Build a wayfinding custom app | [`docs/system/wayfinding.md`](docs/system/wayfinding.md) and `examples/spatial-wayfinding` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |
@@ -90,7 +89,7 @@ The tracked-image review threshold is 10 MiB, not an absolute ceiling. A justifi
 
 `deliver` creates an upload ZIP and a separate sanitized source ZIP plus manifest, brief, and datasource sidecars. Upload only the app ZIP. `_UNVERIFIED` packages have `uploadReady: false` and require normal delivery elsewhere.
 
-Wayfinding v1 uses three distinct artifacts: the editable `.wbwayfinding` source, its generated `.wbmap` runtime package, and the accepted custom-app upload ZIP that contains the map. See [`docs/system/wayfinding.md`](docs/system/wayfinding.md); Northline under `examples/spatial-wayfinding` is the proven runtime mechanics reference.
+Wayfinding v1 uses three distinct artifacts: the editable `.wbwayfinding` source, its generated `.wbmap` runtime package, and the accepted custom-app upload ZIP that contains the map. Author and publish with [Wayfinding Studio](https://wayfinding.wallboard.info); this repository only owns the visitor app and `.wbmap` consumption. See [`docs/system/wayfinding.md`](docs/system/wayfinding.md); Northline under `examples/spatial-wayfinding` is the proven runtime mechanics reference.
 
 ## Build Output
 

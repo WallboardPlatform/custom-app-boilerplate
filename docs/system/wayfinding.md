@@ -1,6 +1,23 @@
 # Wayfinding
 
-Wayfinding Studio is the canonical editor for Wallboard maps. A project can publish a polished searchable map without routing; once a route network exists, publishing requires it to be safe and complete.
+[Wayfinding Studio](https://wayfinding.wallboard.info) is the canonical editor for Wallboard maps. Authoring, validation, and publishing are operated outside this custom-app repository. A project can publish a polished searchable map without routing; once a route network exists, publishing requires it to be safe and complete.
+
+## Public compatibility contract
+
+This repository contains everything required to build a Wayfinding custom app. No external implementation source is required.
+
+| Public source | Contract |
+|---------------|----------|
+| `schemas/wayfinding-studio-project.schema.json` | Editable `.wbwayfinding` project format |
+| `schemas/wayfinding-route-graph.schema.json` | Nodes, edges, geometry, accessibility, and traversal |
+| `src/utils/wayfinding.ts` | Graph types and standard/step-free pathfinding |
+| `src/utils/wayfinding-presentation.ts` | Runtime presentation model |
+| `src/utils/wayfinding-guidance.ts` | Guidance capability and direction helpers |
+| `examples/spatial-wayfinding/overlay/src/interfaces/spatial-wayfinding.interface.ts` | Published package and scene types |
+| `examples/spatial-wayfinding/overlay/src/utils/wayfinding-map-package.ts` | `.wbmap` loader and validation pattern |
+| `examples/spatial-wayfinding` | Complete 2D/3D consumer reference |
+
+The schemas are the public release contract. Any Studio schema or `.wbmap` package change must update these schemas, runtime types, loader, documentation, and reference widget in the same release cycle.
 
 ## Artifact lifecycle
 
@@ -10,7 +27,7 @@ Wayfinding Studio is the canonical editor for Wallboard maps. A project can publ
 | `*.wbmap` | Portable published map | Regenerate after every accepted project change. Never hand-edit. |
 | Custom-app ZIP | Installable visitor experience containing a `.wbmap` | Build and validate through the normal delivery workflow. |
 
-`*.wbwayfinding` uses `format: "wallboard-wayfinding-studio"` and `formatVersion: 1`. No earlier Studio format is supported. `schemas/wayfinding-studio-project.schema.json` is the file contract.
+`*.wbwayfinding` uses `format: "wallboard-wayfinding-studio"` and `formatVersion: 1`. No earlier Studio format is supported. Wayfinding Studio validates the file contract before publication; custom-app tooling can validate it against `schemas/wayfinding-studio-project.schema.json`.
 
 `*.wbmap` is a ZIP containing:
 
@@ -62,31 +79,13 @@ Semantic floor elements:
 
 Stable IDs are mandatory. Geometry and editor state are separate: saved projects contain authored content, not selection, hover, open panels, preview journeys, or diagnostic-layer state.
 
-## Studio architecture
+## Ownership boundary
 
-The application is organized by product capability, not by generic component type:
-
-| Module | Owns |
-|--------|------|
-| `features/map` | Map workspace composition and object browser |
-| `features/routing` | Route workflow, readiness, geometry diagnostics, journey model, and network inspectors |
-| `features/directory` | Destination content, languages, and categories |
-| `features/assets` | Reusable media and image decoding |
-| `features/appearance` | Project presentation controls |
-| `features/preview` | Ephemeral simulation session, directory, destination detail, and shared presentation scene |
-| `features/publishing` | Runtime validation and `.wbmap` publication |
-| `canvas` | Camera, rendering, hit testing, authoring, keyboard, drag, and pointer interaction controllers |
-| `editor-core` | Persistent document commands, history, selection-independent state, graph synchronization, and route generation |
-
-Feature barrels are the public application boundary. Canvas interaction controllers stay independent from rendering so hit testing, gestures, and authored transactions can evolve without turning the stage component into a second state store.
+Wayfinding Studio owns authoring UI, project persistence, routing generation, 2D/3D preview, and `.wbmap` publication. This repository owns the public compatibility contract, custom-app runtime consumption, signage interaction, legacy-browser packaging, and delivery validation. Do not copy Studio modules into an app; pass only the published `.wbmap` across the runtime boundary.
 
 ## Studio workflow
 
-Run:
-
-```bash
-npm run wayfinding:studio
-```
+Open [wayfinding.wallboard.info](https://wayfinding.wallboard.info).
 
 1. Create a project and add floors.
 2. Upload optional floor artwork. The image is a visual reference, not topology.
@@ -161,12 +160,7 @@ AI may propose geometry but must not silently assert entrances, orientation, acc
 
 ## Validation
 
-Run:
-
-```bash
-npm run test:wayfinding
-npm run test:wayfinding-studio
-```
+The editor repository validates schemas, route generation, project round trips, browser workflows, and production builds through `npm run check`. This repository validates the consuming visitor app through its normal example, visual-review, package, modern-build, and Chrome 49 gates.
 
 Acceptance requires:
 
@@ -180,4 +174,4 @@ Acceptance requires:
 - visual inspection at the supported editor and signage viewport matrix;
 - no overlap, clipping, invisible controls, focus failures, console errors, or stale preview state.
 
-`examples/spatial-wayfinding` is the maintained mechanics reference for consuming a `.wbmap`; it demonstrates the package contract without prescribing a visual style.
+`examples/spatial-wayfinding` is the maintained mechanics reference for consuming a `.wbmap`; it demonstrates the package contract without prescribing a visual style. Editor defects and authoring-contract changes belong to Wayfinding Studio, not this repository.
