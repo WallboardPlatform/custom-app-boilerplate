@@ -41,7 +41,10 @@
 			"height": 1080,
 			"role": "primary",
 			"purpose": "Primary full-HD landscape touch kiosk.",
-			"minimumContentCoverage": { "width": 93, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 88
+			}
 		},
 		{
 			"id": "compact-landscape",
@@ -49,7 +52,10 @@
 			"height": 720,
 			"role": "required",
 			"purpose": "Compact landscape touch kiosk.",
-			"minimumContentCoverage": { "width": 93, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 88
+			}
 		},
 		{
 			"id": "portrait",
@@ -57,7 +63,10 @@
 			"height": 1920,
 			"role": "required",
 			"purpose": "Full-height portrait touch kiosk.",
-			"minimumContentCoverage": { "width": 93, "height": 91 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 91
+			}
 		},
 		{
 			"id": "square",
@@ -65,14 +74,27 @@
 			"height": 1080,
 			"role": "required",
 			"purpose": "Square and near-square kiosk placement.",
-			"minimumContentCoverage": { "width": 93, "height": 88 }
+			"minimumContentCoverage": {
+				"width": 93,
+				"height": 88
+			}
 		}
 	],
 	"data": {
 		"mode": "bound",
 		"bindings": [
-			{ "property": "donorData", "source": "existing", "contract": "EXISTING", "access": "read" },
-			{ "property": "categoryData", "source": "generated", "contract": "TABLE", "access": "read" }
+			{
+				"property": "donorData",
+				"source": "existing",
+				"contract": "EXISTING",
+				"access": "read"
+			},
+			{
+				"property": "categoryData",
+				"source": "generated",
+				"contract": "TABLE",
+				"access": "read"
+			}
 		]
 	},
 	"ownership": [
@@ -80,14 +102,18 @@
 			"id": "donor-content",
 			"area": "content",
 			"owner": "datasource",
-			"targets": ["donorData"],
+			"targets": [
+				"donorData"
+			],
 			"rationale": "Donor records remain durable in the existing internal TABLE and update without rebuilding the app."
 		},
 		{
 			"id": "category-content",
 			"area": "content",
 			"owner": "datasource",
-			"targets": ["categoryData"],
+			"targets": [
+				"categoryData"
+			],
 			"rationale": "Optional category order, labels, and descriptions have independent shared ownership and authoring cadence."
 		},
 		{
@@ -198,36 +224,77 @@
 			"id": "visitor-session",
 			"area": "state",
 			"owner": "interaction",
-			"targets": ["active-category", "page", "query", "best-match", "manual-navigation"],
+			"targets": [
+				"active-category",
+				"page",
+				"query",
+				"best-match",
+				"manual-navigation"
+			],
 			"rationale": "Browse and search state is private to the active kiosk session and resets on mount."
 		},
 		{
 			"id": "autoplay-session",
 			"area": "state",
 			"owner": "external-command",
-			"targets": ["enablePaginationMode", "disablePaginationMode", "resetExperience", "runtime-duration", "autoplay-frame"],
+			"targets": [
+				"enablePaginationMode",
+				"disablePaginationMode",
+				"resetExperience",
+				"runtime-duration",
+				"autoplay-frame"
+			],
 			"rationale": "Wallboard actions own start, stop, and full reset transitions plus the optional runtime duration override; the timer remains instance-local."
 		},
 		{
 			"id": "search-and-order-rules",
 			"area": "behavior",
 			"owner": "locked",
-			"targets": ["normalized-category-join", "search-ranking", "autoplay-sequence", "complex-cell-safety"],
+			"targets": [
+				"normalized-category-join",
+				"search-ranking",
+				"autoplay-sequence",
+				"complex-cell-safety"
+			],
 			"rationale": "Deterministic joins, stable search context, sequence rules, and safe complex-cell handling prevent placement-specific ambiguity."
 		}
 	],
 	"experience": {
 		"mode": "interactive",
 		"views": [
-			{ "id": "directory", "purpose": "Browse category pages and inspect up to three editor-mapped values per donor entry." },
-			{ "id": "search", "purpose": "Search all donors with stable category context and result badges." },
-			{ "id": "keyboard", "purpose": "Enter a donor query through an on-demand touch keyboard overlay." },
-			{ "id": "autoplay", "purpose": "Present real category pages unattended after a Wallboard action." }
+			{
+				"id": "directory",
+				"purpose": "Browse category pages and inspect up to three editor-mapped values per donor entry."
+			},
+			{
+				"id": "search",
+				"purpose": "Search all donors with stable category context and result badges."
+			},
+			{
+				"id": "keyboard",
+				"purpose": "Enter a donor query through an on-demand touch keyboard overlay."
+			},
+			{
+				"id": "autoplay",
+				"purpose": "Present real category pages unattended after a Wallboard action."
+			}
 		],
 		"inputs": [
-			{ "id": "touch-directory", "type": "touch", "action": "Select categories, change pages, open or dismiss the on-screen keyboard, type a query, and clear search." },
-			{ "id": "physical-keyboard", "type": "keyboard", "action": "Type into the same controlled donor search and use standard editing keys." },
-			{ "id": "pagination-actions", "type": "external-command", "action": "Enable pagination with an optional duration override, disable it, or reset the entire experience to ALL/page 1 with empty search and a closed keyboard." }
+			{
+				"id": "touch-directory",
+				"type": "touch",
+				"action": "Select categories, change pages, open or dismiss the on-screen keyboard, type a query, and clear search."
+			},
+			{
+				"id": "physical-keyboard",
+				"type": "keyboard",
+				"action": "Type into the same controlled donor search and use standard editing keys."
+			},
+			{
+				"id": "pagination-actions",
+				"type": "external-command",
+				"action": "Enable pagination with an optional duration override, disable it, or reset the entire experience to ALL/page 1 with empty search and a closed keyboard."
+			}
 		],
 		"session": {
 			"reset": "manual",
@@ -244,7 +311,9 @@
 		"default": "subtle",
 		"presetProperty": "motionPreset",
 		"transition": "fade",
-		"techniques": ["fade"],
+		"techniques": [
+			"fade"
+		],
 		"rationale": "A short bounded fade communicates page/category changes; Off updates immediately and never stops timed progression."
 	},
 	"media": [
@@ -263,7 +332,9 @@
 			"type": "image",
 			"source": "setting",
 			"fit": "cover",
-			"properties": ["backgroundImage"],
+			"properties": [
+				"backgroundImage"
+			],
 			"cache": "platform",
 			"preview": "platform-mock",
 			"fallback": "Use the packaged reference background for Light and Custom, and the coordinated solid background for Dark.",
@@ -274,7 +345,9 @@
 			"type": "image",
 			"source": "setting",
 			"fit": "contain",
-			"properties": ["logo"],
+			"properties": [
+				"logo"
+			],
 			"cache": "platform",
 			"preview": "platform-mock",
 			"fallback": "Remove the logo region and preserve header balance without showing a broken-image marker.",
@@ -288,7 +361,11 @@
 		"fallback": "Use the coordinated mint, off-white, forest, black, and spring-green Light theme, with matching Dark and fully semantic Custom alternatives."
 	},
 	"presentation": {
-		"themes": ["light", "dark", "custom"],
+		"themes": [
+			"light",
+			"dark",
+			"custom"
+		],
 		"density": "dense",
 		"viewingDistance": "near",
 		"textRoles": [
@@ -326,95 +403,411 @@
 		"intervalProperty": "autoplayIntervalSeconds"
 	},
 	"settings": [
-		{ "property": "donorTableName", "purpose": "Selects the table containing donor rows." },
-		{ "property": "categoryColumn", "purpose": "Maps the donor category/dropdown value." },
-		{ "property": "entryField1Column", "purpose": "Maps the required primary donor identity and search value.", "effect": "entry-field-1-column" },
-		{ "property": "entryField2Column", "purpose": "Maps an optional second display value; a blank mapping hides the field.", "effect": "entry-field-2-column" },
-		{ "property": "entryField3Column", "purpose": "Maps an optional third display value; a blank mapping hides the field.", "effect": "entry-field-3-column" },
-		{ "property": "sortColumn", "purpose": "Maps the source column used to sort donor records." },
-		{ "property": "sortDirection", "purpose": "Preserves source order or applies ascending/descending stable sort.", "effect": "sort-direction" },
-		{ "property": "directoryColumns", "purpose": "Sets the donor-grid upper limit: four columns in landscape, three in portrait, and two in square placements.", "effect": "directory-columns" },
-		{ "property": "entriesPerColumn", "purpose": "Sets one to twenty donor entries per directory column and drives adaptive row typography.", "effect": "entries-per-column" },
-		{ "property": "maximumRowHeight", "purpose": "Optionally caps donor-row height in pixels on sparse pages; zero preserves automatic equal-height sizing.", "effect": "maximum-row-height" },
-		{ "property": "numberLocale", "purpose": "Supplies the preferred locale for stable text sorting, numeric grouping, and header date/time." },
-		{ "property": "formatNumberColumnsAsCurrency", "purpose": "Adds locale grouping and the configured prefix only to mapped entry fields declared number by the TABLE header.", "effect": "format-number-columns-as-currency" },
-		{ "property": "currencySymbol", "purpose": "Sets the literal prefix placed before formatted number-column values.", "effect": "currency-symbol" },
-		{ "property": "categoryTableName", "purpose": "Selects the optional metadata table." },
-		{ "property": "categoryKeyColumn", "purpose": "Maps the metadata key joined to donor categories." },
-		{ "property": "categoryLabelColumn", "purpose": "Maps an optional public category label." },
-		{ "property": "categoryDescriptionColumn", "purpose": "Maps optional range/explanatory copy shown for the active category." },
-		{ "property": "showCategoryButtonDescriptions", "purpose": "Shows the mapped metadata description beneath each category-button label.", "effect": "show-category-button-descriptions" },
-		{ "property": "categoryOrderColumn", "purpose": "Maps optional numeric category order; source row order is the fallback." },
-		{ "property": "title", "purpose": "Public donor-directory title.", "effect": "title-copy" },
-		{ "property": "titleFontSize", "purpose": "Sets the preferred title size before complete-title auto-fit.", "effect": "title-font-size" },
-		{ "property": "subtitle", "purpose": "Optional gratitude or instruction line.", "effect": "subtitle-copy" },
-		{ "property": "allLabel", "purpose": "Public label for the synthetic ALL category.", "effect": "all-label" },
-		{ "property": "allLabelFontSize", "purpose": "Sets the All categories heading size before per-label auto-fit.", "effect": "all-label-font-size" },
-		{ "property": "emptyStateText", "purpose": "Message shown when a bound donor source has no valid rows." },
-		{ "property": "noResultsText", "purpose": "Message shown when search has no matching donor." },
-		{ "property": "searchPlaceholder", "purpose": "Prompt shown in the donor search input." },
-		{ "property": "logo", "purpose": "Selects the Wallboard-managed header logo.", "effect": "header-logo" },
-		{ "property": "logoScale", "purpose": "Sets logo height within the header.", "effect": "logo-scale" },
-		{ "property": "dateFormat", "purpose": "Selects the visible date preset.", "effect": "date-format" },
-		{ "property": "timeFormat", "purpose": "Selects 12-hour, 24-hour, or hidden time.", "effect": "time-format" },
-		{ "property": "timeZone", "purpose": "Sets an optional IANA timezone, falling back to the device when invalid or blank." },
-		{ "property": "showKeyboard", "purpose": "Enables the on-demand app-owned touch keyboard and its search-bar icon.", "effect": "keyboard-availability" },
-		{ "property": "autoplayIntervalSeconds", "purpose": "Sets fallback seconds per page when the enable action omits a valid override.", "effect": "autoplay-interval" },
-		{ "property": "stopAtEnd", "purpose": "Stops after the last page of the last real category instead of looping." },
-		{ "property": "motionPreset", "purpose": "Selects Off or Subtle bounded page feedback.", "effect": "motion-preset" },
-		{ "property": "themePreset", "purpose": "Selects the complete Light, Dark, or Custom semantic palette.", "effect": "theme-preset" },
-		{ "property": "displayFont", "purpose": "Sets the editorial display family and style for the title and active category.", "effect": "display-font" },
-		{ "property": "interfaceFont", "purpose": "Sets the clean interface family and style for controls and metadata.", "effect": "interface-font" },
-		{ "property": "categoryFont", "purpose": "Sets an independent category-button family and style.", "effect": "category-font" },
-		{ "property": "categoryMaxFontSize", "purpose": "Caps category-button type before responsive density reduction.", "effect": "category-max-font-size" },
-		{ "property": "categoryButtonDescriptionFont", "purpose": "Sets the family and style used only for metadata descriptions on category buttons.", "effect": "category-button-description-font" },
-		{ "property": "categoryButtonDescriptionMaxFontSize", "purpose": "Sets the category-button description size independently of its label.", "effect": "category-button-description-max-font-size" },
-		{ "property": "activeCategoryDescriptionFont", "purpose": "Sets the family and style used only for the active category description above donor rows.", "effect": "active-category-description-font" },
-		{ "property": "activeCategoryDescriptionMaxFontSize", "purpose": "Sets the active category description size independently of its heading.", "effect": "active-category-description-max-font-size" },
-		{ "property": "entryField1Font", "purpose": "Sets the Entry Field 1 family and style.", "effect": "entry-field-1-font" },
-		{ "property": "entryField1MaxFontSize", "purpose": "Caps Entry Field 1 type before responsive density reduction.", "effect": "entry-field-1-max-font-size" },
-		{ "property": "entryField2Font", "purpose": "Sets the Entry Field 2 family and style.", "effect": "entry-field-2-font" },
-		{ "property": "entryField2MaxFontSize", "purpose": "Caps Entry Field 2 type before responsive density reduction.", "effect": "entry-field-2-max-font-size" },
-		{ "property": "entryField3Font", "purpose": "Sets the Entry Field 3 family and style.", "effect": "entry-field-3-font" },
-		{ "property": "entryField3MaxFontSize", "purpose": "Caps Entry Field 3 type before responsive density reduction.", "effect": "entry-field-3-max-font-size" },
-		{ "property": "cornerRadius", "purpose": "Sets bounded rounding for tactile controls and donor entries.", "effect": "corner-radius" },
-		{ "property": "backgroundImage", "purpose": "Optionally replaces the preset canvas background image in Light, Dark, or Custom.", "effect": "background-image" },
-		{ "property": "backgroundOverlayColor", "purpose": "Sets the color layered above the canvas background image in every color scheme.", "effect": "background-overlay-color" },
-		{ "property": "backgroundOverlayOpacity", "purpose": "Sets the background overlay strength from zero to one hundred percent.", "effect": "background-overlay-opacity" },
-		{ "property": "backgroundColor", "purpose": "Custom page background.", "effect": "background-color" },
-		{ "property": "headerBackgroundColor", "purpose": "Custom header background.", "effect": "header-background-color" },
-		{ "property": "headerTextColor", "purpose": "Custom header text.", "effect": "header-text-color" },
-		{ "property": "panelColor", "purpose": "Custom directory surface.", "effect": "panel-color" },
-		{ "property": "primaryTextColor", "purpose": "Custom title and heading text.", "effect": "primary-text-color" },
-		{ "property": "secondaryTextColor", "purpose": "Custom descriptions and general metadata.", "effect": "secondary-text-color" },
-		{ "property": "categoryButtonDescriptionTextColor", "purpose": "Custom text color used only by descriptions on category buttons.", "effect": "category-button-description-text-color" },
-		{ "property": "activeCategoryDescriptionTextColor", "purpose": "Custom text color used only by the active category description above donor rows.", "effect": "active-category-description-text-color" },
-		{ "property": "entryField1TextColor", "purpose": "Custom Entry Field 1 text.", "effect": "entry-field-1-text-color" },
-		{ "property": "entryField2TextColor", "purpose": "Custom Entry Field 2 text.", "effect": "entry-field-2-text-color" },
-		{ "property": "entryField3TextColor", "purpose": "Custom Entry Field 3 text.", "effect": "entry-field-3-text-color" },
-		{ "property": "categoryButtonColor", "purpose": "Custom inactive category button.", "effect": "category-button-color" },
-		{ "property": "categoryButtonTextColor", "purpose": "Custom inactive category text.", "effect": "category-button-text-color" },
-		{ "property": "categoryActiveColor", "purpose": "Custom selected category surface.", "effect": "category-active-color" },
-		{ "property": "categoryActiveTextColor", "purpose": "Custom selected category text.", "effect": "category-active-text-color" },
-		{ "property": "donorCardColor", "purpose": "Custom donor entry surface.", "effect": "donor-card-color" },
-		{ "property": "donorCardBorderColor", "purpose": "Custom donor entry rule.", "effect": "donor-card-border-color" },
-		{ "property": "searchBackgroundColor", "purpose": "Custom search and keyboard-value surface.", "effect": "search-background-color" },
-		{ "property": "searchTextColor", "purpose": "Custom search text and icon.", "effect": "search-text-color" },
-		{ "property": "searchBorderColor", "purpose": "Custom search and shell borders.", "effect": "search-border-color" },
-		{ "property": "accentColor", "purpose": "Custom navigation, page, and result highlight.", "effect": "accent-color" },
-		{ "property": "accentTextColor", "purpose": "Custom text on accent surfaces.", "effect": "accent-text-color" },
-		{ "property": "keyboardBackgroundColor", "purpose": "Custom on-screen keyboard panel.", "effect": "keyboard-background-color" },
-		{ "property": "keyboardKeyColor", "purpose": "Custom keyboard key surface.", "effect": "keyboard-key-color" },
-		{ "property": "keyboardKeyTextColor", "purpose": "Custom keyboard key text.", "effect": "keyboard-key-text-color" }
+		{
+			"property": "donorTableName",
+			"purpose": "Selects the table containing donor rows."
+		},
+		{
+			"property": "categoryColumn",
+			"purpose": "Maps the donor category/dropdown value."
+		},
+		{
+			"property": "entryField1Column",
+			"purpose": "Maps the required primary donor identity and search value.",
+			"effect": "entry-field-1-column"
+		},
+		{
+			"property": "entryField2Column",
+			"purpose": "Maps an optional second display value; a blank mapping hides the field.",
+			"effect": "entry-field-2-column"
+		},
+		{
+			"property": "entryField3Column",
+			"purpose": "Maps an optional third display value; a blank mapping hides the field.",
+			"effect": "entry-field-3-column"
+		},
+		{
+			"property": "sortColumn",
+			"purpose": "Maps the source column used to sort donor records."
+		},
+		{
+			"property": "sortDirection",
+			"purpose": "Preserves source order or applies ascending/descending stable sort.",
+			"effect": "sort-direction"
+		},
+		{
+			"property": "directoryColumns",
+			"purpose": "Sets the donor-grid upper limit: four columns in landscape, three in portrait, and two in square placements.",
+			"effect": "directory-columns"
+		},
+		{
+			"property": "entriesPerColumn",
+			"purpose": "Sets one to twenty donor entries per directory column and drives adaptive row typography.",
+			"effect": "entries-per-column"
+		},
+		{
+			"property": "maximumRowHeight",
+			"purpose": "Optionally caps donor-row height in pixels on sparse pages; zero preserves automatic equal-height sizing.",
+			"effect": "maximum-row-height"
+		},
+		{
+			"property": "numberLocale",
+			"purpose": "Supplies the preferred locale for stable text sorting, numeric grouping, and header date/time."
+		},
+		{
+			"property": "formatNumberColumnsAsCurrency",
+			"purpose": "Adds locale grouping and the configured prefix only to mapped entry fields declared number by the TABLE header.",
+			"effect": "format-number-columns-as-currency"
+		},
+		{
+			"property": "currencySymbol",
+			"purpose": "Sets the literal prefix placed before formatted number-column values.",
+			"effect": "currency-symbol"
+		},
+		{
+			"property": "categoryTableName",
+			"purpose": "Selects the optional metadata table."
+		},
+		{
+			"property": "categoryKeyColumn",
+			"purpose": "Maps the metadata key joined to donor categories."
+		},
+		{
+			"property": "categoryLabelColumn",
+			"purpose": "Maps an optional public category label."
+		},
+		{
+			"property": "categoryDescriptionColumn",
+			"purpose": "Maps optional range/explanatory copy shown for the active category."
+		},
+		{
+			"property": "showCategoryButtonDescriptions",
+			"purpose": "Shows the mapped metadata description beneath each category-button label.",
+			"effect": "show-category-button-descriptions"
+		},
+		{
+			"property": "categoryOrderColumn",
+			"purpose": "Maps optional numeric category order; source row order is the fallback."
+		},
+		{
+			"property": "title",
+			"purpose": "Public donor-directory title.",
+			"effect": "title-copy"
+		},
+		{
+			"property": "titleFontSize",
+			"purpose": "Sets the preferred title size before complete-title auto-fit.",
+			"effect": "title-font-size"
+		},
+		{
+			"property": "subtitle",
+			"purpose": "Optional gratitude or instruction line.",
+			"effect": "subtitle-copy"
+		},
+		{
+			"property": "allLabel",
+			"purpose": "Public label for the synthetic ALL category.",
+			"effect": "all-label"
+		},
+		{
+			"property": "allLabelFontSize",
+			"purpose": "Sets the All categories heading size before per-label auto-fit.",
+			"effect": "all-label-font-size"
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Message shown when a bound donor source has no valid rows."
+		},
+		{
+			"property": "noResultsText",
+			"purpose": "Message shown when search has no matching donor."
+		},
+		{
+			"property": "searchPlaceholder",
+			"purpose": "Prompt shown in the donor search input."
+		},
+		{
+			"property": "logo",
+			"purpose": "Selects the Wallboard-managed header logo.",
+			"effect": "header-logo"
+		},
+		{
+			"property": "logoScale",
+			"purpose": "Sets logo height within the header.",
+			"effect": "logo-scale"
+		},
+		{
+			"property": "dateFormat",
+			"purpose": "Selects the visible date preset.",
+			"effect": "date-format"
+		},
+		{
+			"property": "timeFormat",
+			"purpose": "Selects 12-hour, 24-hour, or hidden time.",
+			"effect": "time-format"
+		},
+		{
+			"property": "timeZone",
+			"purpose": "Sets an optional IANA timezone, falling back to the device when invalid or blank."
+		},
+		{
+			"property": "showKeyboard",
+			"purpose": "Enables the on-demand app-owned touch keyboard and its search-bar icon.",
+			"effect": "keyboard-availability"
+		},
+		{
+			"property": "autoplayIntervalSeconds",
+			"purpose": "Sets fallback seconds per page when the enable action omits a valid override.",
+			"effect": "autoplay-interval"
+		},
+		{
+			"property": "stopAtEnd",
+			"purpose": "Stops after the last page of the last real category instead of looping."
+		},
+		{
+			"property": "motionPreset",
+			"purpose": "Selects Off or Subtle bounded page feedback.",
+			"effect": "motion-preset"
+		},
+		{
+			"property": "themePreset",
+			"purpose": "Selects the complete Light, Dark, or Custom semantic palette.",
+			"effect": "theme-preset"
+		},
+		{
+			"property": "displayFont",
+			"purpose": "Sets the editorial display family and style for the title and active category.",
+			"effect": "display-font"
+		},
+		{
+			"property": "interfaceFont",
+			"purpose": "Sets the clean interface family and style for controls and metadata.",
+			"effect": "interface-font"
+		},
+		{
+			"property": "categoryFont",
+			"purpose": "Sets an independent category-button family and style.",
+			"effect": "category-font"
+		},
+		{
+			"property": "categoryMaxFontSize",
+			"purpose": "Caps category-button type before responsive density reduction.",
+			"effect": "category-max-font-size"
+		},
+		{
+			"property": "categoryButtonDescriptionFont",
+			"purpose": "Sets the family and style used only for metadata descriptions on category buttons.",
+			"effect": "category-button-description-font"
+		},
+		{
+			"property": "categoryButtonDescriptionMaxFontSize",
+			"purpose": "Sets the category-button description size independently of its label.",
+			"effect": "category-button-description-max-font-size"
+		},
+		{
+			"property": "activeCategoryDescriptionFont",
+			"purpose": "Sets the family and style used only for the active category description above donor rows.",
+			"effect": "active-category-description-font"
+		},
+		{
+			"property": "activeCategoryDescriptionMaxFontSize",
+			"purpose": "Sets the active category description size independently of its heading.",
+			"effect": "active-category-description-max-font-size"
+		},
+		{
+			"property": "entryField1Font",
+			"purpose": "Sets the Entry Field 1 family and style.",
+			"effect": "entry-field-1-font"
+		},
+		{
+			"property": "entryField1MaxFontSize",
+			"purpose": "Caps Entry Field 1 type before responsive density reduction.",
+			"effect": "entry-field-1-max-font-size"
+		},
+		{
+			"property": "entryField2Font",
+			"purpose": "Sets the Entry Field 2 family and style.",
+			"effect": "entry-field-2-font"
+		},
+		{
+			"property": "entryField2MaxFontSize",
+			"purpose": "Caps Entry Field 2 type before responsive density reduction.",
+			"effect": "entry-field-2-max-font-size"
+		},
+		{
+			"property": "entryField3Font",
+			"purpose": "Sets the Entry Field 3 family and style.",
+			"effect": "entry-field-3-font"
+		},
+		{
+			"property": "entryField3MaxFontSize",
+			"purpose": "Caps Entry Field 3 type before responsive density reduction.",
+			"effect": "entry-field-3-max-font-size"
+		},
+		{
+			"property": "cornerRadius",
+			"purpose": "Sets bounded rounding for tactile controls and donor entries.",
+			"effect": "corner-radius"
+		},
+		{
+			"property": "backgroundImage",
+			"purpose": "Optionally replaces the preset canvas background image in Light, Dark, or Custom.",
+			"effect": "background-image"
+		},
+		{
+			"property": "backgroundOverlayColor",
+			"purpose": "Sets the color layered above the canvas background image in every color scheme.",
+			"effect": "background-overlay-color"
+		},
+		{
+			"property": "backgroundOverlayOpacity",
+			"purpose": "Sets the background overlay strength from zero to one hundred percent.",
+			"effect": "background-overlay-opacity"
+		},
+		{
+			"property": "backgroundColor",
+			"purpose": "Custom page background.",
+			"effect": "background-color"
+		},
+		{
+			"property": "headerBackgroundColor",
+			"purpose": "Custom header background.",
+			"effect": "header-background-color"
+		},
+		{
+			"property": "headerTextColor",
+			"purpose": "Custom header text.",
+			"effect": "header-text-color"
+		},
+		{
+			"property": "panelColor",
+			"purpose": "Custom directory surface.",
+			"effect": "panel-color"
+		},
+		{
+			"property": "primaryTextColor",
+			"purpose": "Custom title and heading text.",
+			"effect": "primary-text-color"
+		},
+		{
+			"property": "secondaryTextColor",
+			"purpose": "Custom descriptions and general metadata.",
+			"effect": "secondary-text-color"
+		},
+		{
+			"property": "categoryButtonDescriptionTextColor",
+			"purpose": "Custom text color used only by descriptions on category buttons.",
+			"effect": "category-button-description-text-color"
+		},
+		{
+			"property": "activeCategoryDescriptionTextColor",
+			"purpose": "Custom text color used only by the active category description above donor rows.",
+			"effect": "active-category-description-text-color"
+		},
+		{
+			"property": "entryField1TextColor",
+			"purpose": "Custom Entry Field 1 text.",
+			"effect": "entry-field-1-text-color"
+		},
+		{
+			"property": "entryField2TextColor",
+			"purpose": "Custom Entry Field 2 text.",
+			"effect": "entry-field-2-text-color"
+		},
+		{
+			"property": "entryField3TextColor",
+			"purpose": "Custom Entry Field 3 text.",
+			"effect": "entry-field-3-text-color"
+		},
+		{
+			"property": "categoryButtonColor",
+			"purpose": "Custom inactive category button.",
+			"effect": "category-button-color"
+		},
+		{
+			"property": "categoryButtonTextColor",
+			"purpose": "Custom inactive category text.",
+			"effect": "category-button-text-color"
+		},
+		{
+			"property": "categoryActiveColor",
+			"purpose": "Custom selected category surface.",
+			"effect": "category-active-color"
+		},
+		{
+			"property": "categoryActiveTextColor",
+			"purpose": "Custom selected category text.",
+			"effect": "category-active-text-color"
+		},
+		{
+			"property": "donorCardColor",
+			"purpose": "Custom donor entry surface.",
+			"effect": "donor-card-color"
+		},
+		{
+			"property": "donorCardBorderColor",
+			"purpose": "Custom donor entry rule.",
+			"effect": "donor-card-border-color"
+		},
+		{
+			"property": "searchBackgroundColor",
+			"purpose": "Custom search and keyboard-value surface.",
+			"effect": "search-background-color"
+		},
+		{
+			"property": "searchTextColor",
+			"purpose": "Custom search text and icon.",
+			"effect": "search-text-color"
+		},
+		{
+			"property": "searchBorderColor",
+			"purpose": "Custom search and shell borders.",
+			"effect": "search-border-color"
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Custom navigation, page, and result highlight.",
+			"effect": "accent-color"
+		},
+		{
+			"property": "accentTextColor",
+			"purpose": "Custom text on accent surfaces.",
+			"effect": "accent-text-color"
+		},
+		{
+			"property": "keyboardBackgroundColor",
+			"purpose": "Custom on-screen keyboard panel.",
+			"effect": "keyboard-background-color"
+		},
+		{
+			"property": "keyboardKeyColor",
+			"purpose": "Custom keyboard key surface.",
+			"effect": "keyboard-key-color"
+		},
+		{
+			"property": "keyboardKeyTextColor",
+			"purpose": "Custom keyboard key text.",
+			"effect": "keyboard-key-text-color"
+		}
 	],
 	"dynamicText": [
 		{
 			"id": "directory-title",
 			"role": "primary",
-			"source": { "type": "setting", "properties": ["title"] },
-			"selectors": [".wb-donor-directory-title"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"title"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-title"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 18, "maximumLines": 1 },
+			"limits": {
+				"minimumFontSize": 18,
+				"maximumLines": 1
+			},
 			"fallback": "Preserve the complete title at the readable minimum and reduce adjacent subtitle/logo allocation first.",
 			"rationale": "Institutional identity must remain complete across portrait and landscape headers.",
 			"evidenceScenario": "long-content"
@@ -422,10 +815,20 @@
 		{
 			"id": "entry-field-1",
 			"role": "metadata",
-			"source": { "type": "datasource", "properties": ["donorData"] },
-			"selectors": [".wb-donor-directory-entry-field-1"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"donorData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-entry-field-1"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 11, "maximumLines": 3 },
+			"limits": {
+				"minimumFontSize": 11,
+				"maximumLines": 3
+			},
 			"fallback": "Give Entry Field 1 the complete card width when it is the only mapped value, then reduce or wrap only that value until its entire text fits.",
 			"rationale": "Entry Field 1 is the configured donor identity and must remain complete rather than ending in an ellipsis.",
 			"evidenceScenario": "single-field-long"
@@ -433,10 +836,20 @@
 		{
 			"id": "category-identity",
 			"role": "primary",
-			"source": { "type": "datasource", "properties": ["donorData", "categoryData"] },
-			"selectors": [".wb-donor-directory-active-category"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"donorData",
+					"categoryData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-active-category"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Use two lines and reduce adjacent page metadata before losing category identity.",
 			"rationale": "The selected donor tier must remain unmistakable.",
 			"evidenceScenario": "long-content"
@@ -444,10 +857,20 @@
 		{
 			"id": "category-navigation",
 			"role": "secondary",
-			"source": { "type": "datasource", "properties": ["donorData", "categoryData"] },
-			"selectors": [".wb-donor-directory-category-label"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"donorData",
+					"categoryData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-category-label"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 6 },
+			"limits": {
+				"maximumLines": 6
+			},
 			"fallback": "Wrap complete labels; portrait uses equal-width centered flex rows with no hidden overflow, while the landscape directory and square rail may scroll before shrinking touch targets.",
 			"rationale": "Dynamic category labels must remain recognizable in touch controls, and every portrait category must remain visible without discovery-by-scroll.",
 			"evidenceScenario": "portrait-many-categories"
@@ -455,10 +878,19 @@
 		{
 			"id": "active-category-description",
 			"role": "secondary",
-			"source": { "type": "datasource", "properties": ["categoryData"] },
-			"selectors": [".wb-donor-directory-active-category-description"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"categoryData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-active-category-description"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 6 },
+			"limits": {
+				"maximumLines": 6
+			},
 			"fallback": "Wrap complete text and let the heading region expand before reducing donor-row height.",
 			"rationale": "Donation ranges and explanatory copy need a persistent touch-accessible treatment.",
 			"evidenceScenario": "long-content"
@@ -466,10 +898,19 @@
 		{
 			"id": "category-button-description",
 			"role": "secondary",
-			"source": { "type": "datasource", "properties": ["categoryData"] },
-			"selectors": [".wb-donor-directory-category-button-description"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"categoryData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-category-button-description"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 8 },
+			"limits": {
+				"maximumLines": 8
+			},
 			"fallback": "Wrap complete descriptions with a legacy-safe long-token fallback; landscape and square may scroll before clipping, while portrait keeps every button in balanced no-scroll rows and reduces the row track count on narrow surfaces.",
 			"rationale": "Optional metadata on a touch button must remain readable without relying on hover or truncation.",
 			"evidenceScenario": "long-content"
@@ -477,10 +918,20 @@
 		{
 			"id": "entry-field-2",
 			"role": "metadata",
-			"source": { "type": "datasource", "properties": ["donorData"] },
-			"selectors": [".wb-donor-directory-entry-field-2"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"donorData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-entry-field-2"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 11, "maximumLines": 3 },
+			"limits": {
+				"minimumFontSize": 11,
+				"maximumLines": 3
+			},
 			"fallback": "Reduce or wrap only this mapped value until the complete text fits its assigned cell.",
 			"rationale": "Entry Field 2 is arbitrary optional context and must remain complete without truncation.",
 			"evidenceScenario": "long-content"
@@ -488,10 +939,20 @@
 		{
 			"id": "entry-field-3",
 			"role": "metadata",
-			"source": { "type": "datasource", "properties": ["donorData"] },
-			"selectors": [".wb-donor-directory-entry-field-3"],
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"donorData"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-entry-field-3"
+			],
 			"strategy": "auto-fit",
-			"limits": { "minimumFontSize": 11, "maximumLines": 3 },
+			"limits": {
+				"minimumFontSize": 11,
+				"maximumLines": 3
+			},
 			"fallback": "Reduce or wrap only this mapped value until the complete text fits its assigned cell.",
 			"rationale": "Entry Field 3 retains independent typography while remaining complete without truncation.",
 			"evidenceScenario": "long-content"
@@ -499,10 +960,20 @@
 		{
 			"id": "empty-and-search-copy",
 			"role": "secondary",
-			"source": { "type": "setting", "properties": ["emptyStateText", "noResultsText"] },
-			"selectors": [".wb-donor-directory-state-copy"],
+			"source": {
+				"type": "setting",
+				"properties": [
+					"emptyStateText",
+					"noResultsText"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-state-copy"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 3 },
+			"limits": {
+				"maximumLines": 3
+			},
 			"fallback": "Use three complete centered lines at the readable floor.",
 			"rationale": "Recovery guidance must remain legible instead of collapsing into a blank kiosk.",
 			"evidenceScenario": "empty-donors"
@@ -510,69 +981,299 @@
 		{
 			"id": "header-date-time",
 			"role": "metadata",
-			"source": { "type": "computed", "properties": ["dateFormat", "timeFormat", "timeZone"] },
-			"selectors": [".wb-donor-directory-meta"],
+			"source": {
+				"type": "computed",
+				"properties": [
+					"dateFormat",
+					"timeFormat",
+					"timeZone"
+				]
+			},
+			"selectors": [
+				".wb-donor-directory-meta"
+			],
 			"strategy": "wrap",
-			"limits": { "maximumLines": 2 },
+			"limits": {
+				"maximumLines": 2
+			},
 			"fallback": "Stack date and time and hide neither unless its editor preset is None.",
 			"rationale": "Localized header time must fit narrow portrait allocation without clipping.",
 			"evidenceScenario": "long-content"
 		}
 	],
 	"states": [
-		{ "scenario": "app-default", "expectation": "The complete reference-led light-theme landscape directory shows ALL, page 1, the default Name and Amount values with support for a third field, a left category directory, full-width search, and a closed keyboard." },
-		{ "scenario": "compact-landscape", "expectation": "The full touch journey remains readable and contained at 1280x720." },
-		{ "scenario": "portrait", "expectation": "The framed shell, wrapped categories, three donor columns, and search remain balanced at 1080x1920 while the on-demand keyboard stays reachable." },
-		{ "scenario": "portrait-many-categories", "expectation": "Nine real categories plus ALL remain simultaneously visible in balanced equal-width portrait rows; buttons stretch within each row, all copy remains complete, and the incomplete final row is centered without horizontal scrolling." },
-		{ "scenario": "square", "expectation": "The square composition keeps balanced header, categories, search, donor rows, and controls with the keyboard closed." },
-		{ "scenario": "dark-theme", "expectation": "The coordinated dark palette preserves the reference-led hierarchy, fine borders, and touch states while remaining compatible with an editor-selected background image and overlay." },
-		{ "scenario": "custom-theme", "expectation": "Every semantic Custom color plus the placement-level background image and overlay apply coherently without fixed light-theme remnants." },
-		{ "scenario": "unbound", "expectation": "An unbound primary datasource shows clear editor binding guidance and no synthetic donor fallback." },
-		{ "scenario": "empty-donors", "expectation": "A bound empty table shows the configured empty-state message in a stable composition." },
-		{ "scenario": "invalid-mapping", "expectation": "A missing configured table or required Entry Field 1/category mapping shows a quiet actionable configuration state." },
-		{ "scenario": "category-metadata-unbound", "expectation": "Derived categories sort alphabetically and no category description appears." },
-		{ "scenario": "category-metadata-order", "expectation": "Metadata numeric/source order, public labels, and active description control the category presentation." },
-		{ "scenario": "three-field-entries", "expectation": "Three arbitrary mapped fields render with independent hierarchy, font controls, and colors without amount-specific behavior." },
-		{ "scenario": "currency-number-columns", "expectation": "Mapped fields declared number by the TABLE header receive locale grouping and the configured literal prefix while text fields remain raw." },
-		{ "scenario": "single-field-long", "expectation": "A single mapped donor field uses the full card width, vertically centers, and auto-fits its complete long value without truncation." },
-		{ "scenario": "keyboard-open", "expectation": "Activating search opens an uppercase bottom keyboard over only the donor table while the landscape category directory, header, and search stay visible; its preserved bottom row reads CLEAR, BACKSPACE, SPACE, SEARCH." },
-		{ "scenario": "search-active", "expectation": "Typing switches to stable ALL/search context, filters donors, shows category badges, and highlights the best match." },
-		{ "scenario": "search-no-results", "expectation": "A nonmatching query shows the configured no-results message and remains easy to clear." },
-		{ "scenario": "density-20", "expectation": "Twenty entries per column are present, contained, and legible with reduced row padding and density-aware field sizes." },
-		{ "scenario": "long-content", "expectation": "Long title, Entry Field 1 values, categories, descriptions, optional fields, and localized metadata remain readable without clipped ink." },
-		{ "scenario": "maximum-content", "expectation": "A high representative donor/category count remains paged with bounded DOM; landscape category overflow remains usable while portrait uses the complete wrapped directory." },
-		{ "scenario": "uneven-last-page", "expectation": "The final partial page retains directory-row rhythm and correct disabled navigation." },
-		{ "scenario": "uneven-last-page-capped", "expectation": "A configured maximum donor-row height prevents a one-entry final page from inflating while leaving automatic full-page sizing and pagination intact." },
-		{ "scenario": "missing-logo", "expectation": "An absent/broken logo removes its region without a broken-image marker or header imbalance." },
-		{ "scenario": "row-array", "expectation": "A processed donor row array renders the same directory as the native TABLE wrapper." },
-		{ "scenario": "live-donor-update", "expectation": "A live donor update preserves valid category/page state, clamps removed pages, and updates search results." },
-		{ "scenario": "live-category-update", "expectation": "A category metadata update changes order/description without resetting a still-valid manual selection." }
+		{
+			"scenario": "app-default",
+			"expectation": "The complete reference-led light-theme landscape directory shows ALL, page 1, the default Name and Amount values with support for a third field, a left category directory, full-width search, and a closed keyboard."
+		},
+		{
+			"scenario": "compact-landscape",
+			"expectation": "The full touch journey remains readable and contained at 1280x720."
+		},
+		{
+			"scenario": "portrait",
+			"expectation": "The framed shell, wrapped categories, three donor columns, and search remain balanced at 1080x1920 while the on-demand keyboard stays reachable."
+		},
+		{
+			"scenario": "portrait-many-categories",
+			"expectation": "Nine real categories plus ALL remain simultaneously visible in balanced equal-width portrait rows; buttons stretch within each row, all copy remains complete, and the incomplete final row is centered without horizontal scrolling."
+		},
+		{
+			"scenario": "square",
+			"expectation": "The square composition keeps balanced header, categories, search, donor rows, and controls with the keyboard closed."
+		},
+		{
+			"scenario": "dark-theme",
+			"expectation": "The coordinated dark palette preserves the reference-led hierarchy, fine borders, and touch states while remaining compatible with an editor-selected background image and overlay."
+		},
+		{
+			"scenario": "custom-theme",
+			"expectation": "Every semantic Custom color plus the placement-level background image and overlay apply coherently without fixed light-theme remnants."
+		},
+		{
+			"scenario": "unbound",
+			"expectation": "An unbound primary datasource shows clear editor binding guidance and no synthetic donor fallback."
+		},
+		{
+			"scenario": "empty-donors",
+			"expectation": "A bound empty table shows the configured empty-state message in a stable composition."
+		},
+		{
+			"scenario": "invalid-mapping",
+			"expectation": "A missing configured table or required Entry Field 1/category mapping shows a quiet actionable configuration state."
+		},
+		{
+			"scenario": "category-metadata-unbound",
+			"expectation": "Derived categories sort alphabetically and no category description appears."
+		},
+		{
+			"scenario": "category-metadata-order",
+			"expectation": "Metadata numeric/source order, public labels, and active description control the category presentation."
+		},
+		{
+			"scenario": "three-field-entries",
+			"expectation": "Three arbitrary mapped fields render with independent hierarchy, font controls, and colors without amount-specific behavior."
+		},
+		{
+			"scenario": "currency-number-columns",
+			"expectation": "Mapped fields declared number by the TABLE header receive locale grouping and the configured literal prefix while text fields remain raw."
+		},
+		{
+			"scenario": "single-field-long",
+			"expectation": "A single mapped donor field uses the full card width, vertically centers, and auto-fits its complete long value without truncation."
+		},
+		{
+			"scenario": "keyboard-open",
+			"expectation": "Activating search opens an uppercase bottom keyboard over only the donor table while the landscape category directory, header, and search stay visible; its preserved bottom row reads CLEAR, BACKSPACE, SPACE, SEARCH."
+		},
+		{
+			"scenario": "search-active",
+			"expectation": "Typing switches to stable ALL/search context, filters donors, shows category badges, and highlights the best match."
+		},
+		{
+			"scenario": "search-no-results",
+			"expectation": "A nonmatching query shows the configured no-results message and remains easy to clear."
+		},
+		{
+			"scenario": "density-20",
+			"expectation": "Twenty entries per column are present, contained, and legible with reduced row padding and density-aware field sizes."
+		},
+		{
+			"scenario": "long-content",
+			"expectation": "Long title, Entry Field 1 values, categories, descriptions, optional fields, and localized metadata remain readable without clipped ink."
+		},
+		{
+			"scenario": "maximum-content",
+			"expectation": "A high representative donor/category count remains paged with bounded DOM; landscape category overflow remains usable while portrait uses the complete wrapped directory."
+		},
+		{
+			"scenario": "uneven-last-page",
+			"expectation": "The final partial page retains directory-row rhythm and correct disabled navigation."
+		},
+		{
+			"scenario": "uneven-last-page-capped",
+			"expectation": "A configured maximum donor-row height prevents a one-entry final page from inflating while leaving automatic full-page sizing and pagination intact."
+		},
+		{
+			"scenario": "missing-logo",
+			"expectation": "An absent/broken logo removes its region without a broken-image marker or header imbalance."
+		},
+		{
+			"scenario": "row-array",
+			"expectation": "A processed donor row array renders the same directory as the native TABLE wrapper."
+		},
+		{
+			"scenario": "live-donor-update",
+			"expectation": "A live donor update preserves valid category/page state, clamps removed pages, and updates search results."
+		},
+		{
+			"scenario": "live-category-update",
+			"expectation": "A category metadata update changes order/description without resetting a still-valid manual selection."
+		}
 	],
 	"behaviors": [
-		{ "id": "datasource-boundary", "expectation": "Native Donor Information TABLE, selected table, row array, renamed three-field mappings, and safe complex display values normalize deterministically without recursive wrapper search.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "number-column-currency", "expectation": "Currency formatting is opt-in, applies to any of the three mapped TABLE number fields, honors locale and literal prefix, and never infers types for text columns or headerless row arrays.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "category-ordering", "expectation": "ALL is first in manual mode; optional metadata uses numeric or source order and unmatched real categories append alphabetically.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "category-description-branding", "expectation": "Category-button descriptions are optional and use typography and color controls independent from the active category description above donor rows.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "portrait-category-layout", "expectation": "Portrait renders every category in non-scrolling equal-width flex tracks, stretches ALL to the height of its row peers, centers an incomplete final row, preserves complete copy, and keeps all buttons inside the visible navigation region.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "manual-pagination", "expectation": "Category selection resets to page 1 and arrows/page indicator remain correct through one-page and uneven-last-page states.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "touch-search", "expectation": "Search focus or the keyboard icon opens the app-owned uppercase keyboard over only the donor table; lowercase input payloads become a title-cased query in stable ALL context; CLEAR resets the query while staying open; and SEARCH, the icon, or an outside touch dismisses it without clearing the current query or showing a dimming overlay. Toggling the icon closed also removes the icon and search active highlighting.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "row-height-cap", "expectation": "Zero maximum row height preserves automatic equal-height sizing, while a positive cap limits sparse-page donor rows without changing page capacity, full-page shrink behavior, or navigation.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "background-branding", "expectation": "Light and Custom fall back to the packaged background, Dark falls back to its solid canvas, and an editor-selected background image plus overlay color/opacity applies in every preset.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "reset-experience", "expectation": "resetExperience stops autoplay, clears and blurs search, closes the keyboard, selects ALL, restores page 1, and resets autoplay frame and fallback duration.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "density-scaling", "expectation": "Entries-per-column values from one through twenty are honored, all mapped fields remain vertically centered, and per-value auto-fit reduces typography without truncation.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "physical-search", "expectation": "The native search input accepts physical typing and editing while sharing the same normalization and filtering state.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "autoplay-command", "expectation": "enablePaginationMode applies a validated duration override, visits every real-category page in order, and loops or stops at the configured final frame.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "autoplay-stop-and-touch", "expectation": "disablePaginationMode restores initial manual state; a purposeful touch stops autoplay and still performs the touched action.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "motion-independent-cadence", "expectation": "Autoplay continues with motion Off and repeated enable commands never create more than one timer.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "live-update-reconciliation", "expectation": "Independent donor/category updates preserve stable keys when valid and reset or clamp deterministically when content disappears.", "evidence": { "testFile": "preview/behavior.spec.ts" } },
-		{ "id": "instance-cleanup", "expectation": "All clock/autoplay timers, resize observers, command subscriptions, and input listeners are instance-local and released on destroy.", "evidence": { "testFile": "preview/behavior.spec.ts" } }
+		{
+			"id": "datasource-boundary",
+			"expectation": "Native Donor Information TABLE, selected table, row array, renamed three-field mappings, and safe complex display values normalize deterministically without recursive wrapper search.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "number-column-currency",
+			"expectation": "Currency formatting is opt-in, applies to any of the three mapped TABLE number fields, honors locale and literal prefix, and never infers types for text columns or headerless row arrays.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "category-ordering",
+			"expectation": "ALL is first in manual mode; optional metadata uses numeric or source order and unmatched real categories append alphabetically.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "category-description-branding",
+			"expectation": "Category-button descriptions are optional and use typography and color controls independent from the active category description above donor rows.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "portrait-category-layout",
+			"expectation": "Portrait renders every category in non-scrolling equal-width flex tracks, stretches ALL to the height of its row peers, centers an incomplete final row, preserves complete copy, and keeps all buttons inside the visible navigation region.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "manual-pagination",
+			"expectation": "Category selection resets to page 1 and arrows/page indicator remain correct through one-page and uneven-last-page states.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "touch-search",
+			"expectation": "Search focus or the keyboard icon opens the app-owned uppercase keyboard over only the donor table; lowercase input payloads become a title-cased query in stable ALL context; CLEAR resets the query while staying open; and SEARCH, the icon, or an outside touch dismisses it without clearing the current query or showing a dimming overlay. Toggling the icon closed also removes the icon and search active highlighting.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "row-height-cap",
+			"expectation": "Zero maximum row height preserves automatic equal-height sizing, while a positive cap limits sparse-page donor rows without changing page capacity, full-page shrink behavior, or navigation.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "background-branding",
+			"expectation": "Light and Custom fall back to the packaged background, Dark falls back to its solid canvas, and an editor-selected background image plus overlay color/opacity applies in every preset.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "reset-experience",
+			"expectation": "resetExperience stops autoplay, clears and blurs search, closes the keyboard, selects ALL, restores page 1, and resets autoplay frame and fallback duration.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "density-scaling",
+			"expectation": "Entries-per-column values from one through twenty are honored, all mapped fields remain vertically centered, and per-value auto-fit reduces typography without truncation.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "physical-search",
+			"expectation": "The native search input accepts physical typing and editing while sharing the same normalization and filtering state.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "autoplay-command",
+			"expectation": "enablePaginationMode applies a validated duration override, visits every real-category page in order, and loops or stops at the configured final frame.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "autoplay-stop-and-touch",
+			"expectation": "disablePaginationMode restores initial manual state; a purposeful touch stops autoplay and still performs the touched action.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "motion-independent-cadence",
+			"expectation": "Autoplay continues with motion Off and repeated enable commands never create more than one timer.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "live-update-reconciliation",
+			"expectation": "Independent donor/category updates preserve stable keys when valid and reset or clamp deterministically when content disappears.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "instance-cleanup",
+			"expectation": "All clock/autoplay timers, resize observers, command subscriptions, and input listeners are instance-local and released on destroy.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
 	],
 	"assets": [
-		{ "id": "app-icon", "source": "packaged", "path": "src/editor-assets/icon.png", "required": true },
-		{ "id": "app-placeholder", "source": "packaged", "path": "src/editor-assets/placeholder.png", "required": true },
-		{ "id": "reference-background", "source": "packaged", "path": "src/assets/donor-directory-mint-background.jpg", "required": true },
-		{ "id": "editor-background", "source": "setting", "properties": ["backgroundImage"], "required": false },
-		{ "id": "header-logo", "source": "setting", "properties": ["logo"], "required": false }
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		},
+		{
+			"id": "reference-background",
+			"source": "packaged",
+			"path": "src/assets/donor-directory-mint-background.jpg",
+			"required": true
+		},
+		{
+			"id": "editor-background",
+			"source": "setting",
+			"properties": [
+				"backgroundImage"
+			],
+			"required": false
+		},
+		{
+			"id": "header-logo",
+			"source": "setting",
+			"properties": [
+				"logo"
+			],
+			"required": false
+		}
 	],
 	"visualDirection": {
 		"source": "reference-led",

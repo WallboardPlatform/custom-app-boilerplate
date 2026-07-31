@@ -694,7 +694,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						<Show
 							when={visibleDocuments().length > 0}
 							fallback={
-								<div class={style.empty}>
+								<div class={style.empty} data-preview-id="directory-empty">
 									<Icon name="pdf" />
 									<strong>{availableDocuments().length === 0 ? 'No documents available' : 'No documents found'}</strong>
 									<span>
