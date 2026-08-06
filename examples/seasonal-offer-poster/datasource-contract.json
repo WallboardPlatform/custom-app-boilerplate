@@ -1,0 +1,50 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"binding": {
+		"property": "offerData",
+		"dataPickerType": "any"
+	},
+	"source": {
+		"contract": "TABLE",
+		"structureType": "TABLE",
+		"table": "Offers",
+		"sampleData": "sample-datasource.json"
+	},
+	"delivery": {
+		"suggestedDatasourceName": "Seasonal Offers",
+		"quickEditEligible": true
+	},
+	"columns": [
+		{
+			"name": "eyebrow",
+			"type": "string",
+			"required": false
+		},
+		{
+			"name": "headline",
+			"type": "string",
+			"required": true
+		},
+		{
+			"name": "price",
+			"type": "string",
+			"required": false
+		},
+		{
+			"name": "priceNote",
+			"type": "string",
+			"required": false
+		},
+		{
+			"name": "validUntil",
+			"type": "string",
+			"required": false
+		},
+		{
+			"name": "smallPrint",
+			"type": "string",
+			"required": false
+		}
+	]
+}

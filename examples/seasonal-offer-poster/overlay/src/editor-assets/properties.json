@@ -1,0 +1,81 @@
+{
+	"version": "1",
+	"name": "Seasonal Offer Poster",
+	"interactive": false,
+	"size": {
+		"width": "1920px",
+		"height": "1080px"
+	},
+	"properties": [
+		{
+			"label": "Offers",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Offer table",
+					"type": "dataPicker",
+					"property": "offerData",
+					"dataPickerType": "any",
+					"tooltip": "Bind a table with eyebrow, headline, price, priceNote, validUntil and smallPrint columns. Two spaces in the headline start a new line, so the copy controls its own break."
+				},
+				{
+					"label": "Seconds per offer",
+					"type": "number",
+					"property": "rotationSeconds",
+					"default": 12,
+					"tooltip": "How long each offer holds before the next one. Ignored when only one offer is bound."
+				},
+				{
+					"label": "Show validity",
+					"type": "checkbox",
+					"property": "showValidity",
+					"default": true
+				},
+				{
+					"label": "Empty message",
+					"type": "text",
+					"property": "emptyStateText",
+					"default": "No offer is scheduled right now."
+				}
+			]
+		},
+		{
+			"label": "Poster",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Brand name",
+					"type": "text",
+					"property": "brandName",
+					"default": "Fernbrook Market"
+				},
+				{
+					"label": "Canvas colour",
+					"type": "color",
+					"property": "canvasColor",
+					"default": "#0f2a24"
+				},
+				{
+					"label": "Ink colour",
+					"type": "color",
+					"property": "inkColor",
+					"default": "#f6f1e4"
+				},
+				{
+					"label": "Accent colour",
+					"type": "color",
+					"property": "accentColor",
+					"default": "#e4a03c"
+				},
+				{
+					"label": "Surround colour",
+					"type": "color",
+					"property": "letterboxColor",
+					"default": "#07100e",
+					"tooltip": "Fills the screen edge left over when the surface is not 16:9. It is not part of the poster, so matching it to the room usually reads better than matching it to the artwork."
+				}
+			]
+		}
+	],
+	"resourceList": ["assets/app.js", "assets/app-chrome-49.js"]
+}

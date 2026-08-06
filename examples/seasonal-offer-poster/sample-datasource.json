@@ -1,0 +1,39 @@
+{
+	"Offers": {
+		"header": {
+			"eyebrow": "string",
+			"headline": "string",
+			"price": "string",
+			"priceNote": "string",
+			"validUntil": "string",
+			"smallPrint": "string"
+		},
+		"rows": [
+			{
+				"eyebrow": "This week only",
+				"headline": "Two stone-baked  sourdough loaves",
+				"price": "£6",
+				"priceNote": "for both",
+				"validUntil": "Until Sunday 14 March",
+				"smallPrint": "While stocks last. One offer per customer. Selected stores only."
+			},
+			{
+				"eyebrow": "Market weekend",
+				"headline": "Seasonal fruit  crates, half price",
+				"price": "50%",
+				"priceNote": "off every crate",
+				"validUntil": "Saturday and Sunday",
+				"smallPrint": "Applies to whole crates only. Excludes imported citrus."
+			},
+			{
+				"eyebrow": "New this month",
+				"headline": "Cold-pressed  apple pressings",
+				"price": "£3",
+				"priceNote": "per bottle",
+				"validUntil": "Throughout March",
+				"smallPrint": "Pressed on site each Tuesday. Bottle deposit refundable at the counter."
+			}
+		],
+		"connectors": {}
+	}
+}

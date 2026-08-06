@@ -1,0 +1,136 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "157d762f31a88feb4c289f1390e9b554b6cb5041cec372f81cf32b479826e4d9",
+	"reviewedAt": "2026-07-31T00:00:00.000Z",
+	"reviewer": "Claude (agent)",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "One approved 16:9 poster with live offer copy, reproduced rather than reflowed."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "No customer artwork was supplied; the composition is agent-authored to demonstrate the archetype."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "Evergreen field with a brass accent and print-poster typography; no card, no header bar, no rail."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Headline and price dominate at hall distance; the fit floor keeps the headline above 84 design px."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Verified in the default palette and a re-skinned navy brand, both with a distinct surround."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "Long-copy scenario fits the headline within its authored block instead of pushing the price."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The same poster at 1920x1080, 1280x720, 900x900, 1080x1920 and 1920x540 - scaled, never rearranged."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "No raster artwork: the glow is a canvas gradient, so it scales exactly and costs nothing."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "The only example that refuses to reflow; every other one adapts its layout to the surface."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "compact-hall-1280x720.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "landscape-960x540.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "portrait-panel-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-custom-brand-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-empty-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-live-datasource-update-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-long-copy-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-no-price-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-portrait-letterbox-1080x1920.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-single-offer-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-square-letterbox-900x900.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "scenario-ultra-wide-letterbox-1920x540.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "square-600x600.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "square-shelf-900x900.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		},
+		{
+			"file": "wide-low-1536x432.png",
+			"status": "pass",
+			"notes": "Inspected; the poster is complete and in proportion, with the surround reading as deliberate framing."
+		}
+	],
+	"unresolvedFindings": []
+}
