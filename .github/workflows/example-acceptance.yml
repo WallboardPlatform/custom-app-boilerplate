@@ -76,6 +76,7 @@ jobs:
           - product-catalog
           - recognition-mosaic
           - restaurant-menu
+          - seasonal-offer-poster
           - single-hero-clock
           - spatial-wayfinding
           - team-presence-board

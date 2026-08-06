@@ -1,0 +1,400 @@
+{
+	"briefVersion": 7,
+	"request": {
+		"summary": "A promotional poster a designer authored at 1920x1080, rendered faithfully on any screen with live offer copy and price from a bound table, letterboxing rather than rearranging when the surface is a different shape.",
+		"audience": "Shoppers passing a market hall screen, and the marketing team who approved the artwork and expect to see exactly it.",
+		"primaryGoal": "Reproduce an approved composition without reflow, so what runs on the wall is what was signed off."
+	},
+	"assumptions": [
+		"The artwork is authored once at 16:9 and the operator accepts a letterbox on other shapes rather than a different arrangement.",
+		"Offer copy changes far more often than the design, so text and price are bound while position and proportion are not editable.",
+		"A double space inside the headline is the copywriter's line break; no separate column is needed for it."
+	],
+	"app": {
+		"mode": "new",
+		"name": "Seasonal Offer Poster",
+		"version": "1"
+	},
+	"surfaceStrategy": {
+		"mode": "adaptive",
+		"rationale": "The composition is fixed but the placements are not: the same poster runs on a 16:9 hall screen, a portrait door panel and a square shelf-edge display. Adaptive verification is what proves the letterbox behaves on each of them; it does not imply the layout rearranges."
+	},
+	"surfaces": [
+		{
+			"id": "app-default",
+			"width": 1920,
+			"height": 1080,
+			"role": "primary",
+			"purpose": "Market hall screen at the authored ratio, where the poster fills the surface with no letterbox at all.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 88
+			}
+		},
+		{
+			"id": "portrait-panel",
+			"width": 1080,
+			"height": 1920,
+			"role": "required",
+			"purpose": "Door panel where the poster occupies a horizontal band and the surround fills the rest.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 30
+			}
+		},
+		{
+			"id": "square-shelf",
+			"width": 900,
+			"height": 900,
+			"role": "required",
+			"purpose": "Shelf-edge square where the poster letterboxes top and bottom.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 54
+			}
+		},
+		{
+			"id": "compact-hall",
+			"width": 1280,
+			"height": 720,
+			"role": "fallback",
+			"purpose": "Smaller hall screen at the authored ratio, proving the poster scales down without losing its small print.",
+			"minimumContentCoverage": {
+				"width": 92,
+				"height": 88
+			}
+		}
+	],
+	"data": {
+		"mode": "bound",
+		"bindings": [
+			{
+				"property": "offerData",
+				"source": "generated",
+				"contract": "TABLE",
+				"access": "read"
+			}
+		]
+	},
+	"ownership": [
+		{
+			"id": "offer-copy",
+			"area": "content",
+			"owner": "datasource",
+			"targets": [
+				"offerData"
+			],
+			"rationale": "Offer wording, price and validity live in the bound table; the app never hard-codes an offer."
+		},
+		{
+			"id": "poster-wording",
+			"area": "content",
+			"owner": "setting",
+			"targets": [
+				"brandName",
+				"emptyStateText"
+			],
+			"rationale": "The brand line and the empty message are the only copy the app itself owns, and both are per-site."
+		},
+		{
+			"id": "poster-palette",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": [
+				"canvasColor",
+				"inkColor",
+				"accentColor",
+				"letterboxColor"
+			],
+			"rationale": "Colour is the one part of the artwork a brand owner legitimately re-skins per market without touching the composition."
+		},
+		{
+			"id": "validity-visibility",
+			"area": "presentation",
+			"owner": "setting",
+			"targets": [
+				"showValidity"
+			],
+			"rationale": "Some offers have no end date, so the validity chip has to be suppressible without editing copy."
+		},
+		{
+			"id": "offer-cadence",
+			"area": "behavior",
+			"owner": "setting",
+			"targets": [
+				"rotationSeconds"
+			],
+			"rationale": "Dwell time depends on the placement: a checkout screen needs longer than a corridor."
+		},
+		{
+			"id": "poster-composition",
+			"area": "presentation",
+			"owner": "locked",
+			"targets": [
+				"canvas layout",
+				"price overlap",
+				"type scale"
+			],
+			"rationale": "Position, proportion and overlap are the approved artwork. Making them editable would let an operator undo the design without noticing."
+		}
+	],
+	"experience": {
+		"mode": "passive",
+		"views": [
+			{
+				"id": "poster",
+				"purpose": "Show one approved offer poster at a time, rotating on a cadence when several are bound."
+			}
+		],
+		"inputs": [],
+		"session": {
+			"reset": "none",
+			"expectation": "A poster is watched, never touched: there is no per-viewer state to keep or reset."
+		}
+	},
+	"outputs": [],
+	"rendering": {
+		"mode": "fixed-canvas",
+		"designWidth": 1920,
+		"designHeight": 1080,
+		"letterbox": "background",
+		"rationale": "Every other example in this portfolio reflows to fit its surface. This one must not: the composition is artwork someone approved, and rearranging it would quietly ship something the customer never saw. The canvas scales as one block and the leftover edge takes the operator's surround colour."
+	},
+	"motion": {
+		"default": "off",
+		"transition": "none",
+		"techniques": [],
+		"rationale": "A printed poster does not dissolve into the next one; it is swapped. A hard cut matches the object being imitated and removes any chance of two offers being legible at once, which on a price claim matters."
+	},
+	"media": [],
+	"branding": {
+		"source": "none",
+		"editable": true,
+		"provenance": "No customer artwork was supplied. The composition is agent-authored to demonstrate the archetype, using invented market branding so nothing implies a real retailer.",
+		"fallback": "With no brand supplied the poster uses its own evergreen and brass palette, which the four colour settings can replace per market."
+	},
+	"presentation": {
+		"themes": [
+			"custom"
+		],
+		"density": "sparse",
+		"viewingDistance": "distance",
+		"textRoles": [
+			{
+				"role": "primary",
+				"selectors": [
+					".wb-offer-poster-headline",
+					".wb-offer-poster-price strong",
+					".wb-offer-poster-empty-message"
+				]
+			},
+			{
+				"role": "secondary",
+				"selectors": [
+					".wb-offer-poster-eyebrow",
+					".wb-offer-poster-validity",
+					".wb-offer-poster-price span"
+				]
+			},
+			{
+				"role": "metadata",
+				"selectors": [
+					".wb-offer-poster-brand",
+					".wb-offer-poster-small-print"
+				]
+			}
+		]
+	},
+	"cadence": {
+		"mode": "rotation",
+		"intervalProperty": "rotationSeconds"
+	},
+	"settings": [
+		{
+			"property": "rotationSeconds",
+			"purpose": "How long each offer holds before the next replaces it."
+		},
+		{
+			"property": "showValidity",
+			"purpose": "Hides the validity chip for offers with no end date.",
+			"effect": "validity-visibility"
+		},
+		{
+			"property": "emptyStateText",
+			"purpose": "Wording shown on the poster when no offer is scheduled."
+		},
+		{
+			"property": "brandName",
+			"purpose": "The brand line printed at the head of the poster."
+		},
+		{
+			"property": "canvasColor",
+			"purpose": "Poster background inside the authored canvas."
+		},
+		{
+			"property": "inkColor",
+			"purpose": "Primary type colour on the canvas."
+		},
+		{
+			"property": "accentColor",
+			"purpose": "Brand accent used for the price and the brand line."
+		},
+		{
+			"property": "letterboxColor",
+			"purpose": "Fills the screen edge left over when the surface is not the authored ratio.",
+			"effect": "surround-colour"
+		}
+	],
+	"dynamicText": [
+		{
+			"id": "offer-headline",
+			"role": "primary",
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"offerData"
+				]
+			},
+			"selectors": [
+				".wb-offer-poster-headline"
+			],
+			"strategy": "auto-fit",
+			"limits": {
+				"minimumFontSize": 84,
+				"maximumLines": 3
+			},
+			"fallback": "Fit the complete headline down to 84px within its authored block; copy that still will not fit is shortened by the operator rather than clipped.",
+			"rationale": "A fixed canvas cannot grow, so the choice is between shrinking the type and clipping words. On a price claim clipping is the worse failure, because a shopper cannot tell a line is missing.",
+			"evidenceScenario": "long-copy"
+		},
+		{
+			"id": "offer-small-print",
+			"role": "metadata",
+			"source": {
+				"type": "datasource",
+				"properties": [
+					"offerData"
+				]
+			},
+			"selectors": [
+				".wb-offer-poster-small-print"
+			],
+			"strategy": "wrap",
+			"limits": {
+				"maximumLines": 3
+			},
+			"fallback": "Small print wraps within its authored column and stops at three lines.",
+			"rationale": "Legal wording varies in length and must stay inside the poster rather than push the composition.",
+			"evidenceScenario": "long-copy"
+		}
+	],
+	"states": [
+		{
+			"scenario": "single-offer",
+			"expectation": "One bound offer holds without rotating, and no page indicator is invented for it."
+		},
+		{
+			"scenario": "square-letterbox",
+			"expectation": "On a square surface the poster keeps its 16:9 proportions, centred, with the surround colour above and below and nothing rearranged."
+		},
+		{
+			"scenario": "portrait-letterbox",
+			"expectation": "On a portrait panel the poster becomes a horizontal band, still complete and still in proportion."
+		},
+		{
+			"scenario": "ultra-wide-letterbox",
+			"expectation": "On a wide, short surface the poster letterboxes left and right rather than stretching."
+		},
+		{
+			"scenario": "long-copy",
+			"expectation": "Long headline, validity and small print stay inside their authored columns without altering the type scale."
+		},
+		{
+			"scenario": "no-price",
+			"expectation": "An offer with no price omits the price block entirely rather than printing an empty badge."
+		},
+		{
+			"scenario": "empty",
+			"expectation": "With no offers bound the poster still shows the brand and says why it is empty, rather than going blank."
+		},
+		{
+			"scenario": "custom-brand",
+			"expectation": "Re-skinning canvas, ink, accent and surround changes the poster's colour without moving anything."
+		},
+		{
+			"scenario": "live-datasource-update",
+			"expectation": "A datasource change swaps the offer in place without remounting the poster."
+		}
+	],
+	"behaviors": [
+		{
+			"id": "fixed-canvas-proportions",
+			"expectation": "The rendered canvas keeps the authored 16:9 ratio on every surface, scaled by a single transform rather than re-laid out.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "letterbox-surround",
+			"expectation": "Space the poster does not occupy is filled by the surround colour and reported by a data attribute, so an operator can tell a letterbox from a bug.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "authored-line-breaks",
+			"expectation": "A double space in the headline starts a new line, so the copywriter controls the break without a second column.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "offer-rotation",
+			"expectation": "Several bound offers rotate on the configured cadence and wrap; a single offer never rotates.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "empty-state-conformance",
+			"expectation": "An empty datasource still identifies the app and states why the surface is empty, in text legible at the declared viewing distance.",
+			"evidence": {
+				"testFile": "preview/conformance.spec.ts"
+			}
+		}
+	],
+	"assets": [
+		{
+			"id": "app-icon",
+			"source": "packaged",
+			"path": "src/editor-assets/icon.png",
+			"required": true
+		},
+		{
+			"id": "app-placeholder",
+			"source": "packaged",
+			"path": "src/editor-assets/placeholder.png",
+			"required": true
+		}
+	],
+	"visualDirection": {
+		"source": "creative-led",
+		"summary": "A deep evergreen field with a warm brass accent, set as a print poster: brand line at the head, a large stacked headline on the left, and an oversized price breaking the right edge over a soft accent disc.",
+		"references": [],
+		"signatureChoices": [
+			"An oversized price that deliberately overlaps the copy column, which only survives because the canvas never reflows.",
+			"A single accent disc drawn from the canvas rather than an image asset, so it scales exactly with the poster and costs no bytes.",
+			"A hard cut between offers instead of a fade, matching a printed board being swapped."
+		],
+		"avoid": [
+			"A centred card on a plain background, which is what a poster becomes when its layout is allowed to reflow."
+		]
+	},
+	"visualReview": {
+		"intent": "One approved poster, unmistakably the same composition at every surface, with the letterbox reading as deliberate framing rather than as missing content.",
+		"focus": [
+			"Whether the letterbox surround looks intentional at square and portrait rather than like the app failed to fill the screen.",
+			"Whether the price still overlaps the copy column correctly once the whole canvas is scaled down to a 900px square."
+		]
+	}
+}

@@ -1,0 +1,163 @@
+/*
+ * Every length below is in design units, because the whole canvas is scaled by one transform.
+ *
+ * That is the point of the archetype and also its discipline: no percentages against the surface,
+ * no media queries, no viewport units. A number here means the same thing on a 600px square as on
+ * a 4K wall, because the poster is drawn once and the frame does the adapting.
+ */
+
+.wb-offer-poster {
+  @include reset-styles();
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--wb-offer-letterbox, #07100e);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+:global(.wb-offer-poster) > *,
+:global(.wb-offer-poster) > * * {
+  @include box-sizing();
+}
+
+/* The authored canvas. `fixedCanvasStyle` supplies the size, centring and scale. */
+:global(.wb-offer-poster-canvas) {
+  overflow: hidden;
+  padding: 96px 110px 88px;
+  color: var(--wb-offer-ink, #f6f1e4);
+  background: var(--wb-offer-canvas, #0f2a24);
+}
+
+/* The glow anchoring the price is painted into the canvas background rather than added as an
+   oversized element. A decorative box that bleeds past the canvas edge is still overflow as far as
+   the visual gate is concerned, and suppressing that check would suppress it for real content too. */
+:global(.wb-offer-poster-canvas) {
+  background-image: radial-gradient(
+    circle at 82% 78%,
+    rgba(228, 160, 60, 0.22) 0,
+    rgba(228, 160, 60, 0.10) 34%,
+    rgba(228, 160, 60, 0) 62%
+  );
+}
+
+:global(.wb-offer-poster-brand) {
+  position: relative;
+  display: block;
+  color: var(--wb-offer-accent, #e4a03c);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+:global(.wb-offer-poster-copy) {
+  position: absolute;
+  top: 232px;
+  left: 110px;
+  width: 1120px;
+}
+
+:global(.wb-offer-poster-eyebrow) {
+  display: block;
+  margin-bottom: 26px;
+  color: var(--wb-offer-ink, #f6f1e4);
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.72;
+  text-transform: uppercase;
+}
+
+:global(.wb-offer-poster-headline) {
+  /* A definite budget, not a maximum: the fit needs a box with a known height to solve against,
+     and the price below must not move when a headline runs long. */
+  height: 420px;
+  margin: 0;
+  overflow: hidden;
+  font-size: 132px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+:global(.wb-offer-poster-headline) span {
+  display: block;
+}
+
+:global(.wb-offer-poster-validity) {
+  display: inline-block;
+  margin-top: 44px;
+  padding: 14px 28px;
+  color: var(--wb-offer-canvas, #0f2a24);
+  background: var(--wb-offer-ink, #f6f1e4);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* The price sits over the disc, deliberately breaking the copy column's right edge. A reflowing
+   layout would push it below the headline and lose the overlap the design is built on. */
+:global(.wb-offer-poster-price) {
+  position: absolute;
+  right: 132px;
+  bottom: 210px;
+  width: 560px;
+  text-align: right;
+}
+
+:global(.wb-offer-poster-price) strong {
+  display: block;
+  color: var(--wb-offer-accent, #e4a03c);
+  font-size: 210px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+
+:global(.wb-offer-poster-price) span {
+  display: block;
+  margin-top: 14px;
+  color: var(--wb-offer-ink, #f6f1e4);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+:global(.wb-offer-poster-small-print) {
+  position: absolute;
+  bottom: 84px;
+  left: 110px;
+  width: 980px;
+  margin: 0;
+  color: var(--wb-offer-ink, #f6f1e4);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0.66;
+}
+
+:global(.wb-offer-poster-empty) {
+  position: absolute;
+  top: 96px;
+  right: 110px;
+  bottom: 88px;
+  left: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+:global(.wb-offer-poster-empty-message) {
+  margin: 0 0 auto;
+  padding-top: 200px;
+  color: var(--wb-offer-ink, #f6f1e4);
+  font-size: 76px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}

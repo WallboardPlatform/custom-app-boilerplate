@@ -1,0 +1,27 @@
+{
+	"title": "Seasonal Offer Poster",
+	"description": "An approved 1920x1080 poster rendered faithfully on any surface: the canvas scales as one block and letterboxes rather than rearranging, with offer copy and price bound to a table.",
+	"mechanisms": [
+		"fixed-canvas-scaling",
+		"auto-fit-text",
+		"timed-rotation",
+		"table-binding",
+		"editorial-poster"
+	],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"app-default-1920x1080.png",
+		"square-shelf-900x900.png"
+	]
+}
