@@ -217,6 +217,17 @@ export interface WayfindingRuntimeBundle {
 	languages: Array<{ code: string; label: string }>;
 	presentation: WayfindingPresentationSettings;
 	siteLevelId?: string;
+	/**
+	 * Spoken directions for one origin-to-destination trip, keyed by language code.
+	 * Speak the entry matching the visitor's chosen language; when that language has
+	 * none, stay silent rather than substituting another. Absent when the venue
+	 * authored no narration, and on any package published before it existed.
+	 */
+	voiceGuidance?: Array<{
+		destinationId: string;
+		originId: string;
+		text: Record<string, string>;
+	}>;
 	manifest: {
 		capabilities: {
 			routing: boolean;

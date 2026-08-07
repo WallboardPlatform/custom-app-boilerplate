@@ -153,6 +153,20 @@ Optional combined modes are independently enabled and quality-gated:
 
 The guided journey provides large **Next**, **Back**, **Overview**, and **Replay** controls. Switching between overview, building, and level scenes preserves the selected journey and saved camera state. Motion uses reduced-motion fallbacks.
 
+### Spoken guidance
+
+A published map may carry `voiceGuidance`: an entry per origin-to-destination trip, each holding the spoken directions keyed by language code.
+
+```ts
+voiceGuidance?: Array<{ destinationId: string; originId: string; text: Record<string, string> }>;
+```
+
+Consumer rules:
+
+- Speak the entry for the visitor's chosen language. When that language has no entry, stay **silent** — do not substitute another language, because directions read in a language the visitor did not choose are worse than none.
+- The field is optional and absent on packages published before it existed, so a consumer must work without it.
+- Speech is visitor-triggered, never automatic. A signage device may have no audio path, so the written journey remains the primary surface and audio is an addition.
+
 ## Presentation assets
 
 - Backgrounds preserve source artwork.

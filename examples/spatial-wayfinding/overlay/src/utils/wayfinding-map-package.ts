@@ -57,6 +57,7 @@ interface PublishedMapV2 extends PublishedMapBase {
 	levels: PublishedLevelDescriptor[];
 	presentation: WayfindingRuntimeBundle['presentation'];
 	siteLevelId?: string;
+	voiceGuidance?: WayfindingRuntimeBundle['voiceGuidance'];
 }
 
 interface PublishedScene {
@@ -217,6 +218,7 @@ export const loadWayfindingMapPackage = (archive: Uint8Array): WayfindingRuntime
 			enabledOverviewModes: ['site']
 		},
 		siteLevelId: v2?.siteLevelId,
+		voiceGuidance: v2?.voiceGuidance,
 		manifest: {
 			capabilities: manifest.capabilities,
 			generatedAt: manifest.generatedAt,
