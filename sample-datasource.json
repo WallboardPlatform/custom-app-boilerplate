@@ -1,0 +1,41 @@
+{
+	"DestinationStatus": {
+		"header": {
+			"destinationId": "string",
+			"available": "boolean",
+			"status": "string",
+			"waitMinutes": "number",
+			"note": "string"
+		},
+		"rows": [
+			{
+				"destinationId": "destination-msd82hxs-y",
+				"available": true,
+				"status": "Open",
+				"waitMinutes": 3,
+				"note": "Visitor assistance is available at the front desk."
+			},
+			{
+				"destinationId": "destination-msd84nao-18",
+				"available": true,
+				"status": "Event in progress",
+				"waitMinutes": 0,
+				"note": "Please enter quietly through the east doors."
+			},
+			{
+				"destinationId": "destination-msdao1ed-1f",
+				"available": true,
+				"status": "6 seats available",
+				"waitMinutes": 0,
+				"note": "Quiet study policy applies."
+			},
+			{
+				"destinationId": "destination-msdaoomt-1n",
+				"available": false,
+				"status": "Reserved",
+				"waitMinutes": 25,
+				"note": "The room becomes available after the current booking."
+			}
+		]
+	}
+}

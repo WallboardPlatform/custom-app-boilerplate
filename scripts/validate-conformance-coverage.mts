@@ -136,11 +136,13 @@ for (const entry of fs.readdirSync(examplesDirectory, { withFileTypes: true })) 
 
 		if (key in policy.excluded) {
 			used.add(key);
+
 			continue;
 		}
 
 		if (specs.includes(requirement.register)) {
 			satisfied.push(key);
+
 			continue;
 		}
 

@@ -1,0 +1,91 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "ee9e6c3dec95e7e2caadb014cc057b2230d79727a0fc3c7857656aa88b7046e2",
+	"reviewedAt": "2026-08-10T16:26:30.8414604+02:00",
+	"reviewer": "Codex visual QA",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "The landscape kiosk provides searchable destinations, full authored 3D overview, complete exploded route, camera journey, live status, replay, accessibility profile, language, and visitor-triggered audio without Atlas or step controls."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "Map pixels, polygon colors, backgrounds, labels, media, floor explosion, route hierarchy, and camera rendering come from the canonical Editor Preview primitives rather than a custom map approximation."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "The result reads as a dedicated architectural directory: persistent destination rail, map-dominant center stage, and restrained destination context instead of a generic dashboard."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "All declared near-touch primary, secondary, and metadata selectors pass their computed font floors; route and destination actions remain legible at 1920x1080."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark, light, and custom shell palettes retain clear hierarchy and controls while leaving the authored map presentation unchanged."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "The long welcome prompt wraps to four readable lines, the long venue identity ellipsizes cleanly, and destination/status policies pass without clipping."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "The fixed Full HD composition consistently measures 98% width and 100% height content coverage; the directory scroll region is intentional and touch reachable."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "Published map imagery and destination photography render sharply, route contrast survives the exploded building view, and both shell themes appear installation-ready."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "No legacy wayfinding example was used as a visual template; the shell is purpose-built around the new canonical viewer boundary and supplied map."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at original resolution: authored campus fills the center stage, directory and empty detail hierarchy are balanced, and controls remain unobtrusive."
+		},
+		{
+			"file": "scenario-custom-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: custom palette variables affect shell chrome while map colors and labels remain identical to the overview."
+		},
+		{
+			"file": "scenario-full-hd-overview-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at Full HD: complete site, interactive building labels, origin marker, directory, language selector, and map controls are visible without clipping."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at original resolution: light directory and detail surfaces preserve contrast and focus while the map remains on its authored dark scene background."
+		},
+		{
+			"file": "scenario-live-unavailable-status-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected in the contact sheet: destination image, unavailable status, notice, and disabled route state fit the detail rail without obscuring the map."
+		},
+		{
+			"file": "scenario-long-copy-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at original resolution: long venue copy truncates intentionally, the four-line visitor prompt remains readable, and search/results retain their space."
+		},
+		{
+			"file": "scenario-route-journey-1920x1080.png",
+			"status": "pass",
+			"notes": "Inspected at original resolution: external and internal route segments, cutaway floors, destination callout, route controls, destination media, and live status all remain readable during the camera journey."
+		}
+	],
+	"unresolvedFindings": []
+}

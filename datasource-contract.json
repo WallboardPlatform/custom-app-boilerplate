@@ -1,0 +1,35 @@
+{
+	"contractVersion": 1,
+	"sampleDataClassification": "synthetic",
+	"bindings": [
+		{
+			"property": "destinationData",
+			"dataPickerType": "any",
+			"source": {
+				"contract": "TABLE",
+				"table": "DestinationStatus",
+				"sampleData": "sample-datasource.json"
+			},
+			"delivery": {
+				"suggestedDatasourceName": "Wayfinding Destination Status",
+				"quickEditEligible": true
+			},
+			"columns": [
+				{ "name": "destinationId", "type": "string", "required": true },
+				{ "name": "available", "type": "boolean", "required": true },
+				{ "name": "status", "type": "string", "required": false },
+				{ "name": "waitMinutes", "type": "number", "required": false },
+				{ "name": "note", "type": "text", "required": false }
+			]
+		}
+	],
+	"rationale": "The published map remains the source of geometry, presentation, labels, routes, origins, and guidance. The optional TABLE only overlays operational visitor status by stable destination ID.",
+	"behavior": {
+		"unbound": "render the bundled synthetic status sample while keeping every map-defined destination available",
+		"boundEmpty": "render all map destinations without operational badges",
+		"invalidRows": "ignore rows without a destinationId and normalize invalid wait values to no wait",
+		"unknownDestination": "ignore status rows whose destinationId is absent from the current map",
+		"availability": "disable route start for unavailable destinations and show the datasource note",
+		"liveUpdate": "update availability, wait time, and notices without rebuilding the map scene"
+	}
+}

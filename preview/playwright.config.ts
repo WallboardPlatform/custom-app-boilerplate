@@ -21,6 +21,9 @@ console.log(`Playwright browser source: ${browserResolution.source}${browserReso
 export default defineConfig({
 	testDir: '.',
 	testMatch: '*.spec.ts',
+	// The showcase intentionally loads a self-contained 46 MB venue archive and initializes
+	// WebGL for every isolated scenario. Software-rendered CI needs a realistic cold-start budget.
+	timeout: 120_000,
 	globalSetup: './global-setup.ts',
 	fullyParallel: false,
 	workers: 1,

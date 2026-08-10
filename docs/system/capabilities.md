@@ -15,11 +15,11 @@ Reuse these mechanics without inheriting an example's visual language.
 | Built-in data | FEED/CALENDAR normalization and independent multi-source composition | `newsroom-spotlight`, `live-agenda`, `civic-venue-pulse` |
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
-| Touch text entry | Opt-in `keyboard` capability with controlled values and selectable layouts | `veszprem-wayfinding` proves Hungarian + English destination search; `pdf-document-workspace` proves document search |
+| Touch text entry | Opt-in `keyboard` capability with controlled values and selectable layouts | `pdf-document-workspace` proves controlled document search; Wayfinding search must be re-proven by the canonical showcase before promotion |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 | PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
 | Video playback | Opt-in `video` capability; hls.js 0.7.9 is materialized only on request | `lumen-media-program`: direct file/folder/JSON playlist, cache, native MP4/WebM/HLS, poster/captions, autoplay/sound/fit/repeat/seek/retry, commands, telemetry, cleanup |
-| Wayfinding routing | Hosted Wayfinding Studio publishes v2 site/building/level `.wbmap`; the public loader also accepts v1 packages and normalizes both to one runtime model | `wayfinding.md`; cross-building and multi-level standard/step-free journeys, entrance and vertical connectors, atlas/exploded overview, disabled edges, topology warnings |
+| Wayfinding routing | Hosted Wayfinding Studio publishes `.wbmap`; custom apps vendor the canonical viewer maintained with Preview | `wayfinding.md`; authored site scene, cross-building and multi-level standard/step-free journeys, complete exploded 3D route, route-wide camera, spoken guidance, datasource overlays, disabled edges, topology warnings |
 
 Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
 

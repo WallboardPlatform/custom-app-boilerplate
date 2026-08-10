@@ -1,51 +1,70 @@
 {
 	"version": "1",
-	"name": "Boilerplate",
-	"interactive": false,
+	"name": "Wayfinding Kiosk Showcase",
+	"interactive": true,
 	"size": {
-		"width": "1280px",
-		"height": "720px"
+		"width": "1920px",
+		"height": "1080px"
 	},
 	"properties": [
 		{
-			"label": "Content",
+			"label": "Datasource bindings",
 			"type": "group",
 			"properties": [
 				{
-					"label": "Title",
-					"type": "text",
-					"property": "title",
-					"default": "Your custom app"
+					"label": "Destination status table",
+					"type": "dataPicker",
+					"property": "destinationData",
+					"dataPickerType": "any",
+					"tooltip": "Optional TABLE datasource for live availability, wait time, and visitor notices. The bundled sample remains visible when unbound."
 				}
 			]
 		},
 		{
-			"label": "Appearance",
+			"label": "Visitor experience",
 			"type": "group",
 			"properties": [
 				{
-					"label": "Accent color",
-					"type": "color",
-					"property": "accentColor",
-					"default": "#15c39a"
+					"label": "Venue name",
+					"type": "text",
+					"property": "venueName",
+					"default": "Northgate Campus"
 				},
 				{
-					"label": "Text color",
-					"type": "color",
-					"property": "textColor",
-					"default": "#f4f7f6"
-				},
-				{
-					"label": "Background color",
-					"type": "color",
-					"property": "backgroundColor",
-					"default": "#111516"
+					"label": "Welcome message",
+					"type": "text",
+					"property": "welcomeMessage",
+					"default": "Where would you like to go?"
 				}
+			]
+		},
+		{
+			"label": "Kiosk palette",
+			"type": "group",
+			"properties": [
+				{
+					"label": "Theme",
+					"type": "select",
+					"property": "themePreset",
+					"default": "dark",
+					"options": [
+						{ "label": "Dark", "value": "dark" },
+						{ "label": "Light", "value": "light" },
+						{ "label": "Custom", "value": "custom" }
+					]
+				},
+				{ "label": "Accent", "type": "color", "property": "accentColor", "default": "#67e0c4" },
+				{ "label": "Primary text", "type": "color", "property": "textColor", "default": "#f4faf8" },
+				{ "label": "Canvas", "type": "color", "property": "backgroundColor", "default": "#0a1110" },
+				{ "label": "Panels", "type": "color", "property": "panelColor", "default": "#111b19" },
+				{ "label": "Supporting text", "type": "color", "property": "mutedColor", "default": "#91a8a3" }
 			]
 		}
 	],
 	"resourceList": [
 		"assets/app.js",
-		"assets/app-chrome-49.js"
-	]
+		"assets/app-chrome-49.js",
+		"assets/index.wbmap"
+	],
+	"externalCommands": []
 }
