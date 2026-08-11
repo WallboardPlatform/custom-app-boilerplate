@@ -17,7 +17,6 @@
 		"target": "ES2022",
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
 		"paths": {
-			"@interfaces/*": ["examples/spatial-wayfinding/overlay/src/interfaces/*"],
 			"@utils/*": ["src/utils/*"]
 		},
 		"types": ["node"]
@@ -25,8 +24,9 @@
 	"include": [
 		"scripts/**/*.mts",
 		"scripts/**/*.mjs",
-		"examples/spatial-wayfinding/overlay/src/interfaces/spatial-wayfinding.interface.ts",
-		"examples/spatial-wayfinding/overlay/src/utils/wayfinding-map-package.ts",
+		"capabilities/wayfinding/overlay/src/capabilities/wayfinding/**/*.ts",
+		"capabilities/wayfinding/overlay/src/capabilities/wayfinding/**/*.tsx",
+		"src/vite-env.d.ts",
 		"src/utils/wayfinding-contract.ts",
 		"src/utils/wayfinding.ts"
 	]

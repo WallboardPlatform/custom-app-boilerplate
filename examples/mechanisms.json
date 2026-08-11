@@ -14,6 +14,7 @@
 		"manual-paging": "Pages a viewer steps through by hand, stopping at the last page rather than wrapping."
 	},
 	"capability": {
+		"canonical-wayfinding-viewer": "The versioned Wayfinding Studio mini-displayer consumed through the map-agnostic harness.",
 		"on-screen-keyboard": "Touch text entry bound to a field.",
 		"pdf-rendering": "PDF.js document rendering and navigation.",
 		"video-playback": "Folder or playlist video playback.",
@@ -57,10 +58,11 @@
 		"directory-search": "campus-directory",
 		"editorial-poster": "museum-welcome",
 		"guided-form": "factory-safety-questionnaire",
-		"map-orientation": "veszprem-wayfinding",
-		"on-screen-keyboard": "veszprem-wayfinding",
+		"canonical-wayfinding-viewer": "wayfinding-kiosk",
+		"map-orientation": "wayfinding-kiosk",
+		"on-screen-keyboard": "interactive-document-viewer",
 		"photographic-overlay": "weather-window",
-		"published-map-package": "spatial-wayfinding",
+		"published-map-package": "wayfinding-kiosk",
 		"status-wall": "call-center-agent-status",
 		"ultra-wide-marquee": "market-rotation-ticker",
 		"accessible-reach": "interactive-document-viewer",

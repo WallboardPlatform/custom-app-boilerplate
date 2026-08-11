@@ -78,9 +78,8 @@ jobs:
           - restaurant-menu
           - seasonal-offer-poster
           - single-hero-clock
-          - spatial-wayfinding
           - team-presence-board
-          - veszprem-wayfinding
+          - wayfinding-kiosk
           - weather-window
 
     steps:

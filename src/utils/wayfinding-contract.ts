@@ -3,7 +3,7 @@ import type { WayfindingGraphDocument, WayfindingPoint } from './wayfinding';
 export type WayfindingLevelRole = 'site' | 'building-floor' | 'standalone';
 export type WayfindingConnectorKind = 'entrance' | 'elevator' | 'stairs' | 'escalator' | 'ramp';
 export type WayfindingBuildingTapBehavior = 'focus-actions' | 'enter-immediately';
-export type WayfindingOverviewMode = 'site' | 'atlas-2d' | 'exploded-3d';
+export type WayfindingOverviewMode = 'site' | 'exploded-3d';
 export type WayfindingElementStatus = 'confirmed' | 'proposed';
 export type WayfindingProvenance = 'ai-draft' | 'customer-source' | 'reviewer-authored';
 

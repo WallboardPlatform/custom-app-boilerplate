@@ -1,0 +1,101 @@
+{
+	"reviewVersion": 1,
+	"sourceHash": "95b1b5fcec4087836ba39cdce06b53cd1f405cb53c13303d12bc68608fab9ac0",
+	"reviewedAt": "2026-08-11T19:48:00+02:00",
+	"reviewer": "Codex",
+	"criteria": [
+		{
+			"id": "promptFidelity",
+			"status": "pass",
+			"notes": "Selection shows the authored 2D route before the deliberate complete 3D journey action."
+		},
+		{
+			"id": "referenceFidelity",
+			"status": "pass",
+			"notes": "The Studio-generated fixture retains its artwork, polygon styling, labels, marker, route styling, and floor geometry."
+		},
+		{
+			"id": "visualSpecificity",
+			"status": "pass",
+			"notes": "The directory, map-first stage, destination context, and compact route controls form a specific kiosk experience."
+		},
+		{
+			"id": "distanceReadability",
+			"status": "pass",
+			"notes": "Primary prompt, directory rows, route action, and destination status remain legible across the Full HD matrix."
+		},
+		{
+			"id": "themeContrast",
+			"status": "pass",
+			"notes": "Dark, light, and custom shell variants preserve clear text and control contrast without recoloring the map."
+		},
+		{
+			"id": "dynamicTextSafety",
+			"status": "pass",
+			"notes": "The long venue and welcome copy remain contained without obscuring search, filters, or results."
+		},
+		{
+			"id": "surfaceComposition",
+			"status": "pass",
+			"notes": "All nine captures keep the map dominant while the fixed directory and detail rails remain balanced."
+		},
+		{
+			"id": "assetAndThemeQuality",
+			"status": "pass",
+			"notes": "The synthetic Studio artwork and canonical viewer render cleanly in 2D, normal 3D, and exploded journey states."
+		},
+		{
+			"id": "exampleSameness",
+			"status": "pass",
+			"notes": "This is the sole Wayfinding reference and teaches the harness rather than inheriting either retired example."
+		}
+	],
+	"screenshots": [
+		{
+			"file": "app-default-1920x1080.png",
+			"status": "pass",
+			"notes": "Balanced default site view with complete directory, stage, details, and controls."
+		},
+		{
+			"file": "scenario-custom-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Custom shell tokens remain coordinated and do not leak into authored map styling."
+		},
+		{
+			"file": "scenario-full-hd-overview-1920x1080.png",
+			"status": "pass",
+			"notes": "Full HD overview preserves the intended map-first hierarchy and complete site context."
+		},
+		{
+			"file": "scenario-light-theme-1920x1080.png",
+			"status": "pass",
+			"notes": "Light shell panels remain readable beside the unchanged authored map."
+		},
+		{
+			"file": "scenario-live-unavailable-status-1920x1080.png",
+			"status": "pass",
+			"notes": "The unavailable status is prominent and route start is visibly disabled without changing the scene."
+		},
+		{
+			"file": "scenario-long-copy-1920x1080.png",
+			"status": "pass",
+			"notes": "Long prompt copy wraps safely while preserving the interactive directory."
+		},
+		{
+			"file": "scenario-normal-3d-overview-1920x1080.png",
+			"status": "pass",
+			"notes": "Normal 3D exploration is centered, legible, and distinct from navigation mode."
+		},
+		{
+			"file": "scenario-route-journey-1920x1080.png",
+			"status": "pass",
+			"notes": "Exploded 3D journey shows the authored route, follow camera, destination details, replay, and end controls."
+		},
+		{
+			"file": "scenario-route-preview-1920x1080.png",
+			"status": "pass",
+			"notes": "The blue authored path, markers, chevrons, and Start 3D route action are clear in ordinary 2D."
+		}
+	],
+	"unresolvedFindings": []
+}

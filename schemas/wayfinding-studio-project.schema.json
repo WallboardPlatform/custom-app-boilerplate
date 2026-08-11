@@ -72,8 +72,8 @@
 			"required": ["buildingTapBehavior", "defaultOverviewMode", "enabledOverviewModes"],
 			"properties": {
 				"buildingTapBehavior": { "enum": ["focus-actions", "enter-immediately"] },
-				"defaultOverviewMode": { "enum": ["site", "atlas-2d", "exploded-3d"] },
-				"enabledOverviewModes": { "type": "array", "uniqueItems": true, "items": { "enum": ["site", "atlas-2d", "exploded-3d"] } }
+				"defaultOverviewMode": { "enum": ["site", "exploded-3d"] },
+				"enabledOverviewModes": { "type": "array", "uniqueItems": true, "items": { "enum": ["site", "exploded-3d"] } }
 			}
 		},
 		"polygonPresentation": {

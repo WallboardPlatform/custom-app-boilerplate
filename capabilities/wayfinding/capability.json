@@ -1,0 +1,36 @@
+{
+	"id": "wayfinding",
+	"version": 1,
+	"title": "Canonical Wayfinding viewer harness",
+	"description": "Opt-in lifecycle and state harness around the checksum-pinned Wayfinding Studio mini-displayer, including authored 2D route preview, ordinary 2D/3D exploration, complete exploded 3D journeys, camera replay, accessibility profile, language, origin, and spoken guidance controls.",
+	"viewerArtifact": {
+		"format": "wallboard-wayfinding-viewer",
+		"formatVersion": 1,
+		"viewerVersion": "1.3.0",
+		"manifest": "src/capabilities/wayfinding/vendor/manifest.json"
+	},
+	"compressedAssets": [
+		{
+			"source": "vendor/wayfinding-viewer.js.gz",
+			"target": "src/capabilities/wayfinding/vendor/wayfinding-viewer.js",
+			"compressedSha256": "4c172a71c4dd15cec4abc24eaa1269e76f2881ed28d551640f3884b867fcd77c",
+			"outputSha256": "fb2945f9d7c0c8e5096754da4f931f74b72a6c91b6c60b44ebd0f2bfb1cf1159"
+		},
+		{
+			"source": "vendor/wayfinding-viewer.d.ts.gz",
+			"target": "src/capabilities/wayfinding/vendor/wayfinding-viewer.d.ts",
+			"compressedSha256": "a5870b6e03fd2d9ac5f0d6b9cf12ec0434170beb7eae87aa35965c73e8742d17",
+			"outputSha256": "4b8f59afdc420c7d27f4fd85953612a7fb05a66edb2921e0dd9360717fa86324"
+		}
+	],
+	"files": [
+		"src/capabilities/wayfinding/index.ts",
+		"src/capabilities/wayfinding/harness.ts",
+		"src/capabilities/wayfinding/harness-core.ts",
+		"src/capabilities/wayfinding/wayfinding-viewport.tsx",
+		"src/capabilities/wayfinding/wayfinding-viewport.module.scss",
+		"src/capabilities/wayfinding/vendor/manifest.json",
+		"src/capabilities/wayfinding/vendor/wayfinding-viewer.js",
+		"src/capabilities/wayfinding/vendor/wayfinding-viewer.d.ts"
+	]
+}

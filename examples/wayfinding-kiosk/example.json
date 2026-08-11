@@ -1,0 +1,30 @@
+{
+	"title": "Wayfinding Kiosk",
+	"description": "Canonical map-agnostic wayfinding kiosk: authored 2D route reveal, exploded 3D journey, camera motion, spoken guidance, and optional live destination availability through the Wayfinding harness.",
+	"mechanisms": [
+		"canonical-wayfinding-viewer",
+		"published-map-package",
+		"map-orientation",
+		"table-binding",
+		"directory-search"
+	],
+	"capabilities": [
+		"wayfinding"
+	],
+	"remove": [
+		"src/components/wb-app",
+		"src/components/wb-layout-builder",
+		"src/editor-assets/dblClickWizard",
+		"src/editor-assets/layout-editor",
+		"src/editor-assets/popup-wizard"
+	],
+	"artifacts": [
+		"generation-brief.json",
+		"datasource-contract.json",
+		"sample-datasource.json"
+	],
+	"referenceScreenshots": [
+		"scenario-route-preview-1920x1080.png",
+		"scenario-route-journey-1920x1080.png"
+	]
+}

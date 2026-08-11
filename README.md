@@ -78,7 +78,7 @@ Ordinary apps receive neither PDF.js nor hls.js.
 | Repository example/tool tests | `npm run validate:examples` |
 | Repository context/image budgets | `npm run validate:context-budget` / `npm run validate:image-budget` |
 | Author and publish a wayfinding map | [Wayfinding Studio](https://wayfinding.wallboard.info) |
-| Build a wayfinding custom app | [`docs/system/wayfinding.md`](docs/system/wayfinding.md) and `examples/spatial-wayfinding` |
+| Build a wayfinding custom app | [`docs/system/wayfinding.md`](docs/system/wayfinding.md), the opt-in `wayfinding` capability, and `examples/wayfinding-kiosk` |
 | Prepare/promote maintained review | `npm run example:review:prepare -- <id>` / `npm run example:review:promote -- <id>` |
 | Accepted delivery | `npm run deliver -- <output-directory>` |
 | Browserless transfer | `npm run deliver:unverified -- <output-directory>` |
@@ -89,7 +89,7 @@ The tracked-image review threshold is 10 MiB, not an absolute ceiling. A justifi
 
 `deliver` creates an upload ZIP and a separate sanitized source ZIP plus manifest, brief, and datasource sidecars. Upload only the app ZIP. `_UNVERIFIED` packages have `uploadReady: false` and require normal delivery elsewhere.
 
-Wayfinding v1 uses three distinct artifacts: the editable `.wbwayfinding` source, its generated `.wbmap` runtime package, and the accepted custom-app upload ZIP that contains the map. Author and publish with [Wayfinding Studio](https://wayfinding.wallboard.info); this repository only owns the visitor app and `.wbmap` consumption. See [`docs/system/wayfinding.md`](docs/system/wayfinding.md); Northline under `examples/spatial-wayfinding` is the proven runtime mechanics reference.
+Wayfinding uses distinct editable `.wbwayfinding`, published `.wbmap`, versioned mini-displayer, and accepted custom-app ZIP artifacts. Author and publish maps with [Wayfinding Studio](https://wayfinding.wallboard.info), then add the checksum-pinned `wayfinding` capability for the canonical viewer and map-agnostic lifecycle harness. See [`docs/system/wayfinding.md`](docs/system/wayfinding.md); `examples/wayfinding-kiosk` is the canonical consumer and its compact synthetic map is not a production venue asset.
 
 ## Build Output
 
