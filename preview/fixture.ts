@@ -41,6 +41,15 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 93, height: 95 }
 	},
 	{
+		id: 'normal-3d-overview',
+		fixture: previewFixture,
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: '3D' }
+		],
+		minimumContentCoverage: { width: 93, height: 95 }
+	},
+	{
 		id: 'route-journey',
 		fixture: previewFixture,
 		viewport: { width: 1920, height: 1080, background: 'dark' },

@@ -1,4 +1,5 @@
 import {
+	createEffect,
 	createMemo,
 	createSignal,
 	For,
@@ -76,6 +77,7 @@ const colorWithAlpha = (color: string, alpha: number, fallback: string): string 
 };
 
 export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
+	let appRoot!: HTMLDivElement;
 	let mapHost!: HTMLDivElement;
 	const settings: Accessor<Settings> = useSettings();
 	const dataSources = useDataSources() as Accessor<DataSources>;
@@ -86,6 +88,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [kind, setKind] = createSignal<'all' | 'building' | 'destination'>('all');
 	const [language, setLanguage] = createSignal('en');
 	const [profile, setProfile] = createSignal<'standard' | 'step-free'>('standard');
+	const [viewDimension, setViewDimension] = createSignal<'2d' | '3d'>('2d');
 	const [journeyActive, setJourneyActive] = createSignal(false);
 	const [muted, setMuted] = createSignal(false);
 	const [loading, setLoading] = createSignal(true);
@@ -113,6 +116,13 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		'--wb-wayfinding-kiosk-accent-border': colorWithAlpha(settings().accentColor, 0.26, 'rgba(103,224,196,0.26)'),
 		'--wb-wayfinding-kiosk-accent-shadow': colorWithAlpha(settings().accentColor, 0.2, 'rgba(103,224,196,0.2)')
 	}));
+	createEffect((): void => {
+		const nextTheme = themeStyle();
+
+		for (const [property, value] of Object.entries(nextTheme)) {
+			appRoot.style.setProperty(property, String(value));
+		}
+	});
 	const datasourceBound = createMemo(() => dataSources().destinationData !== undefined);
 	const statuses = createMemo((): Map<string, DestinationLiveStatus> => normalizeDestinationStatuses(
 		datasourceBound() ? dataSources().destinationData?.value : sampleDatasource
@@ -177,6 +187,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 				if (cancelled) return;
 				const instance = createWayfindingViewerFromArchive(mapHost, archive, {
+					dimension: '2d',
 					language: language(),
 					onSelection: (target) => {
 						if (!target) return;
@@ -186,6 +197,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					},
 					onStateChange: (state: WayfindingViewerState): void => {
 						setJourneyActive(state.mode === 'journey');
+						setViewDimension(state.dimension);
 					},
 					onUnavailable: showNotice,
 					profile: profile()
@@ -216,14 +228,15 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 	return (
 		<div
+			ref={appRoot}
 			class={style['wb-app']}
 			data-preview-id="wayfinding-kiosk-root"
 			data-host-ready={Boolean(props.hostElement)}
 			data-journey-active={journeyActive()}
+			data-viewer-dimension={viewDimension()}
 			data-selected-target={selected() ? targetKey(selected()!.target) : ''}
 			data-spoken-guidance-ready={guidanceAvailable()}
 			data-viewer-ready={!loading() && !error()}
-			style={themeStyle()}
 		>
 			<aside class={`${style.directory} wb-wayfinding-kiosk-directory`} data-wayfinding-overlay aria-label="Destination directory">
 				<header class={style.brand}>
@@ -281,7 +294,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 			<main class={`wb-wayfinding-kiosk-stage ${style['map-stage']}`} data-wayfinding-stage aria-label="Interactive wayfinding map">
 				<div class={style['map-header']}>
-					<div><small>{journeyActive() ? 'COMPLETE ROUTE' : 'CAMPUS OVERVIEW'}</small><strong>{journeyActive() ? localizedPlaceName(selected()!, language()) : mapProjectName()}</strong></div>
+					<div><small>{journeyActive() ? 'COMPLETE ROUTE' : viewDimension() === '2d' ? '2D CAMPUS MAP' : '3D CAMPUS OVERVIEW'}</small><strong>{journeyActive() ? localizedPlaceName(selected()!, language()) : mapProjectName()}</strong></div>
 					<div class={style['map-header-badge']}><span /> Live wayfinding</div>
 				</div>
 				<div class={`${style['viewer-host']} wb-wayfinding-kiosk-scene`} ref={mapHost} />
@@ -289,7 +302,21 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				<Show when={error()}>{(message) => <div class={style.error} role="alert"><strong>Map unavailable</strong><span>{message()}</span></div>}</Show>
 				<div class={`${style['map-controls']} wb-wayfinding-kiosk-toolbar`} data-wayfinding-overlay>
 					<Show when={journeyActive()} fallback={(
-						<button type="button" onClick={() => viewer()?.resetCamera()}><Icon name="reset" /><span>Reset view</span></button>
+						<>
+							<button
+								type="button"
+								aria-pressed={viewDimension() === '2d'}
+								class={viewDimension() === '2d' ? style.active : undefined}
+								onClick={() => viewer()?.setDimension('2d')}
+							><Icon name="map" /><span>2D</span></button>
+							<button
+								type="button"
+								aria-pressed={viewDimension() === '3d'}
+								class={viewDimension() === '3d' ? style.active : undefined}
+								onClick={() => viewer()?.setDimension('3d')}
+							><Icon name="layers" /><span>3D</span></button>
+							<button type="button" onClick={() => viewer()?.resetCamera()}><Icon name="reset" /><span>Reset view</span></button>
+						</>
 					)}>
 						<button type="button" onClick={endJourney}><Icon name="close" /><span>End route</span></button>
 						<button type="button" onClick={() => viewer()?.replay({ speak: !muted() })}><Icon name="replay" /><span>Replay</span></button>
@@ -337,7 +364,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						</div>}</Show>
 						<p class={`${style.description} wb-wayfinding-kiosk-description`}>{localizedPlaceDescription(place(), language())}</p>
 						<div class={style['route-summary']}>
-							<span><Icon name="layers" /><small>View</small><strong>Exploded 3D</strong></span>
+							<span><Icon name="layers" /><small>Route view</small><strong>Complete 3D</strong></span>
 							<span><Icon name="volume" /><small>Guidance</small><strong>{guidanceAvailable() ? 'Ready' : viewer()?.guidanceSupported ? 'If authored' : 'Text only'}</strong></span>
 						</div>
 						<Show when={journeyActive()} fallback={(

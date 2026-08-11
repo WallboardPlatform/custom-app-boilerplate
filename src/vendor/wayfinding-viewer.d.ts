@@ -2,6 +2,8 @@ export type WayfindingViewerTarget =
 	| { id: string; kind: 'building' }
 	| { id: string; kind: 'destination' };
 
+export type WayfindingViewerDimension = '2d' | '3d';
+
 export interface WayfindingViewerAsset {
 	dataUrl: string;
 	id: string;
@@ -62,6 +64,7 @@ export interface WayfindingViewerLanguage {
 }
 
 export interface WayfindingViewerState {
+	dimension: WayfindingViewerDimension;
 	language: string;
 	mode: 'journey' | 'site';
 	originId?: string;
@@ -70,6 +73,7 @@ export interface WayfindingViewerState {
 }
 
 export interface WayfindingViewerOptions {
+	dimension?: WayfindingViewerDimension;
 	language?: string;
 	onSelection?: (target: WayfindingViewerTarget | undefined) => void;
 	onStateChange?: (state: WayfindingViewerState) => void;
@@ -92,6 +96,7 @@ export class WayfindingViewer {
 	guidanceText(): string;
 	replay(options?: { speak?: boolean }): void;
 	resetCamera(): void;
+	setDimension(dimension: WayfindingViewerDimension): void;
 	setLanguage(language: string): void;
 	setOrigin(originId: string): void;
 	setProfile(profile: 'standard' | 'step-free'): void;

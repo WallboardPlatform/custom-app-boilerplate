@@ -1,9 +1,9 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding a refined directory, live datasource status, complete exploded 3D routes, camera guidance, and spoken guidance.",
+		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding ordinary 2D and 3D exploration, a refined directory, live datasource status, complete exploded 3D routes, camera guidance, and spoken guidance.",
 		"audience": "Visitors using a large landscape touchscreen kiosk in a campus, office, healthcare, education, or public venue.",
-		"primaryGoal": "Let a visitor find a destination and understand the complete route at a glance without manual step navigation or a separate Atlas mode."
+		"primaryGoal": "Let a visitor explore the ordinary authored 2D or 3D map, find a destination, and understand the complete exploded route at a glance without manual step navigation or a separate Atlas mode."
 	},
 	"assumptions": [
 		"The supplied .wbmap is a temporary venue package and will later be replaceable without changing kiosk composition or renderer logic.",
@@ -18,7 +18,7 @@
 	},
 	"surfaceStrategy": {
 		"mode": "fixed",
-		"rationale": "The requested deployment is a dedicated 16:9 landscape kiosk whose directory, 3D map, and destination panel are composed as one fixed visitor experience."
+		"rationale": "The requested deployment is a dedicated 16:9 landscape kiosk whose directory, switchable 2D/3D map, and destination panel are composed as one fixed visitor experience."
 	},
 	"surfaces": [
 		{
@@ -26,7 +26,7 @@
 			"width": 1920,
 			"height": 1080,
 			"role": "primary",
-			"purpose": "Full HD landscape touchscreen kiosk with simultaneous directory, canonical 3D map, and destination context.",
+			"purpose": "Full HD landscape touchscreen kiosk with simultaneous directory, canonical 2D/3D map, and destination context.",
 			"minimumContentCoverage": {
 				"width": 93,
 				"height": 95
@@ -145,12 +145,12 @@
 			{
 				"id": "pointer-map",
 				"type": "pointer",
-				"action": "Select map entities, orbit the 3D scene, and zoom the authored map."
+				"action": "Select map entities, pan and zoom the ordinary 2D map, or orbit and zoom the normal 3D scene."
 			},
 			{
 				"id": "keyboard-access",
 				"type": "keyboard",
-				"action": "Reach every kiosk action and manipulate the focused 3D map with documented keyboard controls."
+				"action": "Reach every kiosk action and manipulate the focused 2D or 3D map with documented keyboard controls."
 			}
 		],
 		"session": {
@@ -360,6 +360,10 @@
 			"expectation": "The complete authored site, searchable directory, and empty destination panel fill the Full HD kiosk without overflow."
 		},
 		{
+			"scenario": "normal-3d-overview",
+			"expectation": "The visitor can switch to the authored normal 3D projection with visible building volume, labels, markers, orbit, and zoom without entering route mode."
+		},
+		{
 			"scenario": "route-journey",
 			"expectation": "The selected route renders in exploded 3D with all route segments visible and no Next, Previous, or Atlas controls."
 		},
@@ -436,7 +440,7 @@
 		"references": [],
 		"signatureChoices": [
 			"A simultaneous directory-map-detail composition instead of modal navigation or dashboard cards.",
-			"The exact Wayfinding Editor Preview renderer owns all map pixels and 3D journey behavior.",
+			"The exact Wayfinding Editor Preview renderer owns all 2D and 3D map pixels and 3D journey behavior.",
 			"One visitor action launches both the complete route camera journey and authored spoken guidance."
 		],
 		"avoid": [
@@ -454,5 +458,3 @@
 		]
 	}
 }
-
-

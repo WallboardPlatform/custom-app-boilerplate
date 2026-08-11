@@ -8,7 +8,7 @@
 |---|---|
 | `.wbwayfinding` source | Venue hierarchy, authored geometry, routes, map materials, labels, imagery, cameras, presentation defaults, and localized voice guidance |
 | Published `.wbmap` | Immutable visitor runtime package consumed by the app |
-| Canonical viewer | Package loading, the authored 3D scene, selection, standard/step-free route resolution, complete exploded journey, camera sequence, and speech lifecycle |
+| Canonical viewer | Package loading, the authored 2D and 3D scenes, selection, standard/step-free route resolution, complete exploded journey, camera sequence, and speech lifecycle |
 | Custom-app shell | Branding, destination discovery, touch controls, detail panels, accessibility choices, datasource overlays, and kiosk session reset |
 | Wallboard datasource | Optional live operational data keyed to stable published destination IDs |
 
@@ -20,14 +20,14 @@ The existing wayfinding examples and standalone renderer utilities in this repos
 
 New visitor apps use one coherent journey model:
 
-1. Explore the authored site scene and directory.
+1. Explore the authored site in its ordinary 2D map or normal 3D scene and use the directory.
 2. Select a destination without silently changing the map scope.
 3. Start a route with one visitor action.
 4. Show the complete route across the site and every route-relevant floor in exploded 3D.
 5. Run the route-wide camera sequence and read the trip's authored guidance in the selected language.
 6. Offer **Replay** and **End route**. Replay restarts the camera and narration; it does not pretend to track physical progress.
 
-Do not add Atlas 2D, Next/Previous controls, per-step instruction cards, or simulated physical progress. A fixed kiosk cannot know where a visitor has walked. Reduced-motion preferences may suppress decoration, but they must not remove the essential route reveal or route-wide camera feedback.
+Ordinary single-map 2D exploration remains a first-class view and must not be confused with Atlas. Do not add Atlas 2D, Next/Previous controls, per-step instruction cards, or simulated physical progress. A fixed kiosk cannot know where a visitor has walked. Reduced-motion preferences may suppress decoration, but they must not remove the essential route reveal or route-wide camera feedback.
 
 ## Viewer contract
 
@@ -52,6 +52,7 @@ The returned controller owns these operations:
 
 ```ts
 viewer.showSite();
+viewer.setDimension('2d'); // or '3d' while exploring
 viewer.startJourney(destinationId);
 viewer.replayJourney();
 viewer.setLanguage(language);

@@ -25,7 +25,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 
 For a wayfinding request based on a PDF, image, SVG, or existing map, read `docs/system/wayfinding.md` and author it in [Wayfinding Studio](https://wayfinding.wallboard.info). Keep the artifacts distinct: preserve the `.wbwayfinding` source, publish a `.wbmap`, vendor the canonical viewer artifact generated from the Wayfinding Editor, package both runtime assets in the custom app, then return the editable project, published map, and accepted app delivery. Never hand-edit `.wbmap`, edit the generated viewer bundle, reconstruct authored map styling, or build from loose export diagnostics.
 
-The current wayfinding examples and standalone renderers are legacy material and are not authority for new work. New apps compose their experience around the canonical mini-displayer: complete exploded 3D journey, route-wide camera, and authored spoken guidance, with no Atlas mode or manual Next/Back steps. The delivered project remains self-contained by checking in the generated viewer artifact and declarations; viewer source stays with the Editor renderer so Preview and custom apps are maintained together.
+The current wayfinding examples and standalone renderers are legacy material and are not authority for new work. New apps compose their experience around the canonical mini-displayer: ordinary authored 2D and 3D exploration, complete exploded 3D journey, route-wide camera, and authored spoken guidance, with no Atlas mode or manual Next/Back steps. The delivered project remains self-contained by checking in the generated viewer artifact and declarations; viewer source stays with the Editor renderer so Preview and custom apps are maintained together.
 
 ## Non-Negotiable
 
