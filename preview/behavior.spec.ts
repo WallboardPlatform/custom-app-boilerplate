@@ -68,9 +68,33 @@ test('offers the ordinary authored 2D map and normal 3D exploration', async ({ p
 	await expect(page.locator('.wayfinding-viewer-2d-shell')).toBeVisible();
 });
 
+test('replays the authored animated 2D route when a destination is selected', async ({ page }): Promise<void> => {
+	const root = page.locator('[data-preview-id="wayfinding-kiosk-root"]');
+	const scene = page.locator('.wb-wayfinding-kiosk-scene');
+	const destination = page.getByRole('button', { name: /Reception Ground floor Open/ });
+	const routeOverlay = page.locator('.wayfinding-viewer-2d-shell').locator('.route-overlay');
+	const route = routeOverlay.locator('.simulated-route');
+
+	await destination.click();
+	await expect(root).toHaveAttribute('data-viewer-mode', 'route');
+	await expect(root).toHaveAttribute('data-viewer-dimension', '2d');
+	await expect(scene).toHaveAttribute('data-wayfinding-viewer-mode', 'route');
+	await expect(page.getByText('ANIMATED ROUTE PREVIEW', { exact: true })).toBeVisible();
+	await expect(route).toHaveCount(1);
+	await expect(routeOverlay).toHaveAttribute('data-route-replay-token', '1');
+	await expect(route).toHaveCSS('animation-name', 'route-reveal-odd');
+	await expect.poll(async (): Promise<number> => page.evaluate((): number => {
+		return (window as WayfindingPreviewWindow).__spokenGuidance?.length ?? 0;
+	})).toBe(0);
+
+	await destination.click();
+	await expect(routeOverlay).toHaveAttribute('data-route-replay-token', '2');
+	await expect(route).toHaveCSS('animation-name', 'route-reveal-even');
+});
+
 test('shows the complete exploded route without manual step navigation', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Reception Ground floor Open/ }).click();
-	await page.getByRole('button', { name: /Show route/ }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
 
 	const root = page.locator('[data-preview-id="wayfinding-kiosk-root"]');
 	const scene = page.locator('.wb-wayfinding-kiosk-scene');
@@ -90,7 +114,7 @@ test('shows the complete exploded route without manual step navigation', async (
 
 test('finishes the route reveal and arrives in the destination camera orbit', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Reception Ground floor Open/ }).click();
-	await page.getByRole('button', { name: /Show route/ }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
 	const scene = page.locator('.wb-wayfinding-kiosk-scene');
 
 	await expect.poll(
@@ -102,7 +126,7 @@ test('finishes the route reveal and arrives in the destination camera orbit', as
 
 test('speaks authored guidance on visitor-triggered route start and replay', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Main building Building/ }).click();
-	await page.getByRole('button', { name: /Show route/ }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
 	const root = page.locator('[data-preview-id="wayfinding-kiosk-root"]');
 
 	await expect(root).toHaveAttribute('data-spoken-guidance-ready', 'true');
@@ -150,7 +174,7 @@ test('applies live datasource availability without rebuilding the map', async ({
 
 	await page.getByRole('button', { name: /Reception Ground floor Temporarily closed/ }).click();
 	await expect(page.getByText('Temporarily closed', { exact: true })).toBeVisible();
-	await expect(page.getByRole('button', { name: /Show route/ })).toBeDisabled();
+	await expect(page.getByRole('button', { name: /Start 3D route/ })).toBeDisabled();
 	if (initialBuilds !== null) {
 		await expect(scene).toHaveAttribute('data-scene-builds', initialBuilds);
 	} else {
@@ -168,7 +192,7 @@ test('applies live datasource availability without rebuilding the map', async ({
 
 test('audio control cancels active speech without ending the journey', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Main building Building/ }).click();
-	await page.getByRole('button', { name: /Show route/ }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
 	await page.getByRole('button', { name: 'Audio', exact: true }).click();
 
 	await expect(page.getByRole('button', { name: 'Muted', exact: true })).toBeVisible();

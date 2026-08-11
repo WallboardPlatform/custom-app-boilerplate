@@ -8,7 +8,7 @@
 |---|---|
 | `.wbwayfinding` source | Venue hierarchy, authored geometry, routes, map materials, labels, imagery, cameras, presentation defaults, and localized voice guidance |
 | Published `.wbmap` | Immutable visitor runtime package consumed by the app |
-| Canonical viewer | Package loading, the authored 2D and 3D scenes, selection, standard/step-free route resolution, complete exploded journey, camera sequence, and speech lifecycle |
+| Canonical viewer | Package loading, the authored 2D and 3D scenes, selection, animated authored 2D route preview, standard/step-free route resolution, complete exploded journey, camera sequence, and speech lifecycle |
 | Custom-app shell | Branding, destination discovery, touch controls, detail panels, accessibility choices, datasource overlays, and kiosk session reset |
 | Wallboard datasource | Optional live operational data keyed to stable published destination IDs |
 
@@ -21,8 +21,8 @@ The existing wayfinding examples and standalone renderer utilities in this repos
 New visitor apps use one coherent journey model:
 
 1. Explore the authored site in its ordinary 2D map or normal 3D scene and use the directory.
-2. Select a destination without silently changing the map scope.
-3. Start a route with one visitor action.
+2. Select a destination and reveal its authored route on the active 2D map with Preview's animation.
+3. Start the complete 3D route with one visitor action.
 4. Show the complete route across the site and every route-relevant floor in exploded 3D.
 5. Run the route-wide camera sequence and read the trip's authored guidance in the selected language.
 6. Offer **Replay** and **End route**. Replay restarts the camera and narration; it does not pretend to track physical progress.
@@ -34,17 +34,13 @@ Ordinary single-map 2D exploration remains a first-class view and must not be co
 The vendored module exposes a framework-neutral factory:
 
 ```ts
-const viewer = await createWayfindingViewer({
-	container,
-	packageUrl,
+const viewer = createWayfindingViewerFromArchive(container, archive, {
 	language: 'en',
 	originId,
 	profile: 'standard',
-	audioEnabled: true,
-	onReady,
-	onSelectionChange,
-	onJourneyChange,
-	onError,
+	onSelection,
+	onStateChange,
+	onUnavailable,
 });
 ```
 
@@ -53,8 +49,9 @@ The returned controller owns these operations:
 ```ts
 viewer.showSite();
 viewer.setDimension('2d'); // or '3d' while exploring
-viewer.startJourney(destinationId);
-viewer.replayJourney();
+viewer.previewRoute({ kind: 'destination', id: destinationId });
+viewer.startJourney({ kind: 'destination', id: destinationId });
+viewer.replay();
 viewer.setLanguage(language);
 viewer.setOrigin(originId);
 viewer.setProfile('standard' | 'step-free');
@@ -80,7 +77,7 @@ voiceGuidance?: Array<{
 }>;
 ```
 
-Speech is triggered by **Show route** and **Replay**, uses only the visitor-selected language, and stops on mute, route end, destination change, or component teardown. If that language has no authored entry, remain silent. Do not synthesize directions from labels, fall back to another language, or speak automatically while browsing.
+Speech is triggered by **Start 3D route** and **Replay**, uses only the visitor-selected language, and stops on mute, route end, destination change, or component teardown. The animated 2D route preview remains silent. If that language has no authored entry, remain silent. Do not synthesize directions from labels, fall back to another language, or speak automatically while browsing.
 
 The written destination and route summary remain available because signage hardware may not expose an audio path.
 
@@ -118,7 +115,7 @@ A v2 `.wbmap` contains the manifest, project/presentation data, graph, destinati
 A production wayfinding app must prove:
 
 - the supplied `.wbmap` loads without reconstructing or overriding its visual configuration;
-- site browsing, selection, complete exploded route reveal, route-wide camera, replay, route end, standard and step-free profiles;
+- site browsing, selection with animated authored 2D route reveal, complete exploded 3D route reveal, route-wide camera, replay, route end, standard and step-free profiles;
 - spoken guidance starts and restarts from visitor actions and is cancelled on every lifecycle boundary;
 - datasource updates change only the intended overlay without recreating the scene;
 - touch and keyboard operation, focus visibility, session reset, long text, empty/invalid data, theme contrast, and no overflow at the target kiosk size;

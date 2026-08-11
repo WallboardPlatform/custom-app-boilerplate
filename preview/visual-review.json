@@ -1,95 +1,100 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "653c631112eda68b57884507ea73aea0a6fd3f8a488274436719f3e59e5b2542",
-	"reviewedAt": "2026-08-11T16:27:44.7579009+02:00",
-	"reviewer": "Codex visual QA",
+	"sourceHash": "54063139b803529d0ed0d4ed71e3daa5927aab68fbf34d98e8ff39fb7a7bd7ba",
+	"reviewedAt": "2026-08-11T18:13:00+02:00",
+	"reviewer": "Codex",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "The kiosk provides ordinary authored 2D and 3D exploration, a complete exploded 3D route, camera movement, datasource status, and visitor-triggered spoken guidance without Atlas or step controls."
+			"notes": "Destination selection exposes the animated authored 2D route before the visitor starts the complete 3D journey."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The 2D map, 3D projection, polygon styling, labels, imagery, floor explosion, route hierarchy, and camera states come from canonical Editor Preview primitives."
+			"notes": "The viewer preserves the supplied map styling, labels, markers, route color, and floor geometry."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The result reads as a dedicated architectural directory with a persistent destination rail, map-dominant stage, restrained detail context, and compact controls."
+			"notes": "The kiosk shell, route preview, destination media, status cards, and map controls form a venue-specific showcase."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "All declared near-touch text roles pass their computed font floors at 1920x1080; route and destination actions remain legible."
+			"notes": "Primary prompts, directory entries, destination details, and navigation actions remain readable at the full-HD kiosk surface."
 		},
 		{
 			"id": "themeContrast",
 			"status": "pass",
-			"notes": "Dark, light, and custom shell palettes retain hierarchy while leaving authored map presentation unchanged; status is not conveyed by color alone."
+			"notes": "Dark, light, and custom captures retain clear hierarchy and readable controls without losing map legibility."
 		},
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long venue and welcome copy use their declared fit policies; destination, status, and route text remain unclipped."
+			"notes": "The long venue name and welcome prompt remain contained and readable without overlapping the directory."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "Every captured state measures 98% width and 100% height content coverage; the directory scroll region remains intentional and touch reachable."
+			"notes": "The three-column composition keeps the directory, authored map, and destination context balanced across every captured state."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Map artwork and destination photography render sharply; ordinary 3D has clear volume and the exploded route preserves indoor and outdoor path contrast."
+			"notes": "Authored map imagery and destination media render sharply; semantic palettes remain coordinated across theme variants."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "No outdated repository example was used as authority; the shell is purpose-built around the Editor-owned mini-displayer boundary."
+			"notes": "The app uses the canonical Editor viewer and an original kiosk experience rather than legacy repository example styling."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at original resolution: the authored ordinary 2D campus map fills the stage and the directory/detail rails are balanced."
+			"notes": "Balanced default overview with complete controls and no clipping or dead regions."
 		},
 		{
 			"file": "scenario-custom-theme-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: the custom palette affects kiosk chrome without modifying authored map colors or labels."
+			"notes": "Custom palette remains cohesive and readable across all three panels."
 		},
 		{
 			"file": "scenario-full-hd-overview-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at Full HD: the ordinary 2D map, origin, labels, directory, language selector, and controls are visible without clipping."
+			"notes": "Full-HD overview preserves the intended map-first hierarchy."
 		},
 		{
 			"file": "scenario-light-theme-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: the light shell preserves contrast while the map retains its authored scene presentation."
+			"notes": "Light side panels retain contrast while the authored map remains visually unchanged."
 		},
 		{
 			"file": "scenario-live-unavailable-status-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: media, unavailable status, notice, and disabled routing fit the detail rail without obscuring the map."
+			"notes": "Datasource-driven closure is prominent, route context remains visible, and 3D start is clearly disabled."
 		},
 		{
 			"file": "scenario-long-copy-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected in the contact sheet: long venue and visitor prompts remain readable while search and results retain usable space."
+			"notes": "Pathological venue and welcome copy stays contained with a usable directory."
 		},
 		{
 			"file": "scenario-normal-3d-overview-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at original resolution: the 3D renderer is visibly active with projected site artwork, authored building volume, markers, and labels."
+			"notes": "Ordinary 3D exploration is centered, legible, and clearly distinct from guided navigation."
 		},
 		{
 			"file": "scenario-route-journey-1920x1080.png",
 			"status": "pass",
-			"notes": "Inspected at original resolution: the exploded interior, blue route, transition marker, destination highlight, camera state, media, and actions remain readable together."
+			"notes": "Exploded 3D journey shows the complete route, destination context, replay action, and route-wide camera state."
+		},
+		{
+			"file": "scenario-route-preview-1920x1080.png",
+			"status": "pass",
+			"notes": "Authored blue route, reveal flow, directional chevrons, and start and arrival markers are clear before 3D starts."
 		}
 	],
 	"unresolvedFindings": []

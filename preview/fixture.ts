@@ -50,12 +50,21 @@ export const previewScenarios: PreviewScenario[] = [
 		minimumContentCoverage: { width: 93, height: 95 }
 	},
 	{
+		id: 'route-preview',
+		fixture: previewFixture,
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: 'Reception Ground floor Open' }
+		],
+		minimumContentCoverage: { width: 93, height: 95 }
+	},
+	{
 		id: 'route-journey',
 		fixture: previewFixture,
 		viewport: { width: 1920, height: 1080, background: 'dark' },
 		interactionSteps: [
 			{ type: 'click', role: 'button', name: 'Reception Ground floor Open' },
-			{ type: 'click', role: 'button', name: 'Show route Full journey with camera guidance' }
+			{ type: 'click', role: 'button', name: 'Start 3D route Full journey with camera and spoken guidance' }
 		],
 		minimumContentCoverage: { width: 93, height: 95 }
 	},

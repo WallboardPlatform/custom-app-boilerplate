@@ -66,7 +66,7 @@ export interface WayfindingViewerLanguage {
 export interface WayfindingViewerState {
 	dimension: WayfindingViewerDimension;
 	language: string;
-	mode: 'journey' | 'site';
+	mode: 'journey' | 'route' | 'site';
 	originId?: string;
 	profile: 'standard' | 'step-free';
 	target?: WayfindingViewerTarget;
@@ -94,6 +94,7 @@ export class WayfindingViewer {
 	readonly state: WayfindingViewerState;
 	destroy(): void;
 	guidanceText(): string;
+	previewRoute(target: WayfindingViewerTarget): boolean;
 	replay(options?: { speak?: boolean }): void;
 	resetCamera(): void;
 	setDimension(dimension: WayfindingViewerDimension): void;

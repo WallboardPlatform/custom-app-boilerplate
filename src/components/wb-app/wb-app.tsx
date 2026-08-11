@@ -89,6 +89,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [language, setLanguage] = createSignal('en');
 	const [profile, setProfile] = createSignal<'standard' | 'step-free'>('standard');
 	const [viewDimension, setViewDimension] = createSignal<'2d' | '3d'>('2d');
+	const [viewerMode, setViewerMode] = createSignal<WayfindingViewerState['mode']>('site');
 	const [journeyActive, setJourneyActive] = createSignal(false);
 	const [muted, setMuted] = createSignal(false);
 	const [loading, setLoading] = createSignal(true);
@@ -138,13 +139,18 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 		return place ? placeImage(place, assets()) : undefined;
 	});
-	const guidanceAvailable = createMemo(() => Boolean(journeyActive() && viewer()?.guidanceText()));
+	const guidanceAvailable = createMemo(() =>
+		viewerMode() !== 'site' && Boolean(viewer()?.guidanceText()));
 	const findPlace = (target: WayfindingViewerTarget): KioskPlace | undefined =>
 		places().find((place) => targetKey(place.target) === targetKey(target));
-	const selectPlace = (place: KioskPlace): void => {
-		if (journeyActive()) viewer()?.showSite();
+	const selectPlace = (place: KioskPlace, previewRoute = true): void => {
+		const currentViewer = viewer();
+
+		if (journeyActive()) currentViewer?.showSite();
 		setSelected(place);
 		setJourneyActive(false);
+
+		if (previewRoute) currentViewer?.previewRoute(place.target);
 	};
 	const startJourney = (): void => {
 		const place = selected();
@@ -193,10 +199,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						if (!target) return;
 						const place = findPlace(target);
 
-						if (place) selectPlace(place);
+						if (place) selectPlace(place, false);
 					},
 					onStateChange: (state: WayfindingViewerState): void => {
 						setJourneyActive(state.mode === 'journey');
+						setViewerMode(state.mode);
 						setViewDimension(state.dimension);
 					},
 					onUnavailable: showNotice,
@@ -233,6 +240,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-preview-id="wayfinding-kiosk-root"
 			data-host-ready={Boolean(props.hostElement)}
 			data-journey-active={journeyActive()}
+			data-viewer-mode={viewerMode()}
 			data-viewer-dimension={viewDimension()}
 			data-selected-target={selected() ? targetKey(selected()!.target) : ''}
 			data-spoken-guidance-ready={guidanceAvailable()}
@@ -294,7 +302,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 
 			<main class={`wb-wayfinding-kiosk-stage ${style['map-stage']}`} data-wayfinding-stage aria-label="Interactive wayfinding map">
 				<div class={style['map-header']}>
-					<div><small>{journeyActive() ? 'COMPLETE ROUTE' : viewDimension() === '2d' ? '2D CAMPUS MAP' : '3D CAMPUS OVERVIEW'}</small><strong>{journeyActive() ? localizedPlaceName(selected()!, language()) : mapProjectName()}</strong></div>
+					<div><small>{journeyActive() ? 'COMPLETE ROUTE' : viewerMode() === 'route' && viewDimension() === '2d' ? 'ANIMATED ROUTE PREVIEW' : viewDimension() === '2d' ? '2D CAMPUS MAP' : '3D CAMPUS OVERVIEW'}</small><strong>{selected() ? localizedPlaceName(selected()!, language()) : mapProjectName()}</strong></div>
 					<div class={style['map-header-badge']}><span /> Live wayfinding</div>
 				</div>
 				<div class={`${style['viewer-host']} wb-wayfinding-kiosk-scene`} ref={mapHost} />
@@ -364,12 +372,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						</div>}</Show>
 						<p class={`${style.description} wb-wayfinding-kiosk-description`}>{localizedPlaceDescription(place(), language())}</p>
 						<div class={style['route-summary']}>
-							<span><Icon name="layers" /><small>Route view</small><strong>Complete 3D</strong></span>
+							<span><Icon name="layers" /><small>Route view</small><strong>2D preview · Full 3D</strong></span>
 							<span><Icon name="volume" /><small>Guidance</small><strong>{guidanceAvailable() ? 'Ready' : viewer()?.guidanceSupported ? 'If authored' : 'Text only'}</strong></span>
 						</div>
 						<Show when={journeyActive()} fallback={(
 							<button type="button" class={style['primary-action']} disabled={selectedStatus()?.available === false} onClick={startJourney}>
-								<span><Icon name="map" /><strong>Show route</strong><small>Full journey with camera guidance</small></span><Icon name="arrow" />
+								<span><Icon name="map" /><strong>Start 3D route</strong><small>Full journey with camera and spoken guidance</small></span><Icon name="arrow" />
 							</button>
 						)}>
 							<div class={style['journey-actions']}>

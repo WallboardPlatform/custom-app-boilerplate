@@ -1,9 +1,9 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding ordinary 2D and 3D exploration, a refined directory, live datasource status, complete exploded 3D routes, camera guidance, and spoken guidance.",
+		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding ordinary 2D and 3D exploration, Preview's animated authored 2D route reveal, a refined directory, live datasource status, complete exploded 3D routes, camera guidance, and spoken guidance.",
 		"audience": "Visitors using a large landscape touchscreen kiosk in a campus, office, healthcare, education, or public venue.",
-		"primaryGoal": "Let a visitor explore the ordinary authored 2D or 3D map, find a destination, and understand the complete exploded route at a glance without manual step navigation or a separate Atlas mode."
+		"primaryGoal": "Let a visitor explore the ordinary authored 2D or 3D map, preview the selected route through an animated authored 2D reveal, and understand the complete exploded 3D journey at a glance without manual step navigation or a separate Atlas mode."
 	},
 	"assumptions": [
 		"The supplied .wbmap is a temporary venue package and will later be replaceable without changing kiosk composition or renderer logic.",
@@ -14,7 +14,7 @@
 	"app": {
 		"mode": "new",
 		"name": "Wayfinding Kiosk Showcase",
-		"version": "1"
+		"version": "2"
 	},
 	"surfaceStrategy": {
 		"mode": "fixed",
@@ -129,7 +129,7 @@
 			},
 			{
 				"id": "destination-detail",
-				"purpose": "Show a selected place, map-defined description or media, and live operational status."
+				"purpose": "Show a selected place, map-defined description or media, live operational status, and the animated authored 2D route preview."
 			},
 			{
 				"id": "exploded-journey",
@@ -364,6 +364,10 @@
 			"expectation": "The visitor can switch to the authored normal 3D projection with visible building volume, labels, markers, orbit, and zoom without entering route mode."
 		},
 		{
+			"scenario": "route-preview",
+			"expectation": "Selecting a routeable place reveals the map-authored route in ordinary 2D using Preview's casing, color, width, chevrons, markers, flow or pulse styling, and replayable path-drawing animation."
+		},
+		{
 			"scenario": "route-journey",
 			"expectation": "The selected route renders in exploded 3D with all route segments visible and no Next, Previous, or Atlas controls."
 		},
@@ -385,6 +389,13 @@
 		}
 	],
 	"behaviors": [
+		{
+			"id": "animated-2d-route-preview",
+			"expectation": "Selecting or reselecting a routeable place replays the canonical Editor Preview 2D path reveal before the visitor starts the complete 3D journey.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
 		{
 			"id": "complete-route-camera",
 			"expectation": "Starting a route shows every route segment in the canonical exploded 3D scene, reveals the full path, and arrives at a destination orbit without manual step state.",
@@ -441,7 +452,7 @@
 		"signatureChoices": [
 			"A simultaneous directory-map-detail composition instead of modal navigation or dashboard cards.",
 			"The exact Wayfinding Editor Preview renderer owns all 2D and 3D map pixels and 3D journey behavior.",
-			"One visitor action launches both the complete route camera journey and authored spoken guidance."
+			"Selection reveals the authored 2D route; one subsequent visitor action launches both the complete 3D camera journey and authored spoken guidance."
 		],
 		"avoid": [
 			"Reinvented map geometry, generic 3D approximations, or shell palette values applied to map materials.",
@@ -452,6 +463,7 @@
 		"intent": "The kiosk should feel installation-ready and architecturally specific while making the published mapĂ˘â‚¬â€ťnot the surrounding chromeĂ˘â‚¬â€ťthe dominant visual object.",
 		"focus": [
 			"Verify map-authored polygon colors, backgrounds, labels, imagery, route styling, and transparency match the canonical viewer at overview and journey states.",
+			"Confirm selection replays the authored 2D path animation before the complete 3D journey begins.",
 			"Confirm the exploded route remains legible across external and internal building segments while camera motion settles on the destination.",
 			"Inspect long venue, destination, and datasource copy for clipping at near-touch font floors.",
 			"Confirm dark, light, and custom shell themes never recolor the map renderer."
