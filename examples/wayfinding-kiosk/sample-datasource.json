@@ -1,0 +1,42 @@
+{
+	"DestinationStatus": {
+		"header": {
+			"destinationId": "string",
+			"available": "boolean",
+			"status": "string",
+			"waitMinutes": "number",
+			"note": "text"
+		},
+		"rows": [
+			{
+				"destinationId": "library-help",
+				"available": true,
+				"status": "Open",
+				"waitMinutes": 3,
+				"note": "Visitor assistance is available at the front desk."
+			},
+			{
+				"destinationId": "reading-room",
+				"available": true,
+				"status": "Quiet study",
+				"waitMinutes": 0,
+				"note": "Study spaces are available on level one."
+			},
+			{
+				"destinationId": "archives",
+				"available": true,
+				"status": "6 seats available",
+				"waitMinutes": 0,
+				"note": "Quiet study policy applies."
+			},
+			{
+				"destinationId": "planetarium",
+				"available": false,
+				"status": "Reserved",
+				"waitMinutes": 25,
+				"note": "The room becomes available after the current booking."
+			}
+		],
+		"connectors": {}
+	}
+}

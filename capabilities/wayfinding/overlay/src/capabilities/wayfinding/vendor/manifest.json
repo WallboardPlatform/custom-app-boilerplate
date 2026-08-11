@@ -1,0 +1,15 @@
+{
+	"files": {
+		"declaration": {
+			"path": "wayfinding-viewer.d.ts",
+			"sha256": "4b8f59afdc420c7d27f4fd85953612a7fb05a66edb2921e0dd9360717fa86324"
+		},
+		"module": {
+			"path": "wayfinding-viewer.js",
+			"sha256": "fb2945f9d7c0c8e5096754da4f931f74b72a6c91b6c60b44ebd0f2bfb1cf1159"
+		}
+	},
+	"format": "wallboard-wayfinding-viewer",
+	"formatVersion": 1,
+	"viewerVersion": "1.3.0"
+}

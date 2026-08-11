@@ -15,11 +15,11 @@ Reuse these mechanics without inheriting an example's visual language.
 | Built-in data | FEED/CALENDAR normalization and independent multi-source composition | `newsroom-spotlight`, `live-agenda`, `civic-venue-pulse` |
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
-| Touch text entry | Opt-in `keyboard` capability with controlled values and selectable layouts | `veszprem-wayfinding` proves Hungarian + English destination search; `pdf-document-workspace` proves document search |
+| Touch text entry | Opt-in `keyboard` capability with controlled values and selectable layouts | `interactive-document-viewer` proves document search with an app-owned keyboard |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 | PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
 | Video playback | Opt-in `video` capability; hls.js 0.7.9 is materialized only on request | `lumen-media-program`: direct file/folder/JSON playlist, cache, native MP4/WebM/HLS, poster/captions, autoplay/sound/fit/repeat/seek/retry, commands, telemetry, cleanup |
-| Wayfinding routing | Hosted Wayfinding Studio publishes v2 site/building/level `.wbmap`; the public loader also accepts v1 packages and normalizes both to one runtime model | `wayfinding.md`; cross-building and multi-level standard/step-free journeys, entrance and vertical connectors, atlas/exploded overview, disabled edges, topology warnings |
+| Wayfinding routing | Opt-in `wayfinding` capability with the checksum-pinned Studio viewer and map-agnostic lifecycle harness | `wayfinding.md`; `wayfinding-kiosk` proves animated authored 2D route preview, complete exploded 3D journey, camera motion, speech, and destination status gating |
 
 Planned capability proofs and their promotion gates live in [capability-roadmap.md](capability-roadmap.md).
 
@@ -42,6 +42,7 @@ Capabilities are excluded from ordinary projects and builds. Add one explicitly:
 npm run capability:add -- pdf
 npm run capability:add -- video
 npm run capability:add -- keyboard
+npm run capability:add -- wayfinding
 ```
 
 The PDF capability expands its checksum-pinned runtime into `src/capabilities/pdf`. Keep `assets/pdf.worker.js` in `resourceList`; the runtime resolves it beside the loaded custom-app script in Wallboard and falls back to Vite's imported URL in local preview.
@@ -49,3 +50,5 @@ The PDF capability expands its checksum-pinned runtime into `src/capabilities/pd
 The video capability expands its checksum-pinned hls.js runtime into `src/capabilities/video`; MP4/WebM still use the native browser path. It cannot expose the platform native/external player, synchronized multi-screen playback, audio ducking, or proof-of-display registration through the current custom-app SDK. Never represent browser telemetry as platform proof-of-display.
 
 The keyboard capability adds an app-owned touch keyboard without relying on the device OS or the legacy Angular User Input widget. Materialize it only for apps with text entry; choose requested language layouts and keep physical keyboard input available.
+
+The wayfinding capability expands one versioned Wayfinding Studio viewer release into `src/capabilities/wayfinding`. Its harness owns map loading, cleanup, route preview, journey start, camera, profile, language, and speech. Keep map presentation in the `.wbmap`; use datasource status only as an operational overlay keyed by `destinationId`.
