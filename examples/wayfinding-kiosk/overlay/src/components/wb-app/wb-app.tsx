@@ -462,7 +462,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<Show when={handoffQr()} fallback={<div class={style['handoff-loading']}><span /><small>{handoffError() ?? 'Preparing secure handoff'}</small></div>}>
 								{(source) => <img src={source()} alt="QR code to continue this wayfinding route on a phone" />}
 							</Show>
-							<small>Camera â†’ point â†’ continue</small>
+							<small>Open camera. Point. Continue.</small>
 						</div>
 					</section>
 				</div>
