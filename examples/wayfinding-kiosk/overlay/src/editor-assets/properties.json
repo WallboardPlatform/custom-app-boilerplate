@@ -35,6 +35,13 @@
 					"type": "text",
 					"property": "welcomeMessage",
 					"default": "Where would you like to go?"
+				},
+				{
+					"label": "Mobile companion URL",
+					"type": "text",
+					"property": "mobileAppUrl",
+					"default": "https://apps.wallboard.us/ba933fe4-c587-47fc-8834-ef534facc4c0/",
+					"tooltip": "Stable Wayfinding Companion PWA URL used for QR route handoff."
 				}
 			]
 		},

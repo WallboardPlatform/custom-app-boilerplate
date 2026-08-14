@@ -27,6 +27,7 @@ export default (config: ConfigValues): Settings => {
 	return {
 		venueName: textSetting(config.venueName, 'Northline Campus'),
 		welcomeMessage: textSetting(config.welcomeMessage, 'Where would you like to go?'),
+		mobileAppUrl: textSetting(config.mobileAppUrl, 'https://apps.wallboard.us/ba933fe4-c587-47fc-8834-ef534facc4c0/'),
 		themePreset: preset,
 		accentColor: preset === 'custom' ? textSetting(config.accentColor, palette.accentColor) : palette.accentColor,
 		textColor: preset === 'custom' ? textSetting(config.textColor, palette.textColor) : palette.textColor,

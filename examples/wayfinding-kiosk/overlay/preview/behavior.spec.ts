@@ -147,6 +147,28 @@ test('speaks authored guidance on visitor-triggered route start and replay', asy
 	expect(spoken.every((item): boolean => item.text.trim().length > 0)).toBe(true);
 });
 
+test('creates a stable semantic mobile handoff without leaking a storage path', async ({ page }): Promise<void> => {
+	await page.getByRole('button', { name: /Visitor services Ground floor Open/ }).click();
+	await page.getByRole('button', { name: /Take it with you/ }).click();
+	const dialog = page.getByRole('dialog', { name: 'Take your route with you' });
+
+	await expect(dialog).toBeVisible();
+	await expect(dialog.getByRole('img', { name: /QR code/ })).toHaveAttribute('src', /^data:image\/png/u);
+	const handoffUrl = await dialog.getAttribute('data-handoff-url');
+
+	expect(handoffUrl).not.toBeNull();
+	const parsed = new URL(handoffUrl!);
+
+	expect(parsed.origin).toBe('https://apps.wallboard.us');
+	expect(parsed.searchParams.get('wf')).toBe('1');
+	expect(parsed.searchParams.get('app')).toBe('Wayfinding Kiosk');
+	expect(parsed.searchParams.get('appVersion')).toBe('2');
+	expect(parsed.searchParams.get('map')).toBe('assets/index.wbmap');
+	expect(parsed.searchParams.get('destination')).toBe('library-help');
+	expect(parsed.searchParams.get('datasource')).toBe('wayfinding-destination-status');
+	expect(handoffUrl).not.toContain('/apps/widgets/');
+});
+
 test('applies live datasource availability without rebuilding the map', async ({ page }): Promise<void> => {
 	const scene = page.locator('.wb-wayfinding-kiosk-scene');
 	const initialBuilds = await scene.getAttribute('data-scene-builds');

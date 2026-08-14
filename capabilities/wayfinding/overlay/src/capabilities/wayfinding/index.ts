@@ -15,6 +15,9 @@ export {
 } from './harness-core';
 export { WayfindingViewport, type WayfindingViewportProps } from './wayfinding-viewport';
 export type {
+	PublicWayfindingResolution,
+	PublicWayfindingResolverOptions,
+	WayfindingHandoff,
 	WayfindingViewerAsset,
 	WayfindingViewerBuilding,
 	WayfindingViewerDestination,
@@ -27,4 +30,12 @@ export type {
 	WayfindingViewerStartOptions,
 	WayfindingViewerState,
 	WayfindingViewerTarget
+} from './vendor/wayfinding-viewer.js';
+export {
+	createWayfindingHandoffUrl,
+	fetchPublicWayfindingMap,
+	normalizeWayfindingServer,
+	parseWayfindingHandoff,
+	resolvePublicWayfindingMap,
+	WAYFINDING_HANDOFF_VERSION
 } from './vendor/wayfinding-viewer.js';

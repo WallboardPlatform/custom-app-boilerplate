@@ -5,6 +5,7 @@ import type { PreviewFixture, PreviewScenario, PreviewSettingEffect } from './fi
 const defaultConfig: Record<string, unknown> = {
 	venueName: 'Northline Campus',
 	welcomeMessage: 'Where would you like to go?',
+	mobileAppUrl: 'https://apps.wallboard.us/ba933fe4-c587-47fc-8834-ef534facc4c0/',
 	themePreset: 'dark',
 	accentColor: '#67e0c4',
 	textColor: '#f4faf8',
@@ -24,6 +25,7 @@ const createFixture = (
 	configValues,
 	dataPickerValues: { destinationData },
 	datasourceIds: { destinationData: 'wayfinding-destination-status' },
+	platform: { isDisplayer: true },
 	additionalConfig: {
 		licenseType: null,
 		mockDatasource: {},
@@ -65,6 +67,16 @@ export const previewScenarios: PreviewScenario[] = [
 		interactionSteps: [
 			{ type: 'click', role: 'button', name: 'Visitor services Ground floor Open' },
 			{ type: 'click', role: 'button', name: 'Start 3D route Full journey with camera and spoken guidance' }
+		],
+		minimumContentCoverage: { width: 93, height: 95 }
+	},
+	{
+		id: 'mobile-handoff',
+		fixture: previewFixture,
+		viewport: { width: 1920, height: 1080, background: 'dark' },
+		interactionSteps: [
+			{ type: 'click', role: 'button', name: 'Visitor services Ground floor Open' },
+			{ type: 'click', role: 'button', name: 'Take it with you Continue on your phone' }
 		],
 		minimumContentCoverage: { width: 93, height: 95 }
 	},

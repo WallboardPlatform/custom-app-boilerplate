@@ -1,10 +1,11 @@
 {
 	"title": "Wayfinding Kiosk",
-	"description": "Canonical map-agnostic wayfinding kiosk: authored 2D route reveal, exploded 3D journey, camera motion, spoken guidance, and optional live destination availability through the Wayfinding harness.",
+	"description": "Canonical map-agnostic wayfinding kiosk: authored 2D route reveal, exploded 3D journey, camera motion, spoken guidance, optional live destination availability, and a QR handoff to the installable mobile companion.",
 	"mechanisms": [
 		"canonical-wayfinding-viewer",
 		"published-map-package",
 		"map-orientation",
+		"mobile-route-handoff",
 		"table-binding",
 		"directory-search"
 	],

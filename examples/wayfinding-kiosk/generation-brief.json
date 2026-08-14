@@ -1,15 +1,16 @@
 {
 	"briefVersion": 7,
 	"request": {
-		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding ordinary 2D and 3D exploration, Preview's animated authored 2D route reveal, a refined directory, live datasource status, complete exploded 3D routes, camera guidance, and spoken guidance.",
+		"summary": "Create a production-grade landscape wayfinding kiosk around the canonical Wayfinding Editor Preview renderer, preserving every authored map presentation setting while adding ordinary 2D and 3D exploration, Preview's animated authored 2D route reveal, a refined directory, live datasource status, complete exploded 3D routes, camera guidance, spoken guidance, and QR continuation on a mobile PWA.",
 		"audience": "Visitors using a large landscape touchscreen kiosk in a campus, office, healthcare, education, or public venue.",
-		"primaryGoal": "Let a visitor explore the ordinary authored 2D or 3D map, preview the selected route through an animated authored 2D reveal, and understand the complete exploded 3D journey at a glance without manual step navigation or a separate Atlas mode."
+		"primaryGoal": "Let a visitor explore the ordinary authored 2D or 3D map, preview the selected route through an animated authored 2D reveal, understand the complete exploded 3D journey at a glance, and continue the same semantic route on a phone without manual step navigation or a separate Atlas mode."
 	},
 	"assumptions": [
 		"The bundled synthetic .wbmap is a deterministic harness fixture and is replaceable with any Studio-published venue package without changing kiosk composition or renderer logic.",
 		"Map geometry, labels, materials, origins, route styling, exploded-floor behavior, camera behavior, and authored voice guidance are owned by the published map and canonical viewer.",
 		"The optional DestinationStatus TABLE provides operational overlay data only and never modifies map presentation.",
-		"Spoken guidance begins only after the visitor explicitly starts or replays a route."
+		"Spoken guidance begins only after the visitor explicitly starts or replays a route.",
+		"The mobile companion URL is a stable public PWA address; the QR contains route state and custom-app identity but never a temporary storage path."
 	],
 	"app": {
 		"mode": "new",
@@ -82,6 +83,15 @@
 			"rationale": "Operators may identify the venue and adapt the primary visitor prompt."
 		},
 		{
+			"id": "mobile-handoff-target",
+			"area": "content",
+			"owner": "setting",
+			"targets": [
+				"mobileAppUrl"
+			],
+			"rationale": "Operators may replace the stable companion deployment URL without changing semantic handoff encoding or map rendering."
+		},
+		{
 			"id": "kiosk-palette",
 			"area": "presentation",
 			"owner": "setting",
@@ -112,6 +122,7 @@
 				"search-query",
 				"directory-filter",
 				"selected-destination",
+				"mobile-handoff-dialog",
 				"journey-active",
 				"language",
 				"route-profile",
@@ -134,13 +145,17 @@
 			{
 				"id": "exploded-journey",
 				"purpose": "Show the entire route across site and building floors with route reveal and camera progression."
+			},
+			{
+				"id": "mobile-handoff",
+				"purpose": "Show a scannable QR code that transfers server, app identity, map resource, origin, destination, route profile, language, and optional datasource ID to the companion PWA."
 			}
 		],
 		"inputs": [
 			{
 				"id": "touch-directory",
 				"type": "touch",
-				"action": "Search, filter, select a destination, start or end a route, replay guidance, choose language, and toggle accessibility or audio."
+				"action": "Search, filter, select a destination, start or end a route, replay guidance, transfer a route to mobile, choose language, and toggle accessibility or audio."
 			},
 			{
 				"id": "pointer-map",
@@ -223,6 +238,10 @@
 		{
 			"property": "welcomeMessage",
 			"purpose": "Sets the primary visitor prompt."
+		},
+		{
+			"property": "mobileAppUrl",
+			"purpose": "Sets the stable mobile companion PWA base URL used for versioned QR handoff."
 		},
 		{
 			"property": "themePreset",
@@ -372,6 +391,10 @@
 			"expectation": "The selected route renders in exploded 3D with all route segments visible and no Next, Previous, or Atlas controls."
 		},
 		{
+			"scenario": "mobile-handoff",
+			"expectation": "The selected destination opens a high-contrast scannable QR dialog whose link transfers semantic route state to the stable companion PWA without exposing a Wallboard storage path."
+		},
+		{
 			"scenario": "live-unavailable-status",
 			"expectation": "A closed datasource row shows its operational message and disables route start without altering the map scene."
 		},
@@ -406,6 +429,13 @@
 		{
 			"id": "spoken-guidance",
 			"expectation": "Visitor-triggered route start and replay speak the map-authored guidance in the selected language; muting cancels speech without ending the route.",
+			"evidence": {
+				"testFile": "preview/behavior.spec.ts"
+			}
+		},
+		{
+			"id": "mobile-route-handoff",
+			"expectation": "The QR link carries the versioned server, custom-app identity, map resource, kiosk origin, selected destination, profile, language, and optional public datasource ID, while the phone resolves the current published resource path itself.",
 			"evidence": {
 				"testFile": "preview/behavior.spec.ts"
 			}
@@ -452,7 +482,8 @@
 		"signatureChoices": [
 			"A simultaneous directory-map-detail composition instead of modal navigation or dashboard cards.",
 			"The exact Wayfinding Editor Preview renderer owns all 2D and 3D map pixels and 3D journey behavior.",
-			"Selection reveals the authored 2D route; one subsequent visitor action launches both the complete 3D camera journey and authored spoken guidance."
+			"Selection reveals the authored 2D route; one subsequent visitor action launches both the complete 3D camera journey and authored spoken guidance.",
+			"A destination-specific QR dialog transfers the semantic route to the stable mobile PWA without coupling the visitor link to an upload storage ID."
 		],
 		"avoid": [
 			"Reinvented map geometry, generic 3D approximations, or shell palette values applied to map materials.",
@@ -464,6 +495,7 @@
 		"focus": [
 			"Verify map-authored polygon colors, backgrounds, labels, imagery, route styling, and transparency match the canonical viewer at overview and journey states.",
 			"Confirm selection replays the authored 2D path animation before the complete 3D journey begins.",
+			"Confirm the mobile QR dialog remains scannable at kiosk distance and names the selected destination clearly.",
 			"Confirm the exploded route remains legible across external and internal building segments while camera motion settles on the destination.",
 			"Inspect long venue, destination, and datasource copy for clipping at near-touch font floors.",
 			"Confirm dark, light, and custom shell themes never recolor the map renderer."

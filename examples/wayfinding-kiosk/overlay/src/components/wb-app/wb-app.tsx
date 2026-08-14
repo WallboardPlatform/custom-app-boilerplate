@@ -8,6 +8,7 @@ import {
 	type Accessor,
 	type JSX
 } from 'solid-js';
+import { toDataURL } from 'qrcode';
 
 import { useDataSources } from '@hooks/system/useDataSources';
 import { useSettings } from '@hooks/system/useSettings';
@@ -23,6 +24,7 @@ import {
 	placeImage
 } from '@utils/wayfinding-kiosk';
 import {
+	createWayfindingHandoffUrl,
 	WayfindingViewport,
 	type WayfindingHarness,
 	type WayfindingHarnessSnapshot,
@@ -31,10 +33,11 @@ import {
 } from '../../capabilities/wayfinding';
 import sampleDatasource from '../../../sample-datasource.json';
 import venueMapUrl from '../../assets/synthetic-campus.wbmap';
+import appProperties from '../../editor-assets/properties.json';
 
 import style from './wb-app.module.scss';
 
-type IconName = 'accessibility' | 'arrow' | 'building' | 'close' | 'layers' | 'map' | 'replay' | 'reset' | 'search' | 'volume' | 'volume-off';
+type IconName = 'accessibility' | 'arrow' | 'building' | 'close' | 'layers' | 'map' | 'phone' | 'qr' | 'replay' | 'reset' | 'search' | 'volume' | 'volume-off';
 
 const ICON_PATHS: Record<IconName, JSX.Element> = {
 	accessibility: <><circle cx="12" cy="4" r="2"/><path d="M7 9h10M12 6v7m0 0-4 7m4-7 4 7M8.5 13H5"/></>,
@@ -43,6 +46,8 @@ const ICON_PATHS: Record<IconName, JSX.Element> = {
 	close: <path d="m6 6 12 12M18 6 6 18"/>,
 	layers: <><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></>,
 	map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></>,
+	phone: <><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M10 18h4"/></>,
+	qr: <><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 14h3v7h-3zM14 19h3v2h-3z"/></>,
 	replay: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></>,
 	reset: <><path d="M4 7h6V1"/><path d="M20 17h-6v6"/><path d="M5.1 16A8 8 0 0 0 18.5 18M18.9 8A8 8 0 0 0 5.5 6"/></>,
 	search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
@@ -94,6 +99,10 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const [loading, setLoading] = createSignal(true);
 	const [error, setError] = createSignal<string>();
 	const [notice, setNotice] = createSignal<string>();
+	const [viewerState, setViewerState] = createSignal<WayfindingViewerState>();
+	const [handoffOpen, setHandoffOpen] = createSignal(false);
+	const [handoffQr, setHandoffQr] = createSignal<string>();
+	const [handoffError, setHandoffError] = createSignal<string>();
 	const [mapProjectName, setMapProjectName] = createSignal('Wayfinding');
 	const [assets, setAssets] = createSignal<NonNullable<WayfindingHarnessSnapshot['catalog']>['assets']>([]);
 	const [levels, setLevels] = createSignal<NonNullable<WayfindingHarnessSnapshot['catalog']>['levels']>([]);
@@ -137,6 +146,50 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const place = selected();
 
 		return place ? placeImage(place, assets()) : undefined;
+	});
+	const handoffUrl = createMemo((): string | undefined => {
+		const place = selected();
+
+		if (!place) return undefined;
+
+		return createWayfindingHandoffUrl(settings().mobileAppUrl, {
+			appId: appProperties.name,
+			appVersion: appProperties.version,
+			datasourceId: dataSources().destinationData?.id ?? undefined,
+			language: language(),
+			mapPath: 'assets/index.wbmap',
+			originId: viewerState()?.originId ?? harness()?.catalog?.origins[0]?.id,
+			profile: profile(),
+			server: window.location.origin,
+			target: place.target,
+			version: 1
+		});
+	});
+	let qrGeneration = 0;
+	createEffect((): void => {
+		const open = handoffOpen();
+		const url = handoffUrl();
+
+		if (!open || !url) {
+			setHandoffQr(undefined);
+			setHandoffError(undefined);
+
+			return;
+		}
+		qrGeneration += 1;
+		const generation = qrGeneration;
+		setHandoffQr(undefined);
+		setHandoffError(undefined);
+		void toDataURL(url, {
+			color: { dark: '#07110f', light: '#ffffff' },
+			errorCorrectionLevel: 'M',
+			margin: 2,
+			width: 320
+		}).then((value) => {
+			if (generation === qrGeneration) setHandoffQr(value);
+		}).catch(() => {
+			if (generation === qrGeneration) setHandoffError('The mobile handoff code could not be created.');
+		});
 	});
 	const guidanceAvailable = createMemo(() =>
 		viewerMode() !== 'site' && Boolean(harness()?.guidanceText));
@@ -185,6 +238,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		}
 
 		if (snapshot.viewerState) {
+			setViewerState(snapshot.viewerState);
 			setJourneyActive(snapshot.viewerState.mode === 'journey');
 			setViewerMode(snapshot.viewerState.mode);
 			setViewDimension(snapshot.viewerState.dimension);
@@ -198,6 +252,8 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (place) selectPlace(place, false);
 	};
 	onCleanup((): void => {
+		qrGeneration += 1;
+
 		if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
 	});
 
@@ -362,9 +418,14 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 							<span><Icon name="volume" /><small>Guidance</small><strong>{guidanceAvailable() ? 'Ready' : harness()?.guidanceSupported ? 'If authored' : 'Text only'}</strong></span>
 						</div>
 						<Show when={journeyActive()} fallback={(
-							<button type="button" class={style['primary-action']} disabled={selectedStatus()?.available === false} onClick={startJourney}>
-								<span><Icon name="map" /><strong>Start 3D route</strong><small>Full journey with camera and spoken guidance</small></span><Icon name="arrow" />
-							</button>
+							<div class={style['destination-actions']}>
+								<button type="button" class={style['primary-action']} disabled={selectedStatus()?.available === false} onClick={startJourney}>
+									<span><Icon name="map" /><strong>Start 3D route</strong><small>Full journey with camera and spoken guidance</small></span><Icon name="arrow" />
+								</button>
+								<button type="button" class={style['handoff-action']} onClick={() => setHandoffOpen(true)}>
+									<Icon name="phone" /><span><strong>Take it with you</strong><small>Continue on your phone</small></span><Icon name="qr" />
+								</button>
+							</div>
 						)}>
 							<div class={style['journey-actions']}>
 								<button type="button" class={style['primary-action']} onClick={() => harness()?.replay({ speak: !muted() })}><span><Icon name="replay" /><strong>Replay route</strong><small>Camera and spoken guidance</small></span><Icon name="arrow" /></button>
@@ -386,6 +447,26 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 					<span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
 				</footer>
 			</aside>
+
+			<Show when={handoffOpen()}>
+				<div class={style['handoff-backdrop']} data-wayfinding-overlay role="presentation" onClick={() => setHandoffOpen(false)}>
+					<section class={style['handoff-dialog']} data-handoff-url={handoffUrl()} role="dialog" aria-modal="true" aria-labelledby="wayfinding-handoff-title" onClick={(event) => event.stopPropagation()}>
+						<button type="button" class={style['handoff-close']} aria-label="Close mobile handoff" onClick={() => setHandoffOpen(false)}><Icon name="close" /></button>
+						<div class={style['handoff-copy']}>
+							<span class={style['handoff-kicker']}><Icon name="phone" /> CONTINUE ON YOUR PHONE</span>
+							<h2 id="wayfinding-handoff-title">Take your route with you</h2>
+							<p>Scan once to open this destination, route profile and kiosk starting point on your phone.</p>
+							<div><small>DESTINATION</small><strong>{selected() ? localizedPlaceName(selected()!, language()) : ''}</strong></div>
+						</div>
+						<div class={style['handoff-code']}>
+							<Show when={handoffQr()} fallback={<div class={style['handoff-loading']}><span /><small>{handoffError() ?? 'Preparing secure handoff'}</small></div>}>
+								{(source) => <img src={source()} alt="QR code to continue this wayfinding route on a phone" />}
+							</Show>
+							<small>Camera â†’ point â†’ continue</small>
+						</div>
+					</section>
+				</div>
+			</Show>
 		</div>
 	);
 };
