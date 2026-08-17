@@ -147,10 +147,25 @@ export interface WayfindingTargetAvailability {
 	message?: string;
 }
 
+export interface WayfindingViewerDirectoryLevel {
+	destinations: readonly WayfindingViewerDestination[];
+	id: string;
+	label: string;
+}
+
+export interface WayfindingViewerDirectoryGroup {
+	building?: WayfindingViewerBuilding;
+	id: string;
+	label: string;
+	levels: readonly WayfindingViewerDirectoryLevel[];
+	type: 'building' | 'site' | 'standalone' | 'unassigned';
+}
+
 export interface WayfindingHarnessCatalog {
 	assets: readonly WayfindingViewerAsset[];
 	buildings: readonly WayfindingViewerBuilding[];
 	destinations: readonly WayfindingViewerDestination[];
+	directory: readonly WayfindingViewerDirectoryGroup[];
 	languages: readonly WayfindingViewerLanguage[];
 	levels: readonly WayfindingViewerLevel[];
 	origins: readonly WayfindingViewerOrigin[];

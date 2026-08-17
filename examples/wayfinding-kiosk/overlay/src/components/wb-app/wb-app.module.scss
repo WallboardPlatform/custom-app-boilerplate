@@ -2,12 +2,15 @@
 
 .wb-app {
 	@include reset-styles();
+	--wb-wayfinding-kiosk-directory-width: clamp(320px, 18.2vw, 350px);
+	--wb-wayfinding-kiosk-detail-width: clamp(340px, 19.3vw, 372px);
+	display: block;
 	width: 100%;
 	height: 100%;
 	min-width: 0;
 	min-height: 0;
 	overflow: hidden;
-	display: flex;
+	position: relative;
 	background: var(--wb-wayfinding-kiosk-background);
 	color: var(--wb-wayfinding-kiosk-text);
 	font-family: Arial, Helvetica, sans-serif;
@@ -35,7 +38,9 @@
 
 .directory,
 .detail {
-	position: relative;
+	position: absolute;
+	top: 0;
+	bottom: 0;
 	z-index: 12;
 	min-width: 0;
 	min-height: 0;
@@ -43,10 +48,8 @@
 }
 
 .directory {
-	width: 20.5%;
-	min-width: 320px;
-	max-width: 394px;
-	flex: 0 0 auto;
+	left: 0;
+	width: var(--wb-wayfinding-kiosk-directory-width);
 	display: flex;
 	flex-direction: column;
 	border-right: 1px solid var(--wb-wayfinding-kiosk-border);
@@ -220,6 +223,52 @@
 	color: var(--wb-wayfinding-kiosk-accent);
 }
 
+.directory-group + .directory-group {
+	margin-top: 14px;
+}
+
+.directory-group-heading,
+.directory-level-heading {
+	display: flex;
+	align-items: center;
+	color: var(--wb-wayfinding-kiosk-muted);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+}
+
+.directory-group-heading {
+	justify-content: space-between;
+	padding: 8px 10px 7px;
+}
+
+.directory-group-heading small {
+	color: var(--wb-wayfinding-kiosk-accent);
+	font-size: 9px;
+}
+
+.directory-level {
+	position: relative;
+	margin-left: 18px;
+	padding-left: 11px;
+	border-left: 1px solid var(--wb-wayfinding-kiosk-border);
+}
+
+.directory-level-heading {
+	position: relative;
+	min-height: 28px;
+	padding: 5px 8px;
+}
+
+.directory-level-heading span {
+	position: absolute;
+	left: -12px;
+	width: 8px;
+	height: 1px;
+	background: var(--wb-wayfinding-kiosk-border);
+}
+
 .place-row {
 	display: flex;
 	width: 100%;
@@ -248,6 +297,23 @@
 
 .place-row.unavailable {
 	opacity: 0.62;
+}
+
+.building-row {
+	background: var(--wb-wayfinding-kiosk-soft);
+	border-color: var(--wb-wayfinding-kiosk-border);
+}
+
+.destination-row {
+	min-height: 58px;
+	padding-right: 8px;
+	padding-left: 8px;
+}
+
+.destination-row .place-icon {
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
 }
 
 .place-icon {
@@ -304,10 +370,10 @@
 }
 
 .map-stage {
-	position: relative;
+	position: absolute;
+	inset: 0;
 	min-width: 0;
 	min-height: 0;
-	flex: 1 1 auto;
 	overflow: hidden;
 	background: #172321;
 }
@@ -328,9 +394,9 @@
 	position: absolute;
 	z-index: 8;
 	top: 22px;
-	left: 24px;
+	left: calc(var(--wb-wayfinding-kiosk-directory-width) + 24px);
 	display: flex;
-	max-width: calc(100% - 48px);
+	max-width: calc(100% - var(--wb-wayfinding-kiosk-directory-width) - var(--wb-wayfinding-kiosk-detail-width) - 48px);
 	align-items: center;
 	justify-content: space-between;
 	padding: 12px 14px;
@@ -465,10 +531,8 @@
 }
 
 .detail {
-	width: 21.5%;
-	min-width: 340px;
-	max-width: 414px;
-	flex: 0 0 auto;
+	right: 0;
+	width: var(--wb-wayfinding-kiosk-detail-width);
 	display: flex;
 	min-width: 0;
 	min-height: 0;
