@@ -86,19 +86,33 @@ type TestHarnessController = new (
 ) => TestHarness;
 
 const loadHarnessController = async (): Promise<TestHarnessController> => {
-	const sourcePath = path.resolve(
-		rootDirectory,
-		'capabilities',
-		'wayfinding',
-		'overlay',
+	const targetDirectory = temporaryDirectory('wallboard-wayfinding-runtime-');
+	fs.writeFileSync(path.join(targetDirectory, 'package.json'), `${JSON.stringify({
+		name: 'wayfinding-runtime-test',
+		type: 'module'
+	}, null, '\t')}\n`);
+	applyCapability({ capabilityId: 'wayfinding', rootDirectory, targetDirectory });
+	const sourcePath = path.join(
+		targetDirectory,
 		'src',
 		'capabilities',
 		'wayfinding',
-		'harness-core.ts'
+		'vendor',
+		'wayfinding-viewer.js'
 	);
-	const module = await import(pathToFileURL(sourcePath).href) as unknown as {
-		WayfindingHarnessController: TestHarnessController;
-	};
+	const browserGlobal = globalThis as unknown as { window?: { document: { addEventListener(): void } } };
+	const previousWindow = browserGlobal.window;
+	let module: { WayfindingHarnessController: TestHarnessController };
+
+	try {
+		browserGlobal.window = { document: { addEventListener: (): void => undefined } };
+		module = await import(pathToFileURL(sourcePath).href) as {
+			WayfindingHarnessController: TestHarnessController;
+		};
+	} finally {
+		if (previousWindow) browserGlobal.window = previousWindow;
+		else delete browserGlobal.window;
+	}
 
 	return module.WayfindingHarnessController;
 };
@@ -152,7 +166,7 @@ void describe('Wayfinding capability materialization', (): void => {
 		assert.deepEqual(packageDocument.wallboardCapabilities, ['wayfinding']);
 		assert.equal(manifest.format, 'wallboard-wayfinding-viewer');
 		assert.equal(manifest.formatVersion, 1);
-		assert.equal(manifest.viewerVersion, '1.3.0');
+		assert.equal(manifest.viewerVersion, '1.4.0');
 		assert.equal(
 			sha256(path.join(vendorDirectory, manifest.files.module.path)),
 			manifest.files.module.sha256

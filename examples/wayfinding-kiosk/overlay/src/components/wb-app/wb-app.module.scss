@@ -723,9 +723,18 @@
 }
 
 .primary-action,
-.secondary-action {
+.secondary-action,
+.handoff-action {
 	width: 100%;
 	border-radius: 14px;
+}
+
+.destination-actions {
+	margin-top: 20px;
+}
+
+.destination-actions .primary-action {
+	margin-top: 0;
 }
 
 .primary-action {
@@ -791,6 +800,204 @@
 	border: 1px solid var(--wb-wayfinding-kiosk-border);
 	font-size: 12px;
 	font-weight: 700;
+}
+
+.handoff-action {
+	display: flex;
+	min-height: 58px;
+	align-items: center;
+	margin-top: 9px;
+	padding: 9px 13px;
+	text-align: left;
+	color: var(--wb-wayfinding-kiosk-text);
+	background: var(--wb-wayfinding-kiosk-accent-soft);
+	border: 1px solid var(--wb-wayfinding-kiosk-accent-border);
+}
+
+.handoff-action > svg:first-child {
+	margin-right: 11px;
+	color: var(--wb-wayfinding-kiosk-accent);
+}
+
+.handoff-action > svg:last-child {
+	margin-left: 10px;
+	color: var(--wb-wayfinding-kiosk-accent);
+}
+
+.handoff-action > span {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	flex-direction: column;
+}
+
+.handoff-action strong {
+	font-size: 13px;
+}
+
+.handoff-action small {
+	margin-top: 3px;
+	color: var(--wb-wayfinding-kiosk-muted);
+	font-size: 10px;
+}
+
+.handoff-backdrop {
+	position: absolute;
+	z-index: 100;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 48px;
+	background: rgba(3, 10, 8, 0.78);
+}
+
+.handoff-dialog {
+	position: relative;
+	display: flex;
+	width: 760px;
+	max-width: 100%;
+	min-height: 390px;
+	padding: 36px;
+	color: var(--wb-wayfinding-kiosk-text);
+	background: var(--wb-wayfinding-kiosk-panel);
+	border: 1px solid var(--wb-wayfinding-kiosk-accent-border);
+	border-radius: 28px;
+	box-shadow: 0 32px 90px rgba(0, 0, 0, 0.46);
+}
+
+.handoff-close {
+	position: absolute;
+	top: 18px;
+	right: 18px;
+	display: flex;
+	width: 42px;
+	height: 42px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--wb-wayfinding-kiosk-muted);
+	background: var(--wb-wayfinding-kiosk-soft);
+	border: 1px solid var(--wb-wayfinding-kiosk-border);
+	border-radius: 12px;
+}
+
+.handoff-copy {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 auto;
+	justify-content: center;
+	flex-direction: column;
+	padding: 14px 42px 14px 8px;
+}
+
+.handoff-kicker {
+	display: flex;
+	align-items: center;
+	color: var(--wb-wayfinding-kiosk-accent);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+}
+
+.handoff-kicker svg {
+	margin-right: 8px;
+}
+
+.handoff-copy h2 {
+	margin: 14px 0 10px;
+	font-size: 38px;
+	line-height: 1.05;
+	letter-spacing: -0.04em;
+}
+
+.handoff-copy > p {
+	max-width: 370px;
+	margin: 0;
+	color: var(--wb-wayfinding-kiosk-muted);
+	font-size: 15px;
+	line-height: 1.55;
+}
+
+.handoff-copy > div {
+	display: flex;
+	max-width: 370px;
+	margin-top: 28px;
+	padding: 14px 16px;
+	flex-direction: column;
+	background: var(--wb-wayfinding-kiosk-soft);
+	border: 1px solid var(--wb-wayfinding-kiosk-border);
+	border-radius: 14px;
+}
+
+.handoff-copy > div small {
+	color: var(--wb-wayfinding-kiosk-muted);
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+}
+
+.handoff-copy > div strong {
+	margin-top: 5px;
+	font-size: 15px;
+}
+
+.handoff-code {
+	display: flex;
+	width: 300px;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	padding: 18px;
+	color: #07110f;
+	background: #ffffff;
+	border-radius: 22px;
+	box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.handoff-code img {
+	display: block;
+	width: 264px;
+	height: 264px;
+}
+
+.handoff-code > small {
+	margin-top: 10px;
+	color: #4d5d59;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.handoff-loading {
+	display: flex;
+	width: 264px;
+	height: 264px;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	color: #4d5d59;
+}
+
+.handoff-loading > span {
+	width: 28px;
+	height: 28px;
+	margin-bottom: 12px;
+	border: 3px solid #d8e3df;
+	border-top-color: #0d7568;
+	border-radius: 50%;
+	animation: wb-wayfinding-kiosk-viewer-spin 900ms linear infinite;
+}
+
+.handoff-loading small {
+	max-width: 210px;
+	text-align: center;
+	font-size: 11px;
 }
 
 .detail-footer {

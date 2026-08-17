@@ -18,6 +18,7 @@ export interface Settings extends Record<string, unknown> {
 	backgroundColor: string;
 	panelColor: string;
 	mutedColor: string;
+	mobileAppUrl: string;
 }
 
 export interface ConfigValues {
@@ -29,4 +30,5 @@ export interface ConfigValues {
 	backgroundColor?: string;
 	panelColor?: string;
 	mutedColor?: string;
+	mobileAppUrl?: string;
 }

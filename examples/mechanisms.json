@@ -49,6 +49,7 @@
 		"guided-form": "Stepped input with validation and submission.",
 		"custom-settings-editor": "An editor surface beyond the property sidebar.",
 		"map-orientation": "Selecting a destination and showing the way to it.",
+		"mobile-route-handoff": "A QR link carrying a versioned semantic route state to a separate mobile wayfinding experience without exposing storage paths.",
 		"accessible-reach": "A viewer-toggled layout that moves controls within reach and enlarges touch targets, for kiosks used from a seated height."
 	},
 	"referenceExample": {
@@ -60,6 +61,7 @@
 		"guided-form": "factory-safety-questionnaire",
 		"canonical-wayfinding-viewer": "wayfinding-kiosk",
 		"map-orientation": "wayfinding-kiosk",
+		"mobile-route-handoff": "wayfinding-kiosk",
 		"on-screen-keyboard": "interactive-document-viewer",
 		"photographic-overlay": "weather-window",
 		"published-map-package": "wayfinding-kiosk",
