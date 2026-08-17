@@ -371,7 +371,10 @@
 
 .map-stage {
 	position: absolute;
-	inset: 0;
+	top: 0;
+	right: var(--wb-wayfinding-kiosk-detail-width);
+	bottom: 0;
+	left: var(--wb-wayfinding-kiosk-directory-width);
 	min-width: 0;
 	min-height: 0;
 	overflow: hidden;
@@ -394,9 +397,9 @@
 	position: absolute;
 	z-index: 8;
 	top: 22px;
-	left: calc(var(--wb-wayfinding-kiosk-directory-width) + 24px);
+	left: 24px;
 	display: flex;
-	max-width: calc(100% - var(--wb-wayfinding-kiosk-directory-width) - var(--wb-wayfinding-kiosk-detail-width) - 48px);
+	max-width: calc(100% - 48px);
 	align-items: center;
 	justify-content: space-between;
 	padding: 12px 14px;

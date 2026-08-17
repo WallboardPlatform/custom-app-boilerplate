@@ -92,6 +92,35 @@ test('replays the authored animated 2D route when a destination is selected', as
 	await expect(route).toHaveCSS('animation-name', 'route-reveal-even');
 });
 
+test('keeps 2D framing and origin scale stable while revealing one continuous authored route', async ({ page }): Promise<void> => {
+	const viewport = page.getByRole('application', { name: 'Interactive 2D wayfinding map' });
+	const map = page.locator('.wayfinding-viewer-2d-shell').locator('.map-transform');
+	const routeOverlay = page.locator('.wayfinding-viewer-2d-shell').locator('.route-overlay');
+	const route = routeOverlay.locator('.simulated-route');
+	const flow = routeOverlay.locator('.simulated-route-flow');
+	const origin = page.locator('.wayfinding-viewer-2d-shell').locator('.visitor-origin-marker__core');
+	const mapBefore = await map.getAttribute('style');
+	const originBefore = await origin.boundingBox();
+
+	await page.getByRole('button', { name: /Visitor services Ground floor Open/ }).click();
+	await expect(routeOverlay).toHaveAttribute('data-route-replay-token', '1');
+	await expect(map).toHaveAttribute('style', mapBefore ?? '');
+	await expect(routeOverlay.locator('.simulated-route-chevron')).toHaveCount(0);
+	await expect(flow).toHaveCSS('opacity', '0');
+	expect(await route.getAttribute('d')).toBe(await flow.getAttribute('d'));
+
+	await expect(flow).toHaveCSS('opacity', '1', { timeout: 2_000 });
+	await viewport.press('=');
+	const originAfter = await origin.boundingBox();
+
+	expect(originBefore).not.toBeNull();
+	expect(originAfter).not.toBeNull();
+	// Browser transform quantization can move an SVG edge by a fraction of one
+	// device pixel, but zoom must never scale the marker itself.
+	expect(Math.abs(originAfter!.width - originBefore!.width)).toBeLessThan(0.75);
+	expect(Math.abs(originAfter!.height - originBefore!.height)).toBeLessThan(0.75);
+});
+
 test('shows the complete exploded route without manual step navigation', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Visitor services Ground floor Open/ }).click();
 	await page.getByRole('button', { name: /Start 3D route/ }).click();
@@ -110,6 +139,23 @@ test('shows the complete exploded route without manual step navigation', async (
 
 	await page.getByRole('button', { name: /End route/ }).click();
 	await expect(root).toHaveAttribute('data-viewer-dimension', '2d');
+});
+
+test('reuses the prepared 3D scene when switching 3D to 2D before starting the route', async ({ page }): Promise<void> => {
+	const scene = page.locator('.wb-wayfinding-kiosk-scene');
+
+	await page.getByRole('button', { name: /Visitor services Ground floor Open/ }).click();
+	await page.getByRole('button', { name: '3D', exact: true }).click();
+	await expect(scene).toHaveAttribute('data-exploded-journey-motion', 'overview');
+	const preparedBuildCount = await scene.getAttribute('data-scene-builds');
+
+	await page.getByRole('button', { name: '2D', exact: true }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
+	await expect(scene).toHaveAttribute('data-wayfinding-viewer-mode', 'journey');
+	await expect(scene).toHaveAttribute('data-exploded-journey-motion', 'replay');
+	await expect(scene).toHaveAttribute('data-exploded-journey-camera-travel-ratio', '0.000');
+	await expect(scene).toHaveAttribute('data-exploded-journey-arrival-zoom', '1.000');
+	await expect(scene).toHaveAttribute('data-scene-builds', preparedBuildCount ?? '1');
 });
 
 test('finishes the route reveal and arrives in the destination camera orbit', async ({ page }): Promise<void> => {
