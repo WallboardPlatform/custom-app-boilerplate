@@ -2,8 +2,8 @@
 
 .wb-app {
 	@include reset-styles();
-	--wb-wayfinding-kiosk-directory-width: clamp(320px, 18.2vw, 350px);
-	--wb-wayfinding-kiosk-detail-width: clamp(340px, 19.3vw, 372px);
+	--wb-wayfinding-kiosk-directory-width: 350px;
+	--wb-wayfinding-kiosk-detail-width: 372px;
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -1106,13 +1106,21 @@
 	to { transform: rotate(360deg); }
 }
 
+@media (max-width: 1600px) {
+	.wb-app {
+		--wb-wayfinding-kiosk-directory-width: 320px;
+		--wb-wayfinding-kiosk-detail-width: 340px;
+	}
+}
+
 @media (max-width: 1280px) {
 	.wb-app {
-		display: flex;
+		--wb-wayfinding-kiosk-directory-width: 310px;
+		display: block;
 	}
 
-	.directory { width: 310px; min-width: 310px; }
-	.detail { width: 340px; min-width: 340px; }
+	.directory { min-width: 310px; }
+	.detail { min-width: 340px; }
 
 	.brand,
 	.directory-heading {
@@ -1133,10 +1141,12 @@
 
 @media (max-width: 900px) {
 	.wb-app {
-		display: flex;
+		--wb-wayfinding-kiosk-directory-width: 260px;
+		--wb-wayfinding-kiosk-detail-width: 0px;
+		display: block;
 	}
 
-	.directory { width: 260px; min-width: 260px; }
+	.directory { min-width: 260px; }
 
 	.detail {
 		display: none;
