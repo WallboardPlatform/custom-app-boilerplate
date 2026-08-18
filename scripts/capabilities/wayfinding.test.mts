@@ -166,7 +166,7 @@ void describe('Wayfinding capability materialization', (): void => {
 		assert.deepEqual(packageDocument.wallboardCapabilities, ['wayfinding']);
 		assert.equal(manifest.format, 'wallboard-wayfinding-viewer');
 		assert.equal(manifest.formatVersion, 1);
-		assert.equal(manifest.viewerVersion, '1.4.2');
+		assert.equal(manifest.viewerVersion, '1.4.3');
 		assert.equal(
 			sha256(path.join(vendorDirectory, manifest.files.module.path)),
 			manifest.files.module.sha256

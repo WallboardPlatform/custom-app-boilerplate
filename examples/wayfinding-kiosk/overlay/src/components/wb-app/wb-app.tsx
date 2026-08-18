@@ -265,7 +265,16 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (started) setJourneyActive(true);
 	};
 	const endJourney = (): void => {
-		harness()?.reset();
+		const currentHarness = harness();
+		const place = selected();
+
+		currentHarness?.reset();
+
+		// Leaving the 3D journey returns to the already selected route preview.
+		// Keeping the shell selection while resetting the harness to an empty site
+		// made the next Start action claim that no destination was selected.
+		if (place) currentHarness?.previewRoute(place.target);
+
 		setJourneyActive(false);
 	};
 	const toggleMuted = (): void => {

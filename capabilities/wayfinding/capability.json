@@ -6,15 +6,15 @@
 	"viewerArtifact": {
 		"format": "wallboard-wayfinding-viewer",
 		"formatVersion": 1,
-		"viewerVersion": "1.4.2",
+		"viewerVersion": "1.4.3",
 		"manifest": "src/capabilities/wayfinding/vendor/manifest.json"
 	},
 	"compressedAssets": [
 		{
 			"source": "vendor/wayfinding-viewer.js.gz",
 			"target": "src/capabilities/wayfinding/vendor/wayfinding-viewer.js",
-			"compressedSha256": "0082fc1d3d27f6383bd69598cd1d2a808a07a05fccee0d3920ead9a1dacb4d88",
-			"outputSha256": "ab10abeef83ff2b9903b136a1d807db19e299ea0335aba2e9e4236e7871601f1"
+			"compressedSha256": "3cbd47f478bc714b497c4dcaaf856e94ab653f2dc070268f60a2be44e40b3902",
+			"outputSha256": "61e444cdf84cb2719254be9d1a38ed2b72e24a77ff16febd0b9bfd2b4dfba4e9"
 		},
 		{
 			"source": "vendor/wayfinding-viewer.d.ts.gz",
