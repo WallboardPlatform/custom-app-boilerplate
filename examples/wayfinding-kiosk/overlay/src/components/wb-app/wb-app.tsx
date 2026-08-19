@@ -501,6 +501,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						)}>
 							<div class={style['journey-actions']}>
 								<button type="button" class={style['primary-action']} onClick={() => harness()?.replay({ speak: !muted() })}><span><Icon name="replay" /><strong>Replay route</strong><small>Camera and spoken guidance</small></span><Icon name="arrow" /></button>
+								<button type="button" class={style['handoff-action']} onClick={() => setHandoffOpen(true)}>
+									<Icon name="phone" /><span><strong>Take it with you</strong><small>Continue on your phone</small></span><Icon name="qr" />
+								</button>
 								<button type="button" class={style['secondary-action']} onClick={endJourney}>Back to campus</button>
 							</div>
 						</Show>

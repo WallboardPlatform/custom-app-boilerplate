@@ -6,10 +6,10 @@
 		},
 		"module": {
 			"path": "wayfinding-viewer.js",
-			"sha256": "61e444cdf84cb2719254be9d1a38ed2b72e24a77ff16febd0b9bfd2b4dfba4e9"
+			"sha256": "84a862ded233066dad06b5263634665d77c2519bb2ef9056c2784c1e1ae59854"
 		}
 	},
 	"format": "wallboard-wayfinding-viewer",
 	"formatVersion": 1,
-	"viewerVersion": "1.4.3"
+	"viewerVersion": "1.4.4"
 }

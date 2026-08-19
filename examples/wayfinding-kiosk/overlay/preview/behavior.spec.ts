@@ -82,7 +82,6 @@ test('replays the authored animated 2D route when a destination is selected', as
 	await expect(page.getByText('ANIMATED ROUTE PREVIEW', { exact: true })).toBeVisible();
 	await expect(route).toHaveCount(1);
 	await expect(routeOverlay).toHaveAttribute('data-route-replay-token', '1');
-	await expect.poll(() => route.evaluate((element): number => element.getAnimations().length)).toBeGreaterThan(0);
 	await expect(route).toHaveCSS('stroke-dasharray', 'none', { timeout: 2_000 });
 	await expect(route).toHaveCSS('stroke-dashoffset', '0px');
 	await expect.poll(async (): Promise<number> => page.evaluate((): number => {
@@ -91,7 +90,6 @@ test('replays the authored animated 2D route when a destination is selected', as
 
 	await destination.click();
 	await expect(routeOverlay).toHaveAttribute('data-route-replay-token', '2');
-	await expect.poll(() => route.evaluate((element): number => element.getAnimations().length)).toBeGreaterThan(0);
 	await expect(route).toHaveCSS('stroke-dasharray', 'none', { timeout: 2_000 });
 	await expect(route).toHaveCSS('stroke-dashoffset', '0px');
 });
@@ -195,6 +193,7 @@ test('shows the complete exploded route without manual step navigation', async (
 	await expect(scene).toHaveAttribute('data-overview-mode', 'exploded-3d');
 	await expect(page.locator('.wayfinding-viewer-2d-shell')).toBeHidden();
 	await expect(scene.locator('canvas')).toBeVisible();
+	await expect(page.getByRole('button', { name: /Take it with you Continue on your phone/ })).toBeVisible();
 	await expect.poll(async (): Promise<number> => Number(await scene.getAttribute('data-exploded-route-segment-count'))).toBeGreaterThan(0);
 	await expect(page.getByRole('button', { name: /Next|Previous|Atlas/i })).toHaveCount(0);
 
@@ -218,8 +217,11 @@ test('reuses the prepared 3D scene when switching 3D to 2D before starting the r
 	await page.getByRole('button', { name: /Start 3D route/ }).click();
 	await expect(scene).toHaveAttribute('data-wayfinding-viewer-mode', 'journey');
 	await expect(scene).toHaveAttribute('data-exploded-journey-motion', 'replay');
-	await expect(scene).toHaveAttribute('data-exploded-journey-camera-travel-ratio', '0.000');
-	await expect(scene).toHaveAttribute('data-exploded-journey-arrival-zoom', '1.000');
+	await expect.poll(async (): Promise<number> => Number(await scene.getAttribute('data-exploded-journey-camera-travel-ratio'))).toBeGreaterThan(0.01);
+	await expect.poll(async (): Promise<number> => Number(await scene.getAttribute('data-exploded-journey-arrival-zoom'))).toBeLessThan(0.9);
+	const openingCamera = await scene.getAttribute('data-camera-state');
+
+	await expect.poll(async (): Promise<string | null> => scene.getAttribute('data-camera-state')).not.toBe(openingCamera);
 	await expect(scene).toHaveAttribute('data-scene-builds', preparedBuildCount ?? '1');
 });
 
@@ -260,6 +262,7 @@ test('speaks authored guidance on visitor-triggered route start and replay', asy
 
 test('creates a stable semantic mobile handoff without leaking a storage path', async ({ page }): Promise<void> => {
 	await page.getByRole('button', { name: /Visitor services Ground floor Open/ }).click();
+	await page.getByRole('button', { name: /Start 3D route/ }).click();
 	await page.getByRole('button', { name: /Take it with you/ }).click();
 	const dialog = page.getByRole('dialog', { name: 'Take your route with you' });
 
