@@ -212,6 +212,10 @@ test('reuses the prepared 3D scene when switching 3D to 2D before starting the r
 	await page.getByRole('button', { name: '3D', exact: true }).click();
 	await expect(scene).toHaveAttribute('data-exploded-journey-motion', 'overview');
 	const preparedBuildCount = await scene.getAttribute('data-scene-builds');
+	const preparedCamera = (await scene.getAttribute('data-camera-state') ?? '').split(',').map(Number);
+
+	expect(preparedCamera).toHaveLength(5);
+	expect(preparedCamera.every(Number.isFinite)).toBe(true);
 
 	await page.getByRole('button', { name: '2D', exact: true }).click();
 	await page.getByRole('button', { name: /Start 3D route/ }).click();
@@ -220,7 +224,11 @@ test('reuses the prepared 3D scene when switching 3D to 2D before starting the r
 	await expect.poll(async (): Promise<number> => Number(await scene.getAttribute('data-exploded-journey-camera-travel-ratio'))).toBeGreaterThan(0.01);
 	await expect.poll(async (): Promise<number> => Number(await scene.getAttribute('data-exploded-journey-arrival-zoom'))).toBeLessThan(0.9);
 	const openingCamera = await scene.getAttribute('data-camera-state');
+	const journeyCamera = (openingCamera ?? '').split(',').map(Number);
 
+	expect(journeyCamera).toHaveLength(5);
+	expect(journeyCamera[3]).toBeCloseTo(preparedCamera[3], 5);
+	expect(journeyCamera[4]).toBeCloseTo(preparedCamera[4], 5);
 	await expect.poll(async (): Promise<string | null> => scene.getAttribute('data-camera-state')).not.toBe(openingCamera);
 	await expect(scene).toHaveAttribute('data-scene-builds', preparedBuildCount ?? '1');
 });

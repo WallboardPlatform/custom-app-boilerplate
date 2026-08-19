@@ -1,2 +1,3 @@
 *.gz binary
 *.pdf binary
+capabilities/wayfinding/overlay/src/capabilities/wayfinding/vendor/wayfinding-viewer.d.ts text eol=lf
