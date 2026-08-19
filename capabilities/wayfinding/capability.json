@@ -6,21 +6,21 @@
 	"viewerArtifact": {
 		"format": "wallboard-wayfinding-viewer",
 		"formatVersion": 1,
-		"viewerVersion": "1.4.0",
+		"viewerVersion": "1.4.4",
 		"manifest": "src/capabilities/wayfinding/vendor/manifest.json"
 	},
 	"compressedAssets": [
 		{
 			"source": "vendor/wayfinding-viewer.js.gz",
 			"target": "src/capabilities/wayfinding/vendor/wayfinding-viewer.js",
-			"compressedSha256": "988c5e290382e443535ed01c6f944e2db514f56d697b262871999a82661f90fc",
-			"outputSha256": "b7ddbff064d1c79f9e4f44ed6d08d243d12d8c06116b3a611d19986369371351"
+			"compressedSha256": "ec9711cc1f16a279eb85ca7e6b20c786face10dd93a2839c05b6150501e47f4f",
+			"outputSha256": "84a862ded233066dad06b5263634665d77c2519bb2ef9056c2784c1e1ae59854"
 		},
 		{
 			"source": "vendor/wayfinding-viewer.d.ts.gz",
 			"target": "src/capabilities/wayfinding/vendor/wayfinding-viewer.d.ts",
-			"compressedSha256": "db9260b9a92899a0c07db75bb595bf924d888deb00779fe32ba5ecdc2a6f88a6",
-			"outputSha256": "de69d68bc786b292320fb98cb5cbdf9ab31f3d18fe3395f1cbe88fbc23f6e14b"
+			"compressedSha256": "f7d0a7d52e5a7aa3ce913b528982c0128d22f330bce4f9e8d27b952a8fa3dac0",
+			"outputSha256": "5741346f87bb6a35ec15cca44853806426753c008ea8d17f5266a296f43eeb66"
 		}
 	],
 	"files": [

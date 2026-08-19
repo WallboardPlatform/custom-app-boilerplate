@@ -72,6 +72,19 @@ const Icon = (props: { name: IconName; size?: number }): JSX.Element => (
 
 const targetKey = (target: WayfindingViewerTarget): string => `${target.kind}:${target.id}`;
 
+interface DirectoryViewLevel {
+	id: string;
+	label: string;
+	places: KioskPlace[];
+}
+
+interface DirectoryViewGroup {
+	building?: KioskPlace;
+	id: string;
+	label: string;
+	levels: DirectoryViewLevel[];
+}
+
 const colorWithAlpha = (color: string, alpha: number, fallback: string): string => {
 	const match = color.trim().match(/^#([0-9a-f]{6})$/i);
 
@@ -87,6 +100,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 	const dataSources = useDataSources() as Accessor<DataSources>;
 	const [harness, setHarness] = createSignal<WayfindingHarness>();
 	const [places, setPlaces] = createSignal<KioskPlace[]>([]);
+	const [directoryGroups, setDirectoryGroups] = createSignal<NonNullable<WayfindingHarnessSnapshot['catalog']>['directory']>([]);
 	const [selected, setSelected] = createSignal<KioskPlace>();
 	const [query, setQuery] = createSignal('');
 	const [kind, setKind] = createSignal<'all' | 'building' | 'destination'>('all');
@@ -113,6 +127,14 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (noticeTimer !== undefined) window.clearTimeout(noticeTimer);
 		noticeTimer = window.setTimeout(() => setNotice(undefined), 5_000);
 	};
+	const clearNotice = (): void => {
+		setNotice(undefined);
+
+		if (noticeTimer !== undefined) {
+			window.clearTimeout(noticeTimer);
+			noticeTimer = undefined;
+		}
+	};
 	const themeStyle = createMemo((): JSX.CSSProperties => ({
 		'--wb-wayfinding-kiosk-accent': settings().accentColor,
 		'--wb-wayfinding-kiosk-background': settings().backgroundColor,
@@ -137,6 +159,35 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		datasourceBound() ? dataSources().destinationData?.value : sampleDatasource
 	));
 	const filteredPlaces = createMemo(() => filterKioskPlaces(places(), query(), language(), kind()));
+	const visibleDirectory = createMemo((): DirectoryViewGroup[] => {
+		const placeByKey = new Map(places().map((place): [string, KioskPlace] => [targetKey(place.target), place]));
+		const matches = (place: KioskPlace): boolean => filterKioskPlaces(
+			[place],
+			query(),
+			language(),
+			kind()
+		).length > 0;
+
+		return directoryGroups().flatMap((group): DirectoryViewGroup[] => {
+			const building = group.building
+				? placeByKey.get(targetKey({ id: group.building.id, kind: 'building' }))
+				: undefined;
+			const buildingMatches = building ? matches(building) : false;
+			const levels = group.levels.map((level): DirectoryViewLevel => ({
+				id: level.id,
+				label: level.label,
+				places: level.destinations.flatMap((destination): KioskPlace[] => {
+					const place = placeByKey.get(targetKey({ id: destination.id, kind: 'destination' }));
+
+					return place && (buildingMatches || matches(place)) ? [place] : [];
+				})
+			})).filter((level) => level.places.length > 0);
+
+			return buildingMatches || levels.length > 0
+				? [{ building: buildingMatches || kind() === 'all' ? building : undefined, id: group.id, label: group.label, levels }]
+				: [];
+		});
+	});
 	const selectedStatus = createMemo(() => {
 		const place = selected();
 
@@ -199,6 +250,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		const currentHarness = harness();
 
 		if (journeyActive()) currentHarness?.reset();
+		clearNotice();
 		setSelected(place);
 		setJourneyActive(false);
 
@@ -213,7 +265,16 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		if (started) setJourneyActive(true);
 	};
 	const endJourney = (): void => {
-		harness()?.reset();
+		const currentHarness = harness();
+		const place = selected();
+
+		currentHarness?.reset();
+
+		// Leaving the 3D journey returns to the already selected route preview.
+		// Keeping the shell selection while resetting the harness to an empty site
+		// made the next Start action claim that no destination was selected.
+		if (place) currentHarness?.previewRoute(place.target);
+
 		setJourneyActive(false);
 	};
 	const toggleMuted = (): void => {
@@ -229,9 +290,11 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 		setError(snapshot.error);
 
 		if (snapshot.notice) showNotice(snapshot.notice);
+		else clearNotice();
 
 		if (snapshot.catalog) {
 			setPlaces(buildKioskPlaces(snapshot.catalog.buildings, snapshot.catalog.destinations));
+			setDirectoryGroups(snapshot.catalog.directory);
 			setAssets(snapshot.catalog.assets);
 			setLevels(snapshot.catalog.levels);
 			setMapProjectName(snapshot.catalog.projectName);
@@ -269,8 +332,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			data-selected-target={selected() ? targetKey(selected()!.target) : ''}
 			data-spoken-guidance-ready={guidanceAvailable()}
 			data-viewer-ready={!loading() && !error()}
+			data-wayfinding-stage
 		>
-			<aside class={`${style.directory} wb-wayfinding-kiosk-directory`} data-wayfinding-overlay aria-label="Destination directory">
+			<aside class={`${style.directory} wb-wayfinding-kiosk-directory`} data-wayfinding-overlay="left" aria-label="Destination directory">
 				<header class={style.brand}>
 					<div class={style['brand-mark']}><Icon name="map" size={24} /></div>
 					<div>
@@ -301,31 +365,38 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				</div>
 				<div class={style.results} data-preview-allow-overflow aria-live="polite">
 					<div class={style['results-meta']}><span>{filteredPlaces().length} destinations</span><small>{datasourceBound() ? 'Live status' : 'Sample status'}</small></div>
-					<For each={filteredPlaces()} fallback={<div class={style.empty}>No places match this search.</div>}>
-						{(place) => {
-							const status = (): DestinationLiveStatus | undefined => statuses().get(place.entity.id);
-							const active = (): boolean => selected()?.entity.id === place.entity.id && selected()?.kind === place.kind;
-
-							return <button
-								type="button"
-								class={`${style['place-row']} ${active() ? style.selected : ''} ${status()?.available === false ? style.unavailable : ''}`}
-								onClick={() => selectPlace(place)}
-							>
-								<span class={style['place-icon']}><Icon name={place.kind === 'building' ? 'building' : 'map'} size={19} /></span>
-								<span class={style['place-copy']}>
-									<strong class="wb-wayfinding-kiosk-place-name">{localizedPlaceName(place, language())}</strong>
-									<small>{placeFloorLabel(place, levels())}</small>
-								</span>
-								<Show when={status()?.status}><span class={style['status-dot']} title={status()?.status} /></Show>
+					<For each={visibleDirectory()} fallback={<div class={style.empty}>No places match this search.</div>}>
+						{(group) => <section class={style['directory-group']}>
+							<div class={style['directory-group-heading']}>
+								<span>{group.label}</span>
+								<small>{group.levels.reduce((total, level) => total + level.places.length, 0)} places</small>
+							</div>
+							<Show when={group.building}>{(building) => <button type="button" class={`${style['place-row']} ${style['building-row']}`} onClick={() => selectPlace(building())}>
+								<span class={style['place-icon']}><Icon name="building" size={19} /></span>
+								<span class={style['place-copy']}><strong>{localizedPlaceName(building(), language())}</strong><small>Building overview</small></span>
 								<Icon name="arrow" size={18} />
-							</button>;
-						}}
+							</button>}</Show>
+							<For each={group.levels}>{(level) => <div class={style['directory-level']}>
+								<div class={style['directory-level-heading']}><span />{level.label}</div>
+								<For each={level.places}>{(place) => {
+									const status = (): DestinationLiveStatus | undefined => statuses().get(place.entity.id);
+									const active = (): boolean => selected()?.entity.id === place.entity.id && selected()?.kind === place.kind;
+
+									return <button type="button" class={`${style['place-row']} ${style['destination-row']} ${active() ? style.selected : ''} ${status()?.available === false ? style.unavailable : ''}`} onClick={() => selectPlace(place)}>
+										<span class={style['place-icon']}><Icon name="map" size={18} /></span>
+										<span class={style['place-copy']}><strong class="wb-wayfinding-kiosk-place-name">{localizedPlaceName(place, language())}</strong><small>{level.label}</small></span>
+										<Show when={status()?.status}><span class={style['status-dot']} title={status()?.status} /></Show>
+										<Icon name="arrow" size={18} />
+									</button>;
+								}}</For>
+							</div>}</For>
+						</section>}
 					</For>
 				</div>
 			</aside>
 
-			<main class={`wb-wayfinding-kiosk-stage ${style['map-stage']}`} data-wayfinding-stage aria-label="Interactive wayfinding map">
-				<div class={style['map-header']}>
+			<main class={`wb-wayfinding-kiosk-stage ${style['map-stage']}`} aria-label="Interactive wayfinding map">
+				<div class={style['map-header']} data-wayfinding-overlay="top">
 					<div><small>{journeyActive() ? 'COMPLETE ROUTE' : viewerMode() === 'route' && viewDimension() === '2d' ? 'ANIMATED ROUTE PREVIEW' : viewDimension() === '2d' ? '2D CAMPUS MAP' : '3D CAMPUS OVERVIEW'}</small><strong>{selected() ? localizedPlaceName(selected()!, language()) : mapProjectName()}</strong></div>
 					<div class={style['map-header-badge']}><span /> Live wayfinding</div>
 				</div>
@@ -350,7 +421,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 				/>
 				<Show when={loading()}><div class={style.loader}><span /><strong>Preparing the map</strong><small>Loading authored geometry and presentation</small></div></Show>
 				<Show when={error()}>{(message) => <div class={style.error} role="alert"><strong>Map unavailable</strong><span>{message()}</span></div>}</Show>
-				<div class={`${style['map-controls']} wb-wayfinding-kiosk-toolbar`} data-wayfinding-overlay>
+				<div class={`${style['map-controls']} wb-wayfinding-kiosk-toolbar`} data-wayfinding-overlay="bottom">
 					<Show when={journeyActive()} fallback={(
 						<>
 							<button
@@ -377,11 +448,12 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						harness()?.setProfile(next);
 					}}><Icon name="accessibility" /><span>Step-free</span></button>
 					<button type="button" class={muted() ? style.active : undefined} onClick={toggleMuted}><Icon name={muted() ? 'volume-off' : 'volume'} /><span>{muted() ? 'Muted' : 'Audio'}</span></button>
+					<Show when={selected()}><button type="button" onClick={() => setHandoffOpen(true)}><Icon name="phone" /><span>Take route</span></button></Show>
 				</div>
 				<Show when={notice()}>{(message) => <div class={style.notice} role="status">{message()}</div>}</Show>
 			</main>
 
-			<aside class={`${style.detail} wb-wayfinding-kiosk-detail`} data-wayfinding-overlay aria-label="Destination details">
+			<aside class={`${style.detail} wb-wayfinding-kiosk-detail`} data-wayfinding-overlay="right" aria-label="Destination details">
 				<Show when={selected()} fallback={(
 					<div class={style['detail-empty']}>
 						<div class={style['detail-illustration']}><Icon name="layers" size={36} /></div>
@@ -429,6 +501,9 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 						)}>
 							<div class={style['journey-actions']}>
 								<button type="button" class={style['primary-action']} onClick={() => harness()?.replay({ speak: !muted() })}><span><Icon name="replay" /><strong>Replay route</strong><small>Camera and spoken guidance</small></span><Icon name="arrow" /></button>
+								<button type="button" class={style['handoff-action']} onClick={() => setHandoffOpen(true)}>
+									<Icon name="phone" /><span><strong>Take it with you</strong><small>Continue on your phone</small></span><Icon name="qr" />
+								</button>
 								<button type="button" class={style['secondary-action']} onClick={endJourney}>Back to campus</button>
 							</div>
 						</Show>
@@ -449,7 +524,7 @@ export default (props: { hostElement: HTMLDivElement }): JSX.Element => {
 			</aside>
 
 			<Show when={handoffOpen()}>
-				<div class={style['handoff-backdrop']} data-wayfinding-overlay role="presentation" onClick={() => setHandoffOpen(false)}>
+				<div class={style['handoff-backdrop']} data-wayfinding-overlay="ignore" role="presentation" onClick={() => setHandoffOpen(false)}>
 					<section class={style['handoff-dialog']} data-handoff-url={handoffUrl()} role="dialog" aria-modal="true" aria-labelledby="wayfinding-handoff-title" onClick={(event) => event.stopPropagation()}>
 						<button type="button" class={style['handoff-close']} aria-label="Close mobile handoff" onClick={() => setHandoffOpen(false)}><Icon name="close" /></button>
 						<div class={style['handoff-copy']}>

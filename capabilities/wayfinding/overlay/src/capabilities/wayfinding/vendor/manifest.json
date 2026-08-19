@@ -2,14 +2,14 @@
 	"files": {
 		"declaration": {
 			"path": "wayfinding-viewer.d.ts",
-			"sha256": "de69d68bc786b292320fb98cb5cbdf9ab31f3d18fe3395f1cbe88fbc23f6e14b"
+			"sha256": "5741346f87bb6a35ec15cca44853806426753c008ea8d17f5266a296f43eeb66"
 		},
 		"module": {
 			"path": "wayfinding-viewer.js",
-			"sha256": "b7ddbff064d1c79f9e4f44ed6d08d243d12d8c06116b3a611d19986369371351"
+			"sha256": "84a862ded233066dad06b5263634665d77c2519bb2ef9056c2784c1e1ae59854"
 		}
 	},
 	"format": "wallboard-wayfinding-viewer",
 	"formatVersion": 1,
-	"viewerVersion": "1.4.0"
+	"viewerVersion": "1.4.4"
 }

@@ -1,28 +1,28 @@
 {
 	"reviewVersion": 1,
-	"sourceHash": "843d7b94d06421cfa6df536360b7b948181eb2d01705773a743e7d49dcf8f23b",
-	"reviewedAt": "2026-08-14T11:38:00+02:00",
+	"sourceHash": "2a99e0152620a4eb98d1e7126544d22e2e15b0094074673d588b8bd748c85689",
+	"reviewedAt": "2026-08-19T09:45:59.8253653Z",
 	"reviewer": "Codex",
 	"criteria": [
 		{
 			"id": "promptFidelity",
 			"status": "pass",
-			"notes": "Selection shows the authored animated 2D route before the complete 3D journey, with a separate QR continuation action."
+			"notes": "Selection exposes the authored continuous 2D route, route-safe animated 3D camera journey, spoken guidance, and handoff during navigation."
 		},
 		{
 			"id": "referenceFidelity",
 			"status": "pass",
-			"notes": "The Studio fixture retains its artwork, polygon styling, labels, marker, route styling, and floor geometry in every state."
+			"notes": "The Studio fixture retains its artwork, polygon styling, labels, markers, route styling, and floor geometry in every state."
 		},
 		{
 			"id": "visualSpecificity",
 			"status": "pass",
-			"notes": "The map-first directory, destination rail, route controls, and focused QR modal form a specific kiosk-to-phone experience."
+			"notes": "The map-first hierarchical directory, destination rail, route controls, and focused QR modal form a specific kiosk-to-phone experience."
 		},
 		{
 			"id": "distanceReadability",
 			"status": "pass",
-			"notes": "Primary prompt, directory rows, route action, QR instructions, and destination status remain legible across Full HD captures."
+			"notes": "Primary prompt, grouped directory rows, route actions, QR instructions, and destination status remain legible across every Full HD capture."
 		},
 		{
 			"id": "themeContrast",
@@ -32,29 +32,29 @@
 		{
 			"id": "dynamicTextSafety",
 			"status": "pass",
-			"notes": "Long venue and welcome copy remain contained without obscuring search, filters, results, or route actions."
+			"notes": "Long venue and welcome copy remain contained without obscuring search, filters, grouped results, or route actions."
 		},
 		{
 			"id": "surfaceComposition",
 			"status": "pass",
-			"notes": "All ten captures keep the map dominant while directory and detail rails remain balanced; the QR dialog has a clear scan target."
+			"notes": "All ten captures keep the map dominant inside the safe area while directory and detail rails remain balanced; the journey retains route handoff."
 		},
 		{
 			"id": "assetAndThemeQuality",
 			"status": "pass",
-			"notes": "Studio artwork and the canonical viewer render cleanly in 2D, normal 3D, exploded journey, theme, and modal states."
+			"notes": "Studio artwork and the canonical viewer render cleanly in 2D, normal 3D, animated exploded route, theme, and modal states."
 		},
 		{
 			"id": "exampleSameness",
 			"status": "pass",
-			"notes": "This remains the sole canonical Wayfinding reference and now uniquely teaches a semantic mobile route handoff."
+			"notes": "This remains the sole canonical Wayfinding reference and uniquely teaches consumer-safe map overlays plus semantic mobile route handoff."
 		}
 	],
 	"screenshots": [
 		{
 			"file": "app-default-1920x1080.png",
 			"status": "pass",
-			"notes": "Balanced default site view with complete directory, stage, details, and controls."
+			"notes": "Balanced default site view with hierarchical directory, safe map stage, destination rail, and controls."
 		},
 		{
 			"file": "scenario-custom-theme-1920x1080.png",
@@ -64,7 +64,7 @@
 		{
 			"file": "scenario-full-hd-overview-1920x1080.png",
 			"status": "pass",
-			"notes": "Full HD overview preserves the intended map-first hierarchy and complete site context."
+			"notes": "Full HD overview preserves the map-first hierarchy, complete site context, and panel-safe framing."
 		},
 		{
 			"file": "scenario-light-theme-1920x1080.png",
@@ -74,17 +74,17 @@
 		{
 			"file": "scenario-live-unavailable-status-1920x1080.png",
 			"status": "pass",
-			"notes": "Unavailable status is prominent and route start is visibly disabled without changing the scene."
+			"notes": "Unavailable status is prominent and route start is visibly disabled without rebuilding the scene."
 		},
 		{
 			"file": "scenario-long-copy-1920x1080.png",
 			"status": "pass",
-			"notes": "Long prompt copy wraps safely while preserving the interactive directory."
+			"notes": "Long prompt copy wraps safely while preserving the interactive hierarchical directory."
 		},
 		{
 			"file": "scenario-mobile-handoff-1920x1080.png",
 			"status": "pass",
-			"notes": "QR modal has strong focus, a large scannable code, selected destination context, and clean encoding-safe instructions."
+			"notes": "QR modal has strong focus, a large scannable code, selected destination context, and clear instructions."
 		},
 		{
 			"file": "scenario-normal-3d-overview-1920x1080.png",
@@ -94,12 +94,12 @@
 		{
 			"file": "scenario-route-journey-1920x1080.png",
 			"status": "pass",
-			"notes": "Exploded 3D journey shows the complete authored route, camera state, destination details, replay, and end controls."
+			"notes": "Exploded 3D journey keeps the complete authored route inside the kiosk safe area while visibly orbiting and zooming, with replay, handoff, and exit controls."
 		},
 		{
 			"file": "scenario-route-preview-1920x1080.png",
 			"status": "pass",
-			"notes": "The authored path, route markers, and Start 3D route action are clear in ordinary 2D."
+			"notes": "The continuous authored path, route markers, Start 3D route action, and persistent handoff remain clear in ordinary 2D."
 		}
 	],
 	"unresolvedFindings": []

@@ -256,6 +256,13 @@ const readHostStyleFingerprint = async (page: Page): Promise<unknown[]> => {
 
 for (const preset of [...presets, ...scenarioPresets]) {
 	test(`${preset.name} ${preset.width}x${preset.height}`, async ({ page }): Promise<void> => {
+		if (preset.scenario === 'route-journey') {
+			// The WebGL journey keeps rendering while the screenshot compositor is forced
+			// through two complete repaints. This is comfortably below the default timeout
+			// locally, but slower Linux CI runners need the standard Playwright slow budget.
+			test.slow();
+		}
+
 		const runtimeErrors: string[] = [];
 		const failedLocalRequests: string[] = [];
 
