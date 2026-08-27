@@ -577,6 +577,120 @@ void describe('generation brief project synchronization', () => {
 		await assert.rejects(validateBriefAgainstProject(context, brief), /themePreset/);
 	});
 
+	void it('accepts a quickEdit opt-in on a supported control', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'headline', purpose: 'The headline shown on the widget.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{
+					label: 'Content',
+					type: 'group',
+					properties: [{
+						label: 'Headline',
+						type: 'text',
+						property: 'headline',
+						quickEdit: { label: 'Headline', order: 10, defaultEnabled: true }
+					}]
+				}]
+			})
+		);
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('rejects quickEdit on a control the quick editor cannot render yet', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'mode', purpose: 'Picks the rendering mode.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{
+					label: 'Mode',
+					type: 'select',
+					property: 'mode',
+					options: [{ label: 'A', value: 'a' }],
+					quickEdit: true
+				}]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /quickEdit is not supported on 'select'/);
+	});
+
+	void it('rejects quickEdit on a property group', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{ label: 'Appearance', type: 'group', quickEdit: true, properties: [] }]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /property group 'Appearance' must not declare quickEdit/);
+	});
+
+	void it('rejects an unknown key in a quickEdit declaration', async (testContext) => {
+		const brief = createValidBrief();
+		brief.settings.push({ property: 'headline', purpose: 'The headline shown on the widget.' });
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{
+					label: 'Headline',
+					type: 'text',
+					property: 'headline',
+					quickEdit: { label: 'Headline', alwaysOn: true }
+				}]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /unknown key 'alwaysOn'/);
+	});
+
+	// Font controls address a container plus a fixed CSS key, which the quick editor cannot target yet
+	void it('rejects quickEdit on a propertyContainer-based control', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(
+			context.propertiesPath,
+			JSON.stringify({
+				name: brief.app.name,
+				version: brief.app.version,
+				size: { width: '1920px', height: '1080px' },
+				properties: [{
+					label: 'Headline font',
+					type: 'fontFamily',
+					propertyContainer: 'headlineStyle',
+					quickEdit: true
+				}]
+			})
+		);
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /quickEdit requires a 'property' name/);
+	});
+
 	void it('rejects nested editor property groups for every brief version', async (testContext) => {
 		const brief = createValidBrief();
 		const context = createProject(brief);

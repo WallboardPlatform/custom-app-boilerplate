@@ -15,7 +15,11 @@
 					"label": "Title",
 					"type": "text",
 					"property": "title",
-					"default": "Your custom app"
+					"default": "Your custom app",
+					"quickEdit": {
+						"label": "Title",
+						"defaultEnabled": true
+					}
 				}
 			]
 		},
@@ -27,7 +31,8 @@
 					"label": "Accent color",
 					"type": "color",
 					"property": "accentColor",
-					"default": "#15c39a"
+					"default": "#15c39a",
+					"quickEdit": true
 				},
 				{
 					"label": "Text color",

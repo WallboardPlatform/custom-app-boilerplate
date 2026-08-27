@@ -228,6 +228,106 @@ const validatePropertyNesting = (
 	}
 };
 
+// Property types the quick editor can render today. Everything else is either valueless (button, dividers, group),
+// resolved by another mechanism (dataPicker goes through the content-wide datasource override), or still pending
+// (select, file, iconSelect, folder and the propertyContainer-based font controls).
+const QUICK_EDIT_SUPPORTED_TYPES = new Set(['text', 'textArea', 'number', 'slider', 'checkbox', 'color']);
+
+const QUICK_EDIT_DECLARATION_KEYS = new Set(['label', 'order', 'defaultEnabled']);
+
+// Baking a long option list into every content that places the app is wasteful; warn well before it hurts
+const QUICK_EDIT_LABEL_MAX_LENGTH = 60;
+
+/**
+ * Validates the optional `quickEdit` opt-in on property blocks.
+ * The declaration only says what MAY be quick-edited; whether it actually is stays a per-tag designer decision.
+ */
+const validateQuickEditDeclarations = (
+	context: ProjectValidationContext,
+	properties: unknown
+): void => {
+	if (!Array.isArray(properties)) {
+		return fail(context, 'properties.json properties must be an array.');
+	}
+
+	for (const propertyValue of properties) {
+		const property = requireObject(context, propertyValue, 'properties[]');
+		const isGroup = Array.isArray(property.properties);
+
+		if (isGroup) {
+			if (property.quickEdit !== undefined) {
+				const label: string = typeof property.label === 'string' ? property.label : '(unlabelled)';
+
+				fail(context, `property group '${label}' must not declare quickEdit; declare it on the individual controls instead.`);
+			}
+
+			validateQuickEditDeclarations(context, property.properties);
+
+			continue;
+		}
+
+		if (property.quickEdit === undefined) {
+			continue;
+		}
+
+		const propertyType = typeof property.type === 'string' ? property.type : '';
+		const propertyName = typeof property.property === 'string' ? property.property : '';
+
+		if (typeof property.quickEdit !== 'boolean' && !isObject(property.quickEdit)) {
+			fail(context, `quickEdit on '${propertyName || propertyType}' must be a boolean or an object.`);
+		}
+
+		if (property.quickEdit === false) {
+			continue;
+		}
+
+		if (!propertyName) {
+			fail(
+				context,
+				`quickEdit requires a 'property' name; '${propertyType}' controls addressed by propertyContainer are not quick-editable yet.`
+			);
+		}
+
+		if (!QUICK_EDIT_SUPPORTED_TYPES.has(propertyType)) {
+			fail(
+				context,
+				`quickEdit is not supported on '${propertyType}' property '${propertyName}'. Supported types: ${[...QUICK_EDIT_SUPPORTED_TYPES].sort().join(', ')}.`
+			);
+		}
+
+		if (!isObject(property.quickEdit)) {
+			continue;
+		}
+
+		for (const key of Object.keys(property.quickEdit)) {
+			if (!QUICK_EDIT_DECLARATION_KEYS.has(key)) {
+				fail(
+					context,
+					`quickEdit on '${propertyName}' has an unknown key '${key}'. Allowed keys: ${[...QUICK_EDIT_DECLARATION_KEYS].sort().join(', ')}.`
+				);
+			}
+		}
+
+		const {label, order, defaultEnabled} = property.quickEdit;
+
+		if (label !== undefined && (typeof label !== 'string' || label.trim().length === 0)) {
+			fail(context, `quickEdit.label on '${propertyName}' must be a non-empty string.`);
+		}
+
+		if (typeof label === 'string' && label.length > QUICK_EDIT_LABEL_MAX_LENGTH) {
+			fail(context, `quickEdit.label on '${propertyName}' must be at most ${QUICK_EDIT_LABEL_MAX_LENGTH} characters.`);
+		}
+
+		if (order !== undefined && (typeof order !== 'number' || !Number.isFinite(order))) {
+			fail(context, `quickEdit.order on '${propertyName}' must be a number.`);
+		}
+
+		if (defaultEnabled !== undefined && typeof defaultEnabled !== 'boolean') {
+			fail(context, `quickEdit.defaultEnabled on '${propertyName}' must be a boolean.`);
+		}
+	}
+};
+
 const setsMatch = (left: Set<string>, right: Set<string>): boolean => {
 	return left.size === right.size && [...left].every((value) => right.has(value));
 };
@@ -281,6 +381,7 @@ export const validateBriefAgainstProject = async (
 ): Promise<void> => {
 	const properties = readJsonFile(context, context.propertiesPath, 'properties.json');
 	validatePropertyNesting(context, properties.properties);
+	validateQuickEditDeclarations(context, properties.properties);
 	const propertySummary = collectProperties(context, properties.properties);
 
 	if (brief.briefVersion >= 4) {

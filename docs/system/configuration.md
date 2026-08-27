@@ -44,6 +44,34 @@ Editor wizards and layout editors are opt-in under `templates/editor-assets/`. C
 
 Functional controls require `label`, `type`, and `property` (font controls use `propertyContainer`). Add concise tooltips only where the decision is unclear.
 
+## Quick Edit
+
+An optional `quickEdit` key marks a control as editable from the platform's Quick Editor, so a content author can change it without opening the designer.
+
+```json
+{
+	"label": "Title",
+	"type": "text",
+	"property": "title",
+	"default": "Your custom app",
+	"quickEdit": { "label": "Title", "order": 10, "defaultEnabled": true }
+}
+```
+
+`quickEdit: true` is shorthand for an empty declaration. Every field is optional:
+
+| Field | Default | Meaning |
+|-------|---------|---------|
+| `label` | the control's own `label` | Caption shown in the Quick Editor. Free text, no translation pipeline. |
+| `order` | declaration order | Ascending order within the widget. |
+| `defaultEnabled` | `false` | Whether the toggle starts on for a **newly placed** tag. Already placed tags are never changed. |
+
+Supported on `text`, `textArea`, `number`, `slider`, `checkbox` and `color`. `select`, `file`, `iconSelect`, `folder` and the `propertyContainer`-based font controls are not supported yet, and `group`, `button` and the dividers never will be — they carry no value. `dataPicker` needs nothing: an app's datasource binding is already re-pointable through the Quick Editor's base data path control.
+
+The declaration only says what **may** be quick-edited. Whether it actually is stays a per-tag decision: the designer renders a `Quick editable` switch under each declared control, exactly like the built-in widgets. A slider appears as a plain number field, without its `min`/`max`/`step`.
+
+Do not confuse this with `quickEditEligible` in `datasource-contract.json`, which is about editing the rows of a generated TABLE datasource.
+
 ## Mapping
 
 Normalize and clamp values in `src/settings.ts`; components consume only mapped `Settings`.
