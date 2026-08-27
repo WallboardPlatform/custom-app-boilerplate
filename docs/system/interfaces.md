@@ -7,6 +7,7 @@ Check existing types before adding another model.
 | Raw editor values, mapped settings, datasource wrappers | `src/interfaces/application.interface.ts` |
 | Domain rows/models shared by components | `src/interfaces/<domain>.interface.ts` |
 | Small private implementation shape | Beside the owning utility/service when not reused |
+| Platform payloads owned by a system hook | The hook itself, e.g. `SensorEvent` from `@hooks/system/useSensorEventListener` |
 
 Core roles:
 

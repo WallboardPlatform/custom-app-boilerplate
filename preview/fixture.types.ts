@@ -20,6 +20,11 @@ export interface PreviewPlatformFixture {
 	filesByFolder?: Record<string, unknown[]>;
 	weatherByLocation?: Record<string, unknown>;
 	weatherErrorsByLocation?: Record<string, string>;
+	/**
+	 * Whether the displayer sensor bridge is exposed. Defaults to 'available'.
+	 * Use 'unavailable' to reproduce the editor or a client without sensor support.
+	 */
+	sensorSource?: 'available' | 'unavailable';
 }
 
 export interface PreviewScenario {

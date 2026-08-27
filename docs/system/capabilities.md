@@ -15,6 +15,7 @@ Reuse these mechanics without inheriting an example's visual language.
 | Built-in data | FEED/CALENDAR normalization and independent multi-source composition | `newsroom-spotlight`, `live-agenda`, `civic-venue-pulse` |
 | Editable general data | TABLE contract and synthetic template | `airport-departures`, `restaurant-menu` |
 | Interactive runtime | `createPageSession`, `createInternalDatasourceWriter`, preview external commands | Reset/timeout, displayer-only mutation, command and output tests |
+| Sensor input | `useSensorEventListener`; widget-side filtering, `ignoreOwn` for echoes | `preview/sensor-events.spec.ts`; delivery, removal, and bridge-unavailable states |
 | Touch text entry | Opt-in `keyboard` capability with controlled values and selectable layouts | `veszprem-wayfinding` proves Hungarian + English destination search; `pdf-document-workspace` proves document search |
 | Authored rendering | Fixed-canvas, motion, and media helpers | Design-size fit, motion tokens/reduction, media fit/fallback |
 | PDF documents | Opt-in `pdf` capability; PDF.js 2.3.200 is materialized only on request | `pdf-document-workspace`: multiple files, range/layout/fit, lazy pages, outline/search/link/annotation/form layers, zoom, auto-scroll, download, commands, cleanup |
@@ -32,7 +33,7 @@ Planned capability proofs and their promotion gates live in [capability-roadmap.
 - Derive every semantic surface from the active theme tokens. Use `mixHexColors` for legacy-safe tones and `readableTextColor` for text on configurable accents; never combine preset text with fixed dark surfaces.
 - Missing, empty, invalid, maximum, odd, long-text, broken-media, last-page, and live-update states are capabilities to design and test, not one shared layout.
 - Examples prove techniques. The prompt/reference/domain still determines hierarchy, palette, density, geometry, media treatment, and pagination style.
-- Preview exposes datasources, actions, sensor events, and commands. Guard writes; editor mode returns `editor-blocked`.
+- Preview exposes datasources, actions, outgoing and incoming sensor events, and commands. Guard writes; editor mode returns `editor-blocked`.
 
 ## Opt-in capabilities
 

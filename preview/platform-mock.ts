@@ -7,13 +7,23 @@ export interface PlatformMockAction {
 	payload: JsonObject;
 }
 
+export interface PlatformMockSensorEvent {
+	id?: string;
+	event?: string;
+	value?: unknown;
+}
+
 export interface PlatformMockController {
 	datasourceActions: PlatformMockAction[];
+	/** Events the application sent out through IApiService.triggerSensorEvent(). */
 	sensorEvents: unknown[];
 	cachedUrls: string[];
 	getDatasource: (id: string) => unknown;
 	getOwnValue: (id: string) => unknown;
 	setDatasource: (id: string, value: unknown) => void;
+	/** Delivers an incoming sensor event to every listener registered on the sensor bridge. */
+	emitSensorEvent: (event: PlatformMockSensorEvent) => void;
+	sensorEventListenerCount: () => number;
 }
 
 const isObject = (value: unknown): value is JsonObject => {
@@ -97,6 +107,7 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 	const ownValues: Record<string, unknown> = {};
 	const datasourceActions: PlatformMockAction[] = [];
 	const sensorEvents: unknown[] = [];
+	const sensorEventListeners: Array<(event: unknown) => void> = [];
 	const cachedUrls: string[] = [];
 	const noOperation = (): undefined => undefined;
 
@@ -241,12 +252,53 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 		cachedUrls,
 		getDatasource: (id: string): unknown => clone(datasources[id]),
 		getOwnValue: (id: string): unknown => clone(ownValues[id]),
-		setDatasource
+		setDatasource,
+		emitSensorEvent: (event: PlatformMockSensorEvent): void => {
+			// Snapshot first: a listener may dispose itself while the event is being delivered.
+			[...sensorEventListeners].forEach((listener: (event: unknown) => void): void => {
+				listener(clone(event));
+			});
+		},
+		sensorEventListenerCount: (): number => sensorEventListeners.length
 	};
 
 	Object.defineProperty(window, 'CustomWidgetAPI', {
 		configurable: true,
 		value: methods,
+		writable: true
+	});
+
+	// The displayer exposes the sensor bridge and the client interface on a separate global.
+	// 'unavailable' reproduces the editor and clients without sensor support.
+	const scriptApi: Record<string, unknown> = {
+		clientInterface: {
+			isOnJsCore: (): boolean => false,
+			hasFeature: (): boolean => false,
+			callFeature: (): undefined => undefined
+		}
+	};
+
+	if ((fixture.sensorSource ?? 'available') === 'available') {
+		scriptApi.interaction = {
+			addSensorEventListener: (listener: (event: unknown) => void): void => {
+				sensorEventListeners.push(listener);
+			},
+			removeSensorEventListener: (listener: (event: unknown) => void): void => {
+				const index: number = sensorEventListeners.indexOf(listener);
+
+				if (index >= 0) {
+					sensorEventListeners.splice(index, 1);
+				}
+			},
+			triggerSensorEvent: (event: string, id: string, value: unknown): void => {
+				sensorEvents.push(clone({ event, id, value }));
+			}
+		};
+	}
+
+	Object.defineProperty(window, 'customScriptAPI', {
+		configurable: true,
+		value: scriptApi,
 		writable: true
 	});
 

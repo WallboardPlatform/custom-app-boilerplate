@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import previewFixture, { previewScenarios } from './fixture';
 import type { PreviewFixture, PreviewScenario } from './fixture.types';
 import { installPlatformMock } from './platform-mock';
-import type { PlatformMockController } from './platform-mock';
+import type { PlatformMockController, PlatformMockSensorEvent } from './platform-mock';
 
 import configJson from '../src/editor-assets/properties.json';
 
@@ -21,6 +21,7 @@ interface PreviewWindow extends Window {
 		pushConfiguration: (configValues: Record<string, unknown>) => void;
 		pushDatasource: (property: string, value: unknown) => void;
 		pushExternalCommand: (command: string, parameters?: Array<{ parameter: string; value: string | number | boolean }>) => void;
+		pushSensorEvent: (event: PlatformMockSensorEvent) => void;
 		platform: PlatformMockController;
 	};
 }
@@ -66,7 +67,15 @@ const mountWidget = async (): Promise<void> => {
 		(candidate: PreviewScenario): boolean => candidate.id === scenarioId
 	);
 	const fixture: PreviewFixture = scenario?.fixture ?? previewFixture;
-	const platform: PlatformMockController = installPlatformMock(fixture.platform);
+	// '?sensorSource=unavailable' reproduces the editor / a client without the sensor bridge
+	// without having to declare a dedicated scenario.
+	const sensorSourceOverride: string | null = params.get('sensorSource');
+	const platform: PlatformMockController = installPlatformMock({
+		...fixture.platform,
+		...(sensorSourceOverride === 'available' || sensorSourceOverride === 'unavailable'
+			? { sensorSource: sensorSourceOverride }
+			: {})
+	});
 
 	await import('../src/index');
 
@@ -108,6 +117,11 @@ const mountWidget = async (): Promise<void> => {
 				messageType: 'triggerCustomCommand',
 				customAppCommandParameters: { command, parameters }
 			});
+		},
+		// Incoming sensor events arrive on the displayer's global bridge, not on the widget
+		// event stream, so they are delivered through the platform mock.
+		pushSensorEvent: (event: PlatformMockSensorEvent): void => {
+			platform.emitSensorEvent(event);
 		}
 	};
 	const config: Record<string, unknown> = {

@@ -13,6 +13,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 | Settings/editor schema | `configuration.md`, `interfaces.md` |
 | SolidJS/component structure | `solidjs-patterns.md`, `components.md` |
 | Hooks, services, contexts, stores | matching system doc |
+| Sensor events, IoT input | `hooks.md` |
 | CSS/layout | `styling.md` |
 | Charts | `charting.md` |
 | Reusable mechanics | `capabilities.md` |
