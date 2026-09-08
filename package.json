@@ -9,6 +9,7 @@
 	"scripts": {
 		"setup": "npm run setup:sdk && npm install --registry=https://registry.npmjs.org/",
 		"setup:sdk": "node scripts/setup-sdk.mjs",
+		"test:setup-sdk": "node --test scripts/setup-sdk.test.mjs",
 		"build": "cross-env SIMPLE_OUTPUT=true npm run build:production",
 		"build:vite:development": "vite build --config ./vite.config.mts --mode development",
 		"build:vite:production": "vite build --config ./vite.config.mts --mode production",
@@ -46,7 +47,7 @@
 		"validate:examples": "node --test scripts/datasource-provisioning.test.mjs scripts/datasource-sample-files.test.mjs && tsx --test scripts/source-archive.test.mts && npm run test:generation-brief && npm run test:legacy-css && npm run test:package-assets && npm run test:playwright-browser && npm run test:visual-coverage && npm run test:text-ink && npm run test:text-fit && npm run test:capabilities && npm run test:custom-settings-editor && npm run test:example-data-privacy && npm run test:example-screenshots && npm run test:visual-review && npm run test:visual-gates && npm run test:conformance-gates && npm run test:path-aliases && npm run test:example-mechanisms && tsx scripts/validate-example-mechanisms.mts && tsx scripts/validate-acceptance-matrix.mts && tsx scripts/validate-conformance-coverage.mts && node scripts/validate-example-contracts.mjs && tsx scripts/validate-example-reviews.mts && tsx scripts/validate-generation-brief.mts --examples",
 		"validate:context-budget": "tsx --test scripts/context-budget.test.mts && tsx scripts/context-budget.mts",
 		"validate:image-budget": "tsx --test scripts/image-budget.test.mts && tsx scripts/image-budget.mts",
-		"validate:repository": "npm run typecheck && npm run lint && npm run validate:examples && npm run validate:context-budget && npm run validate:image-budget",
+		"validate:repository": "npm run test:setup-sdk && npm run typecheck && npm run lint && npm run validate:examples && npm run validate:context-budget && npm run validate:image-budget",
 		"validate:legacy": "node scripts/validate-legacy-css.mjs",
 		"prepare:datasource-package": "node scripts/sync-datasource-package.mjs",
 		"validate:package-assets": "node scripts/validate-package-assets.mjs",
