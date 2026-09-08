@@ -44,6 +44,10 @@ Editor wizards and layout editors are opt-in under `templates/editor-assets/`. C
 
 Functional controls require `label`, `type`, and `property` (font controls use `propertyContainer`). Add concise tooltips only where the decision is unclear.
 
+## Quick Edit
+
+Add `quickEdit` to a control so a content author can override it from the platform Quick Editor without opening the designer. Use `true` or `{ "label", "order", "defaultEnabled", "styleContainer" }`; supported on `text`, `textArea`, `number`, `slider`, `checkbox`, `color`, `file`, `folder`, and `dataPicker`. Contract, runtime behavior, and a complete example: `quick-edit.md`.
+
 ## Custom Settings Editors
 
 Use a `button` with `customSettingsUrl` when structured app-owned content or layout cannot be edited safely in the property sidebar:
