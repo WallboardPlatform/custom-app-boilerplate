@@ -12,14 +12,28 @@ cd custom-app-boilerplate
 npm run setup
 ```
 
-`setup` resolves `wallboard-app-sdk` from anonymous Wallboard Nexus and falls back to the matching GitHub release asset, then installs other packages from public npm. Pin a version with:
+`setup` resolves the latest `wallboard-app-sdk` from anonymous Wallboard Nexus. If Nexus metadata or the download is unavailable, it selects the highest stable SDK version published in this repository's GitHub releases, ignoring drafts, prereleases, and unrelated releases. It verifies the tarball against GitHub's asset SHA-256 and prints the selected version and source. The mirror can lag Nexus until the new SDK is uploaded.
+
+Setup saves an exact tarball URL in `package.json`; `npm install` updates the lockfile without deleting unrelated dependency pins. Use `npm ci` for repeatable builds of an existing app; running `npm run setup` again intentionally resolves the latest SDK again. Pin a version with:
 
 ```bash
-npm run setup:sdk -- --version 2.0.85
+npm run setup:sdk -- --version 2.0.109
 npm install --registry=https://registry.npmjs.org/
 ```
 
-Optional setup variables: `WALLBOARD_SDK_REGISTRY`, `WALLBOARD_APP_SDK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_VERSION`, `WALLBOARD_APP_SDK_FALLBACK_URL`, and `WALLBOARD_APP_SDK_FALLBACK_SHA256`.
+Explicit versions use that exact version from Nexus or GitHub and fail if it is unavailable; they never switch to another release.
+
+Optional setup variables: `WALLBOARD_SDK_REGISTRY`, `WALLBOARD_APP_SDK_VERSION`, and `WALLBOARD_APP_SDK_FALLBACK_VERSION` (overrides mirror discovery only for `latest`). A custom `WALLBOARD_APP_SDK_FALLBACK_URL` also requires an exact requested/fallback version and `WALLBOARD_APP_SDK_FALLBACK_SHA256`. Normal GitHub releases need no checksum configuration.
+
+### Maintaining the SDK mirror
+
+After a new stable SDK is published to Nexus:
+
+1. Download its original `wallboard-app-sdk-<version>.tgz` from Nexus's `dist.tarball` URL and verify it against `dist.integrity`. Do not rebuild or repack it.
+2. Create a draft release in this repository with tag `wallboard-app-sdk-<version>`, attach `wallboard-app-sdk-<version>.tgz`, then publish it as a normal release after the upload finishes. Retain existing versioned releases for pinned consumers.
+3. Verify the uploaded tarball matches the Nexus package and its GitHub asset has a `sha256:` digest. Test discovery from a disposable app directory with `WALLBOARD_SDK_REGISTRY=http://127.0.0.1:9/ npm run setup:sdk` (Bash syntax), then run `npm install --registry=https://registry.npmjs.org/`.
+
+New releases are discovered automatically: no setup-script version or checksum edits are needed. The repository's committed `package.json` and `package-lock.json` are separate tested dependency pins; update those together only when upgrading the SDK used by CI. GitHub mirror uploads are manual; there is no scheduled synchronization.
 
 ## Generation
 
