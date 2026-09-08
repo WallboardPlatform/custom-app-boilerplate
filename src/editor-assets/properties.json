@@ -15,7 +15,11 @@
 					"label": "Title",
 					"type": "text",
 					"property": "title",
-					"default": "Your custom app"
+					"default": "Your custom app",
+					"quickEdit": {
+						"label": "Title text",
+						"defaultEnabled": true
+					}
 				}
 			]
 		},
@@ -27,19 +31,22 @@
 					"label": "Accent color",
 					"type": "color",
 					"property": "accentColor",
-					"default": "#15c39a"
+					"default": "#15c39a",
+					"quickEdit": true
 				},
 				{
 					"label": "Text color",
 					"type": "color",
 					"property": "textColor",
-					"default": "#f4f7f6"
+					"default": "#f4f7f6",
+					"quickEdit": true
 				},
 				{
 					"label": "Background color",
 					"type": "color",
 					"property": "backgroundColor",
-					"default": "#111516"
+					"default": "#111516",
+					"quickEdit": true
 				}
 			]
 		}

@@ -11,6 +11,7 @@ Build production Wallboard widgets, not demo pages. Start with:
 |------|------|
 | Data binding | `datasource-contracts.md` |
 | Settings/editor schema | `configuration.md`, `interfaces.md` |
+| Quick Edit overrides | `quick-edit.md` |
 | SolidJS/component structure | `solidjs-patterns.md`, `components.md` |
 | Hooks, services, contexts, stores | matching system doc |
 | CSS/layout | `styling.md` |
