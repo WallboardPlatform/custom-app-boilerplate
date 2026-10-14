@@ -1,3 +1,5 @@
+import type { PreviewAudioFixture } from './audio-mock';
+
 export interface MinimumContentCoverage {
 	width: number;
 	height: number;
@@ -15,6 +17,7 @@ export interface PreviewFixture {
 }
 
 export interface PreviewPlatformFixture {
+	audio?: PreviewAudioFixture;
 	isDisplayer?: boolean;
 	internalDatasources?: Record<string, unknown>;
 	filesByFolder?: Record<string, unknown[]>;

@@ -4,6 +4,7 @@ import previewFixture, { previewScenarios } from './fixture';
 import type { PreviewFixture, PreviewScenario } from './fixture.types';
 import { installPlatformMock } from './platform-mock';
 import type { PlatformMockController } from './platform-mock';
+import type { PreviewAudioFixture } from './audio-mock';
 
 import configJson from '../src/editor-assets/properties.json';
 
@@ -20,6 +21,7 @@ interface PreviewWindow extends Window {
 		destroy: () => Promise<void>;
 		pushConfiguration: (configValues: Record<string, unknown>) => void;
 		pushDatasource: (property: string, value: unknown) => void;
+		pushAudio: (state: PreviewAudioFixture) => void;
 		pushExternalCommand: (command: string, parameters?: Array<{ parameter: string; value: string | number | boolean }>) => void;
 		platform: PlatformMockController;
 	};
@@ -79,12 +81,21 @@ const mountWidget = async (): Promise<void> => {
 	}
 
 	const eventSubject: Subject<unknown> = new Subject<unknown>();
+	const audio = platform.audio.beginRender(
+		{ ...fixture.platform?.audio, supported: fixture.platform?.isDisplayer === true && fixture.platform?.audio?.supported !== false },
+		(event): void => eventSubject.next(event)
+	);
 	let currentConfigValues: Record<string, unknown> = { ...fixture.configValues };
 	previewWindow.__wallboardPreview = {
 		platform,
+		pushAudio: (state: PreviewAudioFixture): void => platform.audio.update(audio.instanceId!, state),
 		destroy: async (): Promise<void> => {
-			eventSubject.complete();
-			await registration.destroy(PREVIEW_ROOT_ID);
+			try {
+				await registration.destroy(PREVIEW_ROOT_ID);
+			} finally {
+				platform.audio.endRender(audio.instanceId!);
+				eventSubject.complete();
+			}
 		},
 		pushConfiguration: (configValues: Record<string, unknown>): void => {
 			currentConfigValues = { ...currentConfigValues, ...configValues };
@@ -112,6 +123,7 @@ const mountWidget = async (): Promise<void> => {
 	};
 	const config: Record<string, unknown> = {
 		...fixture.additionalConfig,
+		audio,
 		id: fixture.id,
 		configValues: currentConfigValues,
 		dataPickerValues: fixture.dataPickerValues,
