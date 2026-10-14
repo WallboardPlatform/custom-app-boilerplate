@@ -47,7 +47,9 @@ npm run capability:add -- wayfinding
 
 The PDF capability expands its checksum-pinned runtime into `src/capabilities/pdf`. Keep `assets/pdf.worker.js` in `resourceList`; the runtime resolves it beside the loaded custom-app script in Wallboard and falls back to Vite's imported URL in local preview.
 
-The video capability expands its checksum-pinned hls.js runtime into `src/capabilities/video`; MP4/WebM still use the native browser path. It cannot expose the platform native/external player, synchronized multi-screen playback, audio ducking, or proof-of-display registration through the current custom-app SDK. Never represent browser telemetry as platform proof-of-display.
+The video capability expands its checksum-pinned hls.js runtime into `src/capabilities/video`; MP4/WebM still use the native browser path. It cannot expose the platform native/external player, synchronized multi-screen playback, or proof-of-display registration through the current custom-app SDK. Never represent browser telemetry as platform proof-of-display.
+
+Audio integration requires an SDK build exporting `AudioService` and a host reporting `audio.supported: true`; the scaffold's pinned SDK is not upgraded by the preview changes. Resolve the service from the app container, register foreground media before playing, and consume its immediate `muted$`/`duck$` state. Native audio/video events (including HLS media events) drive foreground activity. Manual WebAudio/player output must implement inherited mute and report actual start/stop/onended. Background tracks consume duck state without registering themselves as foreground sources; apply percentages and fades from a stable baseline. See [audio preview verification](audio-preview.md).
 
 The keyboard capability adds an app-owned touch keyboard without relying on the device OS or the legacy Angular User Input widget. Materialize it only for apps with text entry; choose requested language layouts and keep physical keyboard input available.
 

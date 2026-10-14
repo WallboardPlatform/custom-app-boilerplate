@@ -1,4 +1,5 @@
 import type { PreviewPlatformFixture } from './fixture.types';
+import { PreviewAudioHost } from './audio-mock';
 
 type JsonObject = Record<string, unknown>;
 
@@ -8,6 +9,7 @@ export interface PlatformMockAction {
 }
 
 export interface PlatformMockController {
+	audio: PreviewAudioHost;
 	datasourceActions: PlatformMockAction[];
 	sensorEvents: unknown[];
 	cachedUrls: string[];
@@ -90,6 +92,7 @@ const mergeRoot = (current: unknown, value: unknown): unknown => {
 };
 
 export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): PlatformMockController => {
+	const audio = new PreviewAudioHost();
 	const datasources: Record<string, unknown> = clone(fixture.internalDatasources ?? {});
 	const filesByFolder: Record<string, unknown[]> = clone(fixture.filesByFolder ?? {});
 	const weatherByLocation: Record<string, unknown> = clone(fixture.weatherByLocation ?? {});
@@ -183,6 +186,7 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 	};
 
 	const methods: Record<string, unknown> = {
+		customAppAudioActions: audio.handle.bind(audio),
 		isDisplayer: fixture.isDisplayer ?? false,
 		triggerSensorEvent: (event: unknown): void => {
 			sensorEvents.push(clone(event));
@@ -236,6 +240,7 @@ export const installPlatformMock = (fixture: PreviewPlatformFixture = {}): Platf
 	};
 
 	const controller: PlatformMockController = {
+		audio,
 		datasourceActions,
 		sensorEvents,
 		cachedUrls,

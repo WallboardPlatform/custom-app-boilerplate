@@ -7,6 +7,8 @@ import solidSvg from 'vite-plugin-solid-svg';
 import { resolvedPathAliases } from '../scripts/path-aliases.mts';
 
 const repositoryRoot: string = resolve(__dirname, '..');
+// Opt-in local SDK validation without changing the scaffold's pinned dependency.
+const localSdkDirectory = process.env.WALLBOARD_PREVIEW_SDK_PATH;
 
 export default defineConfig({
 	root: repositoryRoot,
@@ -33,9 +35,16 @@ export default defineConfig({
 	},
 	resolve: {
 		// Declared once in tsconfig.json; see scripts/path-aliases.mts.
-		alias: resolvedPathAliases(repositoryRoot)
+		alias: {
+			...resolvedPathAliases(repositoryRoot),
+			...(localSdkDirectory ? {
+				'wallboard-app-sdk/wallboard-app-sdk.css': resolve(localSdkDirectory, 'wallboard-app-sdk.css'),
+				'wallboard-app-sdk': resolve(localSdkDirectory, 'index.es.js')
+			} : {})
+		}
 	},
 	server: {
+		...(localSdkDirectory ? { fs: { allow: [repositoryRoot, resolve(localSdkDirectory, '..')] } } : {}),
 		strictPort: true
 	}
 });
