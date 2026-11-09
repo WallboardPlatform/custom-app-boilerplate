@@ -1,9 +1,18 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ page }): Promise<void> => {
+	const response = await page.goto('/preview/widget.html');
+	expect(response?.ok()).toBe(true);
+	await page.waitForFunction((): boolean => {
+		return document.documentElement.dataset.previewReady === 'true'
+			|| Boolean(document.documentElement.dataset.previewError);
+	});
+	expect(await page.evaluate((): string | undefined => document.documentElement.dataset.previewError)).toBeUndefined();
+});
+
 test('audio preview validates tokens, excludes own sources and restores duck state', async ({
 	page
 }): Promise<void> => {
-	await page.goto('/preview/widget.html');
 	const result = await page.evaluate(async () => {
 		const modulePath = '/preview/audio-mock.ts';
 		const { PreviewAudioHost } = await import(modulePath);
@@ -71,7 +80,6 @@ test('audio preview validates tokens, excludes own sources and restores duck sta
 });
 
 test('audio preview observes real media playback, volume, mute, end and release', async ({ page }): Promise<void> => {
-	await page.goto('/preview/widget.html');
 	const result = await page.evaluate(async () => {
 		const modulePath = '/preview/audio-mock.ts';
 		const { PreviewAudioHost } = await import(modulePath);
@@ -174,7 +182,6 @@ test('audio preview observes real media playback, volume, mute, end and release'
 test('editor and unsupported previews reject commands while preserving initial mute; audio events are injectable', async ({
 	page
 }): Promise<void> => {
-	await page.goto('/preview/widget.html');
 	const result = await page.evaluate(async () => {
 		const modulePath = '/preview/audio-mock.ts';
 		const { PreviewAudioHost } = await import(modulePath);
