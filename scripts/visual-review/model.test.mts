@@ -28,6 +28,27 @@ const createProject = (): string => {
 };
 
 void describe('visual review model', (): void => {
+	void it('ignores shared audio tests while tracking app-specific audio tests', (context): void => {
+		const projectDirectory = createProject();
+		context.after((): void => fs.rmSync(projectDirectory, { recursive: true, force: true }));
+		const before = createVisualReviewSourceHash(projectDirectory);
+
+		for (const fileName of ['audio.spec.ts', 'audio-sdk.spec.ts']) {
+			const testPath = path.join(projectDirectory, 'preview', fileName);
+			fs.writeFileSync(testPath, 'export const version = 1;');
+			assert.equal(createVisualReviewSourceHash(projectDirectory), before);
+			fs.writeFileSync(testPath, 'export const version = 2;');
+			assert.equal(createVisualReviewSourceHash(projectDirectory), before);
+		}
+
+		const appTestPath = path.join(projectDirectory, 'preview', 'audio-controls.spec.ts');
+		fs.writeFileSync(appTestPath, 'export const version = 1;');
+		const withAppTest = createVisualReviewSourceHash(projectDirectory);
+		assert.notEqual(withAppTest, before);
+		fs.writeFileSync(appTestPath, 'export const version = 2;');
+		assert.notEqual(createVisualReviewSourceHash(projectDirectory), withAppTest);
+	});
+
 	void it('ignores shared conformance suites when hashing the reviewed source', (context): void => {
 		// The hash answers whether the app, fixture, brief or datasource sample moved since a reviewer
 		// looked at the screenshots. A conformance suite is boilerplate harness that renders nothing,

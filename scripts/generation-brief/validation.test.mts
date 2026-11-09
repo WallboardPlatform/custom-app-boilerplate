@@ -560,6 +560,33 @@ void describe('standalone generation brief validation', () => {
 });
 
 void describe('generation brief project synchronization', () => {
+	void it('does not require app behavior evidence for shared preview tests', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+
+		for (const fileName of ['visual.spec.ts', 'audio.spec.ts', 'audio-sdk.spec.ts']) {
+			fs.writeFileSync(path.join(context.applicationDirectory, 'preview', fileName), 'export {};');
+		}
+
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
+	void it('still requires behavior evidence for app-specific audio tests', async (testContext) => {
+		const brief = createValidBrief();
+		const context = createProject(brief);
+		testContext.after(() => fs.rmSync(context.applicationDirectory, { recursive: true, force: true }));
+		fs.writeFileSync(path.join(context.applicationDirectory, 'preview', 'audio-controls.spec.ts'), 'export {};');
+
+		await assert.rejects(validateBriefAgainstProject(context, brief), /app-specific test .*audio-controls\.spec\.ts/);
+		brief.behaviors.push({
+			id: 'audio-controls',
+			expectation: 'The app audio controls update playback.',
+			evidence: { testFile: 'preview/audio-controls.spec.ts' }
+		});
+		await assert.doesNotReject(validateBriefAgainstProject(context, brief));
+	});
+
 	void it('accepts a synchronized project', async (testContext) => {
 		const brief = createValidBrief();
 		const context = createProject(brief);

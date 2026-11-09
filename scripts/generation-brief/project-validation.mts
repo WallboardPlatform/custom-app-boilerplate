@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import { normalizeDatasourceBindings } from '../datasource-provisioning.mjs';
 import { readPngDimensions } from '../png-validation.mjs';
+import { isAppSpecificPreviewTest } from '../preview-test-classification.mts';
 import type { GenerationBrief } from './validation.mts';
 import { validateStyleIsolation } from './style-isolation.mts';
 
@@ -518,7 +519,7 @@ export const validateBriefAgainstProject = async (
 	const previewDirectory = path.join(context.applicationDirectory, 'preview');
 	const appSpecificTests = fs.existsSync(previewDirectory)
 		? fs.readdirSync(previewDirectory)
-			.filter((entry) => entry.endsWith('.spec.ts') && entry !== 'visual.spec.ts')
+			.filter(isAppSpecificPreviewTest)
 			.map((entry) => path.normalize(path.join('preview', entry)))
 		: [];
 

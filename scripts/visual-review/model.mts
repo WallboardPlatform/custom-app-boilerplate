@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { readPathAliases } from '../path-aliases.mts';
+import { isAppSpecificPreviewTest } from '../preview-test-classification.mts';
 
 export const VISUAL_REVIEW_CRITERIA = [
 	'promptFidelity',
@@ -221,7 +222,7 @@ export const collectVisualReviewSourceFiles = (projectDirectory: string): string
 
 	if (fs.existsSync(previewDirectory)) {
 		for (const previewFile of fs.readdirSync(previewDirectory, { withFileTypes: true })) {
-			if (previewFile.isFile() && previewFile.name.endsWith('.spec.ts') && previewFile.name !== 'visual.spec.ts') {
+			if (previewFile.isFile() && isAppSpecificPreviewTest(previewFile.name)) {
 				seeds.push(path.join(previewDirectory, previewFile.name));
 			}
 		}
